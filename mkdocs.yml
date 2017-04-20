@@ -1,0 +1,8 @@
+site_name: BEAST Documentation
+docs_dir: docs/build
+markdown_extensions:
+    - mdx_math
+
+extra_javascript:
+    - https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS_HTML
+    - assets/mathjaxhelper.js
