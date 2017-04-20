@@ -14,6 +14,9 @@ This package contains common basis functions and assembly routines for the imple
 boundary element methods. Examples are included for the 2D and 3D Helmholtz equations and for
 the 3D Maxwell equations.
 
+Support for the space-time Galerkin based solution of time domain integral equations is in
+place for the 3D Helmholtz and Maxwell equations.
+
 ## Prerequisites
 
 In addition to the Julia packages in REQUIRE.jl, the following packages are required:
