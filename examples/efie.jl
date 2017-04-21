@@ -2,7 +2,7 @@ using BEAST
 using CompScienceMeshes
 using LinearForms
 
-o, x, y, z = euclidianbasis(Float64, 3)
+o, x, y, z = euclidianbasis(3)
 n = BEAST.n
 
 Γ = meshsphere(1.0, 0.2)
@@ -10,7 +10,7 @@ RT = raviartthomas(Γ)
 
 κ = 1.0
 t = MWSingleLayer3D(im*κ)
-E = PlaneWaveMW(z, x, κ)
+E = planewavemw3d(direction=z, polarization=x, wavenumber=κ)
 e = (n × E) × n
 
 j, = hilbertspace(:j)

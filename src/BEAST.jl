@@ -1,6 +1,7 @@
 module BEAST
 
 export planewave
+export planewavemw3d
 export n, ι
 
 using Combinatorics

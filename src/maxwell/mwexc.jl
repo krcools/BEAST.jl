@@ -1,7 +1,5 @@
 type PlaneWaveMW{T,P}
-  #direction::Pt{3,T}
   direction::P
-  #polarisation::Pt{3,T}
   polarisation::P
   wavenumber::T
   amplitude::T

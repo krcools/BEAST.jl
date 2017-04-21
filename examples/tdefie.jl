@@ -1,9 +1,7 @@
 using CompScienceMeshes
 using BEAST
 
-x = point(1.0,0.0,0.0)
-y = point(0.0,1.0,0.0)
-z = point(0.0,0.0,1.0)
+x, y, z = euclidianbasis(3)
 
 D, Δx = 1.0, 0.25
 Γ = meshsphere(D, Δx)

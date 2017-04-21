@@ -159,8 +159,6 @@ function assemblydata(basis::Space)
     resize!(active_cell_indices, j)
     num_active_cells = length(active_cell_indices)
 
-    #elements = [simplex(cellvertices(geo,i)) for i in active_cell_indices]
-
     # TODO: remove dependency on explicit indexing into the cell collection
     elements = [simplex(vertices(geo, geo.faces[i])) for i in active_cell_indices]
 

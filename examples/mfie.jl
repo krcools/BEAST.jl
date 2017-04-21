@@ -2,7 +2,7 @@ using CompScienceMeshes
 using BEAST
 using LinearForms
 
-o, x, y, z = euclidianbasis(Float64, 3)
+o, x, y, z = euclidianbasis(3)
 n = BEAST.n
 
 Γ = meshsphere(1.0, 0.2)
@@ -12,7 +12,7 @@ Y = buffachristiansen(Γ)
 ω = κ = 1.0
 μ = ϵ = 1.0
 
-K = MWDoubleLayer3D(ι*κ)
+K = MWDoubleLayer3D(im*κ)
 N = NCross()
 
 e = PlaneWaveMW(z, x, κ, complex(1.0))
