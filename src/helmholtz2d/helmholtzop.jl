@@ -81,9 +81,7 @@ function kernelvals(biop::HelmholtzOperator2D, tgeo, bgeo)
     green = -im / 4 * hankels[1]
     gradgreen = k * im / 4 * hankels[2] * r / R
 
-    tx = utangents(tgeo,1)
-    ty = utangents(bgeo,1)
-    txty = dot(tx, ty)
+    txty = dot(normal(tgeo), normal(bgeo))
 
     KernelValsHelmholtz2D(k, r, R, green, gradgreen, txty)
 end

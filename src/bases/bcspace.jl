@@ -99,9 +99,8 @@ function buffachristiansen(Γ, γ=mesh(coordtype(Γ),1,3))
 
     # first pass to determine the number of functions
     numfuncs = 0
-    for i in 1 : numcells(edges)
-        edge = edges.faces[i]
-        ch = simplex(vertices(edges, edge))
+    for edge in cells(edges)
+        ch = chart(edges, edge)
         !in_interior(edge) && !on_junction(ch) && continue
         numfuncs += 1
     end
@@ -109,9 +108,9 @@ function buffachristiansen(Γ, γ=mesh(coordtype(Γ),1,3))
     vtof, vton = vertextocellmap(fine)
     jct_pred = overlap_gpredicate(γ)
     bcs, k = Vector{Vector{Shape{T}}}(numfuncs), 1
-    for i in 1 : numcells(edges)
-        edge = edges.faces[i]
-        ch = simplex(vertices(edges, edge))
+    for (i,edge) in enumerate(cells(edges))
+
+        ch = chart(edges, edge)
         !in_interior(edge) && !on_junction(ch) && continue
 
         # index of edge center in fine's vertexbuffer

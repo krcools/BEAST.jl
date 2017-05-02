@@ -17,8 +17,7 @@ X = lagrangec0d1(m, boundary(m))
 @test numfunctions(X) == 3
 
 x = refspace(X)
-#s = simplex(cellvertices(m,X.fns[1][1].cellid))
-s = simplex(vertices(m, m.faces[X.fns[1][1].cellid]))
+s = chart(m, m.faces[X.fns[1][1].cellid])
 c = neighborhood(s, [1,1]/3)      # get the barycenter of that patch
 v = x(c, Val{:withcurl})       # evaluate the Lagrange elements in c, together with their curls
 
@@ -30,8 +29,7 @@ Y = lagrangec0d1(n, boundary(n))
 @test numfunctions(Y) == 2
 
 y = refspace(Y)
-#t = simplex(cellvertices(n, Y.fns[1][1].cellid))
-t = simplex(vertices(n, n.faces[Y.fns[1][1].cellid]))
+t = chart(n, n.faces[Y.fns[1][1].cellid])
 d = neighborhood(t, [1]/2)
 tg = normalize(tangents(d,1))
 w = y(d)

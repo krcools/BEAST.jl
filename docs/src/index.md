@@ -14,12 +14,6 @@ For the Helmholtz 2D and Maxwell 3D systems, complete implementations are suppli
 
 Central to the solution of boundary integral equations is the assembly of the system matrix. The system matrix is fully determined by specifying a kernel G, a set of trial functions, and a set of test functions.
 
-## Geometry
-
-The provided implementations simply use a mesh based on a vertex buffer and an index buffer as the type to store the geometry of the problem, but any object is valid as long as it complies with the following API:
-
-- [`elements(geo)`](@ref): returns an iterable collection of elements or cells. This object is used in the assembly algorithms for the system matrix and right hand side and will be passed to [`quaddata`](@ref).
-
 ## Basis
 
 Sets of both trial and testing functions are implemented by models following the basis concept. The term basis is somewhat misleading as it is nowhere required nor enforced that these functions are linearly independent. Models implementing the Basis concept need to comply to the following semantics.

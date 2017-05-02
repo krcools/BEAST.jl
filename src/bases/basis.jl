@@ -147,20 +147,18 @@ function assemblydata(basis::Space)
 
     # mark the active elements, i.e. elements over which
     # at least one function is defined.
-    active_cell_indices = zeros(Int, num_cells)
-    j = 0
-    for i in 1:size(celltonum, 1)
-        m = maximum(celltonum[i,j] for j in 1:num_refs)
-        if m > 0
-            j += 1
-            active_cell_indices[j] = i
+    active = falses(num_cells)
+    index_among_actives = fill(0, num_cells)
+    num_active_cells = 0
+    for i in 1:num_cells
+        if maximum(@view celltonum[i,:]) > 0
+            num_active_cells += 1
+            active[i] = true
+            index_among_actives[i] = num_active_cells
         end
     end
-    resize!(active_cell_indices, j)
-    num_active_cells = length(active_cell_indices)
 
-    # TODO: remove dependency on explicit indexing into the cell collection
-    elements = [simplex(vertices(geo, geo.faces[i])) for i in active_cell_indices]
+    elements = map(x->chart(geo,x[2]), filter(x->x[1], zip(active, cells(geo))))
 
     max_celltonum = maximum(celltonum)
     fill!(celltonum, 0)
@@ -168,7 +166,7 @@ function assemblydata(basis::Space)
     for b in 1 : num_bfs
         for shape in basisfunction(basis, b)
             c = shape.cellid
-            l = searchsortedfirst(active_cell_indices, c)
+            l = index_among_actives[c]
             @assert 0 < l <= num_active_cells
             r = shape.refid
             w = shape.coeff

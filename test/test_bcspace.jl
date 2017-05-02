@@ -51,16 +51,16 @@ end
 function touches_predicate(mesh)
 
     verts = skeleton(mesh,0)
-    verts = sort(verts.faces)
+    verts = sort(verts.faces, lt=lexless)
 
     edges = skeleton(mesh,1)
-    edges = sort(edges.faces)
+    edges = sort(edges.faces, lt=lexless)
 
     function pred(s)
 
         num_hits = 0
         for i in 1:length(s)
-            if !isempty(searchsorted(verts, SVector(s[i])))
+            if !isempty(searchsorted(verts, SVector(s[i]), lt=lexless))
                 num_hits += 1
             end
         end
@@ -68,7 +68,7 @@ function touches_predicate(mesh)
         @assert num_hits < 3
         num_hits == 0 && return false
         num_hits == 1 && return true
-        isempty(searchsorted(edges, s)) && return true
+        isempty(searchsorted(edges, s, lt=lexless)) && return true
         return false
     end
 
@@ -107,27 +107,18 @@ println("BC space is div-conforming")
 
 # Now repeat the exercise with an open mesh
 mesh = meshrectangle(1.0, 1.0, 0.2);
-#edges = interior(mesh);
 fine = barycentric_refinement(mesh);
 
-#vp = cellpairs(mesh, edges)
-
-#rt = raviartthomas(mesh, vp);
 rt = raviartthomas(mesh)
 bc = buffachristiansen(mesh)
 
 @test numfunctions(rt) == 65
 @test numfunctions(bc) == 65
 
-
 int_pred = interior_tpredicate(mesh)
 bnd_pred(s) = !int_pred(s)
-#bnd_edges = find(bnd_pred, edges.faces)
-
-#@show size(bnd_edges)
 
 leaky_edges = find(sum(abs(isdivconforming(rt)),1))
-#@test bnd_edges == leaky_edges
 @test length(leaky_edges) == 0
 
 bnd = boundary(mesh)
@@ -151,8 +142,8 @@ for fn in bc.fns
     fill!(charges,0)
     for  sh in fn
         cellid = sh.cellid
-        #cell = simplex(cellvertices(fine, cellid))
-        cell = simplex(vertices(fine, fine.faces[cellid]))
+
+        #cell = simplex(vertices(fine, fine.faces[cellid]))
         net_charge += sh.coeff
         charges[cellid] += sh.coeff
     end

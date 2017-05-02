@@ -2,7 +2,7 @@ using CompScienceMeshes
 using BEAST
 using Base.Test
 
-m = meshsphere(1.0, 0.3)
+sphere = readmesh(joinpath(dirname(@__FILE__),"assets","sphere3.in"))
 
 κ = 2π
 direction = point(0,0,1)
@@ -17,7 +17,7 @@ v2 = f(point(0,0,0.5))
 import BEAST.∂n
 p = ∂n(f)
 
-s = simplex(cellvertices(m,1))
+s = chart(m,1)
 c = neighborhood(s, [1,1]/3)
 
 r = cartesian(c)

@@ -2,8 +2,7 @@ using BEAST
 using CompScienceMeshes
 using Base.Test
 
-#m = meshsphere(1.0, 0.2)
-m = readmesh(joinpath(@__FILE__,"..","sphere.in"))
+m = readmesh(joinpath(dirname(@__FILE__),"sphere.in"))
 X = raviartthomas(m)
 κ = ω = c = 1.0
 

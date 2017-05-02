@@ -1,7 +1,7 @@
 using CompScienceMeshes
 using BEAST
 
-x, y, z = euclidianbasis(3)
+o, x, y, z = euclidianbasis(3)
 
 D, Δx = 1.0, 0.25
 Γ = meshsphere(D, Δx)

@@ -5,12 +5,10 @@ using StaticArrays
 import BEAST
 BE = BEAST
 
-Γ = meshsphere(1.0, 0.2)
+Γ = readmesh(joinpath(dirname(@__FILE__),"assets","sphere2.in"))
 nc = numcells(Γ)
-#t = simplex(cellvertices(Γ,1))
-t = simplex(vertices(Γ, Γ.faces[1]))
-#s = simplex(cellvertices(Γ,nc))
-s = simplex(vertices(Γ, Γ.faces[nc]))
+t = chart(Γ, Γ.faces[1])
+s = chart(Γ, Γ.faces[nc])
 
 X = BEAST.raviartthomas(Γ)
 x = BEAST.refspace(X)
@@ -25,7 +23,6 @@ z2 = zeros(z1)
 tqd = BE.quadpoints(x, [t], (12,13))
 bqd = BE.quadpoints(x, [t], (13,))
 
-#SE_strategy = BEAST.WiltonSEStrategy(13,12,13)
 SE_strategy = BE.WiltonSEStrategy(
   tqd[2,1],
   BE.DoubleQuadStrategy(
@@ -39,10 +36,8 @@ EE_strategy = BEAST.BogaertSelfPatchStrategy(20)
 BEAST.momintegrals!(op, x, x, t, t, z2, EE_strategy)
 
 Γ = meshrectangle(1.0, 1.0, 1.0)
-#t = simplex(cellvertices(Γ,1))
-t = simplex(vertices(Γ, Γ.faces[1]))
-#s = simplex(cellvertices(Γ,2))
-s = simplex(vertices(Γ, Γ.faces[2]))
+t = chart(Γ, Γ.faces[1])
+s = chart(Γ, Γ.faces[2])
 
 
 z3 = zeros(Complex128, n, n)

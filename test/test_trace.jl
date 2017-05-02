@@ -21,8 +21,7 @@ for i in eachindex(rwg.fns)
     length(nt.fns[i]) == 1 || continue
     n += 1
     c = nt.fns[i][1].cellid
-    #edge = simplex(cellvertices(Σ,c))
-    edge = simplex(vertices(Σ, Σ.faces[c]))
+    edge = chart(Σ, Σ.faces[c])
     @test on_bnd(edge)
     @test nt.fns[i][1].refid == 1
     @test nt.fns[i][1].coeff == 2.0

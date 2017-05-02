@@ -204,15 +204,12 @@ function singleduallagd0(fine, F, v)
     T = coordtype(fine)
     fn = Shape{T}[]
     for cellid in F
-        #ptch = simplex(cellvertices(fine, cellid))
-        ptch = simplex(vertices(fine, fine.faces[cellid]))
+        cell = fine.faces[cellid]
+        ptch = chart(fine, cell)
         coeff = 1 / volume(ptch) / length(F)
         refid = 1
         push!(fn, Shape(cellid, refid, coeff))
     end
-
-    # normalise to make the total charge 1
-
 
     return fn
 end
@@ -331,15 +328,12 @@ function duallagrangec0d1(mesh, refined, jct_pred, ::Type{Val{3}})
     uv_ctr = ones(dimension(mesh))/(dimension(mesh)+1)
 
     vtoc, vton = vertextocellmap(refined)
-    #for i in 1:numcells(mesh)
     for (i,coarse_idcs) in enumerate(cells(mesh))
         fns[i] = Vector{Shape{T}}()
 
         # It is assumed the vertices of this cell have the same index
         # mesh and its refinement.
-        #coarse_idcs = cells(mesh, i)
-        #coarse_cell = simplex(cellvertices(mesh, i))
-        coarse_cell = simplex(vertices(mesh, coarse_idcs))
+        coarse_cell = chart(mesh, coarse_idcs)
 
         # get the index in fine.vertices of the centroid of coarse_cell
         centroid = barytocart(coarse_cell, uv_ctr)
@@ -364,7 +358,6 @@ function duallagrangec0d1(mesh, refined, jct_pred, ::Type{Val{3}})
 
         n = vton[centroid_id]
         for c in vtoc[centroid_id,1:n]
-            #fine_idcs = cells(refined,c)
             fine_idcs = refined.faces[c]
             local_id = findfirst(fine_idcs, centroid_id)
             @assert local_id != 0
@@ -377,7 +370,6 @@ function duallagrangec0d1(mesh, refined, jct_pred, ::Type{Val{3}})
             jct_pred(refined.vertices[v]) && continue
             n = vton[v]
             for c in vtoc[v,1:n]
-                #fine_idcs = cells(refined,c)
                 fine_idcs = refined.faces[c]
                 local_id = findfirst(fine_idcs, v)
                 @assert local_id != 0

@@ -53,10 +53,8 @@ Nyx = assemble(N,Y,X)
 
 @test size(Nyx) == (1,1)
 
-#sx = simplex(cellvertices(m,1))
-sx = simplex(vertices(m, first(cells(m))))
-#sy = simplex(cellvertices(n,1))
-sy = simplex(vertices(n, first(cells(n))))
+sx = chart(m, first(cells(m)))
+sy = chart(n, first(cells(n)))
 
 cx = neighborhood(sx, [1,1]/3)
 cy = neighborhood(sy, [1]/2)
@@ -90,8 +88,7 @@ end
 for f in Y.fns
     @test length(f) == 1
     @test 0 < f[1].cellid < 4
-    #seg = simplex(cellvertices(Σ,f[1].cellid))
-    seg = simplex(vertices(Σ, Σ.faces[f[1].cellid]))
+    seg = chart(Σ, Σ.faces[f[1].cellid])
     @test f[1].refid == 1
     @test f[1].coeff ≈ (1 / volume(seg))
 end

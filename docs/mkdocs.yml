@@ -1,5 +1,5 @@
 site_name: BEAST Documentation
-docs_dir: docs/build
+docs_dir: build
 markdown_extensions:
     - mdx_math
 

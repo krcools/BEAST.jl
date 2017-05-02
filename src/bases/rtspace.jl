@@ -92,15 +92,14 @@ Calls raviartthomas(Γ, duals) which constructs
 function raviartthomas(Γ, γ)
 
     in_interior = interior_tpredicate(Γ)
+    on_junction = overlap_gpredicate(γ)
+    
+    pred = c -> (in_interior(c) || on_junction(chart(Γ,c)))
 
-    overlaps = overlap_gpredicate(γ)
-    on_junction = c -> overlaps(simplex(vertices(Γ,c)))
-
-    pred = x -> (in_interior(x) || on_junction(x))
     edges = skeleton(pred, Γ, 1)
+    cps = cellpairs(Γ, edges, dropjunctionpair=true)
 
-    duals = cellpairs(Γ, edges, dropjunctionpair=true)
-    raviartthomas(Γ, duals)
+    raviartthomas(Γ, cps)
 end
 
 raowiltonglisson = raviartthomas

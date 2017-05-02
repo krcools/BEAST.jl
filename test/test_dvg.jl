@@ -15,8 +15,7 @@ for (f,g) in zip(x.fns, X.fns)
     @test length(f) == length(g)
     if length(f) == 1
         c = f[1].cellid
-        #s = simplex(cellvertices(Γ,c))
-        s = simplex(vertices(Γ, Γ.faces[c]))
+        s = chart(Γ, Γ.faces[c])
         @test f[1].coeff == 1 / volume(s)
     else
         @test f[1].coeff + f[2].coeff == 0

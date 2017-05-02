@@ -45,9 +45,8 @@ Degr = 1
 Dim1 = 3
 NumF = 3
 f = BEAST.LagrangeRefSpace{T,Degr,Dim1,NumF}()
-sphere = meshsphere(1.0, 0.5)
-#s = simplex(cellvertices(sphere, 1))
-s = simplex(vertices(sphere, first(cells(sphere))))
+sphere = readmesh(joinpath(dirname(@__FILE__),"assets","sphere5.in"))
+s = chart(sphere, first(cells(sphere)))
 t = neighborhood(s, [1,1]/3)
 v = f(t, Val{:withcurl})
 
@@ -103,10 +102,9 @@ sh = Y.fns[1][1]; @test (sh.cellid, sh.refid, sh.coeff) == (1, 1, 1.0)
 sh = Y.fns[2][1]; @test (sh.cellid, sh.refid, sh.coeff) == (1, 2, 1.0)
 
 x = refspace(X)
-#cell = simplex(cellvertices(m,1))
-cell = simplex(vertices(m, first(cells(m))))
-#face = simplex(cellvertices(b,1))
-face = simplex(vertices(b, first(cells(b))))
+
+cell = chart(m, first(cells(m)))
+face = chart(b, first(cells(b)))
 Q = BEAST.strace(x, cell, 3, face)
 @test Q == [1 0 0; 0 1 0]
 
@@ -128,8 +126,8 @@ x = refspace(X)
 
 p = point(0.5, 0.0, 0.0)
 for s in X.fns[1]
-    #patch = simplex(cellvertices(m, s.cellid))
-    patch = simplex(vertices(m, m.faces[s.cellid]))
+    cell = m.faces[s.cellid]
+    patch = chart(m, cell)
     bary = carttobary(patch, p)
     mp = neighborhood(patch, bary)
 
@@ -159,8 +157,8 @@ for fn in X.fns
     for sh in fn
         @test sh.refid == 1
         cellid = sh.cellid
-        #ptch = simplex(cellvertices(fine, cellid))
-        ptch = simplex(vertices(fine, fine.faces[cellid]))
+        cell = fine.faces[cellid]
+        ptch = chart(fine, cell)
         @test sh.coeff * volume(ptch) ≈ 1/n
     end
 end

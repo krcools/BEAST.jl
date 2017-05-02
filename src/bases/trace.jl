@@ -116,8 +116,8 @@ function strace(X::Space, γ, dim1::Type{Val{2}})
             @assert e != 0
 
             # make sure we use fc as oriented in Σ
-            #fc = simplex(cellvertices(Σ, e))
-            fc = simplex(vertices(Σ, Σ.faces[e]))
+            cell = Σ.faces[e]
+            fc = chart(Σ, cell)
             on_target(fc) || continue
 
             Q = strace(x,el,q,fc)

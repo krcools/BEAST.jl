@@ -31,9 +31,9 @@ m = meshrectangle(1.0,1.0,0.5);
 rwg = raviartthomas(m)
 ref = refspace(rwg)
 
-#vrts = cellvertices(m,1)
-vrts = vertices(m, first(cells(m)))
-ptch = simplex(vrts[1], vrts[2], vrts[3])
+# vrts = vertices(m, first(cells(m)))
+# ptch = simplex(vrts[1], vrts[2], vrts[3])
+ptch = chart(m, first(cells(m)))
 
 ctrd = neighborhood(ptch, [1,1]/3)
 vals = shapevals(ref, [ctrd])

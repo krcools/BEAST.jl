@@ -97,12 +97,10 @@ for p in pts
 end
 
 
-Γ = meshsphere(1.0, 0.2)
+Γ = readmesh(joinpath(dirname(@__FILE__),"assets","sphere2.in"))
 nc = numcells(Γ)
-#t = simplex(cellvertices(Γ,1))
-t = simplex(vertices(Γ, Γ.faces[1]))
-#s = simplex(cellvertices(Γ,nc))
-s = simplex(vertices(Γ, Γ.faces[nc]))
+t = chart(Γ, first(cells(Γ)))
+s = chart(Γ, last(cells(Γ)))
 
 X = BEAST.raviartthomas(Γ)
 x = BEAST.refspace(X)
@@ -115,9 +113,6 @@ z1 = zeros(Complex128, n, n)
 z2 = zeros(z1)
 
 BE = BEAST
-
-# tqd = BE.quaddata(x, [t], (12,))
-# bqd = BE.quaddata(x, [s], (13,))
 
 tqd = BE.quadpoints(x, [t], (12,))
 bqd = BE.quadpoints(x, [s], (13,))
