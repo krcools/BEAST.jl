@@ -24,7 +24,8 @@ In addition to the Julia packages in REQUIRE.jl, the following packages are requ
 * `krcools/CompScienceMeshes`
 * `krcools/LinearForms`
 
-In addition, some functionality requires `gmsh` to be installed and on the system path.
+In addition, some functionality requires `gmsh` to be installed and on the system path. `LinearForms`
+is only required for syntactic sugar; all assembly routines can be directly called.
 
 ## Example script
 
