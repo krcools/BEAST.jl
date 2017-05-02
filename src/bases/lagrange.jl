@@ -8,15 +8,6 @@ dimension n is binom(n+d,d) == binom(n+d,n)
 """
 function lagdimension end
 
-# T: coeff type
-# Degree: degree
-# Dim1: dimension of the support + 1
-type LagrangeRefSpace{T,Degree,Dim1,NF} <: RefSpace{T,NF} end
-
-numfunctions{T,D}(s::LagrangeRefSpace{T,D,2}) = D+1
-
-numfunctions{T}(s::LagrangeRefSpace{T,0,3}) = 1
-numfunctions{T}(s::LagrangeRefSpace{T,1,3}) = 3
 
 # D: degree
 # C: continuity
@@ -27,57 +18,13 @@ type LagrangeBasis{D,C,M,T,NF} <: Space{T}
   fns::Vector{Vector{Shape{T}}}
 end
 
-valuetype{T}(ref::LagrangeRefSpace{T}, charttype) =
-        SVector{numfunctions(ref), Tuple{T,T}}
+
 
 # Constructor that automatically deduces MeshType and ScalarType but requires specification
 # of the Degree, Cont, and NumFns type parameters
 (::Type{LagrangeBasis{D,C,N}}){D,C,M,T,N}(g::M, f::Vector{Vector{Shape{T}}}) = LagrangeBasis{D,C,M,T,N}(g, f)
 
 refspace{D,C,M,T,NF}(space::LagrangeBasis{D,C,M,T,NF}) = LagrangeRefSpace{T,D,dimension(geometry(space))+1,NF}()
-
-# Evaluate constant lagrange elements on anything
-(ϕ::LagrangeRefSpace{T,0}){T}(tp) = SVector(((one(T),zero(T)),))
-
-# Evaluate linear Lagrange elements on a segment
-function (f::LagrangeRefSpace{T,1,2}){T}(mp)
-    u = mp.bary[1]
-    j = jacobian(mp)
-    SVector((u,-1/j), (1-u,1/j))
-end
-
-# Evaluete linear lagrange elements on a triangle
-function (f::LagrangeRefSpace{T,1,3}){T}(t)
-    u,v,w, = barycentric(t)
-    SVector(u, v, w)
-end
-
-"""
-    f(tangent_space, Val{:withcurl})
-
-Compute the values of the shape functions together with their curl.
-"""
-function (f::LagrangeRefSpace{T,1,3}){T}(t, ::Type{Val{:withcurl}})
-    # Evaluete linear Lagrange elements on a triange, together with their curl
-    j = jacobian(t)
-    u,v,w, = barycentric(t)
-    p = t.patch
-    SVector(
-        (u, (p[3]-p[2])/j),
-        (v, (p[1]-p[3])/j),
-        (w, (p[2]-p[1])/j)
-    )
-end
-
-
-# Evaluate constant Lagrange elements on a triangle, with their curls
-function (f::LagrangeRefSpace{T,0,3}){T}(t, ::Type{Val{:withcurl}})
-    i = one(T)
-    z = zero(cartesian(t))
-    (
-        (i,z,),
-    )
-end
 
 
 function lagrangecxd0(mesh)
@@ -109,18 +56,14 @@ function lagrangec0d1_dirichlet(mesh)
 
     verts = skeleton(mesh, 0)
     detached = trues(numvertices(mesh))
-    #for i in 1:numcells(verts)
     for v in cells(verts)
-        #v = cells(verts, i)[1]
         detached[v] = false
     end
 
     bnd = boundary(mesh)
     bndverts = skeleton(bnd, 0)
     notonbnd = trues(numvertices(mesh))
-    #for i in 1:numcells(bndverts)
     for v in cells(bndverts)
-        #v = cells(bndverts, i)[1]
         notonbnd[v] = false
     end
 
@@ -132,26 +75,20 @@ end
 function interior_and_junction_vertices(mesh, jct)
     verts = skeleton(mesh, 0)
     detached = trues(numvertices(mesh))
-    #for i in 1:numcells(verts)
     for v in cells(verts)
-        #v = cells(verts, i)[1]
         detached[v] = false
     end
 
     bndfaces = boundary(mesh)
     bndverts = skeleton(bndfaces, 0)
     notonbnd = trues(numvertices(mesh))
-    #for i in 1:numcells(bndverts)
     for v in cells(bndverts)
-        #v = cells(bndverts, i)[1]
         notonbnd[v] = false
     end
 
     onjct = !notonbnd
     overlap_with_junction = overlap_gpredicate(jct)
-    #for i in 1:numcells(bndfaces)
     for indices in cells(bndfaces)
-        #indices = cells(bndfaces, i)
         bndface = simplex(vertices(bndfaces, indices))
         if overlap_with_junction(bndface)
             continue
@@ -480,11 +417,6 @@ function duallagrangec0d1(mesh, mesh2, pred, ::Type{Val{2}})
 end
 
 
-function curl(ref::LagrangeRefSpace, sh, el)
-    sh1 = Shape(sh.cellid, mod1(sh.refid+1,3), -sh.coeff)
-    sh2 = Shape(sh.cellid, mod1(sh.refid+2,3), +sh.coeff)
-    return [sh1, sh2]
-end
 curl(space::LagrangeBasis{1,0}, geo, fns) = RTBasis(geo, fns)
 
 #
@@ -499,59 +431,4 @@ function strace(X::LagrangeBasis{1,0}, geo, fns::Vector)
     NF = binomial(n+d,n)
 
     LagrangeBasis{1,0,NF}(geo, fns)
-end
-
-function strace(x::LagrangeRefSpace, cell, localid, face)
-
-    Q = zeros(scalartype(x),2,3)
-
-    p1 = neighborhood(face, 1)
-    p2 = neighborhood(face, 0)
-
-    u1 = carttobary(cell, cartesian(p1))
-    u2 = carttobary(cell, cartesian(p2))
-
-    P1 = neighborhood(cell, u1)
-    P2 = neighborhood(cell, u2)
-
-    vals1 = x(P1)
-    vals2 = x(P2)
-
-    for j in 1:numfunctions(x)
-        Q[1,j] = vals1[j]
-        Q[2,j] = vals2[j]
-    end
-
-    Q
-end
-
-
-
-
-function restrict{T}(refs::LagrangeRefSpace{T,0}, dom1, dom2)
-    Q = eye(T, numfunctions(refs))
-end
-
-function restrict{T}(f::LagrangeRefSpace{T,1}, dom1, dom2)
-
-    D = numfunctions(f)
-    Q = zeros(T, D, D)
-
-    # for each point of the new domain
-    for i in 1:D
-        v = dom2.vertices[i]
-
-        # find the barycentric coordinates in dom1
-        uvn = carttobary(dom1, v)
-
-        # evaluate the shape functions in this point
-        x = neighborhood(dom1, uvn)
-        fx = f(x)
-
-        for j in 1:D
-            Q[j,i] = fx[j][1]
-        end
-    end
-
-    return Q
 end

@@ -1,4 +1,5 @@
-site_name: BEAST Documentation
+site_name: BEAST.jl
+repo_url: https://github.com/krcools/BEAST.jl
 docs_dir: build
 markdown_extensions:
     - mdx_math

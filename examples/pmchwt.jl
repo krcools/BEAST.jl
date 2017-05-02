@@ -1,7 +1,7 @@
 using CompScienceMeshes
 using BEAST
-using LinearForms
 
+include(Pkg.dir("BEAST","src","lusolver.jl"))
 include(Pkg.dir("CompScienceMeshes","examples","plotlyjs_patches.jl"))
 
 x = point(1.0, 0.0, 0.0)
@@ -41,6 +41,5 @@ u = solve(pmchwt)
 
 u1 = u[1:numfunctions(X)]
 fcr, geo = facecurrents(u1,X)
-#A = [real(norm(f)) for f in fcr]
 p = patch(geo, real.(norm.(fcr)))
 PlotlyJS.plot(p)

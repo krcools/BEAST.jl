@@ -1,6 +1,5 @@
 using BEAST
 using CompScienceMeshes
-#using LinearForms
 include(Pkg.dir("BEAST","src","lusolver.jl"))
 
 o, x, y, z = euclidianbasis(3)

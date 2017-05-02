@@ -5,7 +5,6 @@ export planewavemw3d
 export n, ι
 
 using Combinatorics
-#using LinearForms
 
 import Base.*
 
@@ -22,7 +21,9 @@ include("bases/basis.jl")
 include("bases/trace.jl")
 include("bases/restrict.jl")
 include("bases/divergence.jl")
+include("bases/laglocal.jl")
 include("bases/lagrange.jl")
+include("bases/rtlocal.jl")
 include("bases/rtspace.jl")
 include("bases/bcspace.jl")
 include("bases/timebasis.jl")
@@ -40,7 +41,6 @@ include("timedomain/tdintegralop.jl")
 include("timedomain/tdexcitation.jl")
 include("timedomain/motlu.jl")
 include("timedomain/tdtimeops.jl")
-
 
 # Support for Maxwell equations
 include("maxwell/wiltonints.jl")
