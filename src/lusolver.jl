@@ -1,3 +1,7 @@
+using LinearForms
+
+import BEAST: assemble
+
 export sysmatrix, solve, discretise, rhs
 export @discretise
 

@@ -5,7 +5,7 @@ export planewavemw3d
 export n, ι
 
 using Combinatorics
-using LinearForms
+#using LinearForms
 
 import Base.*
 
@@ -65,7 +65,7 @@ include("helmholtz3d/timedomain/tdhh3dexc.jl")
 include("maxwell/timedomain/mwtdops.jl")
 include("maxwell/timedomain/mwtdexc.jl")
 
-include("lusolver.jl")
+#include("lusolver.jl")
 
 using CompScienceMeshes
 
