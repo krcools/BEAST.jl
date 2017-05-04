@@ -6,7 +6,7 @@ If broadband information is required or if the system under study will be couple
 
 Building the geometry and defining the spatial finite elements happens in completely the same manner as for frequency domain simulations:
 
-```@example 2
+```julia
 using CompScienceMeshes
 using BEAST
 D, dx = 1.0, 0.3
@@ -27,7 +27,7 @@ where $\Delta t$ is the time step used to solve the problem. This time step depe
 
 We need a temporal trial space and test space. Common examples of temporal trial spaces are the shifted quadratic spline and shifted lagrange basis functions. In this example, a shifted quadratic spline `S` is used for the trial space, while a delta function `U` is used as the temporal test space to obtain a time-stepping solution.  
 
-```@example 2
+```julia
 Δt, Nt = 0.25, 300
 S = BEAST.timebasisspline2(Δt, Nt)
 U = BEAST.timebasisdelta(Δt, Nt)
@@ -40,7 +40,7 @@ $Tj = -e^i,$
 
 where the incident electric field can be any Maxwell solution in the background medium. To describe this problem in Julia we create a retarded potential operator objects and a functional representing the incident field:
 
-```@example 2
+```julia
 x = point(1.0,0.0,0.0)
 y = point(0.0,1.0,0.0)
 z = point(0.0,0.0,1.0)
@@ -52,7 +52,7 @@ nothing; # hide
 
 Using the finite element spaces defined above this retarded potential equation can be discretized.
 
-```@example 2
+```julia
 V = X ⊗ S #Space and time trial basis
 W = X ⊗ U #Space and time test basis
 
@@ -65,7 +65,7 @@ The variable `Z` can efficiently store the matrices corresponding to different d
 
 The algorithm below solves the discrete convolution problem by marching on in time:
 
-```@example 2
+```julia
 Z0 = Z[:,:,1]
 W0 = inv(Z0)
 x = BEAST.marchonintime(W0,Z,-B,Nt)
@@ -73,7 +73,7 @@ nothing # hide
 ```
 Computing the values of the induced current is now possible in the same manner as for frequency domain simulations by first converting our MOT solution back to the frequency domain using the fourier transform, along with some adjustments.
 
-```@example 2
+```julia
 Xefie, Δω, ω0 = fouriertransform(x, Δt, 0.0, 2)
 ω = collect(ω0 + (0:Nt-1)*Δω)
 _, i1 = findmin(abs(ω-1.0))
@@ -87,12 +87,10 @@ nothing # hide
 
 For now the package still relies upon Matlab for some of its visualisation. This dependency will be removed in the near future:
 
-```@example 2
+```julia
 include(Pkg.dir("CompScienceMeshes","examples","matlab_patches.jl"))
 mat"clf"
 patch(geo, real.(norm.(fcr)))
 mat"cd($(pwd()))"
 mat"print('current.png', '-dpng')"
 ```
-
-![](../current.png)
