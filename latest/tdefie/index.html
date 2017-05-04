@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        
+        
+        
+        <link rel="shortcut icon" href="../img/favicon.ico">
+        <title>Tdefie - BEAST.jl</title>
+        <link href="../css/bootstrap-custom.min.css" rel="stylesheet">
+        <link href="../css/font-awesome-4.5.0.css" rel="stylesheet">
+        <link href="../css/base.css" rel="stylesheet">
+        <link rel="stylesheet" href="../css/highlight.css">
+        <link href="../assets/Documenter.css" rel="stylesheet">
+        <!-- HTML5 shim and Respond.js IE8 support of HTML5 elements and media queries -->
+        <!--[if lt IE 9]>
+            <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+            <script src="https://oss.maxcdn.com/libs/respond.js/1.3.0/respond.min.js"></script>
+        <![endif]-->
+	
+	<script src="../js/jquery-1.10.2.min.js"></script>
+        <script src="../js/bootstrap-3.0.3.min.js"></script>
+        <script src="../js/highlight.pack.js"></script> 
+    </head>
+
+    <body>
+
+        <div class="navbar navbar-default navbar-fixed-top" role="navigation">
+    <div class="container">
+
+        <!-- Collapsed navigation -->
+        <div class="navbar-header">
+            <!-- Expander button -->
+            <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="..">BEAST.jl</a>
+        </div>
+
+        <!-- Expanded navigation -->
+        <div class="navbar-collapse collapse">
+                <!-- Main navigation -->
+                <ul class="nav navbar-nav">
+                    <li >
+                        <a href="..">Home</a>
+                    </li>
+                    <li >
+                        <a href="../assemble/">Assemble</a>
+                    </li>
+                    <li class="active">
+                        <a href="./">Tdefie</a>
+                    </li>
+                    <li >
+                        <a href="../tutorial/">Tutorial</a>
+                    </li>
+                </ul>
+
+            <ul class="nav navbar-nav navbar-right">
+                <li>
+                    <a href="#" data-toggle="modal" data-target="#mkdocs_search_modal">
+                        <i class="fa fa-search"></i> Search
+                    </a>
+                </li>
+                    <li >
+                        <a rel="next" href="../assemble/">
+                            <i class="fa fa-arrow-left"></i> Previous
+                        </a>
+                    </li>
+                    <li >
+                        <a rel="prev" href="../tutorial/">
+                            Next <i class="fa fa-arrow-right"></i>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="https://github.com/krcools/BEAST.jl">
+                                <i class="fa fa-github"></i>GitHub
+                        </a>
+                    </li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+        <div class="container">
+                <div class="col-md-3"><div class="bs-sidebar hidden-print affix well" role="complementary">
+    <ul class="nav bs-sidenav">
+        <li class="main active"><a href="#solving-the-time-domain-efie-using-marching-on-in-time">Solving the Time Domain EFIE using Marching-on-in-Time</a></li>
+            <li><a href="#building-the-geometry">Building the geometry</a></li>
+    </ul>
+</div></div>
+                <div class="col-md-9" role="main">
+
+<p><a id='Solving-the-Time-Domain-EFIE-using-Marching-on-in-Time-1'></a></p>
+<h1 id="solving-the-time-domain-efie-using-marching-on-in-time">Solving the Time Domain EFIE using Marching-on-in-Time</h1>
+<p>If broadband information is required or if the system under study will be coupled to non-linear components, the scattering problem should be solved directly in the time domain, i.e. as a hyperbolic evolution problem.</p>
+<p><a id='Building-the-geometry-1'></a></p>
+<h2 id="building-the-geometry">Building the geometry</h2>
+<p>Building the geometry and defining the spatial finite elements happens in completely the same manner as for frequency domain simulations:</p>
+<pre><code class="julia">using CompScienceMeshes
+using BEAST
+D, dx = 1.0, 0.3
+Γ = meshsphere(1.0, dx)
+X = raviartthomas(Γ)
+nothing # hide
+</code></pre>
+
+<p>Time domain currents are approximated in the tensor product of a spatial and temporal finite element space:</p>
+<p>
+<script type="math/tex; mode=display">
+j(x) \approx \sum_{i=1}^{N_T} \sum_{m=1}^{N_S} u_{i,m} T_i(t) f_m(x)
+</script>
+</p>
+<p>This package only supports translation invariant temopral basis functions, i.e.</p>
+<p>
+<script type="math/tex; mode=display">
+T_i(t) = T(t - i \Delta t),
+</script>
+</p>
+<p>where $\Delta t$ is the time step used to solve the problem. This time step depends on the bandwidth of the incident field and the desired accuracy. Space-Time Galerkin solvers of the type used here are not subject to stability conditions linking spatial and temporal discretisation resolutions.</p>
+<p>We need a temporal trial space and test space. Common examples of temporal trial spaces are the shifted quadratic spline and shifted lagrange basis functions. In this example, a shifted quadratic spline <code>S</code> is used for the trial space, while a delta function <code>U</code> is used as the temporal test space to obtain a time-stepping solution.  </p>
+<pre><code class="julia">Δt, Nt = 0.25, 300
+S = BEAST.timebasisspline2(Δt, Nt)
+U = BEAST.timebasisdelta(Δt, Nt)
+nothing # hide
+</code></pre>
+
+<p>We want to solve the EFIE, i.e. we want to find the current $j$ such that</p>
+<p>
+<script type="math/tex; mode=display">
+Tj = -e^i,
+</script>
+</p>
+<p>where the incident electric field can be any Maxwell solution in the background medium. To describe this problem in Julia we create a retarded potential operator objects and a functional representing the incident field:</p>
+<pre><code class="julia">x = point(1.0,0.0,0.0)
+y = point(0.0,1.0,0.0)
+z = point(0.0,0.0,1.0)
+gaussian = BEAST.creategaussian(30Δt, 60Δt)
+E = BEAST.planewave(x, z, BEAST.derive(gaussian), 1.0)
+T = BEAST.MWSingleLayerTDIO(1.0,-1.0,-1.0,2,0)
+nothing; # hide
+</code></pre>
+
+<p>Using the finite element spaces defined above this retarded potential equation can be discretized.</p>
+<pre><code class="julia">V = X ⊗ S #Space and time trial basis
+W = X ⊗ U #Space and time test basis
+
+B = assemble(E, W)
+Z = assemble(T, W, V)
+nothing # hide
+</code></pre>
+
+<p>The variable <code>Z</code> can efficiently store the matrices corresponding to different delays (<code>assemble</code> knows about the specific sparsity pattern of such matrices and returns a sparse array of rank three fit for purpose).</p>
+<p>The algorithm below solves the discrete convolution problem by marching on in time:</p>
+<pre><code class="julia">Z0 = Z[:,:,1]
+W0 = inv(Z0)
+x = BEAST.marchonintime(W0,Z,-B,Nt)
+nothing # hide
+</code></pre>
+
+<p>Computing the values of the induced current is now possible in the same manner as for frequency domain simulations by first converting our MOT solution back to the frequency domain using the fourier transform, along with some adjustments.</p>
+<pre><code class="julia">Xefie, Δω, ω0 = fouriertransform(x, Δt, 0.0, 2)
+ω = collect(ω0 + (0:Nt-1)*Δω)
+_, i1 = findmin(abs(ω-1.0))
+ω1 = ω[i1]
+
+ue = Xefie[:,i1]
+ue /= fouriertransform(gaussian)(ω1)
+fcr, geo = facecurrents(ue, X)
+nothing # hide
+</code></pre>
+
+<p>For now the package still relies upon Matlab for some of its visualisation. This dependency will be removed in the near future:</p>
+<pre><code class="julia">include(Pkg.dir(&quot;CompScienceMeshes&quot;,&quot;examples&quot;,&quot;matlab_patches.jl&quot;))
+mat&quot;clf&quot;
+patch(geo, real.(norm.(fcr)))
+mat&quot;cd($(pwd()))&quot;
+mat&quot;print('current.png', '-dpng')&quot;
+</code></pre></div>
+        </div>
+
+        <footer class="col-md-12">
+            <hr>
+            <p>Documentation built with <a href="http://www.mkdocs.org/">MkDocs</a>.</p>
+        </footer>
+        <script>var base_url = '..';</script>
+        <script data-main="../mkdocs/js/search.js" src="../mkdocs/js/require.js"></script>
+        <script src="../js/base.js"></script>
+        <script src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS_HTML"></script>
+        <script src="../assets/mathjaxhelper.js"></script><div class="modal" id="mkdocs_search_modal" tabindex="-1" role="dialog" aria-labelledby="Search Modal" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+                <h4 class="modal-title" id="exampleModalLabel">Search</h4>
+            </div>
+            <div class="modal-body">
+                <p>
+                    From here you can search these documents. Enter
+                    your search terms below.
+                </p>
+                <form role="form">
+                    <div class="form-group">
+                        <input type="text" class="form-control" placeholder="Search..." id="mkdocs-search-query">
+                    </div>
+                </form>
+                <div id="mkdocs-search-results"></div>
+            </div>
+            <div class="modal-footer">
+            </div>
+        </div>
+    </div>
+</div>
+
+    </body>
+</html>

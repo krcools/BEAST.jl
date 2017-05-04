@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        
+        
+        
+        <link rel="shortcut icon" href="../img/favicon.ico">
+        <title>Tutorial - BEAST.jl</title>
+        <link href="../css/bootstrap-custom.min.css" rel="stylesheet">
+        <link href="../css/font-awesome-4.5.0.css" rel="stylesheet">
+        <link href="../css/base.css" rel="stylesheet">
+        <link rel="stylesheet" href="../css/highlight.css">
+        <link href="../assets/Documenter.css" rel="stylesheet">
+        <!-- HTML5 shim and Respond.js IE8 support of HTML5 elements and media queries -->
+        <!--[if lt IE 9]>
+            <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+            <script src="https://oss.maxcdn.com/libs/respond.js/1.3.0/respond.min.js"></script>
+        <![endif]-->
+	
+	<script src="../js/jquery-1.10.2.min.js"></script>
+        <script src="../js/bootstrap-3.0.3.min.js"></script>
+        <script src="../js/highlight.pack.js"></script> 
+    </head>
+
+    <body>
+
+        <div class="navbar navbar-default navbar-fixed-top" role="navigation">
+    <div class="container">
+
+        <!-- Collapsed navigation -->
+        <div class="navbar-header">
+            <!-- Expander button -->
+            <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="..">BEAST.jl</a>
+        </div>
+
+        <!-- Expanded navigation -->
+        <div class="navbar-collapse collapse">
+                <!-- Main navigation -->
+                <ul class="nav navbar-nav">
+                    <li >
+                        <a href="..">Home</a>
+                    </li>
+                    <li >
+                        <a href="../assemble/">Assemble</a>
+                    </li>
+                    <li >
+                        <a href="../tdefie/">Tdefie</a>
+                    </li>
+                    <li class="active">
+                        <a href="./">Tutorial</a>
+                    </li>
+                </ul>
+
+            <ul class="nav navbar-nav navbar-right">
+                <li>
+                    <a href="#" data-toggle="modal" data-target="#mkdocs_search_modal">
+                        <i class="fa fa-search"></i> Search
+                    </a>
+                </li>
+                    <li >
+                        <a rel="next" href="../tdefie/">
+                            <i class="fa fa-arrow-left"></i> Previous
+                        </a>
+                    </li>
+                    <li class="disabled">
+                        <a rel="prev" >
+                            Next <i class="fa fa-arrow-right"></i>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="https://github.com/krcools/BEAST.jl">
+                                <i class="fa fa-github"></i>GitHub
+                        </a>
+                    </li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+        <div class="container">
+                <div class="col-md-3"><div class="bs-sidebar hidden-print affix well" role="complementary">
+    <ul class="nav bs-sidenav">
+        <li class="main active"><a href="#tutorial">Tutorial</a></li>
+            <li><a href="#building-the-geometry">Building the geometry</a></li>
+    </ul>
+</div></div>
+                <div class="col-md-9" role="main">
+
+<p><a id='Tutorial-1'></a></p>
+<h1 id="tutorial">Tutorial</h1>
+<p>
+<script type="math/tex; mode=display">
+\newcommand{\vt}[1]{\boldsymbol{#1}}
+\newcommand{\uv}[1]{\hat{\boldsymbol{#1}}}
+\newcommand{\arr}[1]{\mathsf{#1}}
+\newcommand{\mat}[1]{\boldsymbol{\mathsf{#1}}}
+</script>
+</p>
+<p>In this tutorial we will go through the steps required for the formulation and the solution of the scattering of a time harmonic electromagnetic wave by a rectangular plate by means of the solution of the electric field integral equation.</p>
+<p><a id='Building-the-geometry-1'></a></p>
+<h2 id="building-the-geometry">Building the geometry</h2>
+<p>The sibling package <code>CompScienceMeshes</code> provides data structures and algorithms for working with simplical meshes in computational science. We will use it to create the geometry:</p>
+<p>```@example 1
+using CompScienceMeshes
+using BEAST
+include(Pkg.dir("BEAST","src","lusolver.jl"))
+h = 0.2
+Γ = meshrectangle(1.0, 1.0, h)
+@show numvertices(Γ)
+@show numcells(Γ)
+nothing # hide</p>
+<pre><code>
+
+Next, we create the finite element space of Raviart-Thomas aka Rao-Wilton-Glisson functions subordinate to the triangulation `Γ` constructed above:
+
+
+```@example 1
+X = raviartthomas(Γ)
+nothing # hide
+</code></pre>
+
+<p>The scattering problem is defined by specifying the single layer operator and the functional acting as excitation. Here, the plate is illuminated by a plane wave. The actual excitation is the tangential trace of this electric field. This trace be constructed easily by using the symbolic normal vector field <code>n</code> defined as part of the <code>BEAST</code> package.</p>
+<pre><code class="julia">direction = point(0,0,1)
+polarisation = point(1,0,0)
+wavenumber = 1.0
+E = PlaneWaveMW(direction, polarisation, wavenumber)
+e = (n × E) × n
+</code></pre>
+
+<p>The single layer potential is also predefined by the <code>BEAST</code> package:</p>
+<pre><code class="julia">t = MWSingleLayer3D(wavenumber*im)
+</code></pre>
+
+<pre><code>BEAST.MWSingleLayer3D{Complex{Float64},Complex{Float64}}(0.0 + 1.0im, -0.0 - 1.0im, -0.0 + 1.0im)
+</code></pre>
+
+<p>It corresponds to the bilinear form</p>
+<p>
+<script type="math/tex; mode=display">
+t(\vt{k},\vt{j}) = \frac{1}{ik} \int_{\Gamma} \int_{\Gamma'} \nabla \cdot \vt{k}(x) \nabla \cdot \vt{j}(y) \frac{e^{-ik|x-y|}}{4\pi|x-y|} dy dx - ik \int_{\Gamma} \int_{\Gamma'} \vt{k}(x) \cdot \vt{j}(y) \frac{e^{-ik|x-y|}}{4\pi|x-y|} dy dx
+</script>
+</p>
+<p>Using the <code>LinearForms</code> package, which implements a simple form compiler for Julia (<code>@varform</code>), the EFIE can be defined and discretised by</p>
+<p>```@example 1
+using LinearForms
+j, = hilbertspace(:j)
+k, = hilbertspace(:k)
+efie = @varform t[k,j] == e[k]
+EFIE = @discretise efie k∈X j∈X
+nothing #hide</p>
+<pre><code>
+
+Solving and computing the values of the induced current in the centers of the triangles of the mesh is now straightforward:
+
+
+```@example 1
+u = solve(EFIE)
+fcr, geo = facecurrents(u,X)
+nothing #hide
+</code></pre>
+
+<p>For now the package still relies upon Matlab for some of its visualisation. This dependency will be removed in the near future:</p>
+<p><code>@example 1
+include(Pkg.dir("CompScienceMeshes","examples","matlab_patches.jl"))
+A = [real(norm(f)) for f in fcr]
+mat"clf"
+patch(geo,A)
+mat"cd($(pwd()))"
+mat"print('facecurrents.png', '-dpng')"</code></p>
+<p><img alt="" src="../facecurrents.png" /></p></div>
+        </div>
+
+        <footer class="col-md-12">
+            <hr>
+            <p>Documentation built with <a href="http://www.mkdocs.org/">MkDocs</a>.</p>
+        </footer>
+        <script>var base_url = '..';</script>
+        <script data-main="../mkdocs/js/search.js" src="../mkdocs/js/require.js"></script>
+        <script src="../js/base.js"></script>
+        <script src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS_HTML"></script>
+        <script src="../assets/mathjaxhelper.js"></script><div class="modal" id="mkdocs_search_modal" tabindex="-1" role="dialog" aria-labelledby="Search Modal" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+                <h4 class="modal-title" id="exampleModalLabel">Search</h4>
+            </div>
+            <div class="modal-body">
+                <p>
+                    From here you can search these documents. Enter
+                    your search terms below.
+                </p>
+                <form role="form">
+                    <div class="form-group">
+                        <input type="text" class="form-control" placeholder="Search..." id="mkdocs-search-query">
+                    </div>
+                </form>
+                <div id="mkdocs-search-results"></div>
+            </div>
+            <div class="modal-footer">
+            </div>
+        </div>
+    </div>
+</div>
+
+    </body>
+</html>
