@@ -16,6 +16,7 @@ The sibling package `CompScienceMeshes` provides data structures and algorithms 
 ```@example 1
 using CompScienceMeshes
 using BEAST
+include(Pkg.dir("BEAST","src","lusolver.jl"))
 h = 0.2
 Γ = meshrectangle(1.0, 1.0, h)
 @show numvertices(Γ)
