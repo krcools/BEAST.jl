@@ -5,7 +5,7 @@ include(Pkg.dir("BEAST","src","lusolver.jl"))
 o, x, y, z = euclidianbasis(3)
 n = BEAST.n
 
-Γ = meshsphere(1.0, 0.2)
+Γ = readmesh(joinpath(dirname(@__FILE__),"sphere2.in"))
 RT = raviartthomas(Γ)
 
 κ = 1.0
