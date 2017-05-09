@@ -29,13 +29,13 @@ idcsΓ = Γ.faces[1]
 vertsΓ = vertices(Γ, idcsΓ)
 @test size(vertsΓ) == (2,)
 
-sum = weld(meshZ,mesh0)
-@test numvertices(sum) == 18
+sum_mesh = weld(meshZ,mesh0)
+@test numvertices(sum_mesh) == 18
 
-edges = skeleton(sum,1)
+edges = skeleton(sum_mesh,1)
 @test numcells(edges) == 32
 
-cps = cellpairs(sum, edges)
+cps = cellpairs(sum_mesh, edges)
 @test size(cps) == (2,32)
 
 # select only outer edges
@@ -47,11 +47,11 @@ edges = skeleton(pred, meshZ, 1) #Take only exterio
 @test numcells(edges) == 2
 @test size(edges.faces[1]) == (2,)
 
-cps = cellpairs(sum, edges)
+cps = cellpairs(sum_mesh, edges)
 @test size(cps) == (2,2)
 
 # test portcells function
-pc = portcells(sum, Γ)
+pc = portcells(sum_mesh, Γ)
 @test size(pc) == (2,2)
 
 # #test rt_vedge function
@@ -63,7 +63,7 @@ pc = portcells(sum, Γ)
 # @test size(ce1) == (2,)
 
 # build the Raviart-Thomas elements
-rt = rt_ports(sum, Γ, γ)
+rt = rt_ports(sum_mesh, Γ, γ)
 @test numfunctions(rt) == 19
 
 #
