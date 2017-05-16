@@ -1,5 +1,6 @@
 export facecurrents
 export potential
+export get_scatter_parameters
 
 """
 	fcr, geo = facecurrents(coeffs, basis)
@@ -108,6 +109,11 @@ function potential!(store, op, points, basis)
 	zlocal = Array{T}(numfunctions(rs))
 	qdata = quaddata(op,rs,els)
 
+	print("Computing nearfield.")
+	print("dots out of 10: ")
+
+	todo, done, pctg = length(els), 0, 0
+
 	for (p,y) in enumerate(points)
 		for (q,el) in enumerate(els)
 
@@ -120,6 +126,13 @@ function potential!(store, op, points, basis)
                 for (n,b) in ad[q,r]
 					store(z*b,p,n)
 				end
+			end
+
+			done += 1
+			new_pctg = round(Int, done / todo * 100)
+			if new_pctg > pctg + 9
+					print(".")
+					pctg = new_pctg
 			end
 		end
 	end
