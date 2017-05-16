@@ -112,6 +112,8 @@ function potential!(store, op, points, basis)
 	print("Computing nearfield.")
 	print("dots out of 10: ")
 
+	todo, done, pctg = length(els), 0, 0
+
 	for (p,y) in enumerate(points)
 		for (q,el) in enumerate(els)
 
