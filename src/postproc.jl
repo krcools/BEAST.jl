@@ -157,27 +157,3 @@ function farfieldlocal!(zlocal,op,refspace,y,el,qr)
     end
 
 end
-
-
-"""
-	get_scatter_parameters(field_incident_input,field_incident_output, nearfield_input, nearfield_output, grid_input, grid_output, RT)
-
-Computes the S11 (reflection) and S21 (transmission) scattering parameters of a two port network
-"""
-function get_scatter_parameters(field_incident_input,field_incident_output, nearfield_input, nearfield_output, grid_input, grid_output, RT)
-
-		S11_num_integrand = (nearfield_input - field_incident_input) * conj(nearfield_input)
-		S11_num = potential(MWSingleLayerField3D(κ), grid_input, S11_num_integrand, RT)
-		S11_denom_integrand = nearfield_input * conj(nearfield_input)
-		S11_denom = potential(MWSingleLayerField3D(κ), grid_input, S11_denom_integrand, RT)
-		S11 = S11_num / S11_denom
-
-		S21_num_integrand = field_incident_output * conj(nearfield_output)
-		S21_num = potential(MWSingleLayerField3D(κ), grid_output, S21_num_integrand, RT)
-		S21_denom_integrand = nearfield_output * conj(nearfield_output)
-		S21_denom = potential(MWSingleLayerField3D(κ), grid_output, S21_denom_integrand, RT)
-		S21 = S21_num / S21_denom
-
-		return S11, S21
-
-end
