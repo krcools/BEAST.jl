@@ -109,10 +109,10 @@ function potential!(store, op, points, basis)
 	zlocal = Array{T}(numfunctions(rs))
 	qdata = quaddata(op,rs,els)
 
-	print("Computing nearfield.")
-	print("dots out of 10: ")
+	println("Computing nearfield.")
+	println("dots out of 10: ")
 
-	todo, done, pctg = length(els), 0, 0
+	todo, done, pctg = length(points), 0, 0
 
 	for (p,y) in enumerate(points)
 		for (q,el) in enumerate(els)
@@ -127,15 +127,19 @@ function potential!(store, op, points, basis)
 					store(z*b,p,n)
 				end
 			end
+		end
 
-			done += 1
-			new_pctg = round(Int, done / todo * 100)
-			if new_pctg > pctg + 9
-					print(".")
-					pctg = new_pctg
-			end
+		done += 1
+		new_pctg = round(Int, done / todo * 100)
+		if new_pctg > pctg + 9
+				#println(todo," ",done," ",new_pctg)
+				println(".")
+				pctg = new_pctg
 		end
 	end
+
+	println("")
+
 end
 
 function farfieldlocal!(zlocal,op,refspace,y,el,qr)
@@ -151,5 +155,29 @@ function farfieldlocal!(zlocal,op,refspace,y,el,qr)
         end
 
     end
+
+end
+
+
+"""
+	get_scatter_parameters(field_incident_input,field_incident_output, nearfield_input, nearfield_output, grid_input, grid_output, RT)
+
+Computes the S11 (reflection) and S21 (transmission) scattering parameters of a two port network
+"""
+function get_scatter_parameters(field_incident_input,field_incident_output, nearfield_input, nearfield_output, grid_input, grid_output, RT)
+
+		S11_num_integrand = (nearfield_input - field_incident_input) * conj(nearfield_input)
+		S11_num = potential(MWSingleLayerField3D(κ), grid_input, S11_num_integrand, RT)
+		S11_denom_integrand = nearfield_input * conj(nearfield_input)
+		S11_denom = potential(MWSingleLayerField3D(κ), grid_input, S11_denom_integrand, RT)
+		S11 = S11_num / S11_denom
+
+		S21_num_integrand = field_incident_output * conj(nearfield_output)
+		S21_num = potential(MWSingleLayerField3D(κ), grid_output, S21_num_integrand, RT)
+		S21_denom_integrand = nearfield_output * conj(nearfield_output)
+		S21_denom = potential(MWSingleLayerField3D(κ), grid_output, S21_denom_integrand, RT)
+		S21 = S21_num / S21_denom
+
+		return S11, S21
 
 end
