@@ -106,23 +106,49 @@
 <p><a id='Building-the-geometry-1'></a></p>
 <h2 id="building-the-geometry">Building the geometry</h2>
 <p>The sibling package <code>CompScienceMeshes</code> provides data structures and algorithms for working with simplical meshes in computational science. We will use it to create the geometry:</p>
-<p>```@example 1
-using CompScienceMeshes
+<pre><code class="julia">using CompScienceMeshes
 using BEAST
-include(Pkg.dir("BEAST","src","lusolver.jl"))
+include(Pkg.dir(&quot;BEAST&quot;,&quot;src&quot;,&quot;lusolver.jl&quot;))
 h = 0.2
 Γ = meshrectangle(1.0, 1.0, h)
 @show numvertices(Γ)
 @show numcells(Γ)
-nothing # hide</p>
+</code></pre>
+
 <pre><code>
+WARNING: deprecated syntax &quot;type&quot; at /home/travis/.julia/v0.7/BEAST/src/lusolver.jl:8.
+Use &quot;mutable struct&quot; instead.
 
-Next, we create the finite element space of Raviart-Thomas aka Rao-Wilton-Glisson functions subordinate to the triangulation `Γ` constructed above:
+WARNING: deprecated syntax &quot;type&quot; at /home/travis/.julia/v0.7/LinearForms/src/LinearForms.jl:12.
+Use &quot;mutable struct&quot; instead.
 
+WARNING: deprecated syntax &quot;type&quot; at /home/travis/.julia/v0.7/LinearForms/src/LinearForms.jl:18.
+Use &quot;mutable struct&quot; instead.
 
-```@example 1
-X = raviartthomas(Γ)
-nothing # hide
+WARNING: deprecated syntax &quot;type&quot; at /home/travis/.julia/v0.7/LinearForms/src/LinearForms.jl:23.
+Use &quot;mutable struct&quot; instead.
+
+WARNING: deprecated syntax &quot;type&quot; at /home/travis/.julia/v0.7/LinearForms/src/LinearForms.jl:30.
+Use &quot;mutable struct&quot; instead.
+
+WARNING: deprecated syntax &quot;type&quot; at /home/travis/.julia/v0.7/LinearForms/src/LinearForms.jl:36.
+Use &quot;mutable struct&quot; instead.
+
+WARNING: deprecated syntax &quot;type&quot; at /home/travis/.julia/v0.7/LinearForms/src/LinearForms.jl:45.
+Use &quot;mutable struct&quot; instead.
+
+WARNING: deprecated syntax &quot;type&quot; at /home/travis/.julia/v0.7/LinearForms/src/metatools.jl:10.
+Use &quot;mutable struct&quot; instead.
+
+WARNING: deprecated syntax &quot;type&quot; at /home/travis/.julia/v0.7/LinearForms/src/metatools.jl:24.
+Use &quot;mutable struct&quot; instead.
+WARNING: could not import Base.call into LinearForms
+numvertices(Γ) = 36
+numcells(Γ) = 50
+</code></pre>
+
+<p>Next, we create the finite element space of Raviart-Thomas aka Rao-Wilton-Glisson functions subordinate to the triangulation <code>Γ</code> constructed above:</p>
+<pre><code class="julia">X = raviartthomas(Γ)
 </code></pre>
 
 <p>The scattering problem is defined by specifying the single layer operator and the functional acting as excitation. Here, the plate is illuminated by a plane wave. The actual excitation is the tangential trace of this electric field. This trace be constructed easily by using the symbolic normal vector field <code>n</code> defined as part of the <code>BEAST</code> package.</p>
@@ -144,28 +170,51 @@ t(\vt{k},\vt{j}) = \frac{1}{ik} \int_{\Gamma} \int_{\Gamma'} \nabla \cdot \vt{k}
 </script>
 </p>
 <p>Using the <code>LinearForms</code> package, which implements a simple form compiler for Julia (<code>@varform</code>), the EFIE can be defined and discretised by</p>
-<p>```@example 1
-using LinearForms
+<pre><code class="julia">using LinearForms
 j, = hilbertspace(:j)
 k, = hilbertspace(:k)
 efie = @varform t[k,j] == e[k]
 EFIE = @discretise efie k∈X j∈X
-nothing # hide</p>
-<pre><code>
+</code></pre>
 
-Solving and computing the values of the induced current in the centers of the triangles of the mesh is now straightforward:
-
-
-```@example 1
-u = solve(EFIE)
+<p>Solving and computing the values of the induced current in the centers of the triangles of the mesh is now straightforward:</p>
+<pre><code class="julia">u = solve(EFIE)
 fcr, geo = facecurrents(u,X)
-nothing # hide
 </code></pre>
 
-<p>For now the package still relies upon Matlab for some of its visualisation. This dependency will be removed in the near future:</p>
-<pre><code class="julia">A = real.(norm.(fcr))
+<pre><code>WARNING: filter(flt, itr) is deprecated, use Iterators.filter(flt, itr) instead.
+Stacktrace:
+ [1] depwarn(::String, ::Symbol) at ./deprecated.jl:64
+ [2] filter(::Function, ::Base.Iterators.Zip2{BitArray{1},Array{SVector{3,Int64},1}}) at ./deprecated.jl:51
+ [3] assemblydata(::BEAST.RTBasis{Float64,CompScienceMeshes.Mesh{3,3,Float64}}) at /home/travis/.julia/v0.7/BEAST/src/bases/basis.jl:166
+ [4] assemble!(::BEAST.TangTraceMW{BEAST.PlaneWaveMW{Float64,SVector{3,Float64}}}, ::BEAST.RTBasis{Float64,CompScienceMeshes.Mesh{3,3,Float64}}, ::BEAST.#store#51{Array{Complex{Float64},1}}) at /home/travis/.julia/v0.7/BEAST/src/excitation.jl:33
+ [5] assemble(::BEAST.TangTraceMW{BEAST.PlaneWaveMW{Float64,SVector{3,Float64}}}, ::BEAST.RTBasis{Float64,CompScienceMeshes.Mesh{3,3,Float64}}) at /home/travis/.julia/v0.7/BEAST/src/excitation.jl:18
+ [6] assemble(::LinearForms.LinForm, ::Dict{Any,Any}) at /home/travis/.julia/v0.7/BEAST/src/lusolver.jl:123
+ [7] solve(::ex-1.DiscreteEquation) at /home/travis/.julia/v0.7/BEAST/src/lusolver.jl:89
+ [8] eval(::Module, ::Any) at ./boot.jl:235
+ [9] #8 at /home/travis/.julia/v0.7/Documenter/src/Expanders.jl:459 [inlined]
+ [10] cd(::Documenter.Expanders.##8#10, ::String) at ./file.jl:70
+ [11] withoutput(::Documenter.Expanders.##7#9{Documenter.Documents.Page}) at /home/travis/.julia/v0.7/Documenter/src/Utilities/Utilities.jl:587
+ [12] runner(::Type{Documenter.Expanders.ExampleBlocks}, ::Base.Markdown.Code, ::Documenter.Documents.Page, ::Documenter.Documents.Document) at /home/travis/.julia/v0.7/Documenter/src/Expanders.jl:457
+ [13] dispatch(::Type{Documenter.Expanders.ExpanderPipeline}, ::Base.Markdown.Code, ::Documenter.Documents.Page, ::Documenter.Documents.Document) at /home/travis/.julia/v0.7/Documenter/src/Selectors.jl:164
+ [14] expand(::Documenter.Documents.Document) at /home/travis/.julia/v0.7/Documenter/src/Expanders.jl:29
+ [15] dispatch(::Type{Documenter.Builder.DocumentPipeline}, ::Documenter.Documents.Document) at /home/travis/.julia/v0.7/Documenter/src/Selectors.jl:164
+ [16] cd(::Documenter.##2#3{Documenter.Documents.Document}, ::String) at ./file.jl:70
+ [17] #makedocs#1(::Bool, ::Array{Any,1}, ::Function) at /home/travis/.julia/v0.7/Documenter/src/Documenter.jl:198
+ [18] (::Documenter.#kw##makedocs)(::Array{Any,1}, ::Documenter.#makedocs) at ./&lt;missing&gt;:0
+ [19] include_from_node1(::String) at ./loading.jl:569
+ [20] include(::String) at ./sysimg.jl:14
+ [21] eval(::Module, ::Any) at ./boot.jl:235
+ [22] process_options(::Base.JLOptions) at ./client.jl:288
+ [23] _start() at ./client.jl:373
+while loading /home/travis/.julia/v0.7/BEAST/docs/make.jl, in expression starting on line 3
+Right hand side assembled.
+Work distributions: [0, 65]
+dots out of 10: ..........
+System matrix assembled.
 </code></pre>
 
+<p>The resulting current distribution can be visualised by e.g. Matlab, Paraview, Plotly,...</p>
 <p><img alt="" src="../assets/facecurrents.png" /></p></div>
         </div>
 
