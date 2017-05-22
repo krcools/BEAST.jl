@@ -60,6 +60,7 @@ elements
 ```@docs
 numfunctions
 coordtype
+scalartype
 assemblydata
 geometry
 refspace

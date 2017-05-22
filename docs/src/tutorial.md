@@ -73,10 +73,6 @@ fcr, geo = facecurrents(u,X)
 nothing # hide
 ```
 
-For now the package still relies upon Matlab for some of its visualisation. This dependency will be removed in the near future:
-
-```julia
-A = real.(norm.(fcr))
-```
+The resulting current distribution can be visualised by e.g. Matlab, Paraview, Plotly,...
 
 ![](assets/facecurrents.png)
