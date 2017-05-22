@@ -137,9 +137,6 @@ e = (n × E) × n
 <pre><code class="julia">t = MWSingleLayer3D(wavenumber*im)
 </code></pre>
 
-<pre><code>BEAST.MWSingleLayer3D{Complex{Float64},Complex{Float64}}(0.0 + 1.0im, -0.0 - 1.0im, -0.0 + 1.0im)
-</code></pre>
-
 <p>It corresponds to the bilinear form</p>
 <p>
 <script type="math/tex; mode=display">
@@ -153,7 +150,7 @@ j, = hilbertspace(:j)
 k, = hilbertspace(:k)
 efie = @varform t[k,j] == e[k]
 EFIE = @discretise efie k∈X j∈X
-nothing #hide</p>
+nothing # hide</p>
 <pre><code>
 
 Solving and computing the values of the induced current in the centers of the triangles of the mesh is now straightforward:
@@ -162,18 +159,14 @@ Solving and computing the values of the induced current in the centers of the tr
 ```@example 1
 u = solve(EFIE)
 fcr, geo = facecurrents(u,X)
-nothing #hide
+nothing # hide
 </code></pre>
 
 <p>For now the package still relies upon Matlab for some of its visualisation. This dependency will be removed in the near future:</p>
-<p><code>@example 1
-include(Pkg.dir("CompScienceMeshes","examples","matlab_patches.jl"))
-A = [real(norm(f)) for f in fcr]
-mat"clf"
-patch(geo,A)
-mat"cd($(pwd()))"
-mat"print('facecurrents.png', '-dpng')"</code></p>
-<p><img alt="" src="../facecurrents.png" /></p></div>
+<pre><code class="julia">A = real.(norm.(fcr))
+</code></pre>
+
+<p><img alt="" src="../assets/facecurrents.png" /></p></div>
         </div>
 
         <footer class="col-md-12">
