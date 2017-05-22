@@ -21,11 +21,16 @@ include("bases/basis.jl")
 include("bases/trace.jl")
 include("bases/restrict.jl")
 include("bases/divergence.jl")
+
 include("bases/laglocal.jl")
-include("bases/lagrange.jl")
 include("bases/rtlocal.jl")
+include("bases/ndlocal.jl")
+
+include("bases/lagrange.jl")
 include("bases/rtspace.jl")
 include("bases/bcspace.jl")
+include("bases/ndspace.jl")
+
 include("bases/timebasis.jl")
 include("bases/tensorbasis.jl")
 

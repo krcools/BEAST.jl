@@ -46,6 +46,7 @@ The single layer potential is also predefined by the `BEAST` package:
 
 ```@example 1
 t = MWSingleLayer3D(wavenumber*im)
+nothing # hide
 ```
 
 It corresponds to the bilinear form
@@ -62,25 +63,20 @@ j, = hilbertspace(:j)
 k, = hilbertspace(:k)
 efie = @varform t[k,j] == e[k]
 EFIE = @discretise efie k∈X j∈X
-nothing #hide
+nothing # hide
 ```
 Solving and computing the values of the induced current in the centers of the triangles of the mesh is now straightforward:
 
 ```@example 1
 u = solve(EFIE)
 fcr, geo = facecurrents(u,X)
-nothing #hide
+nothing # hide
 ```
 
 For now the package still relies upon Matlab for some of its visualisation. This dependency will be removed in the near future:
 
-```@example 1
-include(Pkg.dir("CompScienceMeshes","examples","matlab_patches.jl"))
-A = [real(norm(f)) for f in fcr]
-mat"clf"
-patch(geo,A)
-mat"cd($(pwd()))"
-mat"print('facecurrents.png', '-dpng')"
+```julia
+A = real.(norm.(fcr))
 ```
 
-![](facecurrents.png)
+![](assets/facecurrents.png)

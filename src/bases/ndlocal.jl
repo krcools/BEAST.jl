@@ -1,9 +1,9 @@
-type NDLocalSpace <: LocalSpace{T,3} end
+type NDRefSpace{T} <: RefSpace{T,3} end
 
-function (ϕ::NDLocalSpace)(nbd)
+function (ϕ::NDRefSpace)(nbd)
 
     u, v = parametric(nbd)
-    n = normap(nbd)
+    n = normal(nbd)
     j = jacobian(nbd)
 
     tu = tangents(nbd,1)
