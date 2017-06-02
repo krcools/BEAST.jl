@@ -18,7 +18,7 @@ y = zeros(T,M)
 end
 
 """
-    mot(Z0,Z,B,I)
+    marchonintime(Z0,Z,B,I)
 
 Solve by marching-on-in-time the causal convolution problem defined by `(W0,Z,B)`
 up to timestep `I`. Here, `Z` is an array of order 3 that contains a discretisation
