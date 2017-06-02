@@ -63,10 +63,10 @@ pc = portcells(sum_mesh, Γ)
 # @test size(ce1) == (2,)
 
 # build the Raviart-Thomas elements
-rt = rt_ports(sum, [Γ, γ])
+rt = rt_ports(sum_mesh, [Γ, γ])
 @test numfunctions(rt) == 19
 
-rt = rt_ports(sum, [Γ, γ], [Γ, γ]) #Don't do this normally.
+rt = rt_ports(sum_mesh, [Γ, γ], [Γ, γ]) #Don't do this normally.
 @test numfunctions(rt) == 22      #Only used here to check numfunctions
 
 #
