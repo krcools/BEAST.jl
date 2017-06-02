@@ -7,10 +7,6 @@ abstract RefSpace{T,D}
 abstract AbstractSpace
 abstract Space{T} <: AbstractSpace
 
-"""
-The type used to represent numbers in the field over which the range of the space is defined.
-"""
-function scalartype end
 
 scalartype{T}(s::RefSpace{T}) = T
 scalartype{T}(s::Space{T}) = T

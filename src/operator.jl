@@ -69,7 +69,7 @@ function assemble(operator::AbstractOperator, test_functions, trial_functions)
     #store(v, m, n) = (Z[m,n] += v)
     Z, store = allocatestorage(operator, test_functions, trial_functions)
     assemble!(operator, test_functions, trial_functions, store)
-    Z
+    sdata(Z)
 end
 
 function allocatestorage(operator::AbstractOperator, test_functions, trial_functions)
