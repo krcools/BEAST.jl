@@ -1,5 +1,5 @@
 export raviartthomas, raowiltonglisson
-export portcells, rt_ports
+export portcells, rt_ports, getindex_rtg
 
 type RTBasis{T,M} <: Space{T}
   geo::M
@@ -168,24 +168,51 @@ function rt_vedge(cps::Array{Int,2}, weight)
 end
 
 """
-    rt_ports(Γ::Mesh, γ₁::Mesh, γ₂::Mesh)
-Construct the RT space relative to boundary γ₁ and γ₂,
-ensuring current leaving mesh Γ through γ₁ is accounted for
-in γ₂ and vice versa
+    rt_ports(Γ::Mesh, γ::Mesh ...)
+Constructs the RT space on `Γ`, relative to boundary pairs in `γ`. `γ` expects
+any number of pairs-of-ports as arguments and accepts tuples, arrays,
+vectors etc. e.g `rt_ports(Γ, a, b ...);` where a = [γ₁ γ₂], b = (γ₃,γ₄) etc.
+`rt_ports` with no pair of ports supplied i.e `rt_ports(Γ)` reduces to the
+`raviartthomas(Γ)` function. The RT space ensures current continuity in each
+pair of ports. i.e. current leaving mesh Γ through γ₁ is accounted for in γ₂.
+
+Returns the RT basis object.
 """
-function rt_ports(Γ, γ₁, γ₂)
+#TODO: can include an extra argument for polarity applied to ports
+function rt_ports(Γ, γ...)
   internal = raviartthomas(Γ)
+  fns = internal.fns
 
-  port1 = portcells(Γ, γ₁); port2 = portcells(Γ, γ₂)
-  ce1 = rt_cedge(port1, 1.0); ce2 = rt_cedge(port2, -1.0)
-  ffs = Vector{Shape{Float64}}(length(ce1) + length(ce2))
-  ffs = [ce1;ce2]
+  for i = 1:length(γ) #loop through pairs of ports
+    port1 = portcells(Γ, γ[i][1]); port2 = portcells(Γ, γ[i][2])
+    ce1 = rt_cedge(port1, 1.0); ce2 = rt_cedge(port2, -1.0)
+    ffs = Vector{Shape{Float64}}(length(ce1) + length(ce2))
+    ffs = [ce1;ce2]
 
-  ve1 = rt_vedge(port1, 1.0); ve2 = rt_vedge(port2, -1.0)
-  fns = [[ffs];internal.fns;ve1;ve2]
+    ve1 = rt_vedge(port1, 1.0); ve2 = rt_vedge(port2, -1.0)
+    fns = [fns;[ffs];ve1;ve2]
+  end
+
   RTBasis(Γ, fns)
 end
 
+"""
+    getindex_rtg(RT::RTBasis)
+Returns the indices of the global half RWGs present in `RT`.
+`RT` is typically gotten from `rt_ports`
+"""
+#TODO: use more reasonable condition to extract indices
+# or have rt_ports return indices with RTBasis
+function getindex_rtg(RT::RTBasis)
+idx=[]
+A = RT.fns
+  for i in 1:length(A)
+    if size(A[i])[1] > 2
+      push!(idx,i)
+    end
+  end
+  idx
+end
 
 divergence(sp::RTBasis, geo, fns) = LagrangeBasis{0,-1,1}(geo, fns)
 ntrace(X::RTBasis, geo, fns) = LagrangeBasis{0,-1,1}(geo, fns)
