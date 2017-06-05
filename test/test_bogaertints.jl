@@ -1,4 +1,4 @@
-using FactCheck
+using Base.Test
 using CompScienceMeshes
 using StaticArrays
 
@@ -82,11 +82,9 @@ SE_strategy = BE.WiltonSEStrategy(
 )
 BEAST.momintegrals!(op, x, x, t, s, z6, SE_strategy)
 
-facts("Test IB Self/Edge/Point-patch strategy...") do
-    @fact norm(z1-z2)/norm(z1) --> less_than(1.0e-6)
-    @fact norm(z3-z4)/norm(z3) --> less_than(3.0e-6)
-    @fact norm(z5-z6)/norm(z5) --> less_than(1.0e-8)
-end
+@test norm(z1-z2)/norm(z1) < 1.0e-6
+@test norm(z3-z4)/norm(z3) < 3.0e-6
+@test norm(z5-z6)/norm(z5) < 1.0e-8
 
 @show norm(z1-z2)/norm(z1)
 @show norm(z3-z4)/norm(z3)
@@ -133,9 +131,7 @@ BEAST.momintegrals!(op, x, x, t1, t2, z1, s1)
 BEAST.momintegrals!(op, x, x, t1, t2, z2, s2)
 BEAST.momintegrals!(op, x, x, t1, t2, z3, s3)
 
-facts("Test IB Edge-patch for MFIE interactions...") do
-    @fact norm(z2-z1)/norm(z2) --> less_than(1.0e-3)
-end
+@test norm(z2-z1)/norm(z2) < 1.0e-3
 
 s1 = BEAST.BogaertPointPatchStrategy(9,10)
 tqd = BE.quadpoints(x, [t2], (12,13))
@@ -156,9 +152,7 @@ fill!(z1, 0); BEAST.momintegrals!(op, x, x, t2, t3, z1, s1)
 fill!(z2, 0); BEAST.momintegrals!(op, x, x, t2, t3, z2, s2)
 fill!(z3, 0); BEAST.momintegrals!(op, x, x, t2, t3, z3, s3)
 
-facts("Test IB Point-patch for MFIE interactions...") do
-    @fact norm(z2-z1)/norm(z2) --> less_than(2.0e-6)
-end
+@test norm(z2-z1)/norm(z2) < 2.0e-6
 
 s1 = BEAST.BogaertSelfPatchStrategy(20)
 tqd = BE.quadpoints(x, [t1], (12,13))
@@ -214,6 +208,4 @@ for i in 1:length(w)
     end
 end
 
-facts("Test IB Point-patch primitve integrals") do
-        @fact maximum([real(norm(x-y)) for (x,y) in zip(I,J)]) --> less_than(2.0e-6)
-end
+@test maximum([real(norm(x-y)) for (x,y) in zip(I,J)]) < 2.0e-6
