@@ -3,7 +3,8 @@ using BEAST
 
 o, x, y, z = euclidianbasis(3)
 
-D, Δx = 1.0, 0.25
+#D, Δx = 1.0, 0.25
+D, Δx = 1.0, 0.35
 Γ = meshsphere(D, Δx)
 X = raviartthomas(Γ)
 
@@ -39,8 +40,8 @@ W0 = inv(Z0)
 tefie = 0.0 : Δt : (Nt-1)*Δt
 xefie = marchonintime(W0,Z,-B,Nt)
 
-using Plots
-plotlyjs()
+using PyPlot
+#plotlyjs()
 plot(tefie, xefie[1,:])
 
 Xefie, Δω, ω0 = fouriertransform(xefie, Δt, 0.0, 2)
@@ -52,7 +53,7 @@ ue = Xefie[:,i1]
 ue /= fgaussian(ω1)
 fcre, geo = facecurrents(ue, X)
 
-include(Pkg.dir("CompScienceMeshes","examples","matlab_patches.jl"))
+#include(Pkg.dir("CompScienceMeshes","examples","matlab_patches.jl"))
 #A = [real(norm(f)) for f in fcre]
-p = patch(geo, real.(norm.(fcre)))
+#p = patch(geo, real.(norm.(fcre)))
 #PlotlyJS.plot([p])

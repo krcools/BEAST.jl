@@ -128,6 +128,8 @@ element whilst iterating over `geometry(basis)`.
 """
 function assemblydata(basis::Space)
 
+    @assert numfunctions(basis) != 0
+
     T = coordtype(basis)
 
     geo = geometry(basis)
@@ -159,7 +161,16 @@ function assemblydata(basis::Space)
         end
     end
 
-    elements = map(x->chart(geo,x[2]), filter(x->x[1], zip(active, cells(geo))))
+    @assert num_active_cells != 0
+    E = typeof(chart(geo, first(cells(geo))))
+    elements = Vector{E}(num_active_cells)
+    j = 1
+    for (i,cell) in enumerate(cells(geo))
+        active[i] || continue
+        elements[j] = chart(geo, cell)
+        j += 1
+    end
+    #elements = map(x->chart(geo,x[2]), filter(x->x[1], zip(active, cells(geo))))
 
     max_celltonum = maximum(celltonum)
     fill!(celltonum, 0)

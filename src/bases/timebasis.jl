@@ -65,7 +65,7 @@ timestep(tbf::TimeBasisFunction) = tbf.timestep
 scalartype{T,N,D1,D}(tbf::TimeBasisFunction{T,N,D1,D}) = T
 
 numfunctions(t::TimeBasisFunction) = t.numfunctions
-refspace{T,N,D1,D}(t::TimeBasisFunction{T,N,D1,D}) = MonomialBasis{T,D,D+1}()
+refspace{T,N,D1,D}(t::TimeBasisFunction{T,N,D1,D}) = MonomialBasis{T,D,D1}()
 
 
 

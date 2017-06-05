@@ -33,6 +33,26 @@ quaddata(op::MWDoubleLayerTDIO, testrefs, trialrefs, timerefs,
 quadrule(op::MWDoubleLayerTDIO, testrefs, trialrefs, timerefs,
         p, testel, q, trialel, r, timeel, qd) = WiltonInts84Strat(qd[1,p])
 
+@inline function tmRoR(d, t, iG)
+    r = zero(t)
+    for q in 0:d
+        sgn = isodd(q) ? -1 : 1
+        r += binomial(d,q) * sgn * t^(d-q) * iG[q+2]
+    end
+    r
+end
+
+@inline function tmRoRf(d, t, iG, iGξy, bξ)
+    r = zero(t)
+    for q in 0:d
+        sgn = isodd(q) ? -1 : 1
+        i = q+2
+        iGf = iGξy[i] + bξ * iG[i]
+        r += binomial(d,q) * sgn * t^(d-q) * iGf
+    end
+    r
+end
+
 
 function innerintegrals!(zl, op::MWSingleLayerTDIO,
     p, tmax, # test_point, test_time
@@ -53,9 +73,11 @@ function innerintegrals!(zl, op::MWSingleLayerTDIO,
     R = ι[2]
 
     @assert r < R
+    @assert degree(W) <= 3
 
-    N = max(degree(W), 0)
-    ∫G, ∫Gξy, = WiltonInts84.wiltonints(σ[1],σ[2],σ[3],x,r,R,Val{N-1})
+    #N = max(degree(W), 0)
+    #∫G, ∫Gξy, = WiltonInts84.wiltonints(σ[1],σ[2],σ[3],x,r,R,Val{N-1})
+    ∫G, ∫Gξy, = WiltonInts84.wiltonints(σ[1],σ[2],σ[3],x,r,R,Val{2})
 
     αg = 1 / volume(τ) / 2
 	αf = 1 / volume(σ) / 2
@@ -65,26 +87,6 @@ function innerintegrals!(zl, op::MWSingleLayerTDIO,
 
 	ds = op.ws_diffs
 	dh = op.hs_diffs
-
-    @inline function tmRoR(d, t, iG)
-        r = zero(t)
-        for q in 0:d
-            sgn = isodd(q) ? -1 : 1
-            r += binomial(d,q) * sgn * t^(d-q) * iG[q+2]
-        end
-        r
-    end
-
-    @inline function tmRoRf(d, t, iG, iGξy, bξ)
-        r = zero(t)
-        for q in 0:d
-            sgn = isodd(q) ? -1 : 1
-            i = q+2
-            iGf = iGξy[i] + bξ * iG[i]
-            r += binomial(d,q) * sgn * t^(d-q) * iGf
-        end
-        r
-    end
 
     for i in 1 : numfunctions(U)
         a = τ[i]
@@ -99,8 +101,8 @@ function innerintegrals!(zl, op::MWSingleLayerTDIO,
 				# hyper singular contribution
 				if d >= dh
 					q = one(T)
-					for p in 0 : dh-1
-						q *= (d-p)
+					for ν in 0 : dh-1
+						q *= (d-ν)
 					end
                     @assert dh == 0
                     zl[i,j,k] += β * q * tmRoR(d-dh, tmax, ∫G)
@@ -109,8 +111,8 @@ function innerintegrals!(zl, op::MWSingleLayerTDIO,
 				# weakly singular contribution
 				if d >= ds
 					q = one(T)
-					for p in 0 : ds-1
-						q *= (d-p)
+					for ν in 0 : ds-1
+						q *= (d-ν)
 					end
 					#∫Gf = ∫Gξy[d+2-ds] + (ξ-b)*∫G[d+2-ds]
                     zl[i,j,k] += α * q * (g ⋅ tmRoRf(d-ds, tmax, ∫G, ∫Gξy, bξ))
@@ -144,7 +146,7 @@ function innerintegrals!(z, op::MWDoubleLayerTDIO,
 
     @assert r < R
 
-    N = max(degree(W), 0)
+    #N = max(degree(W), 0)
     ∫G, ∫Gξy, ∫∇G = WiltonInts84.wiltonints(σ[1],σ[2],σ[3],x,r,R,Val{N-1})
 
     αg = 1 / volume(τ) / 2

@@ -1,5 +1,6 @@
 using BEAST
 using CompScienceMeshes
+using PyPlot
 include(Pkg.dir("BEAST","src","lusolver.jl"))
 
 o, x, y, z = euclidianbasis(3)
@@ -22,19 +23,25 @@ efie = @discretise EFIE j∈RT k∈RT
 u = solve(efie)
 println("Solution computed")
 
-fcr, geo = facecurrents(u, RT)
-println("Face currents computed")
+ϕ, Θ = 0.0, linspace(0,π,100)
+pts = 2 * [point(cos(ϕ)*sin(Θ), sin(ϕ)*sin(Θ), cos(Θ)) for Θ in Θ]
+ffd = potential(MWFarField3D(im*κ), pts, u, RT)
+plot(Θ, norm.(ffd))
+println("far field computed")
 
-include(Pkg.dir("CompScienceMeshes","examples","plotlyjs_patches.jl"))
-A = real.(norm.(fcr))
-p = patch(geo, A)
-display(PlotlyJS.plot(p))
+# fcr, geo = facecurrents(u, RT)
+# println("Face currents computed")
+
+#include(Pkg.dir("CompScienceMeshes","examples","plotlyjs_patches.jl"))
+# A = real.(norm.(fcr))
+# p = patch(geo, A)
+# display(PlotlyJS.plot(p))
 
 isdefined(:nearfar) || (nearfar = false;)
 if nearfar
-    pts = 2 * [point(cos(p)*sin(t), sin(p)*sin(t), cos(t)) for t in linspace(0,π,100) for p in [0.0]]
-    ffd = potential(MWFarField3D(im*κ), pts, u, RT)
-    println("far field computed")
+    # pts = 2 * [point(cos(p)*sin(t), sin(p)*sin(t), cos(t)) for t in linspace(0,π,100) for p in [0.0]]
+    # ffd = potential(MWFarField3D(im*κ), pts, u, RT)
+    # println("far field computed")
 
     grid = [point(x,0,z) for x in linspace(-2,2,40), z in linspace(-4,4,40)]
     nfd = potential(MWSingleLayerField3D(κ), grid, u, RT)
@@ -45,6 +52,6 @@ if nearfar
     A = [real(f[1]) for f in nfd]
     A = clamp(A,0.0, 2.5)
 
-    using Plots
-    heatmap(A)
+    # using Plots
+    # heatmap(A)
 end
