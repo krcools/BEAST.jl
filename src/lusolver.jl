@@ -1,5 +1,7 @@
 using LinearForms
 
+export hilbertspace, @hilbertspace, @varform, @discretise
+
 import BEAST: assemble
 
 export sysmatrix, solve, discretise, rhs

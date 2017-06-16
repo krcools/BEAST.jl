@@ -1,45 +1,37 @@
-using CompScienceMeshes
-using BEAST
+using CompScienceMeshes, BEAST
 
-include(Pkg.dir("BEAST","src","lusolver.jl"))
-include(Pkg.dir("CompScienceMeshes","examples","plotlyjs_patches.jl"))
-
-x = point(1.0, 0.0, 0.0)
-y = point(0.0, 1.0, 0.0)
-z = point(0.0, 0.0, 1.0)
-ι = complex(0.0, 1.0)
-
-Γ = meshsphere(1.0, 0.2)
+Γ = meshcuboid(1.0, 1.0, 1.0, 0.15)
 X = raviartthomas(Γ)
 
-ω = 1.0
-μ = ϵ = 1.0
+κ,  η  = 1.0, 1.0
+κ′, η′ = 1.4κ, η/1.4
 
-κ = ω * √(ϵ*μ)
-η = √(μ/ϵ)
+γ, γ′ = im*κ, im*κ′
+T,  K  = MWSingleLayer3D(γ),  MWDoubleLayer3D(γ)
+T′, K′ = MWSingleLayer3D(γ′), MWDoubleLayer3D(γ′)
 
-T = MWSingleLayer3D(im*κ)
-K = MWDoubleLayer3D(im*κ)
+o, x, y, z = euclidianbasis(3)
+d = normalize(x+y+z); p = normalize(d × z)
+E = planewavemw3d(direction=d, polarization=p, wavenumber=κ)
+H = -1/(im*κ*η)*curl(E)
 
-E = PlaneWaveMW(z, x, κ, 1.0)
-H = -1/(ι*μ*ω)*curl(E)
+e, h = (n × E) × n, (n × H) × n
 
-e = (n × E) × n
-h = (n × H) × n
+@hilbertspace j m
+@hilbertspace k l
 
-j, m, = hilbertspace(:j, :m)
-k, l, = hilbertspace(:k, :l)
+α, α′ = 1/η, 1/η′
+pmchwt = @discretise(
+    (η*T+η′*T′)[k,j] +      (K+K′)[k,m] -
+         (K+K′)[l,j] + (α*T+α′*T′)[l,m] == h[k] + e[l],
+    j∈X, m∈X, k∈X, l∈X)
 
-PMCHWT = @varform begin
-    2T[k,j] + 2K[k,m] -
-    2K[l,j] + 2T[l,m] ==
-    h[j] - e[m]
-end
-
-pmchwt = @discretise PMCHWT j∈X m∈X k∈X l∈X
 u = solve(pmchwt)
 
+## Post-processing
 u1 = u[1:numfunctions(X)]
 fcr, geo = facecurrents(u1,X)
+
+include(Pkg.dir("CompScienceMeshes","examples","plotlyjs_patches.jl"))
 p = patch(geo, real.(norm.(fcr)))
 PlotlyJS.plot(p)

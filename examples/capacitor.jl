@@ -2,7 +2,7 @@ using BEAST
 using CompScienceMeshes
 using LinearForms
 using MATLAB
-include(Pkg.dir("BEAST.jl","src","lusolver.jl"))
+#include(Pkg.dir("BEAST","src","lusolver.jl"))
 
 function patch_mat(Γ,fcr=nothing)
   fcr != nothing ?  C = norm.(fcr) : C=0
@@ -16,7 +16,7 @@ function patch_mat(Γ,fcr=nothing)
   end
 
   mat"axis equal"
-  mat"colormap jet"
+  #mat"colormap jet"
   mat"xlabel('x-axis')"
   mat"ylabel('y-axis')"
   mat"colorbar"
@@ -82,7 +82,8 @@ volt = η*potential(MWSingleLayerPotential3D(κ), pts1, u, RT)
 # Plot the Scalar potential
 using Plots
   plotlyjs()
-Plots.plot(norm.(volt))
+Φ = [real(v[1]) for v in volt]
+Plots.plot(Φ)
 println("Potential plotted")
 
 # Calculate total charge Q

@@ -1,12 +1,9 @@
 using BEAST
 using CompScienceMeshes
-using PyPlot
-include(Pkg.dir("BEAST","src","lusolver.jl"))
 
 o, x, y, z = euclidianbasis(3)
-n = BEAST.n
 
-Γ = readmesh(joinpath(dirname(@__FILE__),"sphere2.in"))
+Γ = readmesh(Pkg.dir("BEAST","examples","sphere2.in"))
 RT = raviartthomas(Γ)
 
 κ = 1.0
@@ -14,44 +11,50 @@ t = MWSingleLayer3D(im*κ)
 E = planewavemw3d(direction=z, polarization=x, wavenumber=κ)
 e = (n × E) × n
 
-j, = hilbertspace(:j)
-k, = hilbertspace(:k)
+@hilbertspace j
+@hilbertspace k
 
-EFIE = @varform t[k,j] == e[k]
-efie = @discretise EFIE j∈RT k∈RT
+efie = @discretise t[k,j]==e[k]  j∈RT k∈RT
 
 u = solve(efie)
 println("Solution computed")
 
-ϕ, Θ = 0.0, linspace(0,π,100)
-pts = 2 * [point(cos(ϕ)*sin(Θ), sin(ϕ)*sin(Θ), cos(Θ)) for Θ in Θ]
-ffd = potential(MWFarField3D(im*κ), pts, u, RT)
-plot(Θ, norm.(ffd))
-println("far field computed")
+isdefined(:plotresults) || (plotresults = false)
+plotresults && (postproc = true)
+isdefined(:postproc) || (postproc = false)
 
-# fcr, geo = facecurrents(u, RT)
-# println("Face currents computed")
+if postproc
 
-#include(Pkg.dir("CompScienceMeshes","examples","plotlyjs_patches.jl"))
-# A = real.(norm.(fcr))
-# p = patch(geo, A)
-# display(PlotlyJS.plot(p))
+    Φ, Θ = [0.0], linspace(0,π,100)
+    pts = [point(cos(ϕ)*sin(θ), sin(ϕ)*sin(θ), cos(θ)) for ϕ in [0.0] for θ in Θ]
+    ffd = potential(MWFarField3D(im*κ), pts, u, RT)
+    println("far field computed")
 
-isdefined(:nearfar) || (nearfar = false;)
-if nearfar
-    # pts = 2 * [point(cos(p)*sin(t), sin(p)*sin(t), cos(t)) for t in linspace(0,π,100) for p in [0.0]]
-    # ffd = potential(MWFarField3D(im*κ), pts, u, RT)
-    # println("far field computed")
+    fcr, geo = facecurrents(u, RT)
+    println("Face currents computed")
 
-    grid = [point(x,0,z) for x in linspace(-2,2,40), z in linspace(-4,4,40)]
+    nx, nz = 50, 100
+    X, Z = linspace(-2,2,nx), linspace(-4,4,nz)
+    grid = [point(x,0,z) for x in X, z in Z]
     nfd = potential(MWSingleLayerField3D(κ), grid, u, RT)
-    nfd = reshape(nfd, (40,40))
+    nfd = reshape(nfd, (nx,nz))
     nfd .-= E.(grid)
     println("near field computed.")
 
-    A = [real(f[1]) for f in nfd]
-    A = clamp(A,0.0, 2.5)
-
-    # using Plots
-    # heatmap(A)
 end
+
+if plotresults
+    @eval begin
+        using PlotlyJS
+        include(Pkg.dir("CompScienceMeshes","examples","plotlyjs_patches.jl"))
+        t1 = scatter(x=Θ, y=real.(norm.(ffd)))
+        t2 = patch(geo, real.(norm.(fcr)))
+        t3 = heatmap(x = X, y = Z, z = clamp(real.(norm.(nfd)), 0.0, 2.0))
+    end
+end
+
+#plot(t1) # uncomment to plot the far field (line2d)
+#plot(t2) # uncomment to plot the induced current (mesh3d)
+#plot(t3) # uncomment to plot the near field (heatmap)
+
+nothing;

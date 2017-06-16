@@ -109,8 +109,8 @@ function potential!(store, op, points, basis)
 	zlocal = Array{T}(numfunctions(rs))
 	qdata = quaddata(op,rs,els)
 
-	println("Computing nearfield.")
-	println("dots out of 10: ")
+	#println("Computing nearfield.")
+	print("dots out of 10: ")
 
 	todo, done, pctg = length(points), 0, 0
 
@@ -133,7 +133,7 @@ function potential!(store, op, points, basis)
 		new_pctg = round(Int, done / todo * 100)
 		if new_pctg > pctg + 9
 				#println(todo," ",done," ",new_pctg)
-				println(".")
+				print(".")
 				pctg = new_pctg
 		end
 	end

@@ -107,9 +107,11 @@ function integrand(biop::MWSL3DGen, kerneldata, tvals, tgeo, bvals, bgeo)
   α = biop.α
   β = biop.β
 
-  t1 = α * G * dot(gx, fy)
-  t2 = β * G * dot(dgx, dfy)
-  return t1 + t2
+  #t1 = α * G * dot(gx, fy)
+  #t2 = β * G * dot(dgx, dfy)
+  t = (α * dot(gx, fy) + β * (dgx*dfy)) * G
+  #return t1 + t2
+  return t
 end
 
 immutable MWDoubleLayer3D{T} <: MaxwellOperator3D

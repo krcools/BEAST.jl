@@ -71,7 +71,16 @@ include("helmholtz3d/timedomain/tdhh3dexc.jl")
 include("maxwell/timedomain/mwtdops.jl")
 include("maxwell/timedomain/mwtdexc.jl")
 
-#include("lusolver.jl")
+try
+    Pkg.installed("LinearForms")
+    info("`LinearForms` detected: form compiler support enabled.")
+    @eval using LinearForms
+    @eval include("lusolver.jl")
+catch
+    error(
+        "Please install prerequisite 'LinearForms':\n\n" *
+        "    Pkg.clone(\"https://github.com/krcools/LinearForms.jl\")")
+end
 
 using CompScienceMeshes
 
