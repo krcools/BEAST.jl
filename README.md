@@ -20,11 +20,9 @@ place for the 3D Helmholtz and Maxwell equations.
 
 In addition to the Julia packages in REQUIRE.jl, the following packages are required:
 
-* `krcools/CompScienceMeshes`
-* `krcools/LinearForms`
+* `Pkg.clone("https://github.com/krcools/LinearForms.jl")`
 
-In addition, some functionality requires `gmsh` to be installed and on the system path. `LinearForms`
-is only required for syntactic sugar; all assembly routines can be directly called.
+In addition, some functionality requires `gmsh` to be installed and on the system path.
 
 ## Example script
 
@@ -32,27 +30,20 @@ To solve scattering by a time harmonic electromagnetic plane wave by a perfectly
 sphere:
 
 ```julia
-using BEAST
-using CompScienceMeshes
-using LinearForms
+using BEAST, CompScienceMeshes
+o, x, y, z = euclidianbasis(3)
 
-o, x, y, z = euclidianbasis(Float64, 3)
-n = BEAST.n
-
-Γ = meshsphere(1.0, 0.2)
+Γ = readmesh(Pkg.dir("BEAST","examples","sphere2.in"))
 RT = raviartthomas(Γ)
 
 κ = 1.0
 t = MWSingleLayer3D(im*κ)
-E = PlaneWaveMW(z, x, κ)
+E = planewavemw3d(direction=z, polarization=x, wavenumber=κ)
 e = (n × E) × n
 
-j, = hilbertspace(:j)
-k, = hilbertspace(:k)
-
-EFIE = @varform t[k,j] == e[k]
-efie = @discretise EFIE j∈RT k∈RT
+@hilbertspace j
+@hilbertspace k
+efie = @discretise t[k,j]==e[k]  j∈RT k∈RT
 
 u = solve(efie)
-fcr, geo = facecurrents(u, RT)
 ```
