@@ -140,8 +140,8 @@ type ScalarTrace <: Functional
     f::Function
 end
 
-@compat (s::ScalarTrace)(x) = s.f(x)
-integrand(s::ScalarTrace, tx, fx) = tx[1] * fx
+#@compat (s::ScalarTrace)(x) = s.f(x)
+#integrand(s::ScalarTrace, tx, fx) = tx[1] * fx
 
 shapevals(f::Functional, ϕ, ts) = shapevals(ValOnly(), ϕ, ts)
 

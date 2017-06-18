@@ -1,62 +1,33 @@
-using Base.Test
-using LinearForms
-using CompScienceMeshes
-using BoundaryElements
-
-x = point(1.0, 0.0, 0.0)
-y = point(0.0, 1.0, 0.0)
-z = point(0.0, 0.0, 1.0)
-
-n = BoundaryElements.n
-
-# Define the kernels
-κ = 1.0
-S = SingleLayerTrace(κ)
-T = MWSingleLayer3D(κ)
-I = Identity()
-
-# Build the geometry
-h1, h2 = 1/12, 1/15
-h = max(h1,h2)
-W, H = 1.0, 0.5
-Γ1 = meshrectangle(W,H,h1)
-Γ2 = translate(meshrectangle(W,H,h2), point(0,-H,0))
-γ = meshsegment(W,W,3)
-
-X1 = raviartthomas(Γ1, γ)
-X2 = raviartthomas(Γ2, γ)
-X = X1 × X2
-
-# Define the incident field
-E = PlaneWaveMW(z, y, κ, complex(1.0))
-e = (n×E)×n
-
-j, = hilbertspace(:j)
-k, = hilbertspace(:k)
+using CompScienceMeshes, BEAST
+o, x, y, z = euclidianbasis(3)
 
 trc = X->ntrace(X,γ)
 dvg = divergence
 
-α = 1/(im*κ)
-β = α*log(abs(h))
+h1 = h2 = h3 = 1/15; h = max(h1, h2, h3)
+width, height = 1.0, 0.5
+Γ1 = meshrectangle(width, height, h1)
+Γ2 = meshrectangle(width, height, h2); rotate!(Γ2, 0.5π * [1,0,0])
+Γ3 = meshrectangle(width, height, h3); rotate!(Γ3, 1.0π * [1,0,0])
+γ = meshsegment(width, width, 3)
 
-Eq = @varform begin
-    T[k,j]              +
-    α*S[trc(k), dvg(j)]   +
-    α*S.'[dvg(k), trc(j)] +
-    β*I[trc(k), trc(j)] == e[k]
-end
+κ = 1.0
+S, T, I = SingleLayerTrace(κ), MWSingleLayer3D(κ), Identity()
+E = planewavemw3d(direction=z, polarization=y, wavenumber=κ)
+e = (n×E)×n
 
-eq = @discretise Eq j∈X k∈X
+X1, X2, X3 = raviartthomas(Γ1, γ), raviartthomas(Γ2, γ), raviartthomas(Γ3, γ)
+#X = X1 × X2
+X = X1 × X2 × X3
 
-b = rhs(eq)
-Z = sysmatrix(eq)
+@hilbertspace j
+@hilbertspace k
+α, β = 1/(im*κ), log(abs(h))/(im*κ)
+Eq = @varform T[k,j] + α*S[trc(k), dvg(j)] + α*S.'[dvg(k), trc(j)] + β*I[trc(k), trc(j)] == e[k]
+eq = @discretise Eq  j∈X k∈X
+u = solve(eq)
 
-u = Z \ b
-
-## Post-processing
 fcr, geo = facecurrents(u, X)
-
-include(Pkg.dir("CompScienceMeshes","examples","matlab_patches.jl"))
+include(Pkg.dir("CompScienceMeshes","examples","plotlyjs_patches.jl"))
 p = patch(geo, real.(norm.(fcr)))
 PlotlyJS.plot(p)

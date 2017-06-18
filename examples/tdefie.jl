@@ -1,6 +1,4 @@
-using CompScienceMeshes
-using BEAST
-
+using CompScienceMeshes, BEAST
 o, x, y, z = euclidianbasis(3)
 
 #D, Δx = 1.0, 0.25
@@ -8,41 +6,30 @@ D, Δx = 1.0, 0.35
 Γ = meshsphere(D, Δx)
 X = raviartthomas(Γ)
 
-
-Δt, Nt = 0.08, 400
+#Δt, Nt = 0.08, 400
+Δt, Nt = 0.11, 200
 T = timebasisshiftedlagrange(Δt, Nt, 3)
 U = timebasisdelta(Δt, Nt)
 
 V = X ⊗ T
 W = X ⊗ U
 
-k = z
-p = x
-width = 8.0
-delay = 12.0
-scaling = 1.0
+width, delay, scaling = 8.0, 12.0, 1.0
 gaussian = creategaussian(width, delay, scaling)
-fgaussian = fouriertransform(gaussian)
-dgaussian = derive(gaussian)
-E = planewave(p, k, derive(gaussian), 1.0)
 
+direction, polarisation = z, x
+E = planewave(polarisation, direction, derive(gaussian), 1.0)
 T = MWSingleLayerTDIO(1.0,-1.0,-1.0,2,0)
 
+@hilbertspace j
+@hilbertspace j′
+tdefie = @discretise T[j′,j] == -1E[j′]   j∈V  j′∈W
+xefie = solve(tdefie)
 
+using PlotlyJS
+include(Pkg.dir("CompScienceMeshes","examples","plotlyjs_patches.jl"))
 
-
-
-B = assemble(E, W)
-Z = assemble(T, W, V)
-
-Z0 = Z[:,:,1]
-W0 = inv(Z0)
-tefie = 0.0 : Δt : (Nt-1)*Δt
-xefie = marchonintime(W0,Z,-B,Nt)
-
-using PyPlot
-#plotlyjs()
-plot(tefie, xefie[1,:])
+t1 = scatter(x=0:Δt:(Nt-1)Δt, y=xefie[1,:])
 
 Xefie, Δω, ω0 = fouriertransform(xefie, Δt, 0.0, 2)
 ω = collect(ω0 + (0:Nt-1)*Δω)
@@ -50,10 +37,9 @@ _, i1 = findmin(abs(ω-1.0))
 ω1 = ω[i1]
 
 ue = Xefie[:,i1]
-ue /= fgaussian(ω1)
-fcre, geo = facecurrents(ue, X)
+fgaussian = fouriertransform(gaussian)
+ue = Xefie[:,i1] / fgaussian(ω1)
 
-#include(Pkg.dir("CompScienceMeshes","examples","matlab_patches.jl"))
-#A = [real(norm(f)) for f in fcre]
-#p = patch(geo, real.(norm.(fcre)))
-#PlotlyJS.plot([p])
+fcre, geo = facecurrents(ue, X)
+t2 = patch(geo, real.(norm.(fcre)))
+PlotlyJS.plot(t2)
