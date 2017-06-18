@@ -69,7 +69,7 @@ function facecurrents(u, X::DirectProductSpace)
 
 	fcrs = facecurrents(u, X.factors...)
 	#fcr = append!(fcrs...)
-	fcr = vcat(fcrs)
+	fcr = vcat(fcrs...)
 	m = weld([geometry(x) for x in X.factors]...)
 
 	fcr, m

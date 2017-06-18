@@ -13,7 +13,7 @@ width, height = 1.0, 0.5
 
 κ = 1.0
 S, T, I = SingleLayerTrace(κ), MWSingleLayer3D(κ), Identity()
-E = planewavemw3d(direction=z, polarization=y, wavenumber=κ)
+E = planewavemw3d(direction=z, polarization=x, wavenumber=κ)
 e = (n×E)×n
 
 X1, X2, X3 = raviartthomas(Γ1, γ), raviartthomas(Γ2, γ), raviartthomas(Γ3, γ)

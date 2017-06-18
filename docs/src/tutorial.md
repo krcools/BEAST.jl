@@ -14,9 +14,9 @@ In this tutorial we will go through the steps required for the formulation and t
 The sibling package `CompScienceMeshes` provides data structures and algorithms for working with simplical meshes in computational science. We will use it to create the geometry:
 
 ```@example 1
-using CompScienceMeshes
-using BEAST
-include(Pkg.dir("BEAST","src","lusolver.jl"))
+using CompScienceMeshes, BEAST
+o, x, y, z = euclidianbasis(3)
+
 h = 0.2
 Γ = meshrectangle(1.0, 1.0, h)
 @show numvertices(Γ)
@@ -27,17 +27,15 @@ nothing # hide
 Next, we create the finite element space of Raviart-Thomas aka Rao-Wilton-Glisson functions subordinate to the triangulation `Γ` constructed above:
 
 ```@example 1
-X = raviartthomas(Γ)
+RT = raviartthomas(Γ)
 nothing # hide
 ```
 
 The scattering problem is defined by specifying the single layer operator and the functional acting as excitation. Here, the plate is illuminated by a plane wave. The actual excitation is the tangential trace of this electric field. This trace be constructed easily by using the symbolic normal vector field `n` defined as part of the `BEAST` package.
 
 ```@example 1
-direction = point(0,0,1)
-polarisation = point(1,0,0)
-wavenumber = 1.0
-E = PlaneWaveMW(direction, polarisation, wavenumber)
+κ = 1.0
+E = planewavemw3d(direction=z, polarization=x, wavenumber=κ)
 e = (n × E) × n
 nothing # hide
 ```
@@ -45,7 +43,7 @@ nothing # hide
 The single layer potential is also predefined by the `BEAST` package:
 
 ```@example 1
-t = MWSingleLayer3D(wavenumber*im)
+t = MWSingleLayer3D(κ*im)
 nothing # hide
 ```
 
@@ -58,18 +56,17 @@ t(\vt{k},\vt{j}) = \frac{1}{ik} \int_{\Gamma} \int_{\Gamma'} \nabla \cdot \vt{k}
 Using the `LinearForms` package, which implements a simple form compiler for Julia (`@varform`), the EFIE can be defined and discretised by
 
 ```@example 1
-using LinearForms
 j, = hilbertspace(:j)
 k, = hilbertspace(:k)
-efie = @varform t[k,j] == e[k]
-EFIE = @discretise efie k∈X j∈X
+EFIE = @varform t[k,j] == e[k]
+efie = @discretise EFIE  j∈RT k∈RT
 nothing # hide
 ```
 Solving and computing the values of the induced current in the centers of the triangles of the mesh is now straightforward:
 
 ```@example 1
-u = solve(EFIE)
-fcr, geo = facecurrents(u,X)
+u = solve(efie)
+fcr, geo = facecurrents(u,RT)
 nothing # hide
 ```
 
