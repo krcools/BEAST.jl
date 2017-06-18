@@ -33,7 +33,7 @@ function marchonintime(W0,Z,B,I)
     for i in 1:I
         b = B[:,i] - convolve(Z,x,i,2)
         x[:,i] = W0 * b
-        println("Timestep: ", i, " of ", I)
+        (i % 10 == 0) && print(i, "[", I, "] - ")
     end
     return x
 end

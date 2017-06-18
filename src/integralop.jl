@@ -83,7 +83,7 @@ function assemblechunk!(biop::IntegralOperator, tfs::Space, bfs::Space, store)
         end
     end
 
-    println("")
+    print(" done. ")
 end
 
 

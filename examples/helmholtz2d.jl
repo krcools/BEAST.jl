@@ -31,17 +31,18 @@ t1, t2 = solve(te_efie), solve(te_mfie)
 
 
 using Plots
+plotlyjs()
 
 nx = numfunctions(X);
 Δα = 2π/nx; α = (collect(1:nx) - 0.5) * Δα
-plt1 = plot(α, real(u1), c=:blue, label="TM-EFIE")
-scatter!(α, real(u2), c=:red, m=:circle, label="TM-MFIE")
-title!("current vs. angle")
+plt1 = Plots.plot(α, real(u1), c=:blue, label="TM-EFIE")
+Plots.scatter!(α, real(u2), c=:red, m=:circle, label="TM-MFIE")
+Plots.title!("current vs. angle")
 
 ny = numfunctions(Y);
 Δα = 2π/ny; α = collect(0:ny-1) * Δα
-plt2 = plot(α, real(t1), c=:blue, label="TE-EFIE")
-scatter!(α, real(t2), c=:red, m=:circle, label="TE-MFIE")
-title!("current vs. angle")
+plt2 = Plots.plot(α, real(t1), c=:blue, label="TE-EFIE")
+Plots.scatter!(α, real(t2), c=:red, m=:circle, label="TE-MFIE")
+Plots.title!("current vs. angle")
 
-plot(plt1,plt2)
+Plots.plot(plt1,plt2)

@@ -1,13 +1,13 @@
 using CompScienceMeshes, BEAST
 o, x, y, z = euclidianbasis(3)
 
-#D, Δx = 1.0, 0.25
-D, Δx = 1.0, 0.35
+D, Δx = 1.0, 0.25
+#D, Δx = 1.0, 0.35
 Γ = meshsphere(D, Δx)
 X = raviartthomas(Γ)
 
-#Δt, Nt = 0.08, 400
-Δt, Nt = 0.11, 200
+Δt, Nt = 0.08, 400
+#Δt, Nt = 0.11, 200
 T = timebasisshiftedlagrange(Δt, Nt, 3)
 U = timebasisdelta(Δt, Nt)
 
