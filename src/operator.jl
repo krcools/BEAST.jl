@@ -112,8 +112,6 @@ function assemble!(operator::Operator, test_functions::Space, trial_functions::S
     T = typeof(test_functions)
     S = eltype(test_functions.fns)
 
-    println("Work distributions: ", splits)
-
     @sync begin
         for (i,p) in enumerate(P)
             I = splits[i]+1 : splits[i+1]

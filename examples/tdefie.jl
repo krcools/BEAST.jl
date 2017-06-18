@@ -29,16 +29,13 @@ xefie = solve(tdefie)
 using PlotlyJS
 include(Pkg.dir("CompScienceMeshes","examples","plotlyjs_patches.jl"))
 
-t1 = scatter(x=0:Δt:(Nt-1)Δt, y=xefie[1,:])
 
 Xefie, Δω, ω0 = fouriertransform(xefie, Δt, 0.0, 2)
 ω = collect(ω0 + (0:Nt-1)*Δω)
 _, i1 = findmin(abs(ω-1.0))
-ω1 = ω[i1]
 
-ue = Xefie[:,i1]
-fgaussian = fouriertransform(gaussian)
-ue = Xefie[:,i1] / fgaussian(ω1)
+ω1 = ω[i1]
+ue = Xefie[:,i1] / fouriertransform(gaussian)(ω1)
 
 fcre, geo = facecurrents(ue, X)
 t2 = patch(geo, real.(norm.(fcre)))

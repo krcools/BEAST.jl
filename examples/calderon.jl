@@ -1,22 +1,21 @@
-using CompScienceMeshes
-using BEAST
-
-κ = ω = 1.0;
-γ = κ*im
+using CompScienceMeshes, BEAST
 
 Γ = readmesh(Pkg.dir("BEAST", "examples", "sphere.in"))
+X, Y = raviartthomas(Γ), buffachristiansen(Γ)
 
-Xh = raviartthomas(Γ)
-Yh = buffachristiansen(Γ)
-
+κ = ω = 1.0; γ = κ*im
 T = MWSingleLayer3D(γ)
 N = NCross()
 
-Txx = sdata(assemble(T,Xh,Xh))
+Txx = sdata(assemble(T,X,X))
+Tyy = sdata(assemble(T,Y,Y))
+Nxy = sdata(assemble(N,X,Y))
+
+iNxy = inv(Nxy)
+A = iNxy' * Tyy * iNxy * Txx
+
 @show cond(Txx)
-Tyy = sdata(assemble(T,Yh,Yh))
 @show cond(Tyy)
-Nxy = sdata(assemble(N,Xh,Yh))
-A = Tyy * inv(Nxy) * Txx
 @show cond(A)
-println("Regression test: cond(A): ",  2.424211950244863)
+
+wx, wy, wp = eigvals(Txx), eigvals(Tyy), eigvals(A)

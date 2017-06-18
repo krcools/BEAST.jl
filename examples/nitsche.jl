@@ -17,7 +17,6 @@ E = planewavemw3d(direction=z, polarization=x, wavenumber=κ)
 e = (n×E)×n
 
 X1, X2, X3 = raviartthomas(Γ1, γ), raviartthomas(Γ2, γ), raviartthomas(Γ3, γ)
-#X = X1 × X2
 X = X1 × X2 × X3
 
 @hilbertspace j

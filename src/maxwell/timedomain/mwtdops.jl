@@ -145,9 +145,10 @@ function innerintegrals!(z, op::MWDoubleLayerTDIO,
     R = ι[2]
 
     @assert r < R
+    @assert degree(W) <= 3
 
     #N = max(degree(W), 0)
-    ∫G, ∫Gξy, ∫∇G = WiltonInts84.wiltonints(σ[1],σ[2],σ[3],x,r,R,Val{N-1})
+    ∫G, ∫Gξy, ∫∇G = WiltonInts84.wiltonints(σ[1],σ[2],σ[3],x,r,R,Val{2})
 
     αg = 1 / volume(τ) / 2
 	αf = 1 / volume(σ) / 2

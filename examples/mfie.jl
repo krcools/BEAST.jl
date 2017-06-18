@@ -1,33 +1,24 @@
-using CompScienceMeshes
-using BEAST
-include(Pkg.dir("BEAST","src","lusolver.jl"))
-
+using CompScienceMeshes, BEAST
 o, x, y, z = euclidianbasis(3)
-n = BEAST.n
 
 Γ = readmesh(joinpath(dirname(@__FILE__),"sphere2.in"))
-X = raviartthomas(Γ)
-Y = buffachristiansen(Γ)
+X, Y = raviartthomas(Γ), buffachristiansen(Γ)
 
 ω = κ = 1.0
 μ = ϵ = 1.0
 
-K = MWDoubleLayer3D(im*κ)
-N = NCross()
+K, N = MWDoubleLayer3D(im*κ), NCross()
 
 e = PlaneWaveMW(z, x, κ, complex(1.0))
-h = -1/(im*μ*ω)*curl(e)
-f = (n × h) × n
+H = -1/(im*μ*ω)*curl(E)
+h = (n × H) × n
 
-j, = hilbertspace(:j)
-m, = hilbertspace(:m)
-
-MFIE = @varform (K+0.5N)[m,j] == f[m]
-mfie = @discretise MFIE j∈X m∈Y
-
+@hilbertspace j; @hilbertspace m;
+mfie = @discretise (K+0.5N)[m,j] == h[m]  j∈X m∈Y
 u = solve(mfie)
-fcr, geo = facecurrents(u, X)
 
+using PlotlyJS
 include(Pkg.dir("CompScienceMeshes","examples","matlab_patches.jl"))
-A = real.(norm.(fcr))
-p = patch(Γ, A)
+
+fcr, geo = facecurrents(u, X)
+p = patch(geo, real.(norm.(fcr)))
