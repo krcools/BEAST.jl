@@ -3,8 +3,8 @@ o, x, y, z = euclidianbasis(3)
 
 width, height, h = 1.0, 0.5, 0.05
 G1 = meshrectangle(width, height, h)
-G2 = rotate(G1, 0.5π * [1,0,0])
-G3 = rotate(G1, 1.0π * [1,0,0])
+G2 = CompScienceMeshes.rotate(G1, 0.5π * [1,0,0])
+G3 = CompScienceMeshes.rotate(G1, 1.0π * [1,0,0])
 G = weld(G1, G2, G3)
 
 X = raviartthomas(G)

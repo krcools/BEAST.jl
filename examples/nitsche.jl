@@ -7,8 +7,8 @@ dvg = divergence
 h1 = h2 = h3 = 1/15; h = max(h1, h2, h3)
 width, height = 1.0, 0.5
 Γ1 = meshrectangle(width, height, h1)
-Γ2 = meshrectangle(width, height, h2); rotate!(Γ2, 0.5π * [1,0,0])
-Γ3 = meshrectangle(width, height, h3); rotate!(Γ3, 1.0π * [1,0,0])
+Γ2 = meshrectangle(width, height, h2); CompScienceMeshes.rotate!(Γ2, 0.5π * [1,0,0])
+Γ3 = meshrectangle(width, height, h3); CompScienceMeshes.rotate!(Γ3, 1.0π * [1,0,0])
 γ = meshsegment(width, width, 3)
 
 κ = 1.0

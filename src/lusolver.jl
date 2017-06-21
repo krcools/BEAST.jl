@@ -94,12 +94,12 @@ function solve(eq)
     rhs = eq.equation.rhs
 
     b = assemble(rhs, test_space_dict)
-    println("Right hand side assembled.")
+    #println("Right hand side assembled.")
     Z = assemble(lhs, test_space_dict, trial_space_dict)
-    println("System matrix assembled.")
+    #println("System matrix assembled.")
 
     u = Z \ b
-    println("System solved.")
+    #println("System solved.")
 
     return u
 end
