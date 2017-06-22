@@ -2,11 +2,9 @@ import CompScienceMeshes.coordtype
 
 export numfunctions, coordtype, scalartype, assemblydata, geometry, refspace, valuetype
 
-abstract RefSpace{T,D}
-
-abstract AbstractSpace
-abstract Space{T} <: AbstractSpace
-
+abstract type RefSpace{T,D} end
+abstract type AbstractSpace end
+abstract type Space{T} <: AbstractSpace end
 
 scalartype{T}(s::RefSpace{T}) = T
 scalartype{T}(s::Space{T}) = T

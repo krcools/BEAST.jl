@@ -1,4 +1,4 @@
-abstract TDFunctional{T}
+abstract type TDFunctional{T} end
 Base.eltype{T}(x::TDFunctional{T}) = T
 
 
@@ -91,7 +91,7 @@ function assemble!(exc::TDFunctional, testST, store)
 end
 
 
-abstract NumQuadStrategy
+abstract type NumQuadStrategy end
 
 type MultiQuadStrategy{P,R} <: NumQuadStrategy
     quad_points::P

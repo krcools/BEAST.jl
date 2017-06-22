@@ -1,4 +1,4 @@
-abstract IntegralOperator <: Operator
+abstract type IntegralOperator <: Operator end
 
 export quadrule, elements
 
@@ -143,7 +143,7 @@ function momintegrals!(biop, tshs, bshs, tcell, bcell, z, strat::DoubleQuadStrat
 end
 
 
-abstract SingularityExtractionStrategy
+abstract type SingularityExtractionStrategy end
 regularpart_quadrule(qr::SingularityExtractionStrategy) = qr.regularpart_quadrule
 
 function momintegrals!(op, g, f, t, s, z, strat::SingularityExtractionStrategy)

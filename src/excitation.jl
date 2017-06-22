@@ -1,6 +1,6 @@
 export assemble
 
-abstract Functional
+abstract type Functional end
 
 quaddata(fn::Functional, refs, cells) = quadpoints(refs, cells, [5])
 quadrule(fn::Functional, refs, p, cell, qd) = qd[1,p]

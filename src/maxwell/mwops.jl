@@ -8,8 +8,8 @@ export TangTraceMW, CrossTraceMW
 
 export curl
 
-abstract MaxwellOperator3D <: IntegralOperator
-abstract MaxwellOperator3DReg <: MaxwellOperator3D
+abstract type MaxwellOperator3D <: IntegralOperator end
+abstract type MaxwellOperator3DReg <: MaxwellOperator3D end
 
 immutable KernelValsMaxwell3D{T,U,P,Q}
     "gamma = im * wavenumber"
@@ -129,7 +129,7 @@ end
 regularpart(op::MWDoubleLayer3D) = MWDoubleLayer3DReg(op.gamma)
 singularpart(op::MWDoubleLayer3D) = MWDoubleLayer3DSng(op.gamma)
 
-typealias MWDL3DGen Union{MWDoubleLayer3D,MWDoubleLayer3DReg}
+const MWDL3DGen = Union{MWDoubleLayer3D,MWDoubleLayer3DReg}
 function integrand(biop::MWDL3DGen, kerneldata, tvals, tgeo, bvals, bgeo)
     g = tvals[1]
     f = bvals[1]

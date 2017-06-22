@@ -15,7 +15,7 @@ numfunctions(x::MonomialBasis) = degree(x)+1
     valuetype(x)[t^d for d in 0 : degree(x)]
 end
 
-abstract AbstractTimeBasisFunction
+abstract type AbstractTimeBasisFunction end
 
 """
     TimeBasisFunction{N,D}

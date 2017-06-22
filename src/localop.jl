@@ -8,7 +8,7 @@ type SingleQuadStrategy{T}
     weights::Vector{T}
 end
 
-abstract LocalOperator <: Operator
+abstract type LocalOperator <: Operator end
 
 
 function assemble!(biop::LocalOperator, tfs::Space, bfs::Space, store)

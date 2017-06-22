@@ -12,7 +12,7 @@ export ScalarTrace
 export PlaneWaveDirichlet
 export PlaneWaveNeumann
 
-abstract HelmholtzOperator2D <: IntegralOperator
+abstract type HelmholtzOperator2D <: IntegralOperator end
 scalartype(::HelmholtzOperator2D) = Complex128
 
 immutable SingleLayer{T} <: HelmholtzOperator2D

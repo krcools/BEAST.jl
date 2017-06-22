@@ -4,7 +4,7 @@ type Banded3D{T} <: AbstractArray{T,3}
     k0::Array{Int,2}
     k1::Array{Int,2}
     data::Array{T,3}
-    function Banded3D(k0,k1,data)
+    function Banded3D{T}(k0,k1,data) where T
         @assert size(k0) == size(k1)
         @assert size(k0) == size(data,1,2)
         return new(k0,k1,data)
@@ -16,7 +16,7 @@ Banded3D{T}(k0,k1,data::Array{T}) = Banded3D{T}(k0,k1,data)
 import Base: size, getindex, setindex!, linearindexing
 
 size(A::Banded3D) = size(A.data)
-linearindexing{T<:Banded3D}(::Type{T}) = Base.LinearSlow()
+#linearindexing{T<:Banded3D}(::Type{T}) = Base.LinearSlow()
 function getindex(A::Banded3D, m::Int, n::Int, k::Int)
     (A.k0[m,n] <= k <= A.k1[m,n]) || return zero(eltype(A.data))
     A.data[m,n,k-A.k0[m,n]+1]

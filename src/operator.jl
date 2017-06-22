@@ -2,8 +2,8 @@ export assemble
 
 import Base: transpose, +, -, *
 
-abstract AbstractOperator
-abstract Operator <: AbstractOperator
+abstract type AbstractOperator end
+abstract type Operator <: AbstractOperator end
 
 # Support for operator transpose
 

@@ -1,6 +1,6 @@
 using WiltonInts84
 
-abstract RetardedPotential{T} <: Operator
+abstract type RetardedPotential{T} <: Operator end
 Base.eltype{T}(::RetardedPotential{T}) = T
 scalartype{T}(A::RetardedPotential{T}) = T
 
