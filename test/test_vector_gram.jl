@@ -5,7 +5,6 @@ using BEAST
 using StaticArrays
 
 T = Float64
-#P = Vec{3,T}
 P = SVector{3,T}
 
 omega = 1.0;
@@ -27,17 +26,17 @@ BEAST.assemble_local_mixed!(id, rt, rt, (v,m,n)->(G2[m,n]+=v))
 # G1 = BEAST.assemble_local_matched(id, rt, rt)
 # G2 = BEAST.assemble_local_mixed(id, rt, rt)
 
-@test_approx_eq_eps norm(G1-G2,  Inf) 0 sqrt(eps())
-@test_approx_eq_eps norm(G1-G1', Inf) 0 sqrt(eps())
-@test_approx_eq_eps norm(G2-G2', Inf) 0 sqrt(eps())
+@test norm(G1-G2,  Inf) ≈ 0 atol = sqrt(eps())
+@test norm(G1-G1', Inf) ≈ 0 atol = sqrt(eps())
+@test norm(G2-G2', Inf) ≈ 0 atol = sqrt(eps())
 
 G = zeros(Complex128, numfunctions(rt), numfunctions(bc))
 BEAST.assemble_local_mixed!(nc, rt, bc, (v,m,n)->(G[m,n]+=v))
-@test_approx_eq(cond(G), 2.919026332637947)
+@test cond(G) ≈ 2.919026332637947
 
 G = zeros(Complex128, numfunctions(rt), numfunctions(rt))
 BEAST.assemble_local_mixed!(nc, rt, rt, (v,m,n)->(G[m,n]+=v))
-@test_approx_eq_eps norm(G+G',  Inf) 0 sqrt(eps())
+@test norm(G+G',  Inf) ≈ 0 atol = sqrt(eps())
 
 
 v = [

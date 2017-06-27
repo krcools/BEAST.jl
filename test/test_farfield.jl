@@ -28,13 +28,13 @@ b = Float64[sqrt(abs(dot(ff[i],utheta[i]))^2 + abs(dot(ff[i],uphi[i]))^2) for i 
 c = [dot(uphi[i], uphi[i]) for i in eachindex(ff)]
 
 tol = eps() * 10000
-@test_approx_eq_eps a[1] 0.6426645162880508 tol
-@test_approx_eq_eps a[2] 0.5222644345134998 tol
-@test_approx_eq_eps a[3] 0.28287430186444407 tol
-@test_approx_eq_eps a[4] 0.3873439919314161 tol
-@test_approx_eq_eps a[5] 0.6788129041674158 tol
-@test_approx_eq_eps a[6] 0.8800967217249486 tol
-@test_approx_eq_eps a[7] 0.9487895695366841 tol
+@test a[1] ≈ 0.6426645162880508  atol=tol
+@test a[2] ≈ 0.5222644345134998  atol=tol
+@test a[3] ≈ 0.28287430186444407 atol=tol
+@test a[4] ≈ 0.3873439919314161  atol=tol
+@test a[5] ≈ 0.6788129041674158  atol=tol
+@test a[6] ≈ 0.8800967217249486  atol=tol
+@test a[7] ≈ 0.9487895695366841  atol=tol
 
 # NF = BEAST.MWSingleLayerField3D(κ)
 # xs = linspace(-8.0, 8.0, 100)

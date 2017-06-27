@@ -19,8 +19,8 @@ m, M = BEAST.minmaxdist(τ, σ)
 @show m, sqrt(2.0)
 @show M, sqrt(8.0)
 
-@test_approx_eq m sqrt(2.0)
-@test_approx_eq M sqrt(8.0)
+@test m ≈ sqrt(2.0)
+@test M ≈ sqrt(8.0)
 
 ΔR = sqrt(2)/2
 r = BEAST.rings(τ,σ,ΔR)

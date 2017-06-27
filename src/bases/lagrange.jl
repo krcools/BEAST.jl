@@ -36,7 +36,7 @@ function lagrangecxd0(mesh)
   num_cells = numcells(mesh)
 
   # create the local shapes
-  fns = Array(Array{Shape{Float64},1}, num_cells)
+  fns = Vector{Vector{Shape{Float64}}}(num_cells)
   for i in 1 : num_cells
     fns[i] = [
       Shape(i, 1, 1.0)]
@@ -67,7 +67,7 @@ function lagrangec0d1_dirichlet(mesh)
         notonbnd[v] = false
     end
 
-    vertexlist = find(notonbnd & !detached)
+    vertexlist = find(notonbnd .& .!detached)
     lagrangec0d1(mesh, vertexlist, Val{dimension(mesh)+1})
 end
 
@@ -86,7 +86,7 @@ function interior_and_junction_vertices(mesh, jct)
         notonbnd[v] = false
     end
 
-    onjct = !notonbnd
+    onjct = broadcast(!, notonbnd)
     overlap_with_junction = overlap_gpredicate(jct)
     for indices in cells(bndfaces)
         bndface = simplex(vertices(bndfaces, indices))
@@ -99,7 +99,7 @@ function interior_and_junction_vertices(mesh, jct)
         end
     end
 
-    vertexlist = find((onjct | notonbnd) & !detached)
+    vertexlist = find(broadcast(|, onjct, notonbnd) .& broadcast(!,detached))
 end
 
 """
@@ -184,7 +184,7 @@ function lagrangec0d1(mesh, vertexlist::Vector, ::Type{Val{3}})
         numshapes = ncells[v]
         numshapes == 0 && continue
 
-        shapes = Array(Shape{Float64}, numshapes)
+        shapes = Vector{Shape{Float64}}(numshapes)
         for s in 1: numshapes
           c = cellids[v,s]
           cell = mesh.faces[c]
@@ -220,7 +220,7 @@ function lagrangec0d1(mesh, vertexlist, ::Type{Val{2}})
     numshapes = ncells[v]
     numshapes == 0 && continue # skip detached vertices
 
-    shapes = Array(Shape{Float64}, numshapes)
+    shapes = Vector{Shape{Float64}}(numshapes)
     for s in 1: numshapes
       c = cellids[v,s]
       cell = mesh.faces[c]
@@ -357,16 +357,16 @@ function duallagrangec0d1(mesh, mesh2, pred, ::Type{Val{2}})
   numverts2 = numvertices(mesh2)
   geometry = mesh2
   cellids2, ncells2 = vertextocellmap(mesh2)
-  fns = Array(Array{Shape{Float64},1}, num_cells1)
+  fns = Vector{Vector{Shape{T}}}(num_cells1)
   # We will iterate over the coarse mesh segments to assign all the functions to it.
   for segment_coarse in 1 : num_cells1
     # For the dual Lagrange there is a 6 shapes per segment
     numshapes = (ncells1[segment_coarse]*4) -2
-    shapes = Array(Shape{Float64}, numshapes)
+    shapes = Vector{Shape{T}}(numshapes)
     # Now we will get all the smaller faces within the coarse segment
     #i.e The coose segment will have two points, and these tow points are connected to two segmesnts in the finer mesh
     # This will give us a 4 smaller faces per Dual lagrange basis, we store them first in all_faces
-    all_faces= Array( SVector,4)                      # faces in the original segment (4)
+    all_faces= Array{SVector{2,Int}}(4)                      # faces in the original segment (4)
     # the follwoing code get the verteciec for each coarse segment
     # then it looks for the two faces connected to each point in the finer mesh
     # if for example the segment would connect to more than two faces we will have

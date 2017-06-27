@@ -24,8 +24,8 @@ Gt = [
     1 3 3 1
     0 0 1 3] // 16
 
-@test_approx_eq_eps norm(G-H') 0.0 sqrt(eps()) #G == H'
-@test_approx_eq_eps norm(G-Gt) 0.0 sqrt(eps())
+@test norm(G-H') ≈ 0.0  atol = sqrt(eps()) #G == H'
+@test norm(G-Gt) ≈ 0.0  atol = sqrt(eps())
 
 # Test whether localoperator and localoperator 2 give the same result
 # for test and basis functions defined on the same mesh.
@@ -50,4 +50,4 @@ I = Identity()
 x1 = lagrangecxd0(m1)
 x2 = lagrangecxd0(m2)
 G = assemble(I,x1,x2)
-@test_approx_eq(sum(G), 1/4)
+@test sum(G) ≈ 1/4
