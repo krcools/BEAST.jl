@@ -106,34 +106,31 @@
 <p><a id='Building-the-geometry-1'></a></p>
 <h2 id="building-the-geometry">Building the geometry</h2>
 <p>The sibling package <code>CompScienceMeshes</code> provides data structures and algorithms for working with simplical meshes in computational science. We will use it to create the geometry:</p>
-<pre><code class="julia">using CompScienceMeshes
-using BEAST
-include(Pkg.dir(&quot;BEAST&quot;,&quot;src&quot;,&quot;lusolver.jl&quot;))
+<pre><code class="julia">using CompScienceMeshes, BEAST
+o, x, y, z = euclidianbasis(3)
+
 h = 0.2
 Γ = meshrectangle(1.0, 1.0, h)
 @show numvertices(Γ)
 @show numcells(Γ)
 </code></pre>
 
-<pre><code>WARNING: could not import Base.call into LinearForms
-numvertices(Γ) = 36
+<pre><code>numvertices(Γ) = 36
 numcells(Γ) = 50
 </code></pre>
 
 <p>Next, we create the finite element space of Raviart-Thomas aka Rao-Wilton-Glisson functions subordinate to the triangulation <code>Γ</code> constructed above:</p>
-<pre><code class="julia">X = raviartthomas(Γ)
+<pre><code class="julia">RT = raviartthomas(Γ)
 </code></pre>
 
 <p>The scattering problem is defined by specifying the single layer operator and the functional acting as excitation. Here, the plate is illuminated by a plane wave. The actual excitation is the tangential trace of this electric field. This trace be constructed easily by using the symbolic normal vector field <code>n</code> defined as part of the <code>BEAST</code> package.</p>
-<pre><code class="julia">direction = point(0,0,1)
-polarisation = point(1,0,0)
-wavenumber = 1.0
-E = PlaneWaveMW(direction, polarisation, wavenumber)
+<pre><code class="julia">κ = 1.0
+E = planewavemw3d(direction=z, polarization=x, wavenumber=κ)
 e = (n × E) × n
 </code></pre>
 
 <p>The single layer potential is also predefined by the <code>BEAST</code> package:</p>
-<pre><code class="julia">t = MWSingleLayer3D(wavenumber*im)
+<pre><code class="julia">t = MWSingleLayer3D(κ*im)
 </code></pre>
 
 <p>It corresponds to the bilinear form</p>
@@ -143,22 +140,18 @@ t(\vt{k},\vt{j}) = \frac{1}{ik} \int_{\Gamma} \int_{\Gamma'} \nabla \cdot \vt{k}
 </script>
 </p>
 <p>Using the <code>LinearForms</code> package, which implements a simple form compiler for Julia (<code>@varform</code>), the EFIE can be defined and discretised by</p>
-<pre><code class="julia">using LinearForms
-j, = hilbertspace(:j)
+<pre><code class="julia">j, = hilbertspace(:j)
 k, = hilbertspace(:k)
-efie = @varform t[k,j] == e[k]
-EFIE = @discretise efie k∈X j∈X
+EFIE = @varform t[k,j] == e[k]
+efie = @discretise EFIE  j∈RT k∈RT
 </code></pre>
 
 <p>Solving and computing the values of the induced current in the centers of the triangles of the mesh is now straightforward:</p>
-<pre><code class="julia">u = solve(EFIE)
-fcr, geo = facecurrents(u,X)
+<pre><code class="julia">u = solve(efie)
+fcr, geo = facecurrents(u,RT)
 </code></pre>
 
-<pre><code>Right hand side assembled.
-Work distributions: [0, 65]
-dots out of 10: ..........
-System matrix assembled.
+<pre><code>dots out of 10: .......... done.
 </code></pre>
 
 <p>The resulting current distribution can be visualised by e.g. Matlab, Paraview, Plotly,...</p>
