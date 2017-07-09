@@ -28,27 +28,15 @@ function assemble_local_matched!(biop::LocalOperator, tfs::Space, bfs::Space, st
     brefs = refspace(bfs)
 
     qd = quaddata(biop, trefs, brefs, tels, bels)
-
-    #for (p,cell) in cellenumeration(geometry(tfs))
     for (p,cell) in enumerate(tels)
 
-        # compute local interactions on reference cell
         qr = quadrule(biop, trefs, brefs, cell, qd)
         locmat = cellinteractions(biop, trefs, brefs, cell, qr)
 
-        # assemble the global matrix
-        for i in 1 : size(locmat, 1)
-            for j in 1 : size(locmat, 2)
-
-                for (m,a) in tad[p,i]
-                    for (n,b) in bad[p,j]
-                        store(a * locmat[i,j] * b, m, n)
-                    end
-                end
-            end
-        end
-    end
-end
+        for i in 1 : size(locmat, 1), j in 1 : size(locmat, 2)
+            for (m,a) in tad[p,i], (n,b) in bad[p,j]
+                store(a * locmat[i,j] * b, m, n)
+end end end end
 
 
 function elementstree(elements)
@@ -72,7 +60,6 @@ function elementstree(elements)
             bary += verts[j]
         end
 
-        #points[i] = sum(verts) / nverts
         points[i] = bary / nverts
         for j in 1 : nverts
             radii[i] = max(radii[i], norm(verts[j]-points[i]))
