@@ -65,8 +65,6 @@ function assemble(operator::AbstractOperator, test_functions, trial_functions)
     # This is a convenience function whose only job is to allocate
     # the storage for the interaction matrix. Further dispatch on
     # operator and space types is handled by the 4-argument version
-    #Z = allocatestorage(operator, test_functions, trial_functions)
-    #store(v, m, n) = (Z[m,n] += v)
     Z, store = allocatestorage(operator, test_functions, trial_functions)
     assemble!(operator, test_functions, trial_functions, store)
     sdata(Z)
@@ -114,17 +112,11 @@ function assemble!(operator::Operator, test_functions::Space, trial_functions::S
 
     @sync begin
         for (i,p) in enumerate(P)
-            I = splits[i]+1 : splits[i+1]
+            start, stop = splits[i]+1, splits[i+1]
 
-            # fns_p = similar(test_functions.fns)
-            # fill!(fns_p, S[])
-            # for i in I
-            #     fns_p[i] = test_functions.fns[i]
-            # end
-            # test_functions_p = T(test_functions.geo, fns_p)
-            
-            test_functions_p = subset(test_functions, I)
-            @async remotecall_wait(assemblechunk!, p, operator, test_functions_p, trial_functions, store)
+            test_functions_p = subset(test_functions, start:stop)
+            store1 = (v,m,n) -> store(v,start+m-1,n)
+            @async remotecall_wait(assemblechunk!, p, operator, test_functions_p, trial_functions, store1)
         end
     end
 
@@ -138,9 +130,7 @@ function assemble!(op::TransposedOperator, tfs::Space, bfs::Space, store)
 end
 
 
-#function assemble!(op::LinearCombinationOfOperators, tfs::Space, bfs::Space, store)
 function assemble!(op::LinearCombinationOfOperators, tfs::AbstractSpace, bfs::AbstractSpace, store)
-#function assemble!(op::LinearCombinationOfOperators, tfs, bfs, store)
     for (a,A) in zip(op.coeffs, op.ops)
         store1(v,m,n) = store(a*v,m,n)
         assemble!(A, tfs, bfs, store1)
