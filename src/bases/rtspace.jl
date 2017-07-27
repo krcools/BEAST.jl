@@ -1,12 +1,17 @@
-export raviartthomas, raowiltonglisson
-export portcells, rt_ports, getindex_rtg
+export raviartthomas, raowiltonglisson, positions
+export portcells, rt_ports, getindex_rtg, subset
 
-type RTBasis{T,M} <: Space{T}
+type RTBasis{T,M,P} <: Space{T}
   geo::M
   fns::Vector{Vector{Shape{T}}}
+  pos::Vector{P}
 end
 
+RTBasis(geo, fns) = RTBasis(geo, fns, Vector{vertextype(geo)}())
+
+positions(rt) = rt.pos
 refspace{T}(space::RTBasis{T}) = RTRefSpace{T}()
+subset(rt::RTBasis,I) = RTBasis(rt.geo, rt.fns[I], rt.pos[I])
 
 
 type ValDiv end
@@ -30,6 +35,7 @@ function raviartthomas(mesh, cellpairs::Array{Int,2})
     # combine now the pairs of monopolar RWGs in div-conforming RWGs
     numpairs = size(cellpairs,2)
     functions = Vector{Vector{Shape{Float64}}}(numpairs)
+    positions = Vector{vertextype(mesh)}(numpairs)
     for i in 1:numpairs
         if cellpairs[2,i] > 0
             c1 = cellpairs[1,i]; cell1 = mesh.faces[c1]
@@ -42,16 +48,21 @@ function raviartthomas(mesh, cellpairs::Array{Int,2})
             @assert length(isct) == 2
             @assert !(cell1[abs(e1)] in isct)
             @assert !(cell2[abs(e2)] in isct)
+
+            ctr1 = cartesian(center(chart(mesh, cell1)))
+            ctr2 = cartesian(center(chart(mesh, cell2)))
+            positions[i] = (ctr1 + ctr2) / 2
         else
             c1 = cellpairs[1,i]
             e1 = cellpairs[2,i]
             functions[i] = [
             Shape(c1, abs(e1), +1.0)]
+            positions[i] = cartesian(center(chart(mesh, mesh.faces[c1])))
         end
     end
 
     geo = mesh
-    RTBasis(geo, functions)
+    RTBasis(geo, functions, positions)
 end
 
 

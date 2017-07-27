@@ -52,7 +52,7 @@ function assemblechunk!(biop::IntegralOperator, tfs::Space, bfs::Space, store)
     T = promote_type(scalartype(biop), scalartype(tfs), scalartype(bfs))
     zlocal = zeros(T, num_tshapes, num_bshapes)
 
-    print("dots out of 10: ")
+    #print("dots out of 10: ")
     todo, done, pctg = length(test_elements), 0, 0
     for p in eachindex(test_elements)
         tcell = test_elements[p]
@@ -71,9 +71,9 @@ function assemblechunk!(biop::IntegralOperator, tfs::Space, bfs::Space, store)
 
         done += 1
         new_pctg = round(Int, done / todo * 100)
-        (new_pctg > pctg + 9) && (print("."); pctg = new_pctg)
+        #(new_pctg > pctg + 9) && (print("."); pctg = new_pctg)
     end
-    print(" done. ")
+    #print(" done. ")
 end
 
 

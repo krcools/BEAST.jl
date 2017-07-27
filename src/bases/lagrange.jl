@@ -25,7 +25,7 @@ end
 (::Type{LagrangeBasis{D,C,N}}){D,C,M,T,N}(g::M, f::Vector{Vector{Shape{T}}}) = LagrangeBasis{D,C,M,T,N}(g, f)
 
 refspace{D,C,M,T,NF}(space::LagrangeBasis{D,C,M,T,NF}) = LagrangeRefSpace{T,D,dimension(geometry(space))+1,NF}()
-
+subset(s::S,I) where {S <: Space} = S(s.geo, s.fns[I])
 
 function lagrangecxd0(mesh)
 

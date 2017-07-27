@@ -116,13 +116,14 @@ function assemble!(operator::Operator, test_functions::Space, trial_functions::S
         for (i,p) in enumerate(P)
             I = splits[i]+1 : splits[i+1]
 
-            fns_p = similar(test_functions.fns)
-            fill!(fns_p, S[])
-            for i in I
-                fns_p[i] = test_functions.fns[i]
-            end
-            test_functions_p = T(test_functions.geo, fns_p)
-
+            # fns_p = similar(test_functions.fns)
+            # fill!(fns_p, S[])
+            # for i in I
+            #     fns_p[i] = test_functions.fns[i]
+            # end
+            # test_functions_p = T(test_functions.geo, fns_p)
+            
+            test_functions_p = subset(test_functions, I)
             @async remotecall_wait(assemblechunk!, p, operator, test_functions_p, trial_functions, store)
         end
     end
