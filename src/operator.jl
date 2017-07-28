@@ -112,7 +112,7 @@ function assemble!(operator::Operator, test_functions::Space, trial_functions::S
 
     @sync begin
         for (i,p) in enumerate(P)
-            start, stop = splits[i]+1, splits[i+1]
+            start::Int, stop::Int = splits[i]+1, splits[i+1]
 
             test_functions_p = subset(test_functions, start:stop)
             store1 = (v,m,n) -> store(v,start+m-1,n)
