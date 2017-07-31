@@ -40,5 +40,5 @@ cross(k, pw::PlaneWaveMWTD) = PlaneWaveMWTD(
     for i in 1 : 3
         dr += r[i]*f.direction[i]
     end
-    f.polarisation * f.amplitude(f.speedoflight*t - dr)
+    f.polarisation * f.amplitude(t - dr/f.speedoflight)
 end

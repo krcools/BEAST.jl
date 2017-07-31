@@ -24,6 +24,8 @@ include("test_nitsche.jl")
 include("test_nitschehh3d.jl")
 include("test_farfield.jl")
 include("test_rtports.jl")
+include("test_tdop_scaling.jl")
+include("test_tdrhs_scaling.jl")
 
 try
     Pkg.installed("BogaertInts10")

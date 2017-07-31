@@ -42,6 +42,10 @@ quadrule(op::MWDoubleLayerTDIO, testrefs, trialrefs, timerefs,
     r
 end
 
+# build
+# ``\int (D-R)^d/R (y-b) dy`` from
+# ``(ξ-b) \int R^k dy`` and
+# ``\int R^k (y-ξ) dy``
 @inline function tmRoRf(d, t, iG, iGξy, bξ)
     r = zero(t)
     for q in 0:d
@@ -55,16 +59,18 @@ end
 
 
 function innerintegrals!(zl, op::MWSingleLayerTDIO,
-    p, tmax, # test_point, test_time
-    U, V, W, # local_test_space, local_trial_space, local_temporal_space
-    τ, σ, ι, # test_element, trial_element, spherial_shell
-    qr, w)   # inner_quadrature_rule, outer_quadrature_weight
+        p, tmax, # test_point, test_time
+        U, V, W, # local_test_space, local_trial_space, local_temporal_space
+        τ, σ, ι, # test_element, trial_element, spherial_shell
+        qr, w)   # inner_quadrature_rule, outer_quadrature_weight
 
 	T = typeof(w)
 
+    sol = op.speed_of_light
+    Rmax = sol * tmax
+
     dx = w
     x = cartesian(p)
-    #n = normal(σ)
     n = cross(σ[1]-σ[3],σ[2]-σ[3])
     n /= norm(n)
     ξ = x - ((x-σ[1]) ⋅ n) * n
@@ -75,8 +81,6 @@ function innerintegrals!(zl, op::MWSingleLayerTDIO,
     @assert r < R
     @assert degree(W) <= 3
 
-    #N = max(degree(W), 0)
-    #∫G, ∫Gξy, = WiltonInts84.wiltonints(σ[1],σ[2],σ[3],x,r,R,Val{N-1})
     ∫G, ∫Gξy, = WiltonInts84.wiltonints(σ[1],σ[2],σ[3],x,r,R,Val{2})
 
     αg = 1 / volume(τ) / 2
@@ -93,8 +97,6 @@ function innerintegrals!(zl, op::MWSingleLayerTDIO,
         g = (x-a)
         for j in 1 : numfunctions(V)
             b = σ[j]; bξ = ξ-b
-            #∫Gf = ∫Gξy + (ξ-b) * ∫G
-            #∫Gf = [∫Gξy[i] + bξ*∫G[i] for i in eachindex(∫G)]
             for k in 1 : numfunctions(W)
 				d = k-1
 				sgn = isodd(d) ? -1 : 1
@@ -105,8 +107,7 @@ function innerintegrals!(zl, op::MWSingleLayerTDIO,
 						q *= (d-ν)
 					end
                     @assert dh == 0
-                    zl[i,j,k] += β * q * tmRoR(d-dh, tmax, ∫G)
-					#zl[i,j,k] += β * sgn * q * ∫G[d+2-dh]
+                    zl[i,j,k] += β * q * tmRoR(d-dh, Rmax, ∫G) / sol^(d-dh)
 				end
 				# weakly singular contribution
 				if d >= ds
@@ -114,9 +115,7 @@ function innerintegrals!(zl, op::MWSingleLayerTDIO,
 					for ν in 0 : ds-1
 						q *= (d-ν)
 					end
-					#∫Gf = ∫Gξy[d+2-ds] + (ξ-b)*∫G[d+2-ds]
-                    zl[i,j,k] += α * q * (g ⋅ tmRoRf(d-ds, tmax, ∫G, ∫Gξy, bξ))
-					#zl[i,j,k] += α * sgn * q * (g ⋅ ∫Gf)
+                    zl[i,j,k] += α * q * (g ⋅ tmRoRf(d-ds, Rmax, ∫G, ∫Gξy, bξ)) / sol^(d-ds)
 				end
             end
         end
@@ -133,6 +132,9 @@ function innerintegrals!(z, op::MWDoubleLayerTDIO,
     qr, w)
 
 	T = typeof(w)
+
+    sol = op.speed_of_light
+    Rmax = sol * tmax
 
     dx = w
     x = cartesian(p)
@@ -161,7 +163,6 @@ function innerintegrals!(z, op::MWDoubleLayerTDIO,
         r = zero(t)
         for q in 0:d
             sgn = isodd(q) ? -1 : 1
-            #r += binomial(d,q) * sgn * t^(d-q) * iG[q+2]
             r += binomial(d,q) * sgn * t^(d-q) * iGG[q+1]
         end
         r
@@ -183,9 +184,7 @@ function innerintegrals!(z, op::MWDoubleLayerTDIO,
 						q *= (d-p)
 					end
                     @assert q == 1
-                    #z[i,j,k] += -α * sgn * q * (f × g) ⋅ ∫∇G[d+1-ds]
-                    z[i,j,k] += -α * q * ( fxg ⋅ tmRoR(d-ds, tmax, ∫∇G) )
-                    #d == 1 && @assert z[i,j,k] == 0
+                    z[i,j,k] += -α * q * ( fxg ⋅ tmRoR(d-ds, Rmax, ∫∇G) ) / sol^(d-ds)
 				end
             end
         end

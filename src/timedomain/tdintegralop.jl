@@ -58,9 +58,11 @@ function assemble!(op::RetardedPotential, testST, trialST, store)
 	trialels, trialad = assemblydata(trialspace)
 
     timeels, timead = assemblydata(timebasisfunction)
+    speedoflight = op.speed_of_light
 
 	Δt = timestep(timebasisfunction)
-	ΔR = Δt * op.speed_of_light
+	ΔR = Δt * speedoflight
+    @show Δt ΔR
 	Nt = numfunctions(timebasisfunction)
 	tmax = (Nt-1) * Δt
 
@@ -83,7 +85,6 @@ function assemble!(op::RetardedPotential, testST, trialST, store)
             σ = trialels[q]
 	        for r in rings(τ,σ,ΔR)
 				r > numfunctions(timebasisfunction) && continue
-	            # construct the radial interval [(r-1)ΔR, rΔR]
 	            ι = ring(r,ΔR)
 
 	            # compute interactions between reference shape functions

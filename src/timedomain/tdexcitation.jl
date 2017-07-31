@@ -113,6 +113,15 @@ function momintegrals!(z, exc::TDFunctional, testrefs, timerefs, τ, ρ, qr)
         f = p.value
         dx = w
 
+        # try
+        #     @assert ρ.vertices[1][1] <= cartesian(x)[1] <= ρ.vertices[2][1]
+        # catch
+        #     @show ρ.vertices[1][1]
+        #     @show cartesian(x)[1]
+        #     @show ρ.vertices[2][1]
+        #     error("")
+        # end
+
         tqr = timequadrule(qr,p)
         timeintegrals!(z, exc, testrefs, timerefs, x, ρ, dx, tqr, f)
 
@@ -147,6 +156,7 @@ function timeintegrals!(z, exc::TDFunctional,
         # since timeelement uses barycentric coordinates,
         # the first/left vertex has coords u = 1.0!
         testtime = neighborhood(timeelement, point(1.0))
+        @assert cartesian(testtime)[1] ≈ timeelement.vertices[1][1]
 
         for i in 1 : numfunctions(spacerefs)
             z[i,1] += dot(testvals[i][1], exc(testpoint, testtime)) * dx
