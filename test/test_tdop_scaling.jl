@@ -1,8 +1,11 @@
 using CompScienceMeshes, BEAST, Base.Test
 
+fn = joinpath(dirname(@__FILE__),"assets","sphere35.in")
+
 sol = 1.0
-D, Δx = 1.0/sol, 0.35/sol
-Γ = meshsphere(D, Δx)
+D, Δx = 1.0, 0.35
+#Γ = meshsphere(D, Δx)
+Γ = readmesh(fn)
 X = raviartthomas(Γ)
 Xm = subset(X,[1])
 Xn = subset(X,[100])
@@ -20,7 +23,8 @@ Z1 = assemble(t, W, V)
 
 sol = 3.0
 D, Δx = 1.0, 0.35
-Γ = meshsphere(D, Δx)
+#Γ = meshsphere(D, Δx)
+Γ = readmesh(fn)
 X = raviartthomas(Γ)
 Xm = subset(X,[1])
 Xn = subset(X,[100])

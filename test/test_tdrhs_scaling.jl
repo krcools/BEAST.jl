@@ -1,7 +1,9 @@
 using CompScienceMeshes, BEAST, Base.Test
 
 D, Δx = 1.0, 0.35
-Γ = meshsphere(D, Δx)
+fn = joinpath(dirname(@__FILE__),"assets","sphere35.in")
+#Γ = meshsphere(D, Δx)
+Γ = readmesh(fn)
 X = raviartthomas(Γ)
 Y = subset(X,[1])
 
