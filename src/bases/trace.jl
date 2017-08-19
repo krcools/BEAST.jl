@@ -82,16 +82,13 @@ function strace(X::Space, γ, dim1::Type{Val{2}})
 
     x = refspace(X)
     on_target = overlap_gpredicate(γ)
-    #ad = assemblydata(X)
     E, ad = assemblydata(X)
 
     geo = geometry(X)
     Γ = geo
     Σ = skeleton(Γ,1)
-    #E = elements(geo)
 
-    # Allows for quick retrieval of the faces in Σ
-    # in a given cell of Γ.
+    # Allows for quick retrieval of the faces in Σ in a given cell of Γ.
     D = transpose(connectivity(Σ, Γ, abs))
     rows, vals = rowvals(D), nonzeros(D)
 
@@ -101,11 +98,9 @@ function strace(X::Space, γ, dim1::Type{Val{2}})
 
     for (p,el) in enumerate(E)
 
-        #for (q,fc) in enumerate(faces(el))
         for q in 1:dimension(Γ)+1
 
             # find the global index in Σ of the q-th face of the p-element
-            #e = findfirst(vals[nzrange(D,p)],q)
             e = 0
             for k in nzrange(D,p)
                 if vals[k] == q

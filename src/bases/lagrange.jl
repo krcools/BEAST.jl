@@ -13,37 +13,42 @@ function lagdimension end
 # C: continuity
 # M: mesh type
 # T: field type
-type LagrangeBasis{D,C,M,T,NF} <: Space{T}
+# NF: number of local shape functions
+type LagrangeBasis{D,C,M,T,NF,P} <: Space{T}
   geo::M
   fns::Vector{Vector{Shape{T}}}
+  pos::Vector{P}
 end
 
 
 
 # Constructor that automatically deduces MeshType and ScalarType but requires specification
 # of the Degree, Cont, and NumFns type parameters
-(::Type{LagrangeBasis{D,C,N}}){D,C,M,T,N}(g::M, f::Vector{Vector{Shape{T}}}) = LagrangeBasis{D,C,M,T,N}(g, f)
+function LagrangeBasis{D,C,N}(mesh::M, fns::Vector{Vector{Shape{T}}}, pos::Vector{P}) where {P,T,M,N,C,D}
+    LagrangeBasis{D,C,M,T,N,P}(mesh, fns, pos)
+end
 
 refspace{D,C,M,T,NF}(space::LagrangeBasis{D,C,M,T,NF}) = LagrangeRefSpace{T,D,dimension(geometry(space))+1,NF}()
-subset(s::S,I) where {S <: Space} = S(s.geo, s.fns[I])
+subset(s::S,I) where {S <: Space} = S(s.geo, s.fns[I], s.pos[I])
 
 function lagrangecxd0(mesh)
 
-  U = universedimension(mesh)
-  D1 = dimension(mesh)+1
+    U = universedimension(mesh)
+    D1 = dimension(mesh)+1
 
-  geometry = mesh
-  num_cells = numcells(mesh)
+    geometry = mesh
+    num_cells = numcells(mesh)
 
-  # create the local shapes
-  fns = Vector{Vector{Shape{Float64}}}(num_cells)
-  for i in 1 : num_cells
-    fns[i] = [
-      Shape(i, 1, 1.0)]
+    # create the local shapes
+    fns = Vector{Vector{Shape{Float64}}}(num_cells)
+    pos = Vector{vertextype(mesh)}(num_cells)
+    for (i,cell) in enumerate(cells(mesh))
+        fns[i] = [Shape(i, 1, 1.0)]
+        pos[i] = cartesian(center(chart(mesh, cell)))
   end
 
   NF = 1
-  LagrangeBasis{0,-1,NF}(geometry, fns)
+  LagrangeBasis{0,-1,NF}(geometry, fns, pos)
 end
 
 
@@ -116,7 +121,9 @@ end
 function duallagrangecxd0(mesh, vertexlist::Vector)
 
     T = coordtype(mesh)
+
     fns = Vector{Vector{Shape{T}}}(length(vertexlist))
+    pos = Vector{vertextype(mesh)}()
 
     fine = barycentric_refinement(mesh)
     vtoc, vton = vertextocellmap(fine)
@@ -124,10 +131,11 @@ function duallagrangecxd0(mesh, vertexlist::Vector)
         n = vton[v]
         F = vtoc[v,1:n]
         fns[k] = singleduallagd0(fine, F, v)
+        push!(pos, mesh.vertices[v])
     end
 
     NF = 1
-    LagrangeBasis{0,-1,NF}(fine, fns)
+    LagrangeBasis{0,-1,NF}(fine, fns, pos)
 end
 
 
@@ -169,75 +177,87 @@ function lagrangec0d1(mesh, jct)
     lagrangec0d1(mesh, vertexlist, Val{dimension(mesh)+1})
 end
 
+# build continuous linear Lagrange elements on a 2D manifold
 function lagrangec0d1(mesh, vertexlist::Vector, ::Type{Val{3}})
 
-      T = coordtype(mesh)
-      U = universedimension(mesh)
+    T = coordtype(mesh)
+    U = universedimension(mesh)
 
-      cellids, ncells = vertextocellmap(mesh)
+    cellids, ncells = vertextocellmap(mesh)
 
-      # create the local shapes
-      fns = Vector{Shape{Float64}}[]
-      sizehint!(fns, length(vertexlist))
-      for v in vertexlist
+    # create the local shapes
+    fns = Vector{Shape{Float64}}[]
+    pos = Vector{vertextype(mesh)}()
+
+    sizehint!(fns, length(vertexlist))
+    sizehint!(pos, length(vertexlist))
+    for v in vertexlist
 
         numshapes = ncells[v]
         numshapes == 0 && continue
 
         shapes = Vector{Shape{Float64}}(numshapes)
         for s in 1: numshapes
-          c = cellids[v,s]
-          cell = mesh.faces[c]
+            c = cellids[v,s]
+            cell = mesh.faces[c]
 
-          localid = findfirst(cell, v)
-          @assert localid != 0
+            localid = findfirst(cell, v)
+            @assert localid != 0
 
-          shapes[s] = Shape(c, localid, 1.0)
+            shapes[s] = Shape(c, localid, 1.0)
         end
 
         push!(fns, shapes)
-      end
-
-      NF = 3
-      LagrangeBasis{1,0,NF}(mesh, fns)
+        push!(pos, mesh.vertices[v])
     end
 
+    NF = 3
+    LagrangeBasis{1,0,NF}(mesh, fns, pos)
+end
 
+# for manifolds of dimension 1
 function lagrangec0d1(mesh, vertexlist, ::Type{Val{2}})
 
-  T = Float64
-  U = universedimension(mesh)
-  geometry = mesh
+    T = coordtype(mesh)
+    U = universedimension(mesh)
+    P = vertextype(mesh)
 
-  cellids, ncells = vertextocellmap(mesh)
+    geometry = mesh
 
-  # create the local shapes
-  numverts = numvertices(mesh)
-  fns = Vector{Vector{Shape{Float64}}}()
-  sizehint!(fns, length(vertexlist))
-  for v in vertexlist
+    cellids, ncells = vertextocellmap(mesh)
 
-    numshapes = ncells[v]
-    numshapes == 0 && continue # skip detached vertices
+    # create the local shapes
+    numverts = numvertices(mesh)
 
-    shapes = Vector{Shape{Float64}}(numshapes)
-    for s in 1: numshapes
-      c = cellids[v,s]
-      cell = mesh.faces[c]
-      if cell[1] == v
-        shapes[s] = Shape(c, 1, 1.0)
-      elseif cell[2] == v
-        shapes[s] = Shape(c, 2, 1.0)
-      else
-        error("Junctions not supported")
-      end
+    fns = Vector{Vector{Shape{T}}}()
+    pos = Vector{P}()
+
+    sizehint!(fns, length(vertexlist))
+    sizehint!(pos, length(vertexlist))
+    for v in vertexlist
+
+        numshapes = ncells[v]
+        numshapes == 0 && continue # skip detached vertices
+
+        shapes = Vector{Shape{Float64}}(numshapes)
+        for s in 1: numshapes
+            c = cellids[v,s]
+            cell = mesh.faces[c]
+            if cell[1] == v
+                shapes[s] = Shape(c, 1, 1.0)
+            elseif cell[2] == v
+                shapes[s] = Shape(c, 2, 1.0)
+            else
+                error("Junctions not supported")
+            end
+        end
+
+        push!(fns, shapes)
+        push!(pos, mesh.vertices[v])
     end
 
-    push!(fns, shapes)
-  end
-
-  NF = 2
-  LagrangeBasis{1,0,NF}(geometry, fns)
+    NF = 2
+    LagrangeBasis{1,0,NF}(geometry, fns, pos)
 end
 
 
@@ -258,7 +278,9 @@ function duallagrangec0d1(mesh, refined, jct_pred, ::Type{Val{3}})
 
     T = coordtype(mesh)
     num_faces = dimension(mesh)+1
+
     fns = Vector{Vector{Shape{T}}}(numcells(mesh))
+    pos = Vector{vertextype(mesh)}()
 
     # store the fine mesh's vertices in an octree for fast retrieval
     fine_vertices = Octree(refined.vertices)
@@ -267,6 +289,7 @@ function duallagrangec0d1(mesh, refined, jct_pred, ::Type{Val{3}})
     vtoc, vton = vertextocellmap(refined)
     for (i,coarse_idcs) in enumerate(cells(mesh))
         fns[i] = Vector{Shape{T}}()
+        push!(pos, cartesian(center(chart(mesh, coarse_idcs))))
 
         # It is assumed the vertices of this cell have the same index
         # mesh and its refinement.
@@ -320,7 +343,6 @@ function duallagrangec0d1(mesh, refined, jct_pred, ::Type{Val{3}})
             jct_pred(refined.vertices[v]) && continue
             n = vton[v]
             for c in vtoc[v,1:n]
-                #fine_idcs = cells(refined,c)
                 fine_idcs = refined.faces[c]
                 local_id = findfirst(fine_idcs, v)
                 @assert local_id != 0
@@ -330,18 +352,21 @@ function duallagrangec0d1(mesh, refined, jct_pred, ::Type{Val{3}})
         end
     end
 
+    @assert length(fns) == length(pos)
+
     NF = 3
-    return LagrangeBasis{1,0,NF}(refined, fns)
+    return LagrangeBasis{1,0,NF}(refined, fns, pos)
 end
 
 
 
 """
     duallagrangec0d1(originalmesh, refinedmesh)
-  It is the user responsibility to provide two meshes representing the same object.
-  The second mesh needs to be obtained using "barycentric_refinement(originalmesh)".
-  This basis function creats the dual Lagrange basis function and return an object that contains array of shapes [fns]
-  It also return a gemoetry containing the refined mesh
+
+It is the user responsibility to provide two meshes representing the same object.
+The second mesh needs to be obtained using "barycentric_refinement(originalmesh)".
+This basis function creats the dual Lagrange basis function and return an object that contains array of shapes [fns]
+It also return a gemoetry containing the refined mesh.
 """
 function duallagrangec0d1(mesh, mesh2, pred, ::Type{Val{2}})
   T = Float64
@@ -357,7 +382,9 @@ function duallagrangec0d1(mesh, mesh2, pred, ::Type{Val{2}})
   numverts2 = numvertices(mesh2)
   geometry = mesh2
   cellids2, ncells2 = vertextocellmap(mesh2)
+
   fns = Vector{Vector{Shape{T}}}(num_cells1)
+  pos = Vector{vertextype(mesh)}()
   # We will iterate over the coarse mesh segments to assign all the functions to it.
   for segment_coarse in 1 : num_cells1
     # For the dual Lagrange there is a 6 shapes per segment
@@ -410,10 +437,11 @@ function duallagrangec0d1(mesh, mesh2, pred, ::Type{Val{2}})
     end
     # Now assign all of these shapes to the relevent segment in the coarse mesh
     fns[segment_coarse]=shapes
+    push!(pos, cartesian(center(chart(mesh, mesh.faces[segment_coarse]))))
   end
 
   NF = 2
-  LagrangeBasis{1,0,NF}(geometry, fns)
+  LagrangeBasis{1,0,NF}(geometry, fns, pos)
 end
 
 
@@ -430,5 +458,6 @@ function strace(X::LagrangeBasis{1,0}, geo, fns::Vector)
     # number of local shape functions
     NF = binomial(n+d,n)
 
-    LagrangeBasis{1,0,NF}(geo, fns)
+    trpos = deepcopy(positions(X))
+    LagrangeBasis{1,0,NF}(geo, fns, trpos)
 end

@@ -191,20 +191,33 @@ Returns the RT basis object.
 """
 #TODO: can include an extra argument for polarity applied to ports
 function rt_ports(Γ, γ...)
-  internal = raviartthomas(Γ)
-  fns = internal.fns
 
-  for i = 1:length(γ) #loop through pairs of ports
-    port1 = portcells(Γ, γ[i][1]); port2 = portcells(Γ, γ[i][2])
-    ce1 = rt_cedge(port1, 1.0); ce2 = rt_cedge(port2, -1.0)
-    ffs = Vector{Shape{Float64}}(length(ce1) + length(ce2))
-    ffs = [ce1;ce2]
+    T = coordtype(Γ)
 
-    ve1 = rt_vedge(port1, 1.0); ve2 = rt_vedge(port2, -1.0)
-    fns = [fns;[ffs];ve1;ve2]
-  end
+    internal = raviartthomas(Γ)
 
-  RTBasis(Γ, fns)
+    fns = internal.fns
+    pos = internal.pos
+
+    for i = 1:length(γ) #loop through pairs of ports
+
+        port1 = portcells(Γ, γ[i][1])
+        port2 = portcells(Γ, γ[i][2])
+
+        ce1 = rt_cedge(port1, +1.0)
+        ce2 = rt_cedge(port2, -1.0)
+
+        ffs = Vector{Shape{T}}(length(ce1) + length(ce2))
+        ffs = [ce1;ce2]
+
+        ve1 = rt_vedge(port1, +1.0)
+        ve2 = rt_vedge(port2, -1.0)
+
+        fns = [fns;[ffs];ve1;ve2]
+    end
+
+    RTBasis(Γ, fns)
+
 end
 
 """
@@ -225,5 +238,5 @@ A = RT.fns
   idx
 end
 
-divergence(sp::RTBasis, geo, fns) = LagrangeBasis{0,-1,1}(geo, fns)
-ntrace(X::RTBasis, geo, fns) = LagrangeBasis{0,-1,1}(geo, fns)
+divergence(X::RTBasis, geo, fns) = LagrangeBasis{0,-1,1}(geo, fns, deepcopy(positions(X)))
+ntrace(X::RTBasis, geo, fns) = LagrangeBasis{0,-1,1}(geo, fns, deepcopy(positions(X)))
