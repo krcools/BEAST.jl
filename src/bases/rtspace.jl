@@ -7,7 +7,7 @@ type RTBasis{T,M,P} <: Space{T}
   pos::Vector{P}
 end
 
-RTBasis(geo, fns) = RTBasis(geo, fns, Vector{vertextype(geo)}())
+RTBasis(geo, fns) = RTBasis(geo, fns, Vector{vertextype(geo)}(length(fns)))
 
 positions(rt) = rt.pos
 refspace{T}(space::RTBasis{T}) = RTRefSpace{T}()
