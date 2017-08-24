@@ -52,7 +52,6 @@ include("maxwell/wiltonints.jl")
 include("maxwell/mwops.jl")
 include("maxwell/nxdbllayer.jl")
 include("maxwell/mwexc.jl")
-#include("maxwell/bogaertints.jl")
 include("maxwell/nitsche.jl")
 include("maxwell/farfield.jl")
 include("maxwell/nearfield.jl")
@@ -72,17 +71,10 @@ include("maxwell/timedomain/mwtdops.jl")
 include("maxwell/timedomain/mwtdexc.jl")
 
 include("utils/variational.jl")
-include("lusolver.jl")
 
-# try
-#     Pkg.installed("LinearForms")
-#     info("`LinearForms` detected: form compiler support enabled.")
-#     @eval using LinearForms
-#     @eval include("lusolver.jl")
-# catch
-#     #error("Please install prerequisite 'LinearForms':\n\n    Pkg.clone(\"https://github.com/krcools/LinearForms.jl\")")
-#     warn("`LinearForms` not installed: form compiler support disabled.")
-# end
+include("solvers/solver.jl")
+include("solvers/lusolver.jl")
+include("solvers/itsolver.jl")
 
 using CompScienceMeshes
 

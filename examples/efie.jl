@@ -16,7 +16,8 @@ e = (n × E) × n
 
 efie = @discretise t[k,j]==e[k]  j∈RT k∈RT
 
-u = solve(efie)
+#u = solve(efie)
+u = gmres(efie)
 println("Solution computed")
 
 isdefined(:plotresults) || (plotresults = false)

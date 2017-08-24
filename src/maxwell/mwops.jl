@@ -14,11 +14,9 @@ abstract type MaxwellOperator3DReg <: MaxwellOperator3D end
 immutable KernelValsMaxwell3D{T,U,P,Q}
     "gamma = im * wavenumber"
     gamma::U
-    #vect::Pt{3,T}
     vect::P
     dist::T
     green::U
-    #gradgreen::Pt{3,U}
     gradgreen::Q
 end
 
@@ -51,7 +49,6 @@ function kernelvals(kernel::MaxwellOperator3DReg, p, q)
 end
 
 immutable MWSingleLayer3D{T,U} <: MaxwellOperator3D
-  #wavenumber::T
   gamma::T
   α::U
   β::U
@@ -60,6 +57,29 @@ end
 MWSingleLayer3D(gamma)  = MWSingleLayer3D(gamma, -gamma, -1/(gamma))
 MWWeaklySingular(gamma) = MWSingleLayer3D(gamma, 1, 0)
 MWHyperSingular(gamma)  = MWSingleLayer3D(gamma, 0, 1)
+
+module Maxwell3D
+
+    using ..BEAST
+
+    """
+        singlelayer(;gamma, alpha, beta)
+
+    Bilinear form given by:
+
+    ```math
+        α ∬_{Γ×Γ} j(x)⋅k(y) G_{γ}(x,y) + β ∬_{Γ×Γ} div j(x) div k(y) G_{γ}(x,y)
+    ```
+
+    with ``G_{γ} = e^{-γ|x-y|} / 4π|x-y|``.
+    """
+    singlelayer(;
+        gamma=error("propagation constant required"),
+        alpha=-gamma,
+        beta=1/gamma) = MWSingleLayer3D(gamma, alpha, beta)
+end
+
+export Maxwell3D
 
 immutable MWSingleLayer3DReg{T,U} <: MaxwellOperator3DReg
     gamma::T
@@ -107,11 +127,7 @@ function integrand(biop::MWSL3DGen, kerneldata, tvals, tgeo, bvals, bgeo)
   α = biop.α
   β = biop.β
 
-  #t1 = α * G * dot(gx, fy)
-  #t2 = β * G * dot(dgx, dfy)
   t = (α * dot(gx, fy) + β * (dgx*dfy)) * G
-  #return t1 + t2
-  return t
 end
 
 immutable MWDoubleLayer3D{T} <: MaxwellOperator3D
@@ -187,11 +203,9 @@ function innerintegrals!(op::MWDoubleLayer3DSng, p, g, f, t, s, z, strat::Wilton
     n /= norm(n)
     ρ = x - ((x-s[1]) ⋅ n) * n
 
-    #scal, vec, grad = wiltonints(s[1], s[2], s[3], x)
     scal, vec, grad = WiltonInts84.wiltonints(s[1], s[2], s[3], x, Val{1})
 
     # \int \nabla G_s with G_s = \nabla (1/R + 0.5*γ^2*R) / (4\pi)
-    #∫∇G = (-grad[1] - 0.5*γ^2*grad[2]) / (4π)
     ∫∇G = (-grad[1] - 0.5*γ^2*grad[3]) / (4π)
 
     α = 1 / volume(t) / volume(s) / 4

@@ -1,11 +1,7 @@
 using .Variational
 
-export hilbertspace, @hilbertspace, @varform, @discretise
-
-import BEAST: assemble
-
-export sysmatrix, solve, discretise, rhs
-export @discretise
+export @hilbertspace, @varform, @discretise
+export solve
 
 type DiscreteEquation
   equation
@@ -13,8 +9,6 @@ type DiscreteEquation
   test_space_dict  # dictionary mapping indices into test space to FE spaces
 end
 
-sysmatrix(eq::DiscreteEquation) = assemble(eq.equation.lhs, eq.test_space_dict, eq.trial_space_dict)
-rhs(eq::DiscreteEquation) = assemble(eq.equation.rhs, eq.test_space_dict)
 
 function discretise(eq, space_mappings::Pair...)
     trial_space_dict = Dict()
@@ -37,24 +31,24 @@ function discretise(eq, space_mappings::Pair...)
     DiscreteEquation(eq, trial_space_dict, test_space_dict)
 end
 
-export discretisation, @discretisation
-function discretisation(space_mappings::Pair...)
-    space_dict = Dict()
-    for sm in space_mappings
-        space_dict[sm.first.idx] = sm.second
-    end
-    space_dict
-end
-
-macro discretisation(pairs...)
-    r = :(discretisation())
-    for p in pairs
-        x = p.args[2]
-        X = p.args[3]
-        push!(r.args, :($x=>$X))
-    end
-    return esc(r)
-end
+# export discretisation, @discretisation
+# function discretisation(space_mappings::Pair...)
+#     space_dict = Dict()
+#     for sm in space_mappings
+#         space_dict[sm.first.idx] = sm.second
+#     end
+#     space_dict
+# end
+#
+# macro discretisation(pairs...)
+#     r = :(discretisation())
+#     for p in pairs
+#         x = p.args[2]
+#         X = p.args[3]
+#         push!(r.args, :($x=>$X))
+#     end
+#     return esc(r)
+# end
 
 
 """
@@ -67,7 +61,7 @@ that for all k ∈ Y a(k,j) = f(k) can be discretised by stating:
     eq = @discretise EQ j∈X k∈Y
 """
 macro discretise(eq, pairs...)
-    r = :(discretise($eq))
+    r = :(BEAST.discretise($eq))
     for p in pairs
         x = p.args[2]
         X = p.args[3]
@@ -76,51 +70,11 @@ macro discretise(eq, pairs...)
     return esc(r)
 end
 
-"""
-Solves a variational equation by simply creating the full system matrix
-and calling a traditional lu decomposition.
-"""
-function solve(eq)
 
-    time_domain = isa(first(eq.trial_space_dict).second, BEAST.SpaceTimeBasis)
-    if time_domain
-        return td_solve(eq)
-    end
+export sysmatrix, rhs
 
-    test_space_dict  = eq.test_space_dict
-    trial_space_dict = eq.trial_space_dict
-
-    lhs = eq.equation.lhs
-    rhs = eq.equation.rhs
-
-    b = assemble(rhs, test_space_dict)
-    #println("Right hand side assembled.")
-    Z = assemble(lhs, test_space_dict, trial_space_dict)
-    #println("System matrix assembled.")
-
-    u = Z \ b
-    #println("System solved.")
-
-    return u
-end
-
-
-function td_solve(eq)
-
-    warn("very limited sypport for automated solution of TD equations....")
-    op = eq.equation.lhs.terms[1].kernel
-    fn = eq.equation.rhs.terms[1].functional
-
-    V = eq.trial_space_dict[1]
-    W = eq.test_space_dict[1]
-
-    A = assemble(op, W, V)
-    S = inv(A[:,:,1])
-    b = assemble(fn, W)
-
-    nt = numfunctions(temporalbasis(V))
-    marchonintime(S, A, b, nt)
-end
+sysmatrix(eq::DiscreteEquation) = assemble(eq.equation.lhs, eq.test_space_dict, eq.trial_space_dict)
+rhs(eq::DiscreteEquation) = assemble(eq.equation.rhs, eq.test_space_dict)
 
 function assemble(lform::LinForm, test_space_dict)
 
