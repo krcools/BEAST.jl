@@ -140,15 +140,21 @@ t(\vt{k},\vt{j}) = \frac{1}{ik} \int_{\Gamma} \int_{\Gamma'} \nabla \cdot \vt{k}
 </script>
 </p>
 <p>Using the <code>LinearForms</code> package, which implements a simple form compiler for Julia (<code>@varform</code>), the EFIE can be defined and discretised by</p>
-<pre><code class="julia">j, = hilbertspace(:j)
+<p>```@example 1
+j, = hilbertspace(:j)
 k, = hilbertspace(:k)
 EFIE = @varform t[k,j] == e[k]
 efie = @discretise EFIE  j∈RT k∈RT
-</code></pre>
+nothing # hide</p>
+<pre><code>
 
-<p>Solving and computing the values of the induced current in the centers of the triangles of the mesh is now straightforward:</p>
-<pre><code class="julia">u = solve(efie)
+Solving and computing the values of the induced current in the centers of the triangles of the mesh is now straightforward:
+
+
+```@example 1
+u = solve(efie)
 fcr, geo = facecurrents(u,RT)
+nothing # hide
 </code></pre>
 
 <p>The resulting current distribution can be visualised by e.g. Matlab, Paraview, Plotly,...</p>
