@@ -32,12 +32,22 @@ a(u,v) = α ∬_{Γ×Γ} u(x) G_{γ}(|x-y|) v(y)
 
 with ``G_{γ}(r) = \frac{e^{-γr}}{4πr}``.
 """
-struct HH3DSingleLayer{T,K} <: Helmholtz3DOp
+struct HH3DSingleLayerFDBIO{T,K} <: Helmholtz3DOp
     alpha::T
     gamma::K
 end
 
-HH3DSingleLayerFDBIO(gamma) = HH3DSingleLayer(one(gamma), gamma)
+HH3DSingleLayerFDBIO(gamma) = HH3DSingleLayerFDBIO(one(gamma), gamma)
+
+struct HH3DDoubleLayer{T,K} <: Helmholtz3DOp
+    alpha::T
+    gamma::K
+end
+
+struct HH3DDoubleLayerTransposed{T,K} <: Helmholtz3DOp
+    alpha::T
+    gamma::K
+end
 
 
 function quaddata(op::Helmholtz3DOp, test_refspace::LagrangeRefSpace,
@@ -46,7 +56,17 @@ function quaddata(op::Helmholtz3DOp, test_refspace::LagrangeRefSpace,
     test_eval(x)  = test_refspace(x,  Val{:withcurl})
     trial_eval(x) = trial_refspace(x, Val{:withcurl})
 
-    qp = quadpoints(test_eval,  test_elements,  (3,)), quadpoints(trial_eval, trial_elements, (4,))
+    # The combinations of rules (6,7) and (5,7 are) BAAAADDDD
+    # they result in many near singularity evaluations with any
+    # resemblence of accuracy going down the drain! Simply don't!
+    # (same for (5,7) btw...).
+    # test_qp = quadpoints(test_eval,  test_elements,  (6,))
+    # bssi_qp = quadpoints(trial_eval, trial_elements, (7,))
+
+    test_qp = quadpoints(test_eval,  test_elements,  (4,))
+    bsis_qp = quadpoints(trial_eval, trial_elements, (7,))
+
+    return test_qp, bsis_qp
 end
 
 
@@ -77,7 +97,7 @@ function integrand(op::HH3DHyperSingularFDBIO,
 end
 
 
-function integrand(op::HH3DSingleLayer, kernel, test_values,
+function integrand(op::HH3DSingleLayerFDBIO, kernel, test_values,
         test_element, trial_values, trial_element)
 
     α = op.alpha
@@ -89,18 +109,41 @@ function integrand(op::HH3DSingleLayer, kernel, test_values,
 end
 
 
+function integrand(biop::HH3DDoubleLayer, kernel, fp, mp, fq, mq)
+    nq = normal(mq)
+    fp[1] * dot(nq, -kernel.gradgreen) * fq[1]
+end
+
+
+function integrand(biop::HH3DDoubleLayerTransposed, kernel, fp, mp, fq, mq)
+    np = normal(mp)
+    fp[1] * dot(np, kernel.gradgreen) * fq[1]
+end
+
+
 module Helmholtz3D
     using ..BEAST
 
     singlelayer(;
         gamma=error("propagation constant is a required argument"),
-        alpha=one(gamma)) = HH3DSingleLayer(alpha,gamma)
+        alpha=one(gamma)) = BEAST.HH3DSingleLayerFDBIO(alpha,gamma)
 
     hypersingular(;
         gamma=error("propagation constant is a required argument"),
         alpha=gamma^2,
-        beta=ones(gamma)) = HH3DHyperSingularFDBIO(alpha, beta, gamma)
+        beta=one(gamma)) = BEAST.HH3DHyperSingularFDBIO(alpha, beta, gamma)
 
+
+    planewave(;
+        direction=error("direction is a required argument"),
+        wavenumber=error("wavenumber is a required arguement"),
+        amplitude=one(eltype(direction))) = BEAST.HH3DPlaneWave(direction, wavenumber, amplitude)
+
+    doublelayer(;gamma=error("gamma missing"), alpha=one(gamma)) =
+        BEAST.HH3DDoubleLayer(alpha, gamma)
+
+    doublelayer_transposed(;gamma=error("gamma missing"), alpha=one(gamma)) =
+        BEAST.HH3DDoubleLayerTransposed(alpha, gamma)
 end
 
 export Helmholtz3D

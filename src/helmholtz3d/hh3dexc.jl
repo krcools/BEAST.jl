@@ -1,4 +1,6 @@
-type HH3DPlaneWave{T,P}
+export ∂n
+
+struct HH3DPlaneWave{T,P} <: Functional
     direction::P
     wavenumber::T
     amplitude::T
@@ -16,7 +18,7 @@ function (f::HH3DPlaneWave)(r)
     a * exp(-im*k*dot(d,r))
 end
 
-type NormalDerivative{F} <: Functional
+struct NormalDerivative{F} <: Functional
     field::F
 end
 

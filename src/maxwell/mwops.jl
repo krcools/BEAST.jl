@@ -76,7 +76,14 @@ module Maxwell3D
     singlelayer(;
         gamma=error("propagation constant required"),
         alpha=-gamma,
-        beta=1/gamma) = MWSingleLayer3D(gamma, alpha, beta)
+        beta=-1/gamma) = MWSingleLayer3D(gamma, alpha, beta)
+
+    planewave(;
+            direction    = error("missing arguement `direction`"),
+            polarization = error("missing arguement `polarization`"),
+            wavenumber   = error("missing arguement `wavenumber`"),
+            amplitude    = one(real(typeof(wavenumber)))) =
+        BEAST.PlaneWaveMW(direction, polarization, wavenumber, amplitude)
 end
 
 export Maxwell3D

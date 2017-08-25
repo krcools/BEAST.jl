@@ -8,6 +8,7 @@ export integrand
 export shapevals
 
 export ScalarTrace
+export strace
 
 export PlaneWaveDirichlet
 export PlaneWaveNeumann
@@ -136,11 +137,13 @@ type PlaneWaveNeumann{T,P} <: Functional
     direction::P
 end
 
-type ScalarTrace <: Functional
-    f::Function
+type ScalarTrace{F} <: Functional
+    f::F
 end
 
-@compat (s::ScalarTrace)(x) = s.f(x)
+strace(f::Functional, mesh) = ScalarTrace(f)
+
+@compat (s::ScalarTrace)(x) = s.f(cartesian(x))
 integrand(s::ScalarTrace, tx, fx) = tx[1] * fx
 
 shapevals(f::Functional, ϕ, ts) = shapevals(ValOnly(), ϕ, ts)

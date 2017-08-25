@@ -38,6 +38,7 @@ function Base.:*(solver::GMRESSolver, b)
     x, ch = solve(solver, b)
     println(ch)
     ch.isconverged || error("Iterative solver did not converge.")
+    return x
 end
 
 

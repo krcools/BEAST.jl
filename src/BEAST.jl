@@ -49,9 +49,9 @@ include("timedomain/tdtimeops.jl")
 
 # Support for Maxwell equations
 include("maxwell/wiltonints.jl")
+include("maxwell/mwexc.jl")
 include("maxwell/mwops.jl")
 include("maxwell/nxdbllayer.jl")
-include("maxwell/mwexc.jl")
 include("maxwell/nitsche.jl")
 include("maxwell/farfield.jl")
 include("maxwell/nearfield.jl")
@@ -60,8 +60,8 @@ include("maxwell/spotential.jl")
 # Support for the Helmholtz equation
 include("helmholtz2d/helmholtzop.jl")
 
-include("helmholtz3d/hh3dops.jl")
 include("helmholtz3d/hh3dexc.jl")
+include("helmholtz3d/hh3dops.jl")
 include("helmholtz3d/nitsche.jl")
 
 include("helmholtz3d/timedomain/tdhh3dops.jl")

@@ -7,8 +7,8 @@ o, x, y, z = euclidianbasis(3)
 RT = raviartthomas(Γ)
 
 κ = 1.0
-t = MWSingleLayer3D(im*κ)
-E = planewavemw3d(direction=z, polarization=x, wavenumber=κ)
+t = Maxwell3D.singlelayer(gamma=im*κ)
+E = Maxwell3D.planewave(direction=z, polarization=x, wavenumber=κ)
 e = (n × E) × n
 
 @hilbertspace j
@@ -16,7 +16,6 @@ e = (n × E) × n
 
 efie = @discretise t[k,j]==e[k]  j∈RT k∈RT
 
-#u = solve(efie)
 u = gmres(efie)
 println("Solution computed")
 
