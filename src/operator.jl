@@ -1,11 +1,17 @@
+using BEAST.LinearSpace
+
 export assemble
 
 import Base: transpose, +, -, *
 
 abstract type AbstractOperator end
-abstract type Operator <: AbstractOperator end
 
-# Support for operator transpose
+#@linearspace AbstractOperator{T} T
+
+"""
+*Atomic operator*: one that assemblechunk can deal with
+"""
+abstract type Operator <: AbstractOperator end
 
 type TransposedOperator <: Operator
     op::Operator

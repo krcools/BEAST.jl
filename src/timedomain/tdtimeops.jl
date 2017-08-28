@@ -3,7 +3,6 @@ function assemble(op::Identity,
         trialfns::AbstractTimeBasisFunction)
 
     tbf = convolve(testnfs, trialfns)
-    #T = valuetype(tbf)
     T = scalartype(tbf)
     z = zeros(T, numintervals(tbf)-1)
     Δt = timestep(tbf)
@@ -17,7 +16,6 @@ function assemble(op::Identity,
 end
 
 type TensorOperator <: Operator
-#type TensorOperator <: RetardedPotential
     spatial_factor
     temporal_factor
 end

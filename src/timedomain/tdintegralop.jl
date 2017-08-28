@@ -123,8 +123,9 @@ function assemble!(op::RetardedPotential, testST, trialST, store)
     println("")
 end
 
-type WiltonInts84Strat
-	outer_quad_points
+struct WiltonInts84Strat{T,V}
+	outer_quad_points::T
+    binomials::V
 end
 
 

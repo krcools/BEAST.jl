@@ -23,21 +23,37 @@ end
 MWSingleLayerTDIO(c) = MWSingleLayerTDIO(c,-1/c,-c,2,0)
 MWDoubleLayerTDIO(c) = MWDoubleLayerTDIO(c, one(c), 0)
 
-quaddata(op::MWSingleLayerTDIO, testrefs, trialrefs, timerefs,
-    testels, trialels, timeels) = quadpoints(testrefs, testels, (3,))
+function quaddata(op::MWSingleLayerTDIO, testrefs, trialrefs, timerefs,
+        testels, trialels, timeels)
+
+    dmax = numfunctions(timerefs)-1
+    bn = binomial.((0:dmax),(0:dmax)')
+    quadpoints(testrefs, testels, (3,)), bn
+
+end
+
+
 quadrule(op::MWSingleLayerTDIO, testrefs, trialrefs, timerefs,
-        p, testel, q, trialel, r, timeel, qd) = WiltonInts84Strat(qd[1,p])
+        p, testel, q, trialel, r, timeel, qd) = WiltonInts84Strat(qd[1][1,p],qd[2])
 
-quaddata(op::MWDoubleLayerTDIO, testrefs, trialrefs, timerefs,
-        testels, trialels, timeels) = quadpoints(testrefs, testels, (3,))
+function quaddata(op::MWDoubleLayerTDIO, testrefs, trialrefs, timerefs,
+        testels, trialels, timeels)
+
+    dmax = numfunctions(timerefs)-1
+    bn = binomial.((0:dmax),(0:dmax)')
+    quadpoints(testrefs, testels, (3,))
+end
+
 quadrule(op::MWDoubleLayerTDIO, testrefs, trialrefs, timerefs,
-        p, testel, q, trialel, r, timeel, qd) = WiltonInts84Strat(qd[1,p])
+        p, testel, q, trialel, r, timeel, qd) = WiltonInts84Strat(qd[1][1,p],qd[2])
 
-@inline function tmRoR(d, t, iG)
+@inline function tmRoR(d, t, iG, bns)
     r = zero(t)
     for q in 0:d
         sgn = isodd(q) ? -1 : 1
-        r += binomial(d,q) * sgn * t^(d-q) * iG[q+2]
+        bn = bns[d+1,q+1]
+        #r += binomial(d,q) * sgn * t^(d-q) * iG[q+2]
+        r += bn * sgn * t^(d-q) * iG[q+2]
     end
     r
 end
@@ -46,15 +62,44 @@ end
 # ``\int (D-R)^d/R (y-b) dy`` from
 # ``(ξ-b) \int R^k dy`` and
 # ``\int R^k (y-ξ) dy``
-@inline function tmRoRf(d, t, iG, iGξy, bξ)
+@inline function tmRoRf(d, t, iG, iGξy, bξ, bns)
     r = zero(t)
     for q in 0:d
         sgn = isodd(q) ? -1 : 1
         i = q+2
         iGf = iGξy[i] + bξ * iG[i]
-        r += binomial(d,q) * sgn * t^(d-q) * iGf
+        bn = bns[d+1,q+1]
+        #r += binomial(d,q) * sgn * t^(d-q) * iGf
+        r += bn * sgn * t^(d-q) * iGf
     end
     r
+end
+
+"""
+    Q = qd(T,dh,::Val{N})
+
+Q[k] is the factor in front resulting from differentiating t^(k-1) dh times.
+"""
+@generated function qh(::Type{T},dh,n::Type{Val{N}}) where {N,T}
+    xp = quote end
+    for k in 1:N
+        qk = Symbol(:q,k)
+        d = k-1
+        xp1 = quote
+            $(qk) = one($T)
+            for v in 0 : dh-1
+                $(qk) *= ($d-v)
+            end
+        end
+        append!(xp.args, xp1.args)
+    end
+    xp1 = :(())
+    for k in 1:N
+        qk = Symbol(:q,k)
+        push!(xp1.args, :($qk))
+    end
+    push!(xp.args, xp1)
+    return xp
 end
 
 
@@ -92,30 +137,31 @@ function innerintegrals!(zl, op::MWSingleLayerTDIO,
 	ds = op.ws_diffs
 	dh = op.hs_diffs
 
+    qhs = qh(T,dh,Val{4})
+    qss = qh(T,ds,Val{4})
+
+    bn = qr.binomials
+
     for i in 1 : numfunctions(U)
         a = τ[i]
         g = (x-a)
         for j in 1 : numfunctions(V)
             b = σ[j]; bξ = ξ-b
             for k in 1 : numfunctions(W)
-				d = k-1
+				d = k-1 # ranges from 0 to numfunctions(W)-1
 				sgn = isodd(d) ? -1 : 1
 				# hyper singular contribution
 				if d >= dh
-					q = one(T)
-					for ν in 0 : dh-1
-						q *= (d-ν)
-					end
                     @assert dh == 0
-                    zl[i,j,k] += β * q * tmRoR(d-dh, Rmax, ∫G) / sol^(d-dh)
+                    q = qhs[k]
+                    Ih = tmRoR(d-dh, Rmax, ∫G, bn) # \int (cTmax-R)^(d-dh)/R dy
+                    zl[i,j,k] += β * q * Ih / sol^(d-dh)
 				end
 				# weakly singular contribution
 				if d >= ds
-					q = one(T)
-					for ν in 0 : ds-1
-						q *= (d-ν)
-					end
-                    zl[i,j,k] += α * q * (g ⋅ tmRoRf(d-ds, Rmax, ∫G, ∫Gξy, bξ)) / sol^(d-ds)
+                    q = qss[k]
+                    Is = tmRoRf(d-ds, Rmax, ∫G, ∫Gξy, bξ, bn) # \int (cTmax-R)^(d-ds)/R (y-b) dy
+                    zl[i,j,k] += α * q * (g ⋅ Is) / sol^(d-ds)
 				end
             end
         end

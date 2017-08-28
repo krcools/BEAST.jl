@@ -16,6 +16,7 @@ include("utils/polynomial.jl")
 include("utils/sparsend.jl")
 include("utils/specialfns.jl")
 include("utils/combinatorics.jl")
+include("utils/linearspace.jl")
 
 include("bases/basis.jl")
 include("bases/trace.jl")

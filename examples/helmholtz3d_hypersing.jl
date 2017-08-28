@@ -7,7 +7,7 @@ X = lagrangec0d1(Γ)
 @show numfunctions(X)
 
 κ = 1.0; γ = im*κ
-a = -Helmholtz3D.hypersingular(gamma=γ)
+a = -1Helmholtz3D.hypersingular(gamma=γ)
 b = Helmholtz3D.doublelayer(gamma=γ) - 0.5Identity()
 
 uⁱ = Helmholtz3D.planewave(wavenumber=κ, direction=z)
