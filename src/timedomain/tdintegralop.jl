@@ -135,6 +135,7 @@ function momintegrals!(z, op, g, f, T, τ, σ, tmax, ι, qr::WiltonInts84Strat)
     for p in 1 : length(XW)
         x = XW[p].point
         w = XW[p].weight
+        #@code_warntype innerintegrals!(z, op, x, tmax, g, f, T, τ, σ, ι, qr, w)
 		innerintegrals!(z, op, x, tmax, g, f, T, τ, σ, ι, qr, w)
     end # next quadrature point
 

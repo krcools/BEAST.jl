@@ -23,12 +23,12 @@ direction, polarisation = z, x
 E = planewave(polarisation, direction, derive(gaussian), sol)
 T = MWSingleLayerTDIO(sol,-1/sol,-sol,2,0)
 
-Z = assemble(T,W,V);
+#Z = assemble(T,W,V);
 
-# @hilbertspace j
-# @hilbertspace j′
-# tdefie = @discretise T[j′,j] == -1E[j′]   j∈V  j′∈W
-# xefie = solve(tdefie)
+@hilbertspace j
+@hilbertspace j′
+tdefie = @discretise T[j′,j] == -1E[j′]   j∈V  j′∈W
+xefie = solve(tdefie)
 
 # using PlotlyJS
 # include(Pkg.dir("CompScienceMeshes","examples","plotlyjs_patches.jl"))

@@ -63,7 +63,7 @@ end
 # ``(ξ-b) \int R^k dy`` and
 # ``\int R^k (y-ξ) dy``
 @inline function tmRoRf(d, t, iG, iGξy, bξ, bns)
-    r = zero(t)
+    r = zero(bξ)
     for q in 0:d
         sgn = isodd(q) ? -1 : 1
         i = q+2
