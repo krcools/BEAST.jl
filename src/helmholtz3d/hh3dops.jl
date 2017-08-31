@@ -1,7 +1,7 @@
 export HH3DHyperSingularFDBIO
 
 abstract type Helmholtz3DOp <: MaxwellOperator3D end
-
+abstract type Helmholtz3DOpReg <: MaxwellOperator3DReg end
 
 """
 ```
@@ -20,10 +20,7 @@ struct HH3DHyperSingularFDBIO{T,K} <: Helmholtz3DOp
 end
 
 HH3DHyperSingularFDBIO(gamma) = HH3DHyperSingularFDBIO(gamma^2, one(gamma), gamma)
-#HH3DSingleLayerFDBIO(gamma) = HH3DHyperSingularFDBIO(one(gamma), zero(gamma), gamma)
-
 scalartype(op::HH3DHyperSingularFDBIO) = promote_type(typeof(op.alpha), typeof(op.beta), typeof(op.gamma))
-
 
 """
 ```math
@@ -37,7 +34,15 @@ struct HH3DSingleLayerFDBIO{T,K} <: Helmholtz3DOp
     gamma::K
 end
 
-HH3DSingleLayerFDBIO(gamma) = HH3DSingleLayerFDBIO(one(gamma), gamma)
+struct HH3DSingleLayerReg{T,K} <: Helmholtz3DOpReg
+    alpha::T
+    gamma::K
+end
+
+struct HH3DSingleLayerSng{T,K} <: Helmholtz3DOp
+    alpha::T
+    gamma::K
+end
 
 struct HH3DDoubleLayer{T,K} <: Helmholtz3DOp
     alpha::T
@@ -48,7 +53,6 @@ struct HH3DDoubleLayerTransposed{T,K} <: Helmholtz3DOp
     alpha::T
     gamma::K
 end
-
 
 function quaddata(op::Helmholtz3DOp, test_refspace::LagrangeRefSpace,
         trial_refspace::LagrangeRefSpace, test_elements, trial_elements)
@@ -69,14 +73,42 @@ function quaddata(op::Helmholtz3DOp, test_refspace::LagrangeRefSpace,
     return test_qp, bsis_qp
 end
 
+function quadrule(op::HH3DSingleLayerFDBIO, test_refspace, trial_refspace, i,
+        test_element, j, trial_element, quadrature_data)
+
+    tol, hits = sqrt(eps(eltype(eltype(test_element.vertices)))), 0
+    for t in test_element.vertices
+        for s in trial_element.vertices
+            norm(t-s) < tol && (hits +=1; break)
+    end end
+
+    test_quadpoints  = quadrature_data[1]
+    trial_quadpoints = quadrature_data[2]
+
+    hits != 0 && return WiltonSEStrategy(
+        test_quadpoints[1,i],
+        DoubleQuadStrategy(
+            test_quadpoints[1,i],
+            trial_quadpoints[1,j]))
+
+    return DoubleQuadStrategy(
+        quadrature_data[1][1,i],
+        quadrature_data[2][1,j])
+end
+
 
 function quadrule(op::Helmholtz3DOp, test_refspace, trial_refspace, i,
         test_element, j, trial_element, quadrature_data)
 
-    DoubleQuadStrategy(
+    test_quadpoints  = quadrature_data[1]
+    trial_quadpoints = quadrature_data[2]
+
+    return DoubleQuadStrategy(
         quadrature_data[1][1,i],
         quadrature_data[2][1,j])
 end
+
+
 
 
 function integrand(op::HH3DHyperSingularFDBIO,
@@ -97,8 +129,16 @@ function integrand(op::HH3DHyperSingularFDBIO,
 end
 
 
-function integrand(op::HH3DSingleLayerFDBIO, kernel, test_values,
-        test_element, trial_values, trial_element)
+
+
+
+HH3DSingleLayerFDBIO(gamma) = HH3DSingleLayerFDBIO(one(gamma), gamma)
+
+regularpart(op::HH3DSingleLayerFDBIO) = HH3DSingleLayerReg(op.alpha, op.gamma)
+singularpart(op::HH3DSingleLayerFDBIO) = HH3DSingleLayerSng(op.alpha, op.gamma)
+
+function integrand(op::Union{HH3DSingleLayerFDBIO,HH3DSingleLayerReg},
+        kernel, test_values, test_element, trial_values, trial_element)
 
     α = op.alpha
     G = kernel.green
@@ -109,13 +149,40 @@ function integrand(op::HH3DSingleLayerFDBIO, kernel, test_values,
 end
 
 
-function integrand(biop::HH3DDoubleLayer, kernel, fp, mp, fq, mq)
+function innerintegrals!(op::HH3DSingleLayerSng,
+        test_neighborhood, test_refspace, trial_refspace, test_elements,
+        trial_element, zlocal, quadrature_rule::WiltonSEStrategy, dx)
+
+    γ = op.gamma
+    α = op.alpha
+
+    s1, s2, s3 = trial_element.vertices
+
+    x = cartesian(test_neighborhood)
+    n = normalize((s1-s3)×(s2-s3))
+    ρ = x - dot(x - s1, n) * n
+
+    scal, vec = WiltonInts84.wiltonints(s1, s2, s3, x, Val{1})
+    ∫G = (scal[2] - γ*scal[3] + 0.5*γ^2*scal[4]) / (4π)
+
+    zlocal[1,1] += α * ∫G * dx
+    return nothing
+end
+
+
+
+function integrand(biop::HH3DDoubleLayer,
+        kernel, fp, mp, fq, mq)
+
     nq = normal(mq)
     fp[1] * dot(nq, -kernel.gradgreen) * fq[1]
 end
 
 
-function integrand(biop::HH3DDoubleLayerTransposed, kernel, fp, mp, fq, mq)
+
+function integrand(biop::HH3DDoubleLayerTransposed,
+        kernel, fp, mp, fq, mq)
+
     np = normal(mp)
     fp[1] * dot(np, kernel.gradgreen) * fq[1]
 end

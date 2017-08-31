@@ -88,13 +88,13 @@ end
 
 export Maxwell3D
 
-immutable MWSingleLayer3DReg{T,U} <: MaxwellOperator3DReg
+struct MWSingleLayer3DReg{T,U} <: MaxwellOperator3DReg
     gamma::T
     α::U
     β::U
 end
 
-immutable MWSingleLayer3DSng{T,U} <: MaxwellOperator3D
+struct MWSingleLayer3DSng{T,U} <: MaxwellOperator3D
     gamma::T
     α::U
     β::U
