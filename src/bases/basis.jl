@@ -45,6 +45,7 @@ operator takes on values in a vector or tensor space. This data type is used to
 determine the `eltype` of assembled discrete operators.
 """
 function scalartype end
+scalartype(x1, xs...) = Base.promote_type(scalartype(x1), scalartype(xs...))
 
 
 """
