@@ -49,34 +49,82 @@ function assemblechunk!(biop::IntegralOperator, tfs::Space, bfs::Space, store)
     bshapes = refspace(bfs); num_bshapes = numfunctions(bshapes)
 
     qd = quaddata(biop, tshapes, bshapes, test_elements, bsis_elements)
-    T = promote_type(scalartype(biop), scalartype(tfs), scalartype(bfs))
-    zlocal = zeros(T, num_tshapes, num_bshapes)
+    zlocal = zeros(scalartype(biop, tfs, bfs), num_tshapes, num_bshapes)
 
-    #print("dots out of 10: ")
-    todo, done, pctg = length(test_elements), 0, 0
-    for p in eachindex(test_elements)
-        tcell = test_elements[p]
-        for q in eachindex(bsis_elements)
-            bcell = bsis_elements[q]
+    assemblechunk_body!(biop,
+        tshapes, test_elements, tad,
+        bshapes, bsis_elements, bad,
+        qd, zlocal, store)
 
-            fill!(zlocal, 0)
-            strat = quadrule(biop, tshapes, bshapes, p, tcell, q, bcell, qd)
-            momintegrals!(biop, tshapes, bshapes, tcell, bcell, zlocal, strat)
-
-            for j in 1 : num_bshapes, i in 1 : num_tshapes
-                z = zlocal[i,j]
-                for (n,b) in bad[q,j], (m,a) in tad[p,i]
-                    store(a*z*b, m, n)
-        end end end
-
-        done += 1
-        new_pctg = round(Int, done / todo * 100)
-        #(new_pctg > pctg + 9) && (print("."); pctg = new_pctg)
-    end
-    #print(" done. ")
+    # todo, done, pctg = length(test_elements), 0, 0
+    # for p in eachindex(test_elements)
+    #     tcell = test_elements[p]
+    #     for q in eachindex(bsis_elements)
+    #         bcell = bsis_elements[q]
+    #
+    #         fill!(zlocal, 0)
+    #         strat = quadrule(biop, tshapes, bshapes, p, tcell, q, bcell, qd)
+    #         momintegrals!(biop, tshapes, bshapes, tcell, bcell, zlocal, strat)
+    #
+    #         for j in 1 : num_bshapes, i in 1 : num_tshapes
+    #             z = zlocal[i,j]
+    #             for (n,b) in bad[q,j], (m,a) in tad[p,i]
+    #                 store(a*z*b, m, n)
+    #     end end end
+    #
+    #     done += 1
+    #     new_pctg = round(Int, done / todo * 100)
+    # end
 end
+# function assemblechunk!(biop::IntegralOperator, tfs::Space, bfs::Space, store)
+#
+#     test_elements, tad = assemblydata(tfs)
+#     bsis_elements, bad = assemblydata(bfs)
+#
+#     tshapes = refspace(tfs); num_tshapes = numfunctions(tshapes)
+#     bshapes = refspace(bfs); num_bshapes = numfunctions(bshapes)
+#
+#     qd = quaddata(biop, tshapes, bshapes, test_elements, bsis_elements)
+#     T = scalartype(biop, tfs, bfs)
+#     zlocal = zeros(T, num_tshapes, num_bshapes)
+#
+#     todo, done, pctg = length(test_elements), 0, 0
+#     for p in eachindex(test_elements)
+#         tcell = test_elements[p]
+#         for q in eachindex(bsis_elements)
+#             bcell = bsis_elements[q]
+#
+#             fill!(zlocal, 0)
+#             strat = quadrule(biop, tshapes, bshapes, p, tcell, q, bcell, qd)
+#             momintegrals!(biop, tshapes, bshapes, tcell, bcell, zlocal, strat)
+#
+#             for j in 1 : num_bshapes, i in 1 : num_tshapes
+#                 z = zlocal[i,j]
+#                 for (n,b) in bad[q,j], (m,a) in tad[p,i]
+#                     store(a*z*b, m, n)
+#         end end end
+#
+#         done += 1
+#         new_pctg = round(Int, done / todo * 100)
+#     end
+# end
 
 
+
+function assemblechunk_body!(biop,
+        test_shapes, test_elements, test_assembly_data,
+        trial_shapes, trial_elements, trial_assembly_data,
+        qd, zlocal, store)
+
+    for (p,tcell) in enumerate(test_elements), (q,bcell) in enumerate(trial_elements)
+        fill!(zlocal, 0)
+        strat = quadrule(biop, test_shapes, trial_shapes, p, tcell, q, bcell, qd)
+        momintegrals!(biop, test_shapes, trial_shapes, tcell, bcell, zlocal, strat)
+
+        for j in 1 : size(zlocal,2), i in 1 : size(zlocal,1)
+            for (n,b) in trial_assembly_data[q,j], (m,a) in test_assembly_data[p,i]
+                store(a*zlocal[i,j]*b, m, n)
+end end end end
 
 
 
