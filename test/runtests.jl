@@ -27,6 +27,8 @@ include("test_rtports.jl")
 include("test_tdop_scaling.jl")
 include("test_tdrhs_scaling.jl")
 
+include("test_assemblerow.jl")
+
 try
     Pkg.installed("BogaertInts10")
     info("`BogaertInts10` detected. Including relevant tests.")
