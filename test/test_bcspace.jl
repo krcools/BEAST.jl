@@ -82,7 +82,8 @@ function interior(mesh::Mesh)
     submesh(pred, edges)
 end
 
-meshfile = Pkg.dir("BEAST","test","sphere2.in")
+#meshfile = Pkg.dir("BEAST","test","sphere2.in")
+meshfile = joinpath(dirname(@__FILE__),"sphere2.in")
 mesh = readmesh(meshfile)
 @test numvertices(mesh) == 160
 @test numcells(mesh) == 316
@@ -130,7 +131,8 @@ leaky_edges = find(sum(abs.(isdivconforming(bc)),1))
 
 
 ## Test the charge of BC functions
-meshfile = Pkg.dir("BEAST","test","sphere2.in")
+#meshfile = Pkg.dir("BEAST","test","sphere2.in")
+meshfile = joinpath(dirname(@__FILE__),"sphere2.in")
 mesh = readmesh(meshfile)
 bc = buffachristiansen(mesh)
 fine = geometry(bc)

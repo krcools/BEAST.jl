@@ -6,7 +6,8 @@ m = readmesh(joinpath(dirname(@__FILE__),"sphere.in"))
 X = raviartthomas(m)
 κ = ω = c = 1.0
 
-fn = Pkg.dir("BEAST","test","efie_solution.txt")
+#fn = Pkg.dir("BEAST","test","efie_solution.txt")
+fn = joinpath(dirname(@__FILE__),"efie_solution.txt")
 u = map(x->eval(parse(x)), readcsv(fn))
 
 fcr = facecurrents(u,X)

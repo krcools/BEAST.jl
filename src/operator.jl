@@ -77,11 +77,14 @@ function assemble(operator::AbstractOperator, test_functions, trial_functions)
 end
 
 function assemblerow(operator::AbstractOperator, test_functions, trial_functions)
-    # This is a convenience function whose only job is to allocate
-    # the storage for the interaction matrix. Further dispatch on
-    # operator and space types is handled by the 4-argument version
     Z, store = allocatestorage(operator, test_functions, trial_functions)
     assemblerow!(operator, test_functions, trial_functions, store)
+    sdata(Z)
+end
+
+function assemblecol(operator::AbstractOperator, test_functions, trial_functions)
+    Z, store = allocatestorage(operator, test_functions, trial_functions)
+    assemblecol!(operator, test_functions, trial_functions, store)
     sdata(Z)
 end
 
