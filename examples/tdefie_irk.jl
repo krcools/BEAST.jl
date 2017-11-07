@@ -1,3 +1,4 @@
+include("../src/BEAST.jl")
 using CompScienceMeshes, BEAST, StaticArrays
 
 sol = 5.0;
@@ -22,23 +23,6 @@ end
 scalartype{T,N,NN}(rkcq::RungeKuttaConvolutionQuadrature{T,N,NN}) = Complex{T};
 
 LaplaceEFIO{T}(s::T) = MWSingleLayer3D(-s/sol, s*s/sol, T(sol));
-
-function ButcherTableauRadau2Stages()
-	A = @SMatrix [5/12   -1/12
-	              3/4    1/4];
-	b = @SVector [3/4, 1/4];
-	c = @SVector [1/3, 1.0];
-	return (A, b, c);
-end
-
-function ButcherTableauRadau3Stages()
-	A = @SMatrix [(88.0-7.0*sqrt(6.0))/360.0       (296.0-169.0*sqrt(6.0))/1800.0   (-2.0+3.0*sqrt(6.0))/225.0
-	              (296.0+169.0*sqrt(6.0))/1800.0   (88.0+7.0*sqrt(6.0))/360.0       (-2.0-3.0*sqrt(6.0))/225.0
-	              (16.0-sqrt(6.0))/36.0            (16.0+sqrt(6.0))/36.0             1/9];
-	b = @SVector [(16.0-sqrt(6.0))/36.0,    (16.0+sqrt(6.0))/36.0,    1/9];
-	c = @SVector [(4.0-sqrt(6.0))/10.0,     (4.0+sqrt(6.0))/10.0,     1.0];
-	return (A, b, c);
-end
 
 # M = H*diagm(D)*invH
 struct DiagonalizedMatrix{T,N,NN}
@@ -206,7 +190,7 @@ D, Δx = 1.0, 0.45
 Γ = meshsphere(D, Δx)
 X = raviartthomas(Γ)
 
-(A, b, c) = ButcherTableauRadau3Stages();
+(A, b, c) = butcher_tableau_radau_2stages();
 V = StagedTimeStep(X, c, Δt, Nt);
 
 duration, delay, amplitude = 2000.0/sol, 2000.0/sol, 1.0

@@ -71,6 +71,7 @@ include("helmholtz3d/timedomain/tdhh3dexc.jl")
 include("maxwell/timedomain/mwtdops.jl")
 include("maxwell/timedomain/mwtdexc.jl")
 
+include("utils/butchertableau.jl")
 include("utils/variational.jl")
 
 include("solvers/solver.jl")
