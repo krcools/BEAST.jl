@@ -40,21 +40,6 @@ function DiagonalizedMatrix{T,N,NN}(M :: SArray{Tuple{N,N},Complex{T},2,NN})
 	return DiagonalizedMatrix(efVectors, inv(efVectors), efValues);
 end
 
-function LaplaceToZ(rho, k, N, dt, A, b)
-	z = rho * exp(2*im*pi*k/N);
-	s = inv(dt * (A + ones(b) * b' / (z-1)));
-	return s;
-end
-
-function InverseZTransform{T}(k, rho, N, X::AbstractArray{T,1})
-	result = zero(X[1]);
-	for n = 0:(N-1)
-		result += X[n+1] * exp(2*im*pi*k*n/N)
-	end
-	result *= (rho^k)/N;
-	return result;
-end
-
 	#########################################
 	#                  RHS                  #
 	#########################################
@@ -132,7 +117,7 @@ function BEAST.assemble(rkcq::RungeKuttaConvolutionQuadrature, testfns::StagedTi
 	Zz = Vector{Array{Tz,2}}(Q);
 	for q = 0:Q-1
 		# Build a temporary matrix for each eigenvalue
-		s = LaplaceToZ(rho, q, Q, Δt, A, b);
+		s = BEAST.laplace_to_z(rho, q, Q, Δt, A, b);
 		sFactorized = DiagonalizedMatrix(s);
 		blocksEigenvalues = [BEAST.assemble(laplaceKernel(sD), test_spatial_basis, trial_spatial_basis) for sD in sFactorized.D];
 		Zz[q+1] = zeros(Tz, M*p, N*p)
@@ -151,7 +136,7 @@ function BEAST.assemble(rkcq::RungeKuttaConvolutionQuadrature, testfns::StagedTi
 	T = real(Tz);
 	Z = zeros(T, M*p, N*p, kmax)
 	for q = 0:kmax-1
-		Z[:,:,q+1] = real(InverseZTransform(q, rho, Q, Zz));
+		Z[:,:,q+1] = real(BEAST.inverse_z_transform(q, rho, Q, Zz));
 	end
     return Z
 
