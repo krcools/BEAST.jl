@@ -32,6 +32,7 @@ include("bases/rtspace.jl")
 include("bases/bcspace.jl")
 include("bases/ndspace.jl")
 
+include("bases/stagedtimestep.jl")
 include("bases/timebasis.jl")
 include("bases/tensorbasis.jl")
 

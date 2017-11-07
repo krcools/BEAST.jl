@@ -2,6 +2,7 @@ export timebasisc0d1
 export timebasiscxd0
 export timebasisdelta
 export timebasisshiftedlagrange
+export TimeBasisDeltaShifted
 
 using Compat
 
@@ -232,4 +233,44 @@ end
 
 function convolve(δ::TimeBasisDelta, g::TimeBasisFunction)
     return g
+end
+
+"""
+    TimeBasisDeltaShifted{T}
+
+Represents a TimeBasisDelta{T} retarded by a fraction of the time step.
+"""
+struct TimeBasisDeltaShifted{T} <: AbstractTimeBasisFunction
+	tbf   :: TimeBasisDelta{T}
+	shift :: T
+end
+scalartype(x::TimeBasisDeltaShifted) = scalartype(x.tbf)
+numfunctions(x::TimeBasisDeltaShifted) = numfunctions(x.tbf)
+refspace(x::TimeBasisDeltaShifted) = refspace(x.tbf)
+timestep(x::TimeBasisDeltaShifted) = timestep(x.tbf)
+numintervals(x::TimeBasisDeltaShifted) = numintervals(x.tbf)
+
+function assemblydata(tbds::TimeBasisDeltaShifted)
+	tbf = tbds.tbf
+
+    T = scalartype(tbf)
+    Δt = timestep(tbf)
+
+    z = zero(scalartype(tbf))
+    w = one(scalartype(tbf))
+
+    num_cells = numfunctions(tbf)
+    num_refs  = 1
+
+    max_num_funcs = 1
+    num_funcs = zeros(Int, num_cells, num_refs)
+    data = fill((0,z), max_num_funcs, num_refs, num_cells)
+
+    els = [ simplex(point((i-0+tbds.shift)*Δt),point((i+1+tbds.shift)*Δt)) for i in 1:num_cells ]
+
+    for k in 1 : numfunctions(tbf)
+        data[1,1,k] = (k,w)
+    end
+
+    return els, AssemblyData(data)
 end

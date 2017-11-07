@@ -3,15 +3,6 @@ using CompScienceMeshes, BEAST, StaticArrays
 
 sol = 5.0;
 
-struct StagedTimeStep{T,N}
-	spatialBasis
-	c  :: SVector{N,T}
-	Δt :: T
-	Nt :: Int
-end
-scalartype{T,N}(sts::StagedTimeStep{T,N}) = T;
-BEAST.temporalbasis{T,N}(sts :: StagedTimeStep{T,N}) = BEAST.timebasisdelta(sts.Δt, sts.Nt)
-
 struct RungeKuttaConvolutionQuadrature{T,N,NN}
 	laplaceKernel         # function of s that returns an IntegralOperator
 	A                     :: SArray{Tuple{N,N},T,2,NN}
@@ -41,63 +32,10 @@ function DiagonalizedMatrix{T,N,NN}(M :: SArray{Tuple{N,N},Complex{T},2,NN})
 end
 
 	#########################################
-	#                  RHS                  #
-	#########################################
-
-struct TimeBasisDeltaShifted{T} <: BEAST.AbstractTimeBasisFunction
-	tbf   :: BEAST.TimeBasisDelta{T}
-	shift :: T
-end
-BEAST.scalartype(x::TimeBasisDeltaShifted) = BEAST.scalartype(x.tbf)
-BEAST.numfunctions(x::TimeBasisDeltaShifted) = BEAST.numfunctions(x.tbf)
-BEAST.refspace(x::TimeBasisDeltaShifted) = BEAST.refspace(x.tbf)
-BEAST.timestep(x::TimeBasisDeltaShifted) = BEAST.timestep(x.tbf)
-BEAST.numintervals(x::TimeBasisDeltaShifted) = BEAST.numintervals(x.tbf)
-
-function BEAST.assemblydata(tbds::TimeBasisDeltaShifted)
-	tbf = tbds.tbf
-
-    T = BEAST.scalartype(tbf)
-    Δt = BEAST.timestep(tbf)
-
-    z = zero(BEAST.scalartype(tbf))
-    w = one(BEAST.scalartype(tbf))
-
-    num_cells = BEAST.numfunctions(tbf)
-    num_refs  = 1
-
-    max_num_funcs = 1
-    num_funcs = zeros(Int, num_cells, num_refs)
-    data = fill((0,z), max_num_funcs, num_refs, num_cells)
-
-    els = [ simplex(point((i-0+tbds.shift)*Δt),point((i+1+tbds.shift)*Δt)) for i in 1:num_cells ]
-
-    for k in 1 : BEAST.numfunctions(tbf)
-        data[1,1,k] = (k,w)
-    end
-
-    return els, BEAST.AssemblyData(data)
-end
-
-function BEAST.assemble(exc::BEAST.TDFunctional, testST::StagedTimeStep)
-	stageCount = length(testST.c);
-    spatialBasis = testST.spatialBasis;
-    Nt = testST.Nt;
-	Δt = testST.Δt;
-    Z = zeros(eltype(exc), BEAST.numfunctions(spatialBasis) * stageCount, Nt)
-	for i = 1:stageCount
-		store(v,m,k) = (Z[(m-1)*stageCount+i,k] += v);
-		tbsd = TimeBasisDeltaShifted(BEAST.timebasisdelta(Δt, Nt), testST.c[i]);
-		BEAST.assemble!(exc, spatialBasis ⊗ tbsd, store);
-	end
-    return Z
-end
-
-	#########################################
 	#                  LHS                  #
 	#########################################
 
-function BEAST.assemble(rkcq::RungeKuttaConvolutionQuadrature, testfns::StagedTimeStep, trialfns::StagedTimeStep)
+function BEAST.assemble(rkcq::RungeKuttaConvolutionQuadrature, testfns::BEAST.StagedTimeStep, trialfns::BEAST.StagedTimeStep)
 
 	laplaceKernel = rkcq.laplaceKernel;
 	A = rkcq.A;
@@ -109,7 +47,7 @@ function BEAST.assemble(rkcq::RungeKuttaConvolutionQuadrature, testfns::StagedTi
 
     test_spatial_basis  = testfns.spatialBasis
     trial_spatial_basis = trialfns.spatialBasis
-	Tz = promote_type(scalartype(rkcq), scalartype(testfns), scalartype(trialfns))
+	Tz = promote_type(scalartype(rkcq), BEAST.scalartype(testfns), BEAST.scalartype(trialfns))
 
 	# Compute the Z transformed sequence
     M = numfunctions(test_spatial_basis)
@@ -140,28 +78,6 @@ function BEAST.assemble(rkcq::RungeKuttaConvolutionQuadrature, testfns::StagedTi
 	end
     return Z
 
-end
-
-function BEAST.solve(eq)
-
-    time_domain = isa(first(eq.trial_space_dict).second, BEAST.SpaceTimeBasis)
-    time_domain |= isa(first(eq.trial_space_dict).second, StagedTimeStep)
-    if time_domain
-        return BEAST.td_solve(eq)
-    end
-
-    test_space_dict  = eq.test_space_dict
-    trial_space_dict = eq.trial_space_dict
-
-    lhs = eq.equation.lhs
-    rhs = eq.equation.rhs
-
-    b = BEAST.assemble(rhs, test_space_dict)
-    Z = BEAST.assemble(lhs, test_space_dict, trial_space_dict)
-
-    u = Z \ b
-
-    return u
 end
 
 #####################################################################
