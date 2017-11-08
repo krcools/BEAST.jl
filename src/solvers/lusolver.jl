@@ -27,7 +27,7 @@ end
 
 function td_solve(eq)
 
-    warn("very limited sypport for automated solution of TD equations....")
+    warn("very limited support for automated solution of TD equations....")
     op = eq.equation.lhs.terms[1].kernel
     fn = eq.equation.rhs.terms[1].functional
 
