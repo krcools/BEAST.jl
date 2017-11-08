@@ -57,12 +57,16 @@ function assemble(rkcq :: RungeKuttaConvolutionQuadrature,
 	test_spatial_basis  = testfns.spatialBasis;
 	trial_spatial_basis = trialfns.spatialBasis;
 
-	# Compute the Z transformed sequence
+	# Compute the Z transformed sequence.
+	# Assume that the operator applied on the conjugate of s is the same as the
+	# conjugate of the operator applied on s,
+	# so that only half of the values are computed
+	Qmax = Q>>1+1;
 	M = numfunctions(test_spatial_basis);
 	N = numfunctions(trial_spatial_basis);
 	Tz = promote_type(scalartype(rkcq), scalartype(testfns), scalartype(trialfns));
-	Zz = Vector{Array{Tz,2}}(Q);
-	for q = 0:Q-1
+	Zz = Vector{Array{Tz,2}}(Qmax);
+	for q = 0:Qmax-1
 		# Build a temporary matrix for each eigenvalue
 		s = laplace_to_z(rho, q, Q, Δt, A, b);
 		sFactorized = diagonalizedmatrix(s);
@@ -83,7 +87,7 @@ function assemble(rkcq :: RungeKuttaConvolutionQuadrature,
 	T = real(Tz);
 	Z = zeros(T, M*p, N*p, kmax)
 	for q = 0:kmax-1
-		Z[:,:,q+1] = real(inverse_z_transform(q, rho, Q, Zz));
+		Z[:,:,q+1] = real_inverse_z_transform(q, rho, Q, Zz);
 	end
 	return Z
 

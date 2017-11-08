@@ -1,4 +1,4 @@
-export laplace_to_z, inverse_z_transform;
+export laplace_to_z, inverse_z_transform, real_inverse_z_transform;
 
 """
     laplace_to_z(rho, n, N, dt, A, b)
@@ -20,4 +20,19 @@ evaluated in the points z=rho*exp(2*im*pi*n/N) for n in 0:(N-1).
 """
 function inverse_z_transform{T}(k, rho, N, X::AbstractArray{T,1})
 	return ((rho^k) / N) * sum(n -> X[n+1] * exp(2*im*pi*k*n/N), 0:(N-1));
+end
+
+"""
+    real_inverse_z_transform(k, rho, N, X)
+
+Returns the k-th term of the inverse z-transform.
+It is assumed that X[n+1] = conj(X[N-n]) for each n in 1:(N-1)
+so that Nmax = N/2+1 or (N+1)/2 (resp. if N%2==0 or N%2==1) terms are used in X
+X is an array of the z-transform
+evaluated in the points z=rho*exp(2*im*pi*n/N) for n in 0:(Nmax-1).
+"""
+function real_inverse_z_transform{T}(k, rho, N, X::AbstractArray{T,1})
+	Nmax = (N+1)>>1;
+	realTerms = (N%2==0) ? real(X[1]) + (-1)^k * real(X[Nmax+1]) : real(X[1]);
+	return ((rho^k) / N) * (realTerms + 2*sum(n -> real(X[n+1] * exp(2*im*pi*k*n/N)), 1:(Nmax-1)));
 end
