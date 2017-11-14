@@ -16,15 +16,15 @@ A, b: Coefficient matrix and vectors from the Butcher tableau.
 zTransformedTermCount: Number of terms in the inverse Z-transform.
 contourRadius: radius of circle used as integration contour for the inverse Z-transform.
 """
-struct RungeKuttaConvolutionQuadrature{T,N,NN}
-	laplaceKernel         # function of s that returns an IntegralOperator
+struct RungeKuttaConvolutionQuadrature{LK, T, N, NN}
+	laplaceKernel         :: LK # function of s that returns an IntegralOperator
 	A                     :: SArray{Tuple{N,N},T,2,NN}
 	b                     :: SVector{N,T}
 	Δt                    :: T
 	zTransformedTermCount :: Int
 	contourRadius         :: T
 end
-scalartype{T,N,NN}(rkcq::RungeKuttaConvolutionQuadrature{T,N,NN}) = Complex{T};
+scalartype{LK, T, N, NN}(rkcq::RungeKuttaConvolutionQuadrature{LK, T, N, NN}) = Complex{T};
 
 # M = H*diagm(D)*invH
 struct DiagonalizedMatrix{T,N,NN}
@@ -37,8 +37,8 @@ end
 function diagonalizedmatrix{T,N,NN}(M :: SArray{Tuple{N,N},Complex{T},2,NN})
 	ef = eigfact(Array{Complex{T},2}(M));
 
-	efValues = SVector{N,Complex{T}}(ef.values);
-	efVectors = SArray{Tuple{N,N},Complex{T},2,NN}(ef.vectors);
+	efValues = SVector{N,Complex{T}}(ef.values)  :: SVector{N,Complex{T}};
+	efVectors = SArray{Tuple{N,N},Complex{T},2,NN}(ef.vectors) :: SArray{Tuple{N,N},Complex{T},2,NN};
 	return DiagonalizedMatrix(efVectors, inv(efVectors), efValues);
 end
 
@@ -66,17 +66,24 @@ function assemble(rkcq :: RungeKuttaConvolutionQuadrature,
 	N = numfunctions(trial_spatial_basis);
 	Tz = promote_type(scalartype(rkcq), scalartype(testfns), scalartype(trialfns));
 	Zz = Vector{Array{Tz,2}}(Qmax);
+	blocksEigenvalues = Vector{Array{Tz,2}}(p);
+	tmpDiag = Vector{Tz}(p);
 	for q = 0:Qmax-1
 		# Build a temporary matrix for each eigenvalue
 		s = laplace_to_z(rho, q, Q, Δt, A, b);
 		sFactorized = diagonalizedmatrix(s);
-		blocksEigenvalues = [assemble(laplaceKernel(sD), test_spatial_basis, trial_spatial_basis) for sD in sFactorized.D];
-		Zz[q+1] = zeros(Tz, M*p, N*p)
+		for (i,sD) in enumerate(sFactorized.D)
+			blocksEigenvalues[i] = assemble(laplaceKernel(sD), test_spatial_basis, trial_spatial_basis);
+		end
 
 		# Compute the Z transformed matrix by block
+		Zz[q+1] = zeros(Tz, M*p, N*p);
 		for m = 1:M
 			for n = 1:N
-				D = SVector{p,Tz}([blocksEigenvalues[i][m,n] for i in 1:p])
+				for i = 1:p
+					tmpDiag[i] = blocksEigenvalues[i][m,n];
+				end
+				D = SVector{p,Tz}(tmpDiag);
 				Zz[q+1][(m-1)*p+(1:p),(n-1)*p+(1:p)] = sFactorized.H * diagm(D) * sFactorized.invH;
 			end
 		end

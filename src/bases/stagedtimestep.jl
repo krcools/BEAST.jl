@@ -9,12 +9,12 @@ N: the number of stages.
 It corresponds to a time-space basis function where each time step has
 intermediary stages given by the vertor c in a Butcher tableau (A,b,c)
 """
-struct StagedTimeStep{T,N}
-	spatialBasis
+struct StagedTimeStep{SB, T, N}
+	spatialBasis :: SB
 	c  :: SVector{N,T}
 	Δt :: T
 	Nt :: Int
 end
 
-scalartype{T,N}(sts :: StagedTimeStep{T,N}) = T;
-temporalbasis{T,N}(sts :: StagedTimeStep{T,N}) = timebasisdelta(sts.Δt, sts.Nt)
+scalartype{SB, T, N}(sts :: StagedTimeStep{SB, T, N}) = T;
+temporalbasis{SB, T, N}(sts :: StagedTimeStep{SB, T, N}) = timebasisdelta(sts.Δt, sts.Nt)
