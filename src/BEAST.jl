@@ -32,6 +32,7 @@ include("bases/rtspace.jl")
 include("bases/bcspace.jl")
 include("bases/ndspace.jl")
 
+include("bases/stagedtimestep.jl")
 include("bases/timebasis.jl")
 include("bases/tensorbasis.jl")
 
@@ -47,6 +48,8 @@ include("timedomain/tdintegralop.jl")
 include("timedomain/tdexcitation.jl")
 include("timedomain/motlu.jl")
 include("timedomain/tdtimeops.jl")
+include("timedomain/rkcq.jl")
+include("timedomain/zdomain.jl")
 
 # Support for Maxwell equations
 include("maxwell/wiltonints.jl")
@@ -71,6 +74,7 @@ include("helmholtz3d/timedomain/tdhh3dexc.jl")
 include("maxwell/timedomain/mwtdops.jl")
 include("maxwell/timedomain/mwtdexc.jl")
 
+include("utils/butchertableau.jl")
 include("utils/variational.jl")
 
 include("solvers/solver.jl")
