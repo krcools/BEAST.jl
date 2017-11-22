@@ -38,6 +38,25 @@ function assemble_local_matched!(biop::LocalOperator, tfs::Space, bfs::Space, st
                 store(a * locmat[i,j] * b, m, n)
 end end end end
 
+function assemble_local_matched!(biop::LocalOperator, tfs::subdBasis, bfs::subdBasis, store)
+
+    tels, tad = assemblydata(tfs)
+    bels, bad = assemblydata(bfs)
+
+    trefs = refspace(tfs)
+    brefs = refspace(bfs)
+
+    qd = quaddata(biop, trefs, brefs, tels, bels)
+    for (p,cell) in enumerate(tels)
+
+        qr = quadrule(biop, trefs, brefs, cell, qd)
+        locmat = cellinteractions(biop, trefs, brefs, cell, qr)
+
+        for i in 1 : size(locmat, 1), j in 1 : size(locmat, 2)
+            for (m,a) in tad[p][i], (n,b) in bad[p][j]
+                store(a * locmat[i,j] * b, m, n)
+end end end end
+
 
 function elementstree(elements)
 
@@ -142,8 +161,10 @@ end
 
 function cellinteractions(biop, trefs, brefs, cell, qr)
 
-    num_tshs = numfunctions(trefs)
-    num_bshs = numfunctions(brefs)
+    # num_tshs = numfunctions(trefs)
+    num_tshs = length(qr[1][3])
+    # num_bshs = numfunctions(brefs)
+    num_bshs = length(qr[1][4])
 
     zlocal = zeros(Float64, num_tshs, num_bshs)
     for q in qr
@@ -153,9 +174,12 @@ function cellinteractions(biop, trefs, brefs, cell, qr)
 
         kernel = kernelvals(biop, mp)
 
-        for m in 1 : num_tshs
+        # for m in 1 : num_tshs
+        for m in 1 : length(tvals)
+
             tval = tvals[m]
-            for n in 1 : num_bshs
+            # for n in 1 : num_bshs
+            for n in 1 : length(bvals)
                 bval = bvals[n]
 
                 igd = integrand(biop, kernel, mp, tval, bval)

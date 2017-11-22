@@ -25,7 +25,7 @@ function patch_mat(Γ,fcr=nothing)
 end
 
 # define geometry & material parameters
-f₀= 3.0e6 # 3 GHz
+ f₀= 3.0e6 # 3 GHz
  c = 3.0e8
  ϵ₀ = 8.85418782e-12
  μ₀ = 1.25663706e-6

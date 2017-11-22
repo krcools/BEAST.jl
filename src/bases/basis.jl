@@ -1,6 +1,6 @@
 import CompScienceMeshes.coordtype
 
-export numfunctions, coordtype, scalartype, assemblydata, geometry, refspace, valuetype
+export RefSpace, numfunctions, coordtype, scalartype, assemblydata, geometry, refspace, valuetype
 
 abstract type RefSpace{T,D} end
 abstract type AbstractSpace end
@@ -135,12 +135,15 @@ function assemblydata(basis::Space)
     num_cells = numcells(geo)
 
     num_bfs  = numfunctions(basis)
+    #zhaowei: should be modified
     num_refs = numfunctions(refspace(basis))
 
     # determine the maximum number of function defined over a given cell
     celltonum = zeros(Int, num_cells, num_refs)
     for b in 1 : num_bfs
-        for shape in basisfunction(basis, b)
+        basisfunc = basisfunction(basis, b)
+        # num_refs = length(basisfunc)
+        for shape in basisfunc
             c = shape.cellid
             r = shape.refid
             celltonum[c,r] += 1

@@ -38,6 +38,10 @@ function cellcellinteractions!(biop::HelmholtzOperator2D, tshs, bshs, tcell, bce
 
 end
 
+function testfunc1()
+    print("test function!")
+end
+
 function quaddata(op::HelmholtzOperator2D, g::LagrangeRefSpace, f::LagrangeRefSpace, tels, bels)
 
   # tqd = quaddata(g, tels, (4,))

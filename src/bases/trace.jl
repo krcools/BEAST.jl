@@ -26,8 +26,6 @@ function faces(c)
     ]
 end
 
-
-
 function ntrace(X::Space, γ)
 
     x = refspace(X)
