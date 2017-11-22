@@ -17,10 +17,15 @@ integrand(op::NCross, kernel, x, g, f) = dot(g[1], normal(x) × f[1])
 scalartype(op::NCross) = Union{}
 
 function quaddata(op::LocalOperator, g::RTRefSpace, f::RTRefSpace, tels, bels)
-
     u, w = trgauss(6)
     return [(w[i],SVector(u[1,i],u[2,i])) for i in 1:length(w)]
 end
+
+function quaddata(op::LocalOperator, g::subReferenceSpace, f::subReferenceSpace, tels, bels)
+    u, w = trgauss(6)
+    return [(w[i],SVector(u[1,i],u[2,i])) for i in 1:length(w)]
+end
+
 
 
 quaddata(op::LocalOperator, g::LagrangeRefSpace, f::LagrangeRefSpace,

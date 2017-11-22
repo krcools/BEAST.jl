@@ -184,7 +184,7 @@ function assembleblock_body!(biop::IntegralOperator,
         tcell = test_elements[p]
         for q in active_trial_el_ids
             bcell = bsis_elements[q]
-
+            zlocal = zeros(T, num_tshapes, num_bshapes)
             fill!(zlocal, 0)
             strat = quadrule(biop, test_shapes, trial_shapes, p, tcell, q, bcell, quadrature_data)
             momintegrals!(biop, test_shapes, trial_shapes, tcell, bcell, zlocal, strat)
@@ -300,6 +300,31 @@ end end end end end
 
 
 
+    #print("dots out of 10: ")
+    todo, done, pctg = length(test_elements), 0, 0
+    for p in eachindex(test_elements)
+        tcell = test_elements[p]
+        num_tshapes = tcell.N
+        for q in eachindex(bsis_elements)
+            bcell = bsis_elements[q]
+            num_bshapes = tcell.N
+            zlocal = zeros(T, num_tshapes, num_bshapes)
+            fill!(zlocal, 0)
+            strat = quadrule(biop, tshapes, bshapes, p, tcell, q, bcell, qd)
+            momintegrals!(biop, tshapes, bshapes, tcell, bcell, zlocal, strat)
+
+            for j in 1 : num_bshapes, i in 1 : num_tshapes
+                z = zlocal[i,j]
+                for (n,b) in bad[q][j], (m,a) in tad[p][i]
+                    store(a*z*b, m, n)
+        end end end
+
+        done += 1
+        new_pctg = round(Int, done / todo * 100)
+        #(new_pctg > pctg + 9) && (print("."); pctg = new_pctg)
+    end
+    #print(" done. ")
+end
 
 
 

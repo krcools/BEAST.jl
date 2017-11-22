@@ -73,6 +73,17 @@ function quaddata(op::Helmholtz3DOp, test_refspace::LagrangeRefSpace,
     return test_qp, bsis_qp
 end
 
+function quaddata(op::Helmholtz3DOp, test_refspace::subReferenceSpace,
+        trial_refspace::subReferenceSpace, test_elements, trial_elements)
+
+    test_qp = quadpoints(test_refspace,  test_elements,  (4,))
+    bsis_qp = quadpoints(trial_refspace, trial_elements, (7,))
+
+    return test_qp, bsis_qp
+end
+
+
+
 function quadrule(op::HH3DSingleLayerFDBIO, test_refspace, trial_refspace, i,
         test_element, j, trial_element, quadrature_data)
 
@@ -95,6 +106,19 @@ function quadrule(op::HH3DSingleLayerFDBIO, test_refspace, trial_refspace, i,
         quadrature_data[1][1,i],
         quadrature_data[2][1,j])
 end
+
+
+# function quadrule(op::HH3DSingleLayerFDBIO, test_refspace::subReferenceSpace, trial_refspace::subReferenceSpace,
+#      i,test_element, j, trial_element, qd)
+# #
+# #     hits = number of equal vertices
+# #     if hits == 3, use SauterSchwabEqualPatch
+# #     if hits  == 2, use SSEqualEdge
+# #     ...
+#
+#     # if hits == 0 then use normal doublequad rule
+# #
+# end
 
 
 function quadrule(op::Helmholtz3DOp, test_refspace, trial_refspace, i,
