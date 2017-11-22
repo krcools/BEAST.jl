@@ -32,7 +32,8 @@ Gt = [
 id = Identity()
 nc = NCross()
 
-fn = Pkg.dir("BEAST","test","sphere2.in")
+#fn = Pkg.dir("BEAST","test","sphere2.in")
+fn = joinpath(dirname(@__FILE__),"sphere2.in")
 m = readmesh(fn)
 rt = raviartthomas(m)
 

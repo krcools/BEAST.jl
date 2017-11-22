@@ -50,6 +50,19 @@ function assemble(exc::TDFunctional, testST)
     return Z
 end
 
+function assemble(exc::TDFunctional, testST::StagedTimeStep)
+    stageCount = length(testST.c);
+    spatialBasis = testST.spatialBasis;
+    Nt = testST.Nt;
+    Δt = testST.Δt;
+    Z = zeros(eltype(exc), numfunctions(spatialBasis) * stageCount, Nt);
+    for i = 1:stageCount
+        store(v,m,k) = (Z[(m-1)*stageCount+i,k] += v);
+        tbsd = TimeBasisDeltaShifted(timebasisdelta(Δt, Nt), testST.c[i]);
+        assemble!(exc, spatialBasis ⊗ tbsd, store);
+    end
+    return Z;
+end
 
 function assemble!(exc::TDFunctional, testST, store)
 

@@ -76,6 +76,18 @@ function assemble(operator::AbstractOperator, test_functions, trial_functions)
     sdata(Z)
 end
 
+function assemblerow(operator::AbstractOperator, test_functions, trial_functions)
+    Z, store = allocatestorage(operator, test_functions, trial_functions)
+    assemblerow!(operator, test_functions, trial_functions, store)
+    sdata(Z)
+end
+
+function assemblecol(operator::AbstractOperator, test_functions, trial_functions)
+    Z, store = allocatestorage(operator, test_functions, trial_functions)
+    assemblecol!(operator, test_functions, trial_functions, store)
+    sdata(Z)
+end
+
 function allocatestorage(operator::AbstractOperator, test_functions, trial_functions)
     T = promote_type(
         scalartype(operator)       ,

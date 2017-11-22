@@ -3,8 +3,7 @@ using CompScienceMeshes
 
 o, x, y, z = euclidianbasis(3)
 
-# Γ = readmesh(Pkg.dir("BEAST","examples","sphere2.in"))
-Γ = readmesh(Pkg.dir("BEAST","examples","sphere_subd1.in"))
+Γ = readmesh(joinpath(dirname(@__FILE__),"sphere2.in"))
 RT = raviartthomas(Γ)
 
 κ = 1.0

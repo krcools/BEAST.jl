@@ -58,33 +58,7 @@ MWSingleLayer3D(gamma)  = MWSingleLayer3D(gamma, -gamma, -1/(gamma))
 MWWeaklySingular(gamma) = MWSingleLayer3D(gamma, 1, 0)
 MWHyperSingular(gamma)  = MWSingleLayer3D(gamma, 0, 1)
 
-module Maxwell3D
 
-    using ..BEAST
-
-    """
-        singlelayer(;gamma, alpha, beta)
-
-    Bilinear form given by:
-
-    ```math
-        α ∬_{Γ×Γ} j(x)⋅k(y) G_{γ}(x,y) + β ∬_{Γ×Γ} div j(x) div k(y) G_{γ}(x,y)
-    ```
-
-    with ``G_{γ} = e^{-γ|x-y|} / 4π|x-y|``.
-    """
-    singlelayer(;
-        gamma=error("propagation constant required"),
-        alpha=-gamma,
-        beta=-1/gamma) = MWSingleLayer3D(gamma, alpha, beta)
-
-    planewave(;
-            direction    = error("missing arguement `direction`"),
-            polarization = error("missing arguement `polarization`"),
-            wavenumber   = error("missing arguement `wavenumber`"),
-            amplitude    = one(real(typeof(wavenumber)))) =
-        BEAST.PlaneWaveMW(direction, polarization, wavenumber, amplitude)
-end
 
 export Maxwell3D
 
@@ -231,20 +205,31 @@ function innerintegrals!(op::MWDoubleLayer3DSng, p, g, f, t, s, z, strat::Wilton
 end
 
 
-function select_quadrule()
-    try
-        Pkg.installed("BogaertInts10")
-        info("`BogaertInts10` detected: enhanced quadrature enabled.")
-        @eval using BogaertInts10
-        @eval include("bogaertints.jl")
-        @eval quadrule(op::MaxwellOperator3D, g::RTRefSpace, f::RTRefSpace, i, τ, j, σ, qd) = qrib(op, g, f, i, τ, j, σ, qd)
-    catch
-        info("Cannot find package `BogaertInts10`. Default quadrature strategy used.")
-        @eval quadrule(op::MaxwellOperator3D, g::RTRefSpace, f::RTRefSpace, i, τ, j, σ, qd) = qrdf(op, g, f, i, τ, j, σ, qd)
-    end
-end
+# function select_quadrule()
+#     try
+#         Pkg.installed("BogaertInts10")
+#         info("`BogaertInts10` detected: enhanced quadrature enabled.")
+#         @eval using BogaertInts10
+#         @eval include("bogaertints.jl")
+#         @eval quadrule(op::MaxwellOperator3D, g::RTRefSpace, f::RTRefSpace, i, τ, j, σ, qd) = qrib(op, g, f, i, τ, j, σ, qd)
+#     catch
+#         info("Cannot find package `BogaertInts10`. Default quadrature strategy used.")
+#         @eval quadrule(op::MaxwellOperator3D, g::RTRefSpace, f::RTRefSpace, i, τ, j, σ, qd) = qrdf(op, g, f, i, τ, j, σ, qd)
+#     end
+# end
+#
+# select_quadrule()
 
-select_quadrule()
+
+try
+    using BogaertInts10
+    info("`BogaertInts10` detected: enhanced quadrature enabled.")
+    include("bogaertints.jl")
+    quadrule(op::MaxwellOperator3D, g::RTRefSpace, f::RTRefSpace, i, τ, j, σ, qd) = qrib(op, g, f, i, τ, j, σ, qd)
+catch
+    info("Cannot find package `BogaertInts10`. Default quadrature strategy used.")
+    quadrule(op::MaxwellOperator3D, g::RTRefSpace, f::RTRefSpace, i, τ, j, σ, qd) = qrdf(op, g, f, i, τ, j, σ, qd)
+end
 
 function qrib(op::MaxwellOperator3D, g::RTRefSpace, f::RTRefSpace, i, τ, j, σ, qd)
   # defines coincidence of points
@@ -320,4 +305,50 @@ function qrdf(op::MaxwellOperator3D, g::RTRefSpace, f::RTRefSpace, i, τ, j, σ,
     qd.bpoints[1,j],
   )
 
+end
+
+
+module Maxwell3D
+
+    using ..BEAST
+
+    """
+        singlelayer(;gamma, alpha, beta)
+
+    Bilinear form given by:
+
+    ```math
+        α ∬_{Γ×Γ} j(x)⋅k(y) G_{γ}(x,y) + β ∬_{Γ×Γ} div j(x) div k(y) G_{γ}(x,y)
+    ```
+
+    with ``G_{γ} = e^{-γ|x-y|} / 4π|x-y|``.
+    """
+    singlelayer(;
+            gamma=error("propagation constant required"),
+            alpha=-gamma,
+            beta=-1/gamma) =
+        MWSingleLayer3D(gamma, alpha, beta)
+
+
+    """
+        doublelayer(;gamma)
+
+    Bilinear form given by:
+
+    ```math
+        ∬_{Γ^2} k(x) ⋅ (∇G_γ(x-y) × j(y))
+    ```
+
+    with ``G_γ = e^{-γ|x-y|} / 4π|x-y|``
+    """
+    doublelayer(;
+            gamma=error("propagation constant required")) =
+        MWDoubleLayer3D(gamma)
+
+    planewave(;
+            direction    = error("missing arguement `direction`"),
+            polarization = error("missing arguement `polarization`"),
+            wavenumber   = error("missing arguement `wavenumber`"),
+            amplitude    = one(real(typeof(wavenumber)))) =
+        BEAST.PlaneWaveMW(direction, polarization, wavenumber, amplitude)
 end
