@@ -77,7 +77,7 @@ function assemblechunk!(biop::IntegralOperator, tfs::Space, bfs::Space, store)
     bshapes = refspace(bfs); num_bshapes = numfunctions(bshapes)
 
     qd = quaddata(biop, tshapes, bshapes, test_elements, bsis_elements)
-    zlocal = zeros(scalartype(biop, tfs, bfs), num_tshapes, num_bshapes)
+    zlocal = zeros(scalartype(biop, tfs, bfs), 2num_tshapes, 2num_bshapes)
 
     assemblechunk_body!(biop,
         tshapes, test_elements, tad,
@@ -97,8 +97,11 @@ function assemblechunk_body!(biop,
         strat = quadrule(biop, test_shapes, trial_shapes, p, tcell, q, bcell, qd)
         momintegrals!(biop, test_shapes, trial_shapes, tcell, bcell, zlocal, strat)
 
-        for j in 1 : size(zlocal,2), i in 1 : size(zlocal,1)
-            for (n,b) in trial_assembly_data[q,j], (m,a) in test_assembly_data[p,i]
+        I = length(test_assembly_data[p])
+        J = length(trial_assembly_data[q])
+
+        for j in 1 : J, i in 1 : I
+            for (n,b) in trial_assembly_data[q][j], (m,a) in test_assembly_data[p][i]
                 store(a*zlocal[i,j]*b, m, n)
 end end end end
 
@@ -184,7 +187,7 @@ function assembleblock_body!(biop::IntegralOperator,
         tcell = test_elements[p]
         for q in active_trial_el_ids
             bcell = bsis_elements[q]
-            zlocal = zeros(T, num_tshapes, num_bshapes)
+
             fill!(zlocal, 0)
             strat = quadrule(biop, test_shapes, trial_shapes, p, tcell, q, bcell, quadrature_data)
             momintegrals!(biop, test_shapes, trial_shapes, tcell, bcell, zlocal, strat)
@@ -213,7 +216,8 @@ function assemblerow!(biop::IntegralOperator, test_functions::Space, trial_funct
     num_trial_shapes = numfunctions(trial_shapes)
 
     quadrature_data = quaddata(biop, test_shapes, trial_shapes, test_elements, trial_elements)
-    zlocal = zeros(scalartype(biop, test_functions, trial_functions), num_test_shapes, num_trial_shapes)
+    zlocal = zeros(scalartype(biop, test_functions, trial_functions),
+        num_test_shapes, num_trial_shapes)
 
     @assert length(trial_elements) == numcells(geometry(trial_functions))
     @assert numfunctions(test_functions) == 1
@@ -260,7 +264,9 @@ function assemblecol!(biop::IntegralOperator, test_functions::Space, trial_funct
     num_trial_shapes = numfunctions(trial_shapes)
 
     quadrature_data = quaddata(biop, test_shapes, trial_shapes, test_elements, trial_elements)
-    zlocal = zeros(scalartype(biop, test_functions, trial_functions), num_test_shapes, num_trial_shapes)
+    zlocal = zeros(
+        scalartype(biop, test_functions, trial_functions),
+        num_test_shapes, num_trial_shapes)
 
     @assert length(test_elements) == numcells(geometry(test_functions))
     @assert numfunctions(trial_functions) == 1
@@ -300,31 +306,31 @@ end end end end end
 
 
 
-    #print("dots out of 10: ")
-    todo, done, pctg = length(test_elements), 0, 0
-    for p in eachindex(test_elements)
-        tcell = test_elements[p]
-        num_tshapes = tcell.N
-        for q in eachindex(bsis_elements)
-            bcell = bsis_elements[q]
-            num_bshapes = tcell.N
-            zlocal = zeros(T, num_tshapes, num_bshapes)
-            fill!(zlocal, 0)
-            strat = quadrule(biop, tshapes, bshapes, p, tcell, q, bcell, qd)
-            momintegrals!(biop, tshapes, bshapes, tcell, bcell, zlocal, strat)
-
-            for j in 1 : num_bshapes, i in 1 : num_tshapes
-                z = zlocal[i,j]
-                for (n,b) in bad[q][j], (m,a) in tad[p][i]
-                    store(a*z*b, m, n)
-        end end end
-
-        done += 1
-        new_pctg = round(Int, done / todo * 100)
-        #(new_pctg > pctg + 9) && (print("."); pctg = new_pctg)
-    end
-    #print(" done. ")
-end
+#     #print("dots out of 10: ")
+#     todo, done, pctg = length(test_elements), 0, 0
+#     for p in eachindex(test_elements)
+#         tcell = test_elements[p]
+#         num_tshapes = tcell.N
+#         for q in eachindex(bsis_elements)
+#             bcell = bsis_elements[q]
+#             num_bshapes = tcell.N
+#             zlocal = zeros(T, num_tshapes, num_bshapes)
+#             fill!(zlocal, 0)
+#             strat = quadrule(biop, tshapes, bshapes, p, tcell, q, bcell, qd)
+#             momintegrals!(biop, tshapes, bshapes, tcell, bcell, zlocal, strat)
+#
+#             for j in 1 : num_bshapes, i in 1 : num_tshapes
+#                 z = zlocal[i,j]
+#                 for (n,b) in bad[q][j], (m,a) in tad[p][i]
+#                     store(a*z*b, m, n)
+#         end end end
+#
+#         done += 1
+#         new_pctg = round(Int, done / todo * 100)
+#         #(new_pctg > pctg + 9) && (print("."); pctg = new_pctg)
+#     end
+#     #print(" done. ")
+# end
 
 
 
@@ -364,9 +370,11 @@ function momintegrals!(biop, tshs, bshs, tcell, bcell, z, strat::DoubleQuadStrat
             j = jx * jy
             kernel = kernelvals(biop, tgeo, bgeo)
 
-            for m in 1 : M
+            #for m in 1 : M
+            for m in 1 : length(tvals)
                 tval = tvals[m]
-                for n in 1 : N
+                #for n in 1 : N
+                for n in 1 : length(bvals)
                     bval = bvals[n]
 
                     igd = integrand(biop, kernel, tval, tgeo, bval, bgeo)

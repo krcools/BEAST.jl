@@ -23,7 +23,7 @@ end
 function kernelvals(biop::MaxwellOperator3D, p, q)
 
     γ = biop.gamma
-    r = p.cart - q.cart
+    r = cartesian(p) - cartesian(q)
     R = norm(r)
     γR = γ*R
 

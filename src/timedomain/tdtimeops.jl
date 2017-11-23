@@ -1,6 +1,9 @@
 function assemble(op::Identity,
         testnfs::AbstractTimeBasisFunction,
         trialfns::AbstractTimeBasisFunction)
+# function assemble(op,
+#         testnfs::AbstractTimeBasisFunction,
+#         trialfns::AbstractTimeBasisFunction)
 
     tbf = convolve(testnfs, trialfns)
     T = scalartype(tbf)

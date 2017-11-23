@@ -70,19 +70,30 @@ numfunctions(S::DirectProductSpace) = sum([numfunctions(s) for s in S.factors])
 scalartype{T}(s::DirectProductSpace{T}) = T
 geometry(x::DirectProductSpace) = weld(x.geo...)
 
-type Shape{T}
+struct Shape{T}
   cellid::Int
   refid::Int
   coeff::T
 end
 
-immutable AssemblyData{T}
+struct AssemblyData{T}
     data::Array{Tuple{Int,T},3}
 end
 
 Base.getindex(ad::AssemblyData, c, r) = ADIterator(c,r,size(ad.data,1),ad)
 
-immutable ADIterator{T}
+struct AssemblyDataEl{T}
+    element_index::Int
+    ad::AssemblyData{T}
+end
+Base.length(adp::AssemblyDataEl) = size(adp.ad.data,2)
+Base.getindex(ad::AssemblyData, c) = AssemblyDataEl(c,ad)
+function Base.getindex(adp::AssemblyDataEl, r)
+    ad = adp.ad
+    ADIterator(adp.element_index,r,size(ad.data,1),ad)
+end
+
+struct ADIterator{T}
     c::Int
     r::Int
     I::Int

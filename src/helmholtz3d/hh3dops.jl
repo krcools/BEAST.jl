@@ -108,17 +108,18 @@ function quadrule(op::HH3DSingleLayerFDBIO, test_refspace, trial_refspace, i,
 end
 
 
-# function quadrule(op::HH3DSingleLayerFDBIO, test_refspace::subReferenceSpace, trial_refspace::subReferenceSpace,
-#      i,test_element, j, trial_element, qd)
-# #
-# #     hits = number of equal vertices
-# #     if hits == 3, use SauterSchwabEqualPatch
-# #     if hits  == 2, use SSEqualEdge
-# #     ...
-#
-#     # if hits == 0 then use normal doublequad rule
-# #
-# end
+function quadrule(op::HH3DSingleLayerFDBIO, test_refspace::subReferenceSpace,
+    trial_refspace::subReferenceSpace, i, test_element, j, trial_element, qd)
+
+     test_qd = qd[1]
+     trial_qd = qd[2]
+
+     DoubleQuadStrategy(
+        test_qd[1,i], # rule 1 on test element j
+        trial_qd[1,j] # rule 1 on trial element i
+     )
+
+end
 
 
 function quadrule(op::Helmholtz3DOp, test_refspace, trial_refspace, i,
@@ -166,8 +167,10 @@ function integrand(op::Union{HH3DSingleLayerFDBIO,HH3DSingleLayerReg},
 
     α = op.alpha
     G = kernel.green
-    g, curlg = test_values
-    f, curlf = trial_values
+    #g, curlg = test_values
+    #f, curlf = trial_values
+    g = test_values[1]
+    f = trial_values[1]
 
     α*g*f*G
 end
