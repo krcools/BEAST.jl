@@ -34,7 +34,7 @@ sphere:
 using CompScienceMeshes, BEAST
 o, x, y, z = euclidianbasis(3)
 
-Γ = readmesh(joinpath(dirname(@__FILE__),"sphere2.in"))
+Γ = meshsphere(1.0, 0.35)
 RT = raviartthomas(Γ)
 
 κ = 1.0
