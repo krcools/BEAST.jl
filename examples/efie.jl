@@ -1,5 +1,4 @@
-using BEAST
-using CompScienceMeshes
+using CompScienceMeshes, BEAST
 
 o, x, y, z = euclidianbasis(3)
 
@@ -13,7 +12,6 @@ e = (n × E) × n
 
 @hilbertspace j
 @hilbertspace k
-
 efie = @discretise t[k,j]==e[k]  j∈RT k∈RT
 
 u = gmres(efie)

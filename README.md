@@ -31,19 +31,20 @@ To solve scattering by a time harmonic electromagnetic plane wave by a perfectly
 sphere:
 
 ```julia
-using BEAST, CompScienceMeshes
+using CompScienceMeshes, BEAST
 o, x, y, z = euclidianbasis(3)
 
-Γ = readmesh(Pkg.dir("BEAST","examples","sphere2.in"))
+Γ = readmesh(joinpath(dirname(@__FILE__),"sphere2.in"))
 RT = raviartthomas(Γ)
 
 κ = 1.0
-t = MWSingleLayer3D(im*κ)
-E = planewavemw3d(direction=z, polarization=x, wavenumber=κ)
+t = Maxwell3D.singlelayer(gamma=im*κ)
+E = Maxwell3D.planewave(direction=z, polarization=x, wavenumber=κ)
 e = (n × E) × n
 
-@hilbertspace j; @hilbertspace k
+@hilbertspace j
+@hilbertspace k
 efie = @discretise t[k,j]==e[k]  j∈RT k∈RT
 
-u = solve(efie)
+u = gmres(efie)
 ```
