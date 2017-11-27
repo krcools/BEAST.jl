@@ -2,5 +2,5 @@ julia 0.6
 WiltonInts84
 CollisionDetection
 Compat
-CompScienceMeshes 0.2.0
+CompScienceMeshes 0.1.0
 IterativeSolvers
