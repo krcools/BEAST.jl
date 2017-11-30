@@ -221,7 +221,7 @@ end
 # select_quadrule()
 
 
-try
+#=try
     using BogaertInts10
     info("`BogaertInts10` detected: enhanced quadrature enabled.")
     include("bogaertints.jl")
@@ -229,7 +229,43 @@ try
 catch
     info("Cannot find package `BogaertInts10`. Default quadrature strategy used.")
     quadrule(op::MaxwellOperator3D, g::RTRefSpace, f::RTRefSpace, i, τ, j, σ, qd) = qrdf(op, g, f, i, τ, j, σ, qd)
+end=#
+
+
+
+
+
+
+
+struct SauterSchwabStrategy <: Any end
+
+try
+    using SauterSchwabQuadrature
+    info("`SauterSchwabQuadrature` detected.")
+    include("bogaertints.jl")
+    quadrule(op::MaxwellOperator3D, g::RTRefSpace, f::RTRefSpace, i, τ, j, σ, qd) = q(op, g, f, i, τ, j, σ, qd)
+catch
+    try
+        using BogaertInts10
+        info("`BogaertInts10` detected: enhanced quadrature enabled.")
+        include("bogaertints.jl")
+        quadrule(op::MaxwellOperator3D, g::RTRefSpace, f::RTRefSpace, i, τ, j, σ, qd) = qrib(op, g, f, i, τ, j, σ, qd)
+    catch
+        info("Cannot find package `BogaertInts10`. Default quadrature strategy used.")
+        quadrule(op::MaxwellOperator3D, g::RTRefSpace, f::RTRefSpace, i, τ, j, σ, qd) = qrdf(op, g, f, i, τ, j, σ, qd)
+    end
 end
+
+function q(op, g, f, i, τ, j, σ, qd)
+    strategy = SauterSchwabStrategy()
+    return strategy
+end
+
+
+
+
+
+
 
 function qrib(op::MaxwellOperator3D, g::RTRefSpace, f::RTRefSpace, i, τ, j, σ, qd)
   # defines coincidence of points
