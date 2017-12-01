@@ -198,6 +198,54 @@ function assemblydata(tbf::TimeBasisFunction)
 end
 
 
+# struct TemporalAssemblyData{D}
+#     data::D
+# end
+#
+# struct TemporalAssemblyDataSlice{D}
+#     data::D
+#     cellindex::Int
+# end
+#
+# Base.getindex(ad::TemporalAssemblyData,c) = TemporalAssemblyDataSlice(ad.data,c)
+# Base.getindex(ads::TemporalAssemblyDataSlice,r) = ads.data[:,r,c]
+
+function temporalassemblydata(tbf)
+
+    T = scalartype(tbf)
+    Δt = timestep(tbf)
+
+    t = Polynomial(zero(T), one(T))
+
+    num_cells = numfunctions(tbf)
+    num_refs  = degree(tbf)+1
+
+    max_num_funcs = numintervals(tbf)
+    numfuncs = zeros(Int, num_cells, num_refs)
+    data = fill((0,zero(T)), max_num_funcs, num_refs, num_cells)
+    for k in 1 : numfunctions(tbf)
+        tk = (k-1) * Δt
+        for i in 1 : numintervals(tbf)
+        #for shape in basisfunction(basis, b)
+            p = tbf.polys[i]
+            q = substitute(p,t+tk)
+
+            c = k - i + 1
+            c < 1 && continue
+            for d = 0 : degree(q)
+                r = d + 1
+                w = q[d]
+
+                j = (numfuncs[c,r] += 1)
+                data[j,r,c] = (k,w)
+            end
+        end
+    end
+
+    return AssemblyData(data)
+end
+
+
 function assemblydata(tbf::TimeBasisDelta)
 
     T = scalartype(tbf)
