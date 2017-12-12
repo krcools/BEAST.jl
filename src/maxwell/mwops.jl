@@ -5,9 +5,10 @@ export MWSingleLayer3D, MWHyperSingular, MWWeaklySingular
 export MWDoubleLayer3D
 export PlaneWaveMW
 export TangTraceMW, CrossTraceMW
-
 export curl
+export SauterSchwabStrategy
 
+struct SauterSchwabStrategy <: Any end
 abstract type MaxwellOperator3D <: IntegralOperator end
 abstract type MaxwellOperator3DReg <: MaxwellOperator3D end
 
@@ -82,8 +83,8 @@ singularpart(op::MWSingleLayer3D) = MWSingleLayer3DSng(op.gamma, op.α, op.β)
 
 function quaddata(op::MaxwellOperator3D, g::RefSpace, f::RefSpace, tels, bels)
 
-    tqd = quadpoints(g, tels, (2,6))
-    bqd = quadpoints(f, bels, (3,7))
+    tqd = quadpoints(g, tels, (2,12))
+    bqd = quadpoints(f, bels, (3,13))
 
     return QuadData(tqd, bqd)
 end
@@ -221,50 +222,69 @@ end
 # select_quadrule()
 
 
-#=try
-    using BogaertInts10
-    info("`BogaertInts10` detected: enhanced quadrature enabled.")
-    include("bogaertints.jl")
-    quadrule(op::MaxwellOperator3D, g::RTRefSpace, f::RTRefSpace, i, τ, j, σ, qd) = qrib(op, g, f, i, τ, j, σ, qd)
-catch
-    info("Cannot find package `BogaertInts10`. Default quadrature strategy used.")
-    quadrule(op::MaxwellOperator3D, g::RTRefSpace, f::RTRefSpace, i, τ, j, σ, qd) = qrdf(op, g, f, i, τ, j, σ, qd)
-end=#
-
-
-
-
-
-
-
-struct SauterSchwabStrategy <: Any end
-
 try
-    using SauterSchwabQuadrature
-    info("`SauterSchwabQuadrature` detected.")
-    include("bogaertints.jl")
-    quadrule(op::MaxwellOperator3D, g::RTRefSpace, f::RTRefSpace, i, τ, j, σ, qd) = q(op, g, f, i, τ, j, σ, qd)
-catch
-    try
-        using BogaertInts10
+    using BogaertInts10
         info("`BogaertInts10` detected: enhanced quadrature enabled.")
         include("bogaertints.jl")
         quadrule(op::MaxwellOperator3D, g::RTRefSpace, f::RTRefSpace, i, τ, j, σ, qd) = qrib(op, g, f, i, τ, j, σ, qd)
     catch
-        info("Cannot find package `BogaertInts10`. Default quadrature strategy used.")
+        info("Cannot find packages `SauterSchwabQuadrature` and `BogaertInts10`. Default quadrature strategy used.")
         quadrule(op::MaxwellOperator3D, g::RTRefSpace, f::RTRefSpace, i, τ, j, σ, qd) = qrdf(op, g, f, i, τ, j, σ, qd)
-    end
 end
+
+try
+    using SauterSchwabQuadrature
+        info("`SauterSchwabQuadrature` detected.")
+        include("sauterschwabints.jl")
+        quadrule(op::MaxwellOperator3D, g::RTRefSpace, f::RTRefSpace, i, τ, j, σ, qd) = q(op, g, f, i, τ, j, σ, qd)
+catch
+end
+
+
+
+
+
+
 
 function q(op, g, f, i, τ, j, σ, qd)
-    strategy = SauterSchwabStrategy()
-    return strategy
+    # defines coincidence of points
+    dtol = 1.0e3 * eps(eltype(eltype(τ.vertices)))
+
+    # decides on whether to use singularity extraction
+    xtol = 0.2
+
+    k = norm(op.gamma)
+
+    hits = 0
+    xmin = xtol
+    for t in τ.vertices
+      for s in σ.vertices
+        d = norm(t-s)
+        xmin = min(xmin, k*d)
+        if d < dtol
+          hits +=1
+          break
+        end
+      end
+    end
+
+
+  hits == 3   && return SauterSchwabStrategy()
+  hits == 2   && return SauterSchwabStrategy()
+  hits == 1   && return SauterSchwabStrategy()
+  xmin < xtol && return WiltonSEStrategy(
+    qd.tpoints[1,i],
+    DoubleQuadStrategy(
+      qd.tpoints[2,i],
+      qd.bpoints[2,j],
+    ),
+  )
+  return DoubleQuadStrategy(
+    qd.tpoints[2,i],
+    qd.bpoints[2,j],
+  )
+
 end
-
-
-
-
-
 
 
 function qrib(op::MaxwellOperator3D, g::RTRefSpace, f::RTRefSpace, i, τ, j, σ, qd)
@@ -289,7 +309,7 @@ function qrib(op::MaxwellOperator3D, g::RTRefSpace, f::RTRefSpace, i, τ, j, σ,
     end
   end
 
-  hits == 3   && return BogaertSelfPatchStrategy(5)
+#=  hits == 3   && return BogaertSelfPatchStrategy(5)
   hits == 2   && return BogaertEdgePatchStrategy(8, 4)
   hits == 1   && return BogaertPointPatchStrategy(2, 3)
   xmin < xtol && return WiltonSEStrategy(
@@ -303,6 +323,22 @@ function qrib(op::MaxwellOperator3D, g::RTRefSpace, f::RTRefSpace, i, τ, j, σ,
     qd.tpoints[1,i],
     qd.bpoints[1,j],
   )
+
+end=#
+hits == 3   && return BogaertSelfPatchStrategy(20)
+hits == 2   && return BogaertEdgePatchStrategy(12, 20)
+hits == 1   && return BogaertPointPatchStrategy(12, 20)
+xmin < xtol && return WiltonSEStrategy(
+  qd.tpoints[1,i],
+  DoubleQuadStrategy(
+    qd.tpoints[2,i],
+    qd.bpoints[2,j],
+  ),
+)
+return DoubleQuadStrategy(
+  qd.tpoints[1,i],
+  qd.bpoints[1,j],
+)
 
 end
 
