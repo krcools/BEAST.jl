@@ -111,6 +111,7 @@ end
 function quadrule(op::HH3DSingleLayerFDBIO, test_refspace::subReferenceSpace,
     trial_refspace::subReferenceSpace, i, test_element, j, trial_element, qd)
 
+
      test_qd = qd[1]
      trial_qd = qd[2]
 
