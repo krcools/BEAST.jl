@@ -14,9 +14,11 @@ e = (n × E) × n
 @hilbertspace k
 efie = @discretise t[k,j]==e[k]  j∈RT k∈RT
 
+BEAST.quadrule(op::BEAST.MaxwellOperator3D, g::BEAST.RTRefSpace, f::BEAST.RTRefSpace, i, τ, j, σ, qd) = BEAST.qrdf(op, g, f, i, τ, j, σ, qd)
 u = gmres(efie)
 println("Solution computed")
 
+isdefined(:sauterschwab) || (sauterschwab = false)
 isdefined(:plotresults) || (plotresults = false)
 plotresults && (postproc = true)
 isdefined(:postproc) || (postproc = false)
@@ -41,10 +43,12 @@ if postproc
 
 end
 
-if plotresults
+if sauterschwab
     @eval begin
-        using PlotlyJS
-        include(Pkg.dir("CompScienceMeshes","examples","plotlyjs_patches.jl"))
+        using SauterSchwabQuadrature
+        include(Pkg.dir("BEAST","src","maxwell", "sauterschwabints.jl"))
+        BEAST.quadrule(op::BEAST.MaxwellOperator3D, g::BEAST.RTRefSpace, f::BEAST.RTRefSpace, i, τ, j, σ, qd) = BEAST.q(op, g, f, i, τ, j, σ, qd)
+
         t1 = scatter(x=Θ, y=real.(norm.(ffd)))
         t2 = patch(geo, real.(norm.(fcr)))
         t3 = heatmap(x = X, y = Z, z = clamp.(real.(norm.(nfd)), 0.0, 2.0))
