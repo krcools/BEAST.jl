@@ -1,7 +1,18 @@
 export convolve
 export marchonintime
 
-function convolve(Z,x,j,k0)
+function convolve(Z::Array,x,j,k0)
+    M,N,K = size(Z)
+    y = similar(Z,M)
+    fill!(y,0)
+    for k ∈ k0 : min(j,K)
+        i = j - k + 1
+        y += Z[:,:,k] * x[:,i]
+    end
+    return y
+end
+
+function convolve(Z::SparseND.Banded3D,x,j,k0)
     T = promote_type(eltype(Z), eltype(x))
     M,N,K = size(Z)
     @assert M == size(x,1)

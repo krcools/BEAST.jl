@@ -34,7 +34,9 @@ function allocatestorage(op::RetardedPotential, testST, basisST)
     println("Allocated memory for convolution operator.")
     data = zeros(eltype(op), M, N, maximum(K1-K0+1))
 
-    Z = SparseND.Banded3D(K0,K1,data)
+    #Z = SparseND.Banded3D(K0,K1,data)
+    kmax = maximum(K1);
+    Z = zeros(eltype(op), M, N, kmax+1)
     store1(v,m,n,k) = (Z[m,n,k] += v)
     return Z, store1
 end
