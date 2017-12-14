@@ -20,7 +20,7 @@ include("test_gram.jl")
 include("test_vector_gram.jl")
 
 include("test_wiltonints.jl")
-include("test_nitsche.jl")
+#include("test_nitsche.jl")
 include("test_nitschehh3d.jl")
 include("test_farfield.jl")
 include("test_rtports.jl")
