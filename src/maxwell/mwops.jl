@@ -309,7 +309,7 @@ function qrib(op::MaxwellOperator3D, g::RTRefSpace, f::RTRefSpace, i, τ, j, σ,
     end
   end
 
-#=  hits == 3   && return BogaertSelfPatchStrategy(5)
+  hits == 3   && return BogaertSelfPatchStrategy(5)
   hits == 2   && return BogaertEdgePatchStrategy(8, 4)
   hits == 1   && return BogaertPointPatchStrategy(2, 3)
   xmin < xtol && return WiltonSEStrategy(
@@ -324,23 +324,23 @@ function qrib(op::MaxwellOperator3D, g::RTRefSpace, f::RTRefSpace, i, τ, j, σ,
     qd.bpoints[1,j],
   )
 
-end=#
-hits == 3   && return BogaertSelfPatchStrategy(20)
-hits == 2   && return BogaertEdgePatchStrategy(12, 20)
-hits == 1   && return BogaertPointPatchStrategy(12, 20)
-xmin < xtol && return WiltonSEStrategy(
-  qd.tpoints[1,i],
-  DoubleQuadStrategy(
-    qd.tpoints[2,i],
-    qd.bpoints[2,j],
-  ),
-)
-return DoubleQuadStrategy(
-  qd.tpoints[1,i],
-  qd.bpoints[1,j],
-)
-
 end
+#hits == 3   && return BogaertSelfPatchStrategy(20)
+#hits == 2   && return BogaertEdgePatchStrategy(12, 20)
+#hits == 1   && return BogaertPointPatchStrategy(12, 20)
+#xmin < xtol && return WiltonSEStrategy(
+#  qd.tpoints[1,i],
+#  DoubleQuadStrategy(
+#    qd.tpoints[2,i],
+#    qd.bpoints[2,j],
+#  ),
+#)
+#return DoubleQuadStrategy(
+#  qd.tpoints[1,i],
+#  qd.bpoints[1,j],
+#)
+#
+#end
 
 
 function qrdf(op::MaxwellOperator3D, g::RTRefSpace, f::RTRefSpace, i, τ, j, σ, qd)
