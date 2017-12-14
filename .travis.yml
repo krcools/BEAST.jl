@@ -1,5 +1,4 @@
 # Documentation: http://docs.travis-ci.com/user/languages/julia/
-install: travis_wait 30 mvn install
 language: julia
 os:
   - linux
@@ -13,7 +12,7 @@ notifications:
 #  - if [[ -a .git/shallow ]]; then git fetch --unshallow; fi
 #  - julia -e 'Pkg.clone(pwd()); Pkg.build("BEAST"); Pkg.test("BEAST"; coverage=true)'
 after_success:
-  # push coverage results to Coveralls
+   install: travis_wait mvn install
   - julia -e 'cd(Pkg.dir("BEAST")); Pkg.add("Coverage"); using Coverage; Coveralls.submit(Coveralls.process_folder())'
   # push coverage results to Codecov
   - julia -e 'cd(Pkg.dir("BEAST")); Pkg.add("Coverage"); using Coverage; Codecov.submit(Codecov.process_folder())'
