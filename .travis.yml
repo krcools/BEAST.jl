@@ -1,4 +1,5 @@
 # Documentation: http://docs.travis-ci.com/user/languages/julia/
+install: travis_wait 30 mvn install
 language: julia
 os:
   - linux
