@@ -202,9 +202,10 @@ function assemble!(op::RetardedPotential, testST, trialST, store)
 end
 
 
-struct WiltonInts84Strat{T,V}
+struct WiltonInts84Strat{T,V,W}
 	outer_quad_points::T
     binomials::V
+    workspace::W
 end
 
 
