@@ -53,32 +53,37 @@ end
 quadrule(op::MWDoubleLayerTDIO, testrefs, trialrefs, timerefs,
         p, testel, q, trialel, r, timeel, qd) = WiltonInts84Strat(qd[1][1,p],qd[2],qd[3])
 
-@inline function tmRoR(d, t, iG, bns)
-    r = zero(t)
-    for q in 0:d
-        sgn = isodd(q) ? -1 : 1
-        bn = bns[d+1,q+1]
-        #r += binomial(d,q) * sgn * t^(d-q) * iG[q+2]
-        r += bn * sgn * t^(d-q) * iG[q+2]
-    end
-    r
+@inline function tmRoR(d, iG, bns)
+    # r = zero(t)
+    # for q in 0:d
+    #     sgn = isodd(q) ? -1 : 1
+    #     bn = bns[d+1,q+1]
+    #     #r += binomial(d,q) * sgn * t^(d-q) * iG[q+2]
+    #     r += bn * sgn * t^(d-q) * iG[q+2]
+    # end
+    # r
+    sgn = isodd(d) ? -1 : 1
+    r = sgn * iG[d+2]
 end
 
 # build
 # ``\int (D-R)^d/R (y-b) dy`` from
 # ``(ξ-b) \int R^k dy`` and
 # ``\int R^k (y-ξ) dy``
-@inline function tmRoRf(d, t, iG, iGξy, bξ, bns)
-    r = zero(bξ)
-    for q in 0:d
-        sgn = isodd(q) ? -1 : 1
-        i = q+2
-        iGf = iGξy[i] + bξ * iG[i]
-        bn = bns[d+1,q+1]
-        #r += binomial(d,q) * sgn * t^(d-q) * iGf
-        r += bn * sgn * t^(d-q) * iGf
-    end
-    r
+@inline function tmRoRf(d, iG, iGξy, bξ, bns)
+    # r = zero(bξ)
+    # for q in 0:d
+    #     sgn = isodd(q) ? -1 : 1
+    #     i = q+2
+    #     iGf = iGξy[i] + bξ * iG[i]
+    #     bn = bns[d+1,q+1]
+    #     #r += binomial(d,q) * sgn * t^(d-q) * iGf
+    #     r += bn * sgn * t^(d-q) * iGf
+    # end
+    # r
+    sgn = isodd(d) ? -1 : 1
+    iGf = iGξy[d+2] + bξ * iG[d+2]
+    r = sgn * iGf
 end
 
 """
@@ -110,7 +115,7 @@ end
 
 
 function innerintegrals!(zl, op::MWSingleLayerTDIO,
-        p, tmax, # test_point, test_time
+        p, # test_point, test_time
         U, V, W, # local_test_space, local_trial_space, local_temporal_space
         τ, σ, ι, # test_element, trial_element, spherial_shell
         qr, w)   # inner_quadrature_rule, outer_quadrature_weight
@@ -118,7 +123,7 @@ function innerintegrals!(zl, op::MWSingleLayerTDIO,
 	T = typeof(w)
 
     sol = op.speed_of_light
-    Rmax = sol * tmax
+    #Rmax = sol * tmax
 
     dx = w
     x = cartesian(p)
@@ -160,13 +165,13 @@ function innerintegrals!(zl, op::MWSingleLayerTDIO,
 				if d >= dh
                     @assert dh == 0
                     q = qhs[k]
-                    Ih = tmRoR(d-dh, Rmax, ∫G, bn) # \int (cTmax-R)^(d-dh)/R dy
+                    Ih = tmRoR(d-dh, ∫G, bn) # \int (cTmax-R)^(d-dh)/R dy
                     zl[i,j,k] += β * q * Ih / sol^(d-dh)
 				end
 				# weakly singular contribution
 				if d >= ds
                     q = qss[k]
-                    Is = tmRoRf(d-ds, Rmax, ∫G, ∫Gξy, bξ, bn) # \int (cTmax-R)^(d-ds)/R (y-b) dy
+                    Is = tmRoRf(d-ds, ∫G, ∫Gξy, bξ, bn) # \int (cTmax-R)^(d-ds)/R (y-b) dy
                     zl[i,j,k] += α * q * (g ⋅ Is) / sol^(d-ds)
 				end
             end
@@ -178,7 +183,7 @@ end
 
 
 function innerintegrals!(z, op::MWDoubleLayerTDIO,
-    p, tmax,
+    p,
     U, V, W,
     τ, σ, ι,
     qr, w)
@@ -186,7 +191,7 @@ function innerintegrals!(z, op::MWDoubleLayerTDIO,
 	T = typeof(w)
 
     sol = op.speed_of_light
-    Rmax = sol * tmax
+    #Rmax = sol * tmax
 
     dx = w
     x = cartesian(p)
@@ -211,13 +216,15 @@ function innerintegrals!(z, op::MWDoubleLayerTDIO,
 
 	ds = op.num_diffs
 
-    @inline function tmRoR(d, t, iGG)
-        r = zero(t)
-        for q in 0:d
-            sgn = isodd(q) ? -1 : 1
-            r += binomial(d,q) * sgn * t^(d-q) * iGG[q+1]
-        end
-        r
+    @inline function tmRoR(d, iGG)
+        # r = zero(t)
+        # for q in 0:d
+        #     sgn = isodd(q) ? -1 : 1
+        #     r += binomial(d,q) * sgn * t^(d-q) * iGG[q+1]
+        # end
+        # r
+        sgn = isodd(d) ? -1 : 1
+        r = sgn * iGG[d+1]
     end
 
     for i in 1 : numfunctions(U)
@@ -236,7 +243,7 @@ function innerintegrals!(z, op::MWDoubleLayerTDIO,
 						q *= (d-p)
 					end
                     @assert q == 1
-                    z[i,j,k] += -α * q * ( fxg ⋅ tmRoR(d-ds, Rmax, ∫∇G) ) / sol^(d-ds)
+                    z[i,j,k] += -α * q * ( fxg ⋅ tmRoR(d-ds, ∫∇G) ) / sol^(d-ds)
 				end
             end
         end
