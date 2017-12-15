@@ -28,24 +28,30 @@ function quaddata(op::MWSingleLayerTDIO, testrefs, trialrefs, timerefs,
 
     dmax = numfunctions(timerefs)-1
     bn = binomial.((0:dmax),(0:dmax)')
-    quadpoints(testrefs, testels, (3,)), bn
+
+    V = eltype(testels[1].vertices)
+    ws = WiltonInts84.workspace(V)
+    quadpoints(testrefs, testels, (3,)), bn, ws
 
 end
 
 
 quadrule(op::MWSingleLayerTDIO, testrefs, trialrefs, timerefs,
-        p, testel, q, trialel, r, timeel, qd) = WiltonInts84Strat(qd[1][1,p],qd[2])
+        p, testel, q, trialel, r, timeel, qd) = WiltonInts84Strat(qd[1][1,p],qd[2],qd[3])
 
 function quaddata(op::MWDoubleLayerTDIO, testrefs, trialrefs, timerefs,
         testels, trialels, timeels)
 
     dmax = numfunctions(timerefs)-1
     bn = binomial.((0:dmax),(0:dmax)')
-    quadpoints(testrefs, testels, (3,))
+
+    V = eltype(testels[1].vertices)
+    ws = WiltonInts84.workspace(V)
+    quadpoints(testrefs, testels, (3,)), bn, ws
 end
 
 quadrule(op::MWDoubleLayerTDIO, testrefs, trialrefs, timerefs,
-        p, testel, q, trialel, r, timeel, qd) = WiltonInts84Strat(qd[1][1,p],qd[2])
+        p, testel, q, trialel, r, timeel, qd) = WiltonInts84Strat(qd[1][1,p],qd[2],qd[3])
 
 @inline function tmRoR(d, t, iG, bns)
     r = zero(t)
@@ -126,7 +132,7 @@ function innerintegrals!(zl, op::MWSingleLayerTDIO,
     @assert r < R
     @assert degree(W) <= 3
 
-    ∫G, ∫Gξy, = WiltonInts84.wiltonints(σ[1],σ[2],σ[3],x,r,R,Val{2})
+    ∫G, ∫Gξy, = WiltonInts84.wiltonints(σ[1],σ[2],σ[3],x,r,R,Val{2},qr.workspace)
 
     αg = 1 / volume(τ) / 2
 	αf = 1 / volume(σ) / 2
@@ -196,7 +202,7 @@ function innerintegrals!(z, op::MWDoubleLayerTDIO,
     @assert degree(W) <= 3
 
     #N = max(degree(W), 0)
-    ∫G, ∫Gξy, ∫∇G = WiltonInts84.wiltonints(σ[1],σ[2],σ[3],x,r,R,Val{2})
+    ∫G, ∫Gξy, ∫∇G = WiltonInts84.wiltonints(σ[1],σ[2],σ[3],x,r,R,Val{2},qr.workspace)
 
     αg = 1 / volume(τ) / 2
 	αf = 1 / volume(σ) / 2
