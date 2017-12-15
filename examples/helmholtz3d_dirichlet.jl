@@ -3,7 +3,8 @@ using Base.Test
 
 o, x, y, z = euclidianbasis(3)
 
-Γ = meshsphere(1.0, 0.11)
+# Γ = meshsphere(1.0, 0.11)
+Γ = readmesh("/Users/Benjamin/Documents/sphere.in")
 X = lagrangecxd0(Γ)
 @show numfunctions(X)
 

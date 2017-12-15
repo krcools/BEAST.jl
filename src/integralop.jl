@@ -392,8 +392,8 @@ function momintegrals!(biop, tshs::subReferenceSpace, bshs::subReferenceSpace, t
     M, N = size(z)
 
     hits = strat.hits
-
-    acc = 4
+    print(hits)
+    acc = 3
 
     if hits == 0
         ssm = PositiveDistance(acc)
