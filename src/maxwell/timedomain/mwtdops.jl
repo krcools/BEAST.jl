@@ -153,6 +153,13 @@ function innerintegrals!(zl, op::MWSingleLayerTDIO,
 
     bn = qr.binomials
 
+    #solpowers = collect(sol^p for p ∈ 0:numfunctions(W)-1)
+    sol2 = sol*sol
+    sol3 = sol2*sol
+    sol4 = sol3*sol
+    sol5 = sol4*sol
+    solpowers = (one(sol), sol, sol2, sol3, sol4, sol5)
+
     for i in 1 : numfunctions(U)
         a = τ[i]
         g = (x-a)
@@ -166,13 +173,15 @@ function innerintegrals!(zl, op::MWSingleLayerTDIO,
                     @assert dh == 0
                     q = qhs[k]
                     Ih = tmRoR(d-dh, ∫G, bn) # \int (cTmax-R)^(d-dh)/R dy
-                    zl[i,j,k] += β * q * Ih / sol^(d-dh)
+                    #zl[i,j,k] += β * q * Ih / sol^(d-dh)
+                    zl[i,j,k] += β * q * Ih / solpowers[d-dh+1]
 				end
 				# weakly singular contribution
 				if d >= ds
                     q = qss[k]
                     Is = tmRoRf(d-ds, ∫G, ∫Gξy, bξ, bn) # \int (cTmax-R)^(d-ds)/R (y-b) dy
-                    zl[i,j,k] += α * q * (g ⋅ Is) / sol^(d-ds)
+                    #zl[i,j,k] += α * q * (g ⋅ Is) / sol^(d-ds)
+                    zl[i,j,k] += α * q * (g ⋅ Is) / solpowers[d-ds+1]
 				end
             end
         end
