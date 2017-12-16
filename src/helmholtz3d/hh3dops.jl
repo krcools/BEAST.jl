@@ -1,8 +1,6 @@
 export HH3DHyperSingularFDBIO
-
 abstract type Helmholtz3DOp <: MaxwellOperator3D end
 abstract type Helmholtz3DOpReg <: MaxwellOperator3DReg end
-
 """
 ```
 ∫_Γ dx ∫_Γ dy \left(α G g(x) n_x ⋅ n_y f(y) + β G \mbox{curl} g(x) ⋅ \mbox{curl} f(y) \right)
@@ -111,14 +109,20 @@ end
 function quadrule(op::HH3DSingleLayerFDBIO, test_refspace::subReferenceSpace,
     trial_refspace::subReferenceSpace, i, test_element, j, trial_element, qd)
 
-     test_qd = qd[1]
-     trial_qd = qd[2]
+    tol, hits = 1e-10, 0
+    for t in getelementVertices(test_element)
+        for s in getelementVertices(trial_element)
+            norm(t-s) < tol && (hits +=1; break)
+    end end
 
-     DoubleQuadStrategy(
-        test_qd[1,i], # rule 1 on test element j
-        trial_qd[1,j] # rule 1 on trial element i
-     )
-
+    return SauterSchwabStrategy(hits)
+     # test_qd = qd[1]
+     # trial_qd = qd[2]
+     #
+     # DoubleQuadStrategy(
+     #    test_qd[1,i], # rule 1 on test element j
+     #    trial_qd[1,j] # rule 1 on trial element i
+     # )
 end
 
 
