@@ -94,7 +94,7 @@ function assemblechunk_body!(biop,
         print("Compute test_element $(p)\n")
         for (q,bcell) in enumerate(trial_elements)
 
-            fill!(zlocal, 0)
+        fill!(zlocal, 0)
             strat = quadrule(biop, test_shapes, trial_shapes, p, tcell, q, bcell, qd)
             momintegrals!(biop, test_shapes, trial_shapes, tcell, bcell, zlocal, strat)
             I = length(test_assembly_data[p])
@@ -104,6 +104,7 @@ function assemblechunk_body!(biop,
                 for (n,b) in trial_assembly_data[q][j], (m,a) in test_assembly_data[p][i]
                     store(a*zlocal[i,j]*b, m, n)
 end end end end end
+
 
 
 function blockassembler(biop::IntegralOperator, tfs::Space, bfs::Space)
