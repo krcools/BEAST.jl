@@ -94,7 +94,7 @@ function assemblechunk_body!(biop,
 
         fill!(zlocal, 0)
         strat = quadrule(biop, test_shapes, trial_shapes, p, tcell, q, bcell, qd)
-        print("Compute test_element $(p) with trial_element $(q) \n");
+        #print("Compute test_element $(p) with trial_element $(q) \n");
         momintegrals!(biop, test_shapes, trial_shapes, tcell, bcell, zlocal, strat)
         I = length(test_assembly_data[p])
         J = length(trial_assembly_data[q])
