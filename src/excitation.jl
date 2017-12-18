@@ -51,6 +51,29 @@ function assemble!(field::Functional, tfs::Space, store)
 
 end
 
+function assemble!(field::Functional, tfs::subdBasis, store)
+
+    tels, tad = assemblydata(tfs)
+
+    trefs = refspace(tfs)
+    qd = quaddata(field, trefs, tels)
+
+    for (t, tcell) in enumerate(tels)
+
+        # compute the testing with the reference elements
+        qr = quadrule(field, trefs, t, tcell, qd)
+        blocal = celltestvalues(trefs, tcell, field, qr)
+
+        for i in 1 : length(tad[t])
+            for (m,a) in tad[t][i]
+                store(a*blocal[i], m)
+            end
+        end
+
+    end
+
+end
+
 function celltestvalues(tshs, tcell, field, qr)
 
     num_tshs = numfunctions(tshs)
@@ -68,6 +91,31 @@ function celltestvalues(tshs, tcell, field, qr)
 
         for m in 1 : num_tshs
             tval = tvals[m]
+
+            igd = integrand(field, tval, fval)
+            interactions[m] += igd * dx
+        end
+    end
+
+    return interactions
+end
+
+function celltestvalues(tshs::subReferenceSpace, tcell, field, qr)
+
+    num_oqp = length(qr)
+    num_tshs = length(qr[1].value[1])
+    interactions = (Complex128, num_tshs)
+    for p in 1 : num_oqp
+        mp = qr[p].point
+
+        dx =qr[p].weight
+
+        fval = field(mp)
+        tvals = qr[p].value
+
+        interactions = zeros(Complex128, num_tshs)
+        for m in 1 : num_tshs
+            tval = tvals[1][m]
 
             igd = integrand(field, tval, fval)
             interactions[m] += igd * dx

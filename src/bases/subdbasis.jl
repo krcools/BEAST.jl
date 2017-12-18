@@ -17,12 +17,14 @@ end
 type subReferenceSpace{T,D} <: RefSpace{T,D} end
 
 refspace(s::subdBasis{T,M,P}) where {T,M,P} = subReferenceSpace{T,12}()
+# 12 only for regular case
 
 function (rs::subReferenceSpace)(nbhd)
     # u = parametric(nbhd)
     # x = cartesian(nbhd)
     s = shapefuns(nbhd)
-    return s
+    scurl = get_shape_curl(nbhd)
+    return s,scurl
 end
 
 function subdsurface(mesh)
