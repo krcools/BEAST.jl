@@ -90,19 +90,20 @@ function assemblechunk_body!(biop,
         trial_shapes, trial_elements, trial_assembly_data,
         qd, zlocal, store)
 
-    for (p,tcell) in enumerate(test_elements), (q,bcell) in enumerate(trial_elements)
+    for (p,tcell) in enumerate(test_elements)
+        print("Compute test_element $(p)\n")
+        for (q,bcell) in enumerate(trial_elements)
 
-        fill!(zlocal, 0)
-        strat = quadrule(biop, test_shapes, trial_shapes, p, tcell, q, bcell, qd)
-        print("Compute test_element $(p) with trial_element $(q) \n");
-        momintegrals!(biop, test_shapes, trial_shapes, tcell, bcell, zlocal, strat)
-        I = length(test_assembly_data[p])
-        J = length(trial_assembly_data[q])
-        # print(zlocal)
-        for j in 1 : J, i in 1 : I
-            for (n,b) in trial_assembly_data[q][j], (m,a) in test_assembly_data[p][i]
-                store(a*zlocal[i,j]*b, m, n)
-end end end end
+            fill!(zlocal, 0)
+            strat = quadrule(biop, test_shapes, trial_shapes, p, tcell, q, bcell, qd)
+            momintegrals!(biop, test_shapes, trial_shapes, tcell, bcell, zlocal, strat)
+            I = length(test_assembly_data[p])
+            J = length(trial_assembly_data[q])
+            # print(zlocal)
+            for j in 1 : J, i in 1 : I
+                for (n,b) in trial_assembly_data[q][j], (m,a) in test_assembly_data[p][i]
+                    store(a*zlocal[i,j]*b, m, n)
+end end end end end
 
 
 function blockassembler(biop::IntegralOperator, tfs::Space, bfs::Space)
@@ -381,6 +382,7 @@ function momintegrals!(biop, tshs, bshs, tcell, bcell, z, strat::DoubleQuadStrat
 
     return z
 end
+
 type SauterSchwabStrategy
     hits::Int64
 end

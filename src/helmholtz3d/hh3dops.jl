@@ -107,15 +107,27 @@ end
 
 
 function quadrule(op::HH3DSingleLayerFDBIO, test_refspace::subReferenceSpace,
-    trial_refspace::subReferenceSpace, i, test_element, j, trial_element, qd)
+    trial_refspace::subReferenceSpace, i, test_element, j, trial_element, quadrature_data)
 
-    tol, hits = 1e-10, 0
-    for t in getelementVertices(test_element)
-        for s in getelementVertices(trial_element)
-            norm(t-s) < tol && (hits +=1; break)
-    end end
+    # tol, hits = 1e-10, 0
+    # for t in getelementVertices(test_element)
+    #     for s in getelementVertices(trial_element)
+    #         norm(t-s) < tol && (hits +=1; break)
+    # end end
+    #
+    # test_quadpoints  = quadrature_data[1]
+    # trial_quadpoints = quadrature_data[2]
 
-    return SauterSchwabStrategy(hits)
+    # hits != 0 && return WiltonSEStrategy(
+    #     test_quadpoints[1,i],
+    #     DoubleQuadStrategy(
+    #         test_quadpoints[1,i],
+    #         trial_quadpoints[1,j]))
+
+    return DoubleQuadStrategy(
+        quadrature_data[1][1,i],
+        quadrature_data[2][1,j])
+    # return SauterSchwabStrategy(hits)
      # test_qd = qd[1]
      # trial_qd = qd[2]
      #
