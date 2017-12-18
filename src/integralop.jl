@@ -3,7 +3,6 @@ abstract type IntegralOperator <: Operator end
 export quadrule, elements
 export blockassembler
 
-
 """
     blockassembler(operator, test_space, trial_space) -> assembler
 
@@ -95,11 +94,11 @@ function assemblechunk_body!(biop,
 
         fill!(zlocal, 0)
         strat = quadrule(biop, test_shapes, trial_shapes, p, tcell, q, bcell, qd)
+        print("Compute test_element $(p) with trial_element $(q) \n");
         momintegrals!(biop, test_shapes, trial_shapes, tcell, bcell, zlocal, strat)
-
         I = length(test_assembly_data[p])
         J = length(trial_assembly_data[q])
-
+        # print(zlocal)
         for j in 1 : J, i in 1 : I
             for (n,b) in trial_assembly_data[q][j], (m,a) in test_assembly_data[p][i]
                 store(a*zlocal[i,j]*b, m, n)
@@ -332,10 +331,6 @@ end end end end end
 #     #print(" done. ")
 # end
 
-
-
-
-
 immutable DoubleQuadStrategy{P,Q}
   outer_quad_points::P
   inner_quad_points::Q
@@ -386,12 +381,64 @@ function momintegrals!(biop, tshs, bshs, tcell, bcell, z, strat::DoubleQuadStrat
 
     return z
 end
+type SauterSchwabStrategy
+    hits::Int64
+end
+function momintegrals!(biop, tshs::subReferenceSpace, bshs::subReferenceSpace, tcell, bcell, z, strat::SauterSchwabStrategy)
 
+    A = biop.alpha
+    k = biop.gamma
+
+    M, N = size(z)
+
+    hits = strat.hits
+
+    acc = 4
+
+    if hits == 0
+        ssm = PositiveDistance(acc)
+    elseif hits == 1
+        ssm = CommonVertex(acc)
+    elseif hits == 2
+        ssm = CommonEdge(acc)
+    elseif hits == 3
+        ssm = CommonFace(acc)
+    else
+        error("hits can not exceed 3")
+    end
+    M= tcell.N
+    N= bcell.N
+    print("M = $(M) and N = $(N) \n")
+    z = Array{Complex{Float64},2}(M,N)
+    for i = 1:M
+        for j = 1:N
+            # print("i = $(i) and j = $(j) \n")
+            function integrand(u,v)
+                upt = neighborhood(tcell,u)
+                vpt = neighborhood(bcell,v)
+                tshape = shapefuns(upt)
+                bshape = shapefuns(vpt)
+                y = cartesian(upt)
+                x = cartesian(vpt)
+                kernel = A * exp(-complex(0,1)*k*norm(x-y))/(4.0*π*norm(x-y))
+                # kernel = kernelvals(biop, upt, vpt)
+                ujac = jacobian(upt)
+                vjac = jacobian(vpt)
+                return tshape[i]*bshape[j]*kernel* ujac * vjac
+                # return kernel* ujac * vjac
+            end
+            z[i,j] = (sauterschwab_parameterized(tcell,bcell,integrand,ssm))
+            end
+    end
+
+    return z
+end
 
 abstract type SingularityExtractionStrategy end
 regularpart_quadrule(qr::SingularityExtractionStrategy) = qr.regularpart_quadrule
 
 function momintegrals!(op, g, f, t, s, z, strat::SingularityExtractionStrategy)
+
 
     womps = strat.outer_quad_points
 
@@ -410,7 +457,6 @@ function momintegrals!(op, g, f, t, s, z, strat::SingularityExtractionStrategy)
     end # next quadrature point
 
 end
-
 
 type QuadData{WPV1,WPV2}
   tpoints::Matrix{Vector{WPV1}}
