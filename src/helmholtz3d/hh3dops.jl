@@ -94,11 +94,11 @@ function quadrule(op::HH3DSingleLayerFDBIO, test_refspace, trial_refspace, i,
     test_quadpoints  = quadrature_data[1]
     trial_quadpoints = quadrature_data[2]
 
-    hits != 0 && return WiltonSEStrategy(
-        test_quadpoints[1,i],
-        DoubleQuadStrategy(
-            test_quadpoints[1,i],
-            trial_quadpoints[1,j]))
+    # hits != 0 && return WiltonSEStrategy(
+    #     test_quadpoints[1,i],
+    #     DoubleQuadStrategy(
+    #         test_quadpoints[1,i],
+    #         trial_quadpoints[1,j]))
 
     return DoubleQuadStrategy(
         quadrature_data[1][1,i],

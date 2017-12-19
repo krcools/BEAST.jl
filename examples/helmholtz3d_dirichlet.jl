@@ -5,8 +5,8 @@ o, x, y, z = euclidianbasis(3)
 
 # Γ = meshsphere(1.0, 0.11)
 Γ = readmesh("/Users/Benjamin/Documents/sphere.in")
-X = lagrangec0d1(Γ)
-# X = subdsurface(Γ)
+# X = lagrangec0d1(Γ)
+X = subdsurface(Γ)
 # X = raviartthomas(Γ)
 @show numfunctions(X)
 
@@ -24,15 +24,15 @@ g = ∂n(uⁱ)
 eq1 = @discretise a[v,u] == f[v] u∈X v∈X
 eq2 = @discretise b[v,u] == g[v] u∈X v∈X
 
-x1_subd = solve(eq1)
+x1 = solve(eq1)
 x2 = solve(eq2)
 
-fcr1, geo1 = facecurrents(x1_subd, X)
+fcr1, geo1 = facecurrents(x1, X)
 fcr2, geo2 = facecurrents(x2, X)
 
 include(Pkg.dir("CompScienceMeshes","examples","plotlyjs_patches.jl"))
 p1 = patch(geo1, real.(norm.(fcr1)))
-p2 = patch(geo1, real.(norm.(fcr2)))
+p2 = patch(geo2, real.(norm.(fcr2)))
 
 ## test the results
 Z = assemble(a,X,X);

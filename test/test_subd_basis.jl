@@ -8,8 +8,8 @@ X = subdsurface(G)
 
 els, ad = BEAST.assemblydata(X)
 
-# identityop    = Identity()
-singlelayer = BEAST.HH3DSingleLayerFDBIO(1.0)
-# I = assemble(identityop, X, X)
-S = assemble(singlelayer, X, X)
-# ncd = cond(I)
+identityop    = Identity()
+# singlelayer = BEAST.HH3DSingleLayerFDBIO(1.0)
+I = assemble(identityop, X, X)
+# S = assemble(singlelayer, X, X)
+ncd = cond(I)

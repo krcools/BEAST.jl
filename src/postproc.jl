@@ -42,6 +42,39 @@ function facecurrents(coeffs, basis)
 	return fcr, geometry(basis)
 end
 
+function facecurrents(coeffs, basis::subdBasis)
+
+	T = eltype(coeffs)
+	RT = real(T)
+
+	refs = refspace(basis)
+	# numrefs = numfunctions(refs)
+
+	cells, tad = assemblydata(basis)
+
+	mesh = geometry(basis)
+	D = dimension(mesh)
+	U = D+1
+
+	# TODO: express relative to input types
+	PT = SVector{U, T}
+	fcr = zeros(PT, numcells(mesh))
+
+	for (t,cell) in enumerate(cells)
+
+		mps = neighborhood(cell, ones(RT,D)/(D+1))
+        vals = refs(mps)
+
+		# assemble in the right hand side vector
+		for i in 1 : length(tad[t])
+			fx = vals[i][1]
+            for (m,a) in tad[t][i]
+				fcr[t] += coeffs[m] * a * fx
+			end
+		end
+	end
+	return fcr, geometry(basis)
+end
 
 function facecurrents(u, X1, Xs...)
 
