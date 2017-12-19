@@ -168,7 +168,8 @@ function assemble!(op::RetardedPotential, testST, trialST, store)
 	            # compute interactions between reference shape functions
 	            fill!(z, 0)
 	            qr = quadrule(op, U, V, W, p, τ, q, σ, r, ι, qd)
-				momintegrals!(z, op, U, V, W, τ, σ, 0, ι, qr)
+				#momintegrals!(z, op, U, V, W, τ, σ, 0, ι, qr)
+                momintegrals!(z, op, U, V, W, τ, σ, ι, qr)
 
 		        # assemble in the global matrix
 		        for i in 1 : udim
@@ -211,13 +212,13 @@ struct WiltonInts84Strat{T,V,W}
 end
 
 
-function momintegrals!(z, op, g, f, T, τ, σ, tmax, ι, qr::WiltonInts84Strat)
+function momintegrals!(z, op, g, f, T, τ, σ, ι, qr::WiltonInts84Strat)
 
     XW = qr.outer_quad_points
     for p in 1 : length(XW)
         x = XW[p].point
         w = XW[p].weight
-		innerintegrals!(z, op, x, tmax, g, f, T, τ, σ, ι, qr, w)
+		innerintegrals!(z, op, x, g, f, T, τ, σ, ι, qr, w)
     end
 
 end
