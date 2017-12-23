@@ -6,9 +6,9 @@ export MWDoubleLayer3D
 export PlaneWaveMW
 export TangTraceMW, CrossTraceMW
 export curl
-export SauterSchwabStrategy
+export sauterschwabstrategy
 
-struct SauterSchwabStrategy <: Any end
+struct sauterschwabstrategy <: Any end
 abstract type MaxwellOperator3D <: IntegralOperator end
 abstract type MaxwellOperator3DReg <: MaxwellOperator3D end
 
@@ -222,25 +222,28 @@ end
 # select_quadrule()
 
 
+function select_quadrule()
+         try
+             Pkg.installed("BogaertInts10")
+             info("`BogaertInts10` detected: enhanced quadrature enabled.")
+             @eval using BogaertInts10
+             @eval include("bogaertints.jl")
+             @eval quadrule(op::MaxwellOperator3D, g::RTRefSpace, f::RTRefSpace, i, τ, j, σ, qd) = qrib(op, g, f, i, τ, j, σ, qd)
+         catch
+             info("Cannot find package `BogaertInts10`. Default quadrature strategy used.")
+             @eval quadrule(op::MaxwellOperator3D, g::RTRefSpace, f::RTRefSpace, i, τ, j, σ, qd) = qrdf(op, g, f, i, τ, j, σ, qd)
+         end
 
-    try
-        using BogaertInts10
-        info("`BogaertInts10` detected: enhanced quadrature enabled.")
-        include("bogaertints.jl")
-        quadrule(op::MaxwellOperator3D, g::RTRefSpace, f::RTRefSpace, i, τ, j, σ, qd) = qrib(op, g, f, i, τ, j, σ, qd)
-    catch
-        info("Cannot find packages `SauterSchwabQuadrature` and `BogaertInts10`. Default quadrature strategy used.")
-        quadrule(op::MaxwellOperator3D, g::RTRefSpace, f::RTRefSpace, i, τ, j, σ, qd) = qrdf(op, g, f, i, τ, j, σ, qd)
-   end
-
-   try
-        using SauterSchwabQuadrature
-        info("`SauterSchwabQuadrature` detected.")
-        include("sauterschwabints.jl")
-        quadrule(op::MaxwellOperator3D, g::RTRefSpace, f::RTRefSpace, i, τ, j, σ, qd) = q(op, g, f, i, τ, j, σ, qd)
-   catch
-   end
-
+         try
+             Pkg.installed("SauterSchwabQuadrature")
+             info("`SauterSchwabQuadrature` detected.")
+             @eval using SauterSchwabQuadrature
+             @eval include("sauterschwabints.jl")
+             @eval quadrule(op::MaxwellOperator3D, g::RTRefSpace, f::RTRefSpace, i, τ, j, σ, qd) = q(op, g, f, i, τ, j, σ, qd)
+        catch
+        end
+end
+select_quadrule()
 
 
 
@@ -270,9 +273,9 @@ function q(op, g, f, i, τ, j, σ, qd)
     end
 
 
-  hits == 3   && return SauterSchwabStrategy()
-  hits == 2   && return SauterSchwabStrategy()
-  hits == 1   && return SauterSchwabStrategy()
+  hits == 3   && return sauterschwabstrategy()
+  hits == 2   && return sauterschwabstrategy()
+  hits == 1   && return sauterschwabstrategy()
   xmin < xtol && return WiltonSEStrategy(
     qd.tpoints[1,i],
     DoubleQuadStrategy(

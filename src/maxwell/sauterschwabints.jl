@@ -1,5 +1,5 @@
 function momintegrals!(op::MWSingleLayer3D, g::RTRefSpace, f::RTRefSpace,
-                            t, s, z, strat::SauterSchwabStrategy)
+                            t, s, z, strat::sauterschwabstrategy)
     accuracy = 12
     accuracy_pd = 8
 
@@ -31,7 +31,7 @@ end
 
 
 function momintegrals!(op::MWDoubleLayer3D, g::RTRefSpace, f::RTRefSpace,
-                        t, s, z, strat::SauterSchwabStrategy)
+                        t, s, z, strat::sauterschwabstrategy)
     accuracy = 12
     accuracy_pd = 8
 
