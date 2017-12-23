@@ -6,9 +6,9 @@ export MWDoubleLayer3D
 export PlaneWaveMW
 export TangTraceMW, CrossTraceMW
 export curl
-export sauterschwabstrategy
+export SauterSchwabStrategy
 
-struct sauterschwabstrategy <: Any end
+struct SauterSchwabStrategy <: Any end
 abstract type MaxwellOperator3D <: IntegralOperator end
 abstract type MaxwellOperator3DReg <: MaxwellOperator3D end
 
@@ -273,9 +273,9 @@ function q(op, g, f, i, τ, j, σ, qd)
     end
 
 
-  hits == 3   && return sauterschwabstrategy()
-  hits == 2   && return sauterschwabstrategy()
-  hits == 1   && return sauterschwabstrategy()
+  hits == 3   && return SauterSchwabStrategy()
+  hits == 2   && return SauterSchwabStrategy()
+  hits == 1   && return SauterSchwabStrategy()
   xmin < xtol && return WiltonSEStrategy(
     qd.tpoints[1,i],
     DoubleQuadStrategy(
