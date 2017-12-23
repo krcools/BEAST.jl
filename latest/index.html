@@ -135,14 +135,14 @@
 <strong><code>BEAST.elements</code></strong> &mdash; <em>Function</em>.</p>
 <p>elements(geo)</p>
 <p>Create an iterable collection of the elements stored in <code>geo</code>. The order in which this collection produces the elements determines the index used for lookup in the data structures returned by <code>assemblydata</code> and <code>quaddata</code>.</p>
-<p><a target='_blank' href='https://github.com/krcools/BEAST.jl/blob/48cba264f22ff71dd13256f485d38887d7bb5868/src/integralop.jl#L53-L59' class='documenter-source'>source</a><br></p>
+<p><a target='_blank' href='https://github.com/krcools/BEAST.jl/blob/200620e73c42fbaa902af67d23ae9b3337b0995e/src/integralop.jl#L53-L59' class='documenter-source'>source</a><br></p>
 <p><a id='BEAST.numfunctions' href='#BEAST.numfunctions'>#</a>
 <strong><code>BEAST.numfunctions</code></strong> &mdash; <em>Function</em>.</p>
 <pre><code>numfunctions(r)
 </code></pre>
 
 <p>Return the number of functions in a <code>Space</code> or <code>RefSpace</code>.</p>
-<p><a target='_blank' href='https://github.com/krcools/BEAST.jl/blob/48cba264f22ff71dd13256f485d38887d7bb5868/src/bases/basis.jl#L31-L35' class='documenter-source'>source</a><br></p>
+<p><a target='_blank' href='https://github.com/krcools/BEAST.jl/blob/200620e73c42fbaa902af67d23ae9b3337b0995e/src/bases/basis.jl#L31-L35' class='documenter-source'>source</a><br></p>
 <p><a id='CompScienceMeshes.coordtype' href='#CompScienceMeshes.coordtype'>#</a>
 <strong><code>CompScienceMeshes.coordtype</code></strong> &mdash; <em>Function</em>.</p>
 <pre><code>coordtype(mesh)
@@ -159,14 +159,14 @@
 </code></pre>
 
 <p>The scalar field over which the argument to a basis function or operator's integration kernel are defined. This is always a salar data type, even if the function or kernel is defined over a multi-dimensional space.</p>
-<p><a target='_blank' href='https://github.com/krcools/BEAST.jl/blob/48cba264f22ff71dd13256f485d38887d7bb5868/src/bases/basis.jl#L20-L26' class='documenter-source'>source</a><br></p>
+<p><a target='_blank' href='https://github.com/krcools/BEAST.jl/blob/200620e73c42fbaa902af67d23ae9b3337b0995e/src/bases/basis.jl#L20-L26' class='documenter-source'>source</a><br></p>
 <p><a id='BEAST.scalartype' href='#BEAST.scalartype'>#</a>
 <strong><code>BEAST.scalartype</code></strong> &mdash; <em>Function</em>.</p>
 <pre><code>scalartype(x)
 </code></pre>
 
 <p>The scalar field over which the values of a global or local basis function, or an operator are defined. This should always be a scalar type, even if the basis or operator takes on values in a vector or tensor space. This data type is used to determine the <code>eltype</code> of assembled discrete operators.</p>
-<p><a target='_blank' href='https://github.com/krcools/BEAST.jl/blob/48cba264f22ff71dd13256f485d38887d7bb5868/src/bases/basis.jl#L39-L46' class='documenter-source'>source</a><br></p>
+<p><a target='_blank' href='https://github.com/krcools/BEAST.jl/blob/200620e73c42fbaa902af67d23ae9b3337b0995e/src/bases/basis.jl#L39-L46' class='documenter-source'>source</a><br></p>
 <p><a id='BEAST.assemblydata' href='#BEAST.assemblydata'>#</a>
 <strong><code>BEAST.assemblydata</code></strong> &mdash; <em>Function</em>.</p>
 <pre><code>assemblydata(basis)
@@ -180,21 +180,21 @@ ad[c,r,i].coefficient
 <p>Here, <code>c</code> and <code>r</code> are indices in the iterable set of geometric elements and the set of local shape functions on each element. <code>i</code> ranges from 1 to the maximum number of basis functions local shape function <code>r</code> on element <code>r</code> contributes to.</p>
 <p>For a triplet <code>(c,r,i)</code>, <code>globalindex</code> is the index in the Basis of the <code>i</code>-th basis function that has a contribution from local shape function <code>r</code> on element <code>r</code>. <code>coefficient</code> is the coefficient of that contribution in the linear combination defining that basis function in terms of local shape function.</p>
 <p><em>Note</em>: the indices <code>c</code> correspond to the position of the corresponding element whilst iterating over <code>geometry(basis)</code>.</p>
-<p><a target='_blank' href='https://github.com/krcools/BEAST.jl/blob/48cba264f22ff71dd13256f485d38887d7bb5868/src/bases/basis.jl#L113-L138' class='documenter-source'>source</a><br></p>
+<p><a target='_blank' href='https://github.com/krcools/BEAST.jl/blob/200620e73c42fbaa902af67d23ae9b3337b0995e/src/bases/basis.jl#L113-L138' class='documenter-source'>source</a><br></p>
 <p><a id='BEAST.geometry' href='#BEAST.geometry'>#</a>
 <strong><code>BEAST.geometry</code></strong> &mdash; <em>Function</em>.</p>
 <pre><code>geometry(basis)
 </code></pre>
 
 <p>Returns an iterable collection of geometric elements on which the functions in <code>basis</code> are defined. The order the elements are encountered needs correspond to the element indices used in the data structure returned by <code>assemblydata</code>.</p>
-<p><a target='_blank' href='https://github.com/krcools/BEAST.jl/blob/48cba264f22ff71dd13256f485d38887d7bb5868/src/bases/basis.jl#L51-L57' class='documenter-source'>source</a><br></p>
+<p><a target='_blank' href='https://github.com/krcools/BEAST.jl/blob/200620e73c42fbaa902af67d23ae9b3337b0995e/src/bases/basis.jl#L51-L57' class='documenter-source'>source</a><br></p>
 <p><a id='BEAST.refspace' href='#BEAST.refspace'>#</a>
 <strong><code>BEAST.refspace</code></strong> &mdash; <em>Function</em>.</p>
 <pre><code>refspace(basis)
 </code></pre>
 
 <p>Returns the ReferenceSpace of local shape functions on which the basis is built.</p>
-<p><a target='_blank' href='https://github.com/krcools/BEAST.jl/blob/48cba264f22ff71dd13256f485d38887d7bb5868/src/bases/basis.jl#L12-L16' class='documenter-source'>source</a><br></p>
+<p><a target='_blank' href='https://github.com/krcools/BEAST.jl/blob/200620e73c42fbaa902af67d23ae9b3337b0995e/src/bases/basis.jl#L12-L16' class='documenter-source'>source</a><br></p>
 <p><a id='BEAST.quaddata' href='#BEAST.quaddata'>#</a>
 <strong><code>BEAST.quaddata</code></strong> &mdash; <em>Function</em>.</p>
 <pre><code>quaddata(operator, test_refspace, trial_refspace, test_elements, trial_elements)
@@ -210,7 +210,7 @@ ad[c,r,i].coefficient
 <li><code>test_elements</code> and <code>trial_elements</code> are iterable collections of the geometric</li>
 </ul>
 <p>elements on which the finite element space are defined. These are provided to allow computation of the actual integrations points - as opposed to only their coordinates.</p>
-<p><a target='_blank' href='https://github.com/krcools/BEAST.jl/blob/48cba264f22ff71dd13256f485d38887d7bb5868/src/quaddata.jl#L3-L19' class='documenter-source'>source</a><br></p>
+<p><a target='_blank' href='https://github.com/krcools/BEAST.jl/blob/200620e73c42fbaa902af67d23ae9b3337b0995e/src/quaddata.jl#L3-L19' class='documenter-source'>source</a><br></p>
 <p><a id='BEAST.quadrule' href='#BEAST.quadrule'>#</a>
 <strong><code>BEAST.quadrule</code></strong> &mdash; <em>Function</em>.</p>
 <pre><code>quadrule(operator,test_refspace,trial_refspace,p,test_element,q_trial_element, qd)
@@ -218,14 +218,14 @@ ad[c,r,i].coefficient
 
 <p>Returns an object that contains all the dynamic (runtime) information that defines the integration strategy that will be used by <code>momintegrals!</code> to compute the interactions between the local test/trial functions defined on the specified geometric elements. The indices <code>p</code> and <code>q</code> refer to the position of the test and trial elements as encountered during iteration over the output of <code>geometry</code>.</p>
 <p>The last argument <code>qd</code> provides access to all precomputed data required for quadrature. For example it might be desirable to precompute all the quadrature points for all possible numerical quadrature schemes that can potentially be required during matrix assembly. This makes sense, since the number of point is order N (where N is the number of faces) but these points will appear in N^2 computations. Precomputation requires some extra memory but can save a lot on computation time.</p>
-<p><a target='_blank' href='https://github.com/krcools/BEAST.jl/blob/48cba264f22ff71dd13256f485d38887d7bb5868/src/integralop.jl#L32-L49' class='documenter-source'>source</a><br></p>
+<p><a target='_blank' href='https://github.com/krcools/BEAST.jl/blob/200620e73c42fbaa902af67d23ae9b3337b0995e/src/integralop.jl#L32-L49' class='documenter-source'>source</a><br></p>
 <p><a id='BEAST.momintegrals!' href='#BEAST.momintegrals!'>#</a>
 <strong><code>BEAST.momintegrals!</code></strong> &mdash; <em>Function</em>.</p>
 <pre><code>regularcellcellinteractions!(biop, tshs, bshs, tcell, bcell, interactions, strat)
 </code></pre>
 
 <p>Function for the computation of moment integrals using simple double quadrature.</p>
-<p><a target='_blank' href='https://github.com/krcools/BEAST.jl/blob/48cba264f22ff71dd13256f485d38887d7bb5868/src/integralop.jl#L342-L346' class='documenter-source'>source</a><br></p></div>
+<p><a target='_blank' href='https://github.com/krcools/BEAST.jl/blob/200620e73c42fbaa902af67d23ae9b3337b0995e/src/integralop.jl#L342-L346' class='documenter-source'>source</a><br></p></div>
         </div>
 
         <footer class="col-md-12">
@@ -309,5 +309,5 @@ ad[c,r,i].coefficient
 
 <!--
 MkDocs version : 0.17.2
-Build Date UTC : 2017-12-18 18:14:17
+Build Date UTC : 2017-12-23 16:29:11
 -->
