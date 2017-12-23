@@ -19,7 +19,6 @@ numfunctions(X1)
 #
 # @test T1 == T2
 
-T1 = assemble(t,X,X)
 T2 = BEAST.assembleblock(t,X,X)
 @test T1 == T2
 

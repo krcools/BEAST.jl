@@ -5,7 +5,6 @@ abstract type Helmholtz3DOpReg <: MaxwellOperator3DReg end
 ```
 ∫_Γ dx ∫_Γ dy \left(α G g(x) n_x ⋅ n_y f(y) + β G \mbox{curl} g(x) ⋅ \mbox{curl} f(y) \right)
 ```
-
 with ``G(x,y) = \frac{e^{-γ |x-y|}}{4 π |x-y|}``
 """
 struct HH3DHyperSingularFDBIO{T,K} <: Helmholtz3DOp
@@ -24,7 +23,6 @@ scalartype(op::HH3DHyperSingularFDBIO) = promote_type(typeof(op.alpha), typeof(o
 ```math
 a(u,v) = α ∬_{Γ×Γ} u(x) G_{γ}(|x-y|) v(y)
 ```
-
 with ``G_{γ}(r) = \frac{e^{-γr}}{4πr}``.
 """
 struct HH3DSingleLayerFDBIO{T,K} <: Helmholtz3DOp
