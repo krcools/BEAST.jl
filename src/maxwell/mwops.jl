@@ -217,28 +217,29 @@ end
 #         info("Cannot find package `BogaertInts10`. Default quadrature strategy used.")
 #         @eval quadrule(op::MaxwellOperator3D, g::RTRefSpace, f::RTRefSpace, i, τ, j, σ, qd) = qrdf(op, g, f, i, τ, j, σ, qd)
 #     end
-# end
+#end
 #
 # select_quadrule()
 
 
-try
-    using BogaertInts10
+
+    try
+        using BogaertInts10
         info("`BogaertInts10` detected: enhanced quadrature enabled.")
         include("bogaertints.jl")
         quadrule(op::MaxwellOperator3D, g::RTRefSpace, f::RTRefSpace, i, τ, j, σ, qd) = qrib(op, g, f, i, τ, j, σ, qd)
     catch
         info("Cannot find packages `SauterSchwabQuadrature` and `BogaertInts10`. Default quadrature strategy used.")
         quadrule(op::MaxwellOperator3D, g::RTRefSpace, f::RTRefSpace, i, τ, j, σ, qd) = qrdf(op, g, f, i, τ, j, σ, qd)
-end
+   end
 
-try
-    using SauterSchwabQuadrature
+   try
+        using SauterSchwabQuadrature
         info("`SauterSchwabQuadrature` detected.")
         include("sauterschwabints.jl")
         quadrule(op::MaxwellOperator3D, g::RTRefSpace, f::RTRefSpace, i, τ, j, σ, qd) = q(op, g, f, i, τ, j, σ, qd)
-catch
-end
+   catch
+   end
 
 
 
