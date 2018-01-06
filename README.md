@@ -27,7 +27,7 @@ be installed and on the system path.
 
 ## Hello World
 
-To solve scattering by a time harmonic electromagnetic plane wave by a perfectly conducting
+To solve scattering of a time harmonic electromagnetic plane wave by a perfectly conducting
 sphere:
 
 ```julia
