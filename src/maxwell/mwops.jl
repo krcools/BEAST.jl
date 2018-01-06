@@ -83,8 +83,8 @@ singularpart(op::MWSingleLayer3D) = MWSingleLayer3DSng(op.gamma, op.α, op.β)
 
 function quaddata(op::MaxwellOperator3D, g::RefSpace, f::RefSpace, tels, bels)
 
-    tqd = quadpoints(g, tels, (2,12))
-    bqd = quadpoints(f, bels, (3,13))
+    tqd = quadpoints(g, tels, (2,6))
+    bqd = quadpoints(f, bels, (3,7))
 
     return QuadData(tqd, bqd)
 end
@@ -234,14 +234,14 @@ function select_quadrule()
              @eval quadrule(op::MaxwellOperator3D, g::RTRefSpace, f::RTRefSpace, i, τ, j, σ, qd) = qrdf(op, g, f, i, τ, j, σ, qd)
          end
 
-         try
-             Pkg.installed("SauterSchwabQuadrature")
-             info("`SauterSchwabQuadrature` detected.")
-             @eval using SauterSchwabQuadrature
-             @eval include("sauterschwabints.jl")
-             @eval quadrule(op::MaxwellOperator3D, g::RTRefSpace, f::RTRefSpace, i, τ, j, σ, qd) = q(op, g, f, i, τ, j, σ, qd)
-        catch
-        end
+        #  try
+        #      Pkg.installed("SauterSchwabQuadrature")
+        #      info("`SauterSchwabQuadrature` detected.")
+        #      @eval using SauterSchwabQuadrature
+        #      @eval include("sauterschwabints.jl")
+        #      @eval quadrule(op::MaxwellOperator3D, g::RTRefSpace, f::RTRefSpace, i, τ, j, σ, qd) = q(op, g, f, i, τ, j, σ, qd)
+        # catch
+        # end
 end
 select_quadrule()
 
