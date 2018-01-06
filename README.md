@@ -34,11 +34,11 @@ sphere:
 using CompScienceMeshes, BEAST
 o, x, y, z = euclidianbasis(3)
 
-Γ = meshsphere(1.0, 0.35)
+Γ = meshsphere(1.0, 0.25)
 RT = raviartthomas(Γ)
 
 κ = 1.0
-t = Maxwell3D.singlelayer(gamma=im*κ)
+t = Maxwell3D.singlelayer(wavenumber=κ)
 E = Maxwell3D.planewave(direction=z, polarization=x, wavenumber=κ)
 e = (n × E) × n
 

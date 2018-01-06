@@ -390,6 +390,7 @@ module Maxwell3D
 
     """
         singlelayer(;gamma, alpha, beta)
+        singlelayer(;wavenumber, alpha, beta)
 
     Bilinear form given by:
 
@@ -399,15 +400,40 @@ module Maxwell3D
 
     with ``G_{γ} = e^{-γ|x-y|} / 4π|x-y|``.
     """
-    singlelayer(;
-            gamma=error("propagation constant required"),
-            alpha=-gamma,
-            beta=-1/gamma) =
+    function singlelayer(;
+            gamma=nothing,
+            wavenumber=nothing,
+            alpha=nothing,
+            beta=nothing)
+
+        if (gamma == nothing) && (wavenumber == nothing)
+            error("Supply one of (not both) gamma or wavenumber")
+        end
+
+        if (gamma != nothing) && (wavenumber != nothing)
+            error("Supply one of (not both) gamma or wavenumber")
+        end
+
+        if gamma == nothing
+            if iszero(real(wavenumber))
+                gamma = -imag(wavenumber)
+            else
+                gamma = im*wavenumber
+            end
+        end
+
+        @assert gamma != nothing
+
+        alpha == nothing && (alpha = -gamma)
+        beta  == nothing && (beta  = -1/gamma)
+
         MWSingleLayer3D(gamma, alpha, beta)
+    end
 
 
     """
         doublelayer(;gamma)
+        doublelaher(;wavenumber)
 
     Bilinear form given by:
 
@@ -417,9 +443,30 @@ module Maxwell3D
 
     with ``G_γ = e^{-γ|x-y|} / 4π|x-y|``
     """
-    doublelayer(;
-            gamma=error("propagation constant required")) =
+    function doublelayer(;
+            gamma=nothing,
+            wavenumber=nothing)
+
+        if (gamma == nothing) && (wavenumber == nothing)
+            error("Supply one of (not both) gamma or wavenumber")
+        end
+
+        if (gamma != nothing) && (wavenumber != nothing)
+            error("Supply one of (not both) gamma or wavenumber")
+        end
+
+        if gamma == nothing
+            if iszero(real(wavenumber))
+                gamma = -imag(wavenumber)
+            else
+                gamma = im*wavenumber
+            end
+        end
+
+        @assert gamma != nothing
+
         MWDoubleLayer3D(gamma)
+    end
 
     planewave(;
             direction    = error("missing arguement `direction`"),
