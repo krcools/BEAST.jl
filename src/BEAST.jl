@@ -2,6 +2,8 @@ module BEAST
 export planewave
 export planewavemw3d
 export n, ι
+export example
+
 using SauterSchwabQuadrature
 using Combinatorics
 
@@ -84,6 +86,13 @@ include("solvers/solver.jl")
 include("solvers/lusolver.jl")
 include("solvers/itsolver.jl")
 
+include("utils/examples.jl")
+
 using CompScienceMeshes
+
+export x̂, ŷ, ẑ
+x̂ = point(1,0,0)
+ŷ = point(0,1,0)
+ẑ = point(0,0,1)
 
 end # module
