@@ -1,24 +1,18 @@
 using CompScienceMeshes, BEAST
-o, x, y, z = euclidianbasis(3)
 
 Γ = readmesh(joinpath(dirname(@__FILE__),"sphere2.in"))
 X, Y = raviartthomas(Γ), buffachristiansen(Γ)
 
-ω = κ = 1.0
-μ = ϵ = 1.0
-
-K, N = MWDoubleLayer3D(im*κ), NCross()
-
-E = PlaneWaveMW(z, x, κ, complex(1.0))
+ϵ, μ, ω = 1.0, 1.0, 1.0; κ = ω * √(ϵ*μ)
+K, N = Maxwell3D.doublelayer(wavenumber=κ), NCross()
+E = Maxwell3D.planewave(direction=ẑ, polarization=x̂, wavenumber=κ)
 H = -1/(im*μ*ω)*curl(E)
 h = (n × H) × n
 
-@hilbertspace j; @hilbertspace m;
+@hilbertspace j
+@hilbertspace m
 mfie = @discretise (K+0.5N)[m,j] == h[m]  j∈X m∈Y
-u = solve(mfie)
+u = gmres(mfie)
 
-using PlotlyJS
-include(Pkg.dir("CompScienceMeshes","examples","plotlyjs_patches.jl"))
-
-fcr, geo = facecurrents(u, X)
-p = patch(geo, real.(norm.(fcr)))
+include("utils/postproc.jl")
+include("utils/plotresults.jl")

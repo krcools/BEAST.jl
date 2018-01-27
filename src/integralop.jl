@@ -91,7 +91,7 @@ function assemblechunk_body!(biop,
         qd, zlocal, store)
 
     for (p,tcell) in enumerate(test_elements)
-        print("Compute test_element $(p)\n")
+        #print("Compute test_element $(p)\n")
         for (q,bcell) in enumerate(trial_elements)
 
         fill!(zlocal, 0)

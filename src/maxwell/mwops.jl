@@ -5,9 +5,10 @@ export MWSingleLayer3D, MWHyperSingular, MWWeaklySingular
 export MWDoubleLayer3D
 export PlaneWaveMW
 export TangTraceMW, CrossTraceMW
-
 export curl
+export sauterschwabstrategy
 
+struct sauterschwabstrategy <: Any end
 abstract type MaxwellOperator3D <: IntegralOperator end
 abstract type MaxwellOperator3DReg <: MaxwellOperator3D end
 
@@ -216,20 +217,79 @@ end
 #         info("Cannot find package `BogaertInts10`. Default quadrature strategy used.")
 #         @eval quadrule(op::MaxwellOperator3D, g::RTRefSpace, f::RTRefSpace, i, τ, j, σ, qd) = qrdf(op, g, f, i, τ, j, σ, qd)
 #     end
-# end
+#end
 #
 # select_quadrule()
 
 
-try
-    using BogaertInts10
-    info("`BogaertInts10` detected: enhanced quadrature enabled.")
-    include("bogaertints.jl")
-    quadrule(op::MaxwellOperator3D, g::RTRefSpace, f::RTRefSpace, i, τ, j, σ, qd) = qrib(op, g, f, i, τ, j, σ, qd)
-catch
-    info("Cannot find package `BogaertInts10`. Default quadrature strategy used.")
-    quadrule(op::MaxwellOperator3D, g::RTRefSpace, f::RTRefSpace, i, τ, j, σ, qd) = qrdf(op, g, f, i, τ, j, σ, qd)
+function select_quadrule()
+         try
+             Pkg.installed("BogaertInts10")
+             info("`BogaertInts10` detected: enhanced quadrature enabled.")
+             @eval using BogaertInts10
+             @eval include("bogaertints.jl")
+             @eval quadrule(op::MaxwellOperator3D, g::RTRefSpace, f::RTRefSpace, i, τ, j, σ, qd) = qrib(op, g, f, i, τ, j, σ, qd)
+         catch
+             info("Cannot find package `BogaertInts10`. Default quadrature strategy used.")
+             @eval quadrule(op::MaxwellOperator3D, g::RTRefSpace, f::RTRefSpace, i, τ, j, σ, qd) = qrdf(op, g, f, i, τ, j, σ, qd)
+         end
+
+        #  try
+        #      Pkg.installed("SauterSchwabQuadrature")
+        #      info("`SauterSchwabQuadrature` detected.")
+        #      @eval using SauterSchwabQuadrature
+        #      @eval include("sauterschwabints.jl")
+        #      @eval quadrule(op::MaxwellOperator3D, g::RTRefSpace, f::RTRefSpace, i, τ, j, σ, qd) = q(op, g, f, i, τ, j, σ, qd)
+        # catch
+        # end
 end
+select_quadrule()
+
+
+
+
+
+
+function q(op, g, f, i, τ, j, σ, qd)
+    # defines coincidence of points
+    dtol = 1.0e3 * eps(eltype(eltype(τ.vertices)))
+
+    # decides on whether to use singularity extraction
+    xtol = 0.2
+
+    k = norm(op.gamma)
+
+    hits = 0
+    xmin = xtol
+    for t in τ.vertices
+      for s in σ.vertices
+        d = norm(t-s)
+        xmin = min(xmin, k*d)
+        if d < dtol
+          hits +=1
+          break
+        end
+      end
+    end
+
+
+  hits == 3   && return sauterschwabstrategy()
+  hits == 2   && return sauterschwabstrategy()
+  hits == 1   && return sauterschwabstrategy()
+  xmin < xtol && return WiltonSEStrategy(
+    qd.tpoints[1,i],
+    DoubleQuadStrategy(
+      qd.tpoints[2,i],
+      qd.bpoints[2,j],
+    ),
+  )
+  return DoubleQuadStrategy(
+    qd.tpoints[2,i],
+    qd.bpoints[2,j],
+  )
+
+end
+
 
 function qrib(op::MaxwellOperator3D, g::RTRefSpace, f::RTRefSpace, i, τ, j, σ, qd)
   # defines coincidence of points
@@ -253,20 +313,36 @@ function qrib(op::MaxwellOperator3D, g::RTRefSpace, f::RTRefSpace, i, τ, j, σ,
     end
   end
 
-  hits == 3   && return BogaertSelfPatchStrategy(5)
-  hits == 2   && return BogaertEdgePatchStrategy(8, 4)
-  hits == 1   && return BogaertPointPatchStrategy(2, 3)
-  xmin < xtol && return WiltonSEStrategy(
-    qd.tpoints[1,i],
-    DoubleQuadStrategy(
-      qd.tpoints[2,i],
-      qd.bpoints[2,j],
-    ),
-  )
-  return DoubleQuadStrategy(
-    qd.tpoints[1,i],
-    qd.bpoints[1,j],
-  )
+#  hits == 3   && return BogaertSelfPatchStrategy(5)
+#  hits == 2   && return BogaertEdgePatchStrategy(8, 4)
+#  hits == 1   && return BogaertPointPatchStrategy(2, 3)
+#  xmin < xtol && return WiltonSEStrategy(
+#    qd.tpoints[1,i],
+#    DoubleQuadStrategy(
+#      qd.tpoints[2,i],
+#      qd.bpoints[2,j],
+#    ),
+# )
+#  return DoubleQuadStrategy(
+#    qd.tpoints[1,i],
+#    qd.bpoints[1,j],
+#  )
+
+#end
+hits == 3   && return BogaertSelfPatchStrategy(20)
+hits == 2   && return BogaertEdgePatchStrategy(12, 20)
+hits == 1   && return BogaertPointPatchStrategy(12, 20)
+xmin < xtol && return WiltonSEStrategy(
+  qd.tpoints[1,i],
+  DoubleQuadStrategy(
+    qd.tpoints[2,i],
+    qd.bpoints[2,j],
+  ),
+)
+return DoubleQuadStrategy(
+  qd.tpoints[1,i],
+  qd.bpoints[1,j],
+)
 
 end
 
@@ -314,6 +390,7 @@ module Maxwell3D
 
     """
         singlelayer(;gamma, alpha, beta)
+        singlelayer(;wavenumber, alpha, beta)
 
     Bilinear form given by:
 
@@ -323,15 +400,40 @@ module Maxwell3D
 
     with ``G_{γ} = e^{-γ|x-y|} / 4π|x-y|``.
     """
-    singlelayer(;
-            gamma=error("propagation constant required"),
-            alpha=-gamma,
-            beta=-1/gamma) =
+    function singlelayer(;
+            gamma=nothing,
+            wavenumber=nothing,
+            alpha=nothing,
+            beta=nothing)
+
+        if (gamma == nothing) && (wavenumber == nothing)
+            error("Supply one of (not both) gamma or wavenumber")
+        end
+
+        if (gamma != nothing) && (wavenumber != nothing)
+            error("Supply one of (not both) gamma or wavenumber")
+        end
+
+        if gamma == nothing
+            if iszero(real(wavenumber))
+                gamma = -imag(wavenumber)
+            else
+                gamma = im*wavenumber
+            end
+        end
+
+        @assert gamma != nothing
+
+        alpha == nothing && (alpha = -gamma)
+        beta  == nothing && (beta  = -1/gamma)
+
         MWSingleLayer3D(gamma, alpha, beta)
+    end
 
 
     """
         doublelayer(;gamma)
+        doublelaher(;wavenumber)
 
     Bilinear form given by:
 
@@ -341,9 +443,30 @@ module Maxwell3D
 
     with ``G_γ = e^{-γ|x-y|} / 4π|x-y|``
     """
-    doublelayer(;
-            gamma=error("propagation constant required")) =
+    function doublelayer(;
+            gamma=nothing,
+            wavenumber=nothing)
+
+        if (gamma == nothing) && (wavenumber == nothing)
+            error("Supply one of (not both) gamma or wavenumber")
+        end
+
+        if (gamma != nothing) && (wavenumber != nothing)
+            error("Supply one of (not both) gamma or wavenumber")
+        end
+
+        if gamma == nothing
+            if iszero(real(wavenumber))
+                gamma = -imag(wavenumber)
+            else
+                gamma = im*wavenumber
+            end
+        end
+
+        @assert gamma != nothing
+
         MWDoubleLayer3D(gamma)
+    end
 
     planewave(;
             direction    = error("missing arguement `direction`"),

@@ -27,18 +27,18 @@ be installed and on the system path.
 
 ## Hello World
 
-To solve scattering by a time harmonic electromagnetic plane wave by a perfectly conducting
+To solve scattering of a time harmonic electromagnetic plane wave by a perfectly conducting
 sphere:
 
 ```julia
 using CompScienceMeshes, BEAST
 o, x, y, z = euclidianbasis(3)
 
-Γ = meshsphere(1.0, 0.35)
+Γ = meshsphere(1.0, 0.25)
 RT = raviartthomas(Γ)
 
 κ = 1.0
-t = Maxwell3D.singlelayer(gamma=im*κ)
+t = Maxwell3D.singlelayer(wavenumber=κ)
 E = Maxwell3D.planewave(direction=z, polarization=x, wavenumber=κ)
 e = (n × E) × n
 
