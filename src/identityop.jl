@@ -26,8 +26,6 @@ function quaddata(op::LocalOperator, g::subReferenceSpace, f::subReferenceSpace,
     return [(w[i],SVector(u[1,i],u[2,i])) for i in 1:length(w)]
 end
 
-
-
 quaddata(op::LocalOperator, g::LagrangeRefSpace, f::LagrangeRefSpace,
         tels::Vector, bels::Vector) = quaddata(op, g, f, tels, bels, Val{dimension(tels[1])})
 

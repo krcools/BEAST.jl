@@ -24,7 +24,7 @@ function (rs::subReferenceSpace)(nbhd)
     # x = cartesian(nbhd)
     s = shapefuns(nbhd)
     scurl = get_shape_curl(nbhd)
-    return s,scurl
+    return s
 end
 
 function subdsurface(mesh)

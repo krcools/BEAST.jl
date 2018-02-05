@@ -72,11 +72,15 @@ function assemblechunk!(biop::IntegralOperator, tfs::Space, bfs::Space, store)
     test_elements, tad = assemblydata(tfs)
     bsis_elements, bad = assemblydata(bfs)
 
-    tshapes = refspace(tfs); num_tshapes = numfunctions(tshapes)
-    bshapes = refspace(bfs); num_bshapes = numfunctions(bshapes)
+    tshapes = refspace(tfs);num_tshapes = numfunctions(tshapes)
+    bshapes = refspace(bfs);num_bshapes = numfunctions(bshapes)
 
     qd = quaddata(biop, tshapes, bshapes, test_elements, bsis_elements)
     zlocal = zeros(scalartype(biop, tfs, bfs), 2num_tshapes, 2num_bshapes)
+
+    if num_tshapes >23 || num_bshapes > 23
+        error("Number of subd basis functions exceed the limit")
+    end
 
     assemblechunk_body!(biop,
         tshapes, test_elements, tad,
