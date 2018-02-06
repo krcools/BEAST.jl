@@ -121,13 +121,18 @@ numcells(Γ) = 50
 </code></pre>
 
 <p>The scattering problem is defined by specifying the single layer operator and the functional acting as excitation. Here, the plate is illuminated by a plane wave. The actual excitation is the tangential trace of this electric field. This trace be constructed easily by using the symbolic normal vector field <code>n</code> defined as part of the <code>BEAST</code> package.</p>
-<pre><code class="julia">κ = 1.0
+<p>```@example 1
+κ = 1.0
 E = planewavemw3d(direction=z, polarization=x, wavenumber=κ)
 e = (n × E) × n
-</code></pre>
+nothing # hide</p>
+<pre><code>
 
-<p>The single layer potential is also predefined by the <code>BEAST</code> package:</p>
-<pre><code class="julia">t = MWSingleLayer3D(κ*im)
+The single layer potential is also predefined by the `BEAST` package:
+
+
+```julia
+t = MWSingleLayer3D(κ*im)
 </code></pre>
 
 <p>It corresponds to the bilinear form</p>
