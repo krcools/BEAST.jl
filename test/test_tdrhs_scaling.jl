@@ -1,4 +1,6 @@
-using CompScienceMeshes, BEAST, Base.Test
+using CompScienceMeshes
+using BEAST
+using Base.Test
 
 D, Δx = 1.0, 0.35
 fn = joinpath(dirname(@__FILE__),"assets","sphere35.in")
@@ -18,7 +20,7 @@ U1 = timebasisdelta(Δt1, Nt)
 W1 = Y ⊗ U1
 duration1, delay1, amplitude1 = 8.0/sol1, 12.0/sol1, 1.0
 gaussian1 = creategaussian(duration1, delay1, duration1)
-E1 = planewave(polarisation, direction, derive(gaussian1), sol1)
+E1 = BEAST.planewave(polarisation, direction, derive(gaussian1), sol1)
 b1 = assemble(E1,W1)
 taxis1 = collect((0:Nt-1)*Δt1)
 
@@ -29,7 +31,7 @@ U2 = timebasisdelta(Δt2, Nt)
 W2 = Y ⊗ U2
 duration2, delay2, amplitude2 = 8.0/sol2, 12.0/sol2, 1.0
 gaussian2 = creategaussian(duration2, delay2, duration2)
-E2 = planewave(polarisation, direction, derive(gaussian2), sol2)
+E2 = BEAST.planewave(polarisation, direction, derive(gaussian2), sol2)
 b2 = assemble(E2,W2)
 taxis2 = collect((0:Nt-1)*Δt2)
 

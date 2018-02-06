@@ -1,6 +1,6 @@
 import IterativeSolvers
 
-export gmres
+
 
 
 struct GMRESSolver{L,R}

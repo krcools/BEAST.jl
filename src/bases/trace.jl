@@ -1,5 +1,4 @@
-export ntrace
-export strace
+
 
 """
     ntrace(X::Space, γ::Mesh)

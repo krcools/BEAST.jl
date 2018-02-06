@@ -1,5 +1,4 @@
-export MWSingleLayerTDIO
-export MWDoubleLayerTDIO
+
 
 type MWSingleLayerTDIO{T} <: RetardedPotential{T}
     "speed of light in medium"

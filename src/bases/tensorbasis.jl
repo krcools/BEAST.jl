@@ -1,5 +1,4 @@
-export spatialbasis, temporalbasis
-export ⊗
+
 
 
 type SpaceTimeBasis{S,T}

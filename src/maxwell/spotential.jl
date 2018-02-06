@@ -1,4 +1,4 @@
-export MWSingleLayerPotential3D
+
 
 type MWSingleLayerPotential3D{K}
     wavenumber::K

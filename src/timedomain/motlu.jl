@@ -1,5 +1,4 @@
-export convolve
-export marchonintime
+
 
 function convolve(Z::Array,x,j,k0)
     M,N,K = size(Z)

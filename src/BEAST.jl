@@ -1,17 +1,83 @@
 module BEAST
-export planewave
-export planewavemw3d
-export n, ι
-export example
 
-using SauterSchwabQuadrature
-using Combinatorics
+export RefSpace, numfunctions, coordtype, scalartype, assemblydata, geometry, refspace, valuetype
+export lagrangecxd0, lagrangec0d1, duallagrangec0d1
+export duallagrangecxd0
+export lagdimension
+export restrict
+export raviartthomas, raowiltonglisson, positions
+export portcells, rt_ports, getindex_rtg, subset
+export StagedTimeStep
+export subdsurface,subdBasis,assemblydata,refspace
+export spatialbasis, temporalbasis
+export ⊗
+export timebasisc0d1
+export timebasiscxd0
+export timebasisdelta
+export timebasisshiftedlagrange
+export TimeBasisDeltaShifted
+export ntrace
+export strace
+export SingleLayer
+export DoubleLayer
+export DoubleLayerTransposed
+export HyperSingular
+export HH3DSingleLayerTDBIO
+export HH3DDoubleLayerTDBIO
+export ∂n
+export HH3DHyperSingularFDBIO
+export NitscheHH3
+export MWSingleLayerTDIO
+export MWDoubleLayerTDIO
+export MWFarField3DTD
+export MWFarField3D
+export MWSingleLayer3D, MWHyperSingular, MWWeaklySingular
+export MWDoubleLayer3D
+export PlaneWaveMW
+export TangTraceMW, CrossTraceMW
+export curl
+export sauterschwabstrategy
+export MWSingleLayerField3D
+export SingleLayerTrace
+export DoubleLayerRotatedMW3D
+export MWSingleLayerPotential3D
+export gmres
+export @hilbertspace, @varform, @discretise
+export solve
+export convolve
+export marchonintime
+export RungeKuttaConvolutionQuadrature
+export laplace_to_z, inverse_z_transform, real_inverse_z_transform
+export butcher_tableau_radau_2stages
+export butcher_tableau_radau_3stages
+export creategaussian
+export derive
+export fouriertransform
+export assemble
+export Identity
+export shapevals
+export NCross
+export quadrule, elements
+export blockassembler
+export localoperator
+export localoperator2
+export assemble
+export facecurrents
+export potential
+export get_scatter_parameters
+export quaddata
 
-import Base.*
 
 
-immutable NormalVector end
-const n = NormalVector()
+export kernelvals
+export integrand
+export shapevals
+export ScalarTrace
+export PlaneWaveDirichlet
+export PlaneWaveNeumann
+
+struct NormalVector end
+
 
 include("utils/polynomial.jl")
 include("utils/sparsend.jl")
@@ -56,9 +122,9 @@ include("timedomain/rkcq.jl")
 include("timedomain/zdomain.jl")
 
 # Support for Maxwell equations
-include("maxwell/wiltonints.jl")
 include("maxwell/mwexc.jl")
 include("maxwell/mwops.jl")
+include("maxwell/wiltonints.jl")
 include("maxwell/nxdbllayer.jl")
 include("maxwell/nitsche.jl")
 include("maxwell/farfield.jl")
@@ -86,13 +152,16 @@ include("solvers/solver.jl")
 include("solvers/lusolver.jl")
 include("solvers/itsolver.jl")
 
-include("utils/examples.jl")
-
 using CompScienceMeshes
+using Combinatorics
 
+
+const x̂ = point(1,0,0)
+const ŷ = point(0,1,0)
+const ẑ = point(0,0,1)
 export x̂, ŷ, ẑ
-x̂ = point(1,0,0)
-ŷ = point(0,1,0)
-ẑ = point(0,0,1)
+
+const n = NormalVector()
+export n
 
 end # module

@@ -1,4 +1,4 @@
-export assemble
+
 
 abstract type Functional end
 
@@ -103,8 +103,8 @@ end
 function celltestvalues(tshs::subReferenceSpace, tcell, field, qr)
 
     num_oqp = length(qr)
-    num_tshs = length(qr[1].value)
-    interactions = zeros(Complex128,num_tshs)
+    num_tshs = length(qr[1].value[1])
+    interactions = (Complex128, num_tshs)
     for p in 1 : num_oqp
         mp = qr[p].point
 
@@ -113,8 +113,9 @@ function celltestvalues(tshs::subReferenceSpace, tcell, field, qr)
         fval = field(mp)
         tvals = qr[p].value
 
+        interactions = zeros(Complex128, num_tshs)
         for m in 1 : num_tshs
-            tval = tvals[m]
+            tval = tvals[1][m]
 
             igd = integrand(field, tval, fval)
             interactions[m] += igd * dx

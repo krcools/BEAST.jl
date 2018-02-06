@@ -1,4 +1,4 @@
-export restrict
+
 
 """
     restrict(refspace, element1, element2)

@@ -1,4 +1,4 @@
-export RungeKuttaConvolutionQuadrature
+
 
 """
     RungeKuttaConvolutionQuadrature{T,N,NN}

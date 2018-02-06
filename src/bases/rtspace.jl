@@ -1,5 +1,4 @@
-export raviartthomas, raowiltonglisson, positions
-export portcells, rt_ports, getindex_rtg, subset
+
 
 type RTBasis{T,M,P} <: Space{T}
   geo::M

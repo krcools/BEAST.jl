@@ -3,7 +3,7 @@ using Base.Test
 
 fn = joinpath(dirname(@__FILE__),"assets","sphere35.in")
 m = readmesh(fn)
-t = Maxwell3D.singlelayer(gamma=im*1.0)
+t = Maxwell3D.singlelayer(wavenumber=1.0)
 X = raviartthomas(m)
 numfunctions(X)
 
@@ -11,15 +11,15 @@ numfunctions(X)
 X1 = subset(X,1:1)
 numfunctions(X1)
 
-# T1 = assemble(t,X1,X)
-# T2 = BEAST.assemblerow(t,X1,X)
+T1 = assemble(t,X1,X)
+T2 = BEAST.assemblerow(t,X1,X)
 #
 # T3 = assemble(t,X,X1)
 # T4 = BEAST.assemblecol(t,X,X1)
 #
 # @test T1 == T2
 
-T2 = BEAST.assembleblock(t,X,X)
+# T2 = BEAST.assembleblock(t,X,X)
 @test T1 == T2
 
 

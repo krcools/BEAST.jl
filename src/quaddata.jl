@@ -1,4 +1,4 @@
-export quaddata
+
 
 """
     quaddata(operator, test_refspace, trial_refspace, test_elements, trial_elements)

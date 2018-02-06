@@ -1,4 +1,4 @@
-export DoubleLayerRotatedMW3D
+
 
 type DoubleLayerRotatedMW3D{T} <: MaxwellOperator3D
     "im times the wavenumber"

@@ -1,7 +1,6 @@
 using .Variational
 
-export @hilbertspace, @varform, @discretise
-export solve
+
 
 type DiscreteEquation
   equation

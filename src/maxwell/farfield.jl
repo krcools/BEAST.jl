@@ -1,4 +1,4 @@
-export MWFarField3D
+
 
 """
 Operator to compute the far field of a current distribution. In particular, given the current distribution ``j`` this operator allows for the computation of

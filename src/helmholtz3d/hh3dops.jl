@@ -1,4 +1,4 @@
-export HH3DHyperSingularFDBIO
+
 abstract type Helmholtz3DOp <: MaxwellOperator3D end
 abstract type Helmholtz3DOpReg <: MaxwellOperator3DReg end
 """
@@ -92,11 +92,11 @@ function quadrule(op::HH3DSingleLayerFDBIO, test_refspace, trial_refspace, i,
     test_quadpoints  = quadrature_data[1]
     trial_quadpoints = quadrature_data[2]
 
-    # hits != 0 && return WiltonSEStrategy(
-    #     test_quadpoints[1,i],
-    #     DoubleQuadStrategy(
-    #         test_quadpoints[1,i],
-    #         trial_quadpoints[1,j]))
+    hits != 0 && return WiltonSEStrategy(
+        test_quadpoints[1,i],
+        DoubleQuadStrategy(
+            test_quadpoints[1,i],
+            trial_quadpoints[1,j]))
 
     return DoubleQuadStrategy(
         quadrature_data[1][1,i],
@@ -230,28 +230,32 @@ end
 
 
 module Helmholtz3D
+
     using ..BEAST
+    const Mod = BEAST
 
     singlelayer(;
-        gamma=error("propagation constant is a required argument"),
-        alpha=one(gamma)) = BEAST.HH3DSingleLayerFDBIO(alpha,gamma)
+            gamma=error("propagation constant is a required argument"),
+            alpha=one(gamma)) =
+        Mod.HH3DSingleLayerFDBIO(alpha,gamma)
 
     hypersingular(;
-        gamma=error("propagation constant is a required argument"),
-        alpha=gamma^2,
-        beta=one(gamma)) = BEAST.HH3DHyperSingularFDBIO(alpha, beta, gamma)
-
+            gamma=error("propagation constant is a required argument"),
+            alpha=gamma^2,
+            beta=one(gamma)) =
+        Mod.HH3DHyperSingularFDBIO(alpha, beta, gamma)
 
     planewave(;
-        direction=error("direction is a required argument"),
-        wavenumber=error("wavenumber is a required arguement"),
-        amplitude=one(eltype(direction))) = BEAST.HH3DPlaneWave(direction, wavenumber, amplitude)
+            direction=error("direction is a required argument"),
+            wavenumber=error("wavenumber is a required arguement"),
+            amplitude=one(eltype(direction))) =
+        Mod.HH3DPlaneWave(direction, wavenumber, amplitude)
 
     doublelayer(;gamma=error("gamma missing"), alpha=one(gamma)) =
-        BEAST.HH3DDoubleLayer(alpha, gamma)
+        Mod.HH3DDoubleLayer(alpha, gamma)
 
     doublelayer_transposed(;gamma=error("gamma missing"), alpha=one(gamma)) =
-        BEAST.HH3DDoubleLayerTransposed(alpha, gamma)
+        Mod.HH3DDoubleLayerTransposed(alpha, gamma)
 end
 
 export Helmholtz3D

@@ -1,5 +1,5 @@
 import CompScienceMeshes.chart,CompScienceMeshes.subd_chart,CompScienceMeshes.GSubdMesh,CompScienceMeshes.subdMesh
-export subdsurface,subdBasis,assemblydata,refspace
+
 
 type subdBasis{T,M,P} <: Space{T}
   geo::M
@@ -24,7 +24,8 @@ function (rs::subReferenceSpace)(nbhd)
     # x = cartesian(nbhd)
     s = shapefuns(nbhd)
     scurl = get_shape_curl(nbhd)
-    return s
+    # TODO: this needs fixing, stat!
+    return s #,scurl
 end
 
 function subdsurface(mesh)

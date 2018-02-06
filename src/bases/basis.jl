@@ -1,11 +1,14 @@
-import CompScienceMeshes.coordtype
-
-export RefSpace, numfunctions, coordtype, scalartype, assemblydata, geometry, refspace, valuetype
-
 abstract type RefSpace{T,D} end
 abstract type AbstractSpace end
 abstract type Space{T} <: AbstractSpace end
 
+"""
+    scalartype(s)
+
+The scalar field over which the argument to a basis function or operator's integration
+kernel are defined. This is always a salar data type, even if the function or kernel
+is defined over a multi-dimensional space.
+"""
 scalartype{T}(s::RefSpace{T}) = T
 scalartype{T}(s::Space{T}) = T
 
@@ -15,17 +18,6 @@ scalartype{T}(s::Space{T}) = T
 Returns the ReferenceSpace of local shape functions on which the basis is built.
 """
 function refspace end
-
-
-"""
-    coordtype(s)
-
-The scalar field over which the argument to a basis function or operator's integration
-kernel are defined. This is always a salar data type, even if the function or kernel
-is defined over a multi-dimensional space.
-"""
-coordtype{T}(::RefSpace{T}) = T
-coordtype{T}(::Space{T}) = T
 
 
 """
@@ -140,7 +132,8 @@ function assemblydata(basis::Space)
 
     @assert numfunctions(basis) != 0
 
-    T = coordtype(basis)
+    #T = coordtype(basis)
+    T = scalartype(basis)
 
     geo = geometry(basis)
     num_cells = numcells(geo)

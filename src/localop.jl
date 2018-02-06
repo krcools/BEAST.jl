@@ -1,5 +1,4 @@
-export localoperator
-export localoperator2
+
 
 using CollisionDetection
 
@@ -48,6 +47,7 @@ function assemble_local_matched!(biop::LocalOperator, tfs::subdBasis, bfs::subdB
 
     qd = quaddata(biop, trefs, brefs, tels, bels)
     for (p,cell) in enumerate(tels)
+
         qr = quadrule(biop, trefs, brefs, cell, qd)
         locmat = cellinteractions(biop, trefs, brefs, cell, qr)
 
@@ -172,6 +172,7 @@ function cellinteractions(biop, trefs, brefs, cell, qr)
         j = w * jacobian(mp)
 
         kernel = kernelvals(biop, mp)
+
         # for m in 1 : num_tshs
         for m in 1 : length(tvals)
 
@@ -182,6 +183,7 @@ function cellinteractions(biop, trefs, brefs, cell, qr)
 
                 igd = integrand(biop, kernel, mp, tval, bval)
                 zlocal[m,n] += j * igd
+
             end
         end
     end

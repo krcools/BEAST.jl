@@ -1,6 +1,3 @@
-export creategaussian
-export derive
-export fouriertransform
 
 
 immutable Gaussian{T}

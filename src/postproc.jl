@@ -1,48 +1,10 @@
-export facecurrents
-export potential
-export get_scatter_parameters
+
 
 """
 	fcr, geo = facecurrents(coeffs, basis)
 
 Compute the value of the function with the given collection of coeffient in the provided basis in all the centroids of the mesh underlying the basis. The mesh is returned together with the currents.
 """
-
-function facecurrents(coeffs, basis::subdBasis)
-
-	T = eltype(coeffs)
-	RT = real(T)
-
-	refs = refspace(basis)
-	# numrefs = numfunctions(refs)
-
-	cells, tad = assemblydata(basis)
-
-	mesh = geometry(basis)
-	D = dimension(mesh)
-	U = D+1
-
-	# TODO: express relative to input types
-	PT = SVector{U, T}
-	fcr = zeros(PT, numcells(mesh))
-
-	for (t,cell) in enumerate(cells)
-
-		mps = neighborhood(cell, ones(RT,D)/(D+1))
-        vals = refs(mps)
-
-		# assemble in the right hand side vector
-		for i in 1 : length(tad[t])
-			fx = vals[i][1]
-            for (m,a) in tad[t][i]
-				fcr[t] += coeffs[m] * a * fx
-			end
-		end
-	end
-
-	return fcr, geometry(basis)
-end
-
 function facecurrents(coeffs, basis)
 
 	T = eltype(coeffs)
@@ -169,7 +131,7 @@ function potential(op, points, coeffs, basis)
 	return ff
 end
 
-function BEAST.potential(op, points,coeffs, basis::SpaceTimeBasis)
+function potential(op, points,coeffs, basis::SpaceTimeBasis)
 	T = SVector{3,Complex128}
 	ff = zeros(T, length(points), size(coeffs)[2])
 	store(v,m,n,k,o) = (ff[m,k] += v*coeffs[n,o])
@@ -237,7 +199,7 @@ function potential!(store, op, points, basis)
 
 end
 
-function BEAST.potential!(store, op, points, basis::SpaceTimeBasis)
+function potential!(store, op, points, basis::SpaceTimeBasis)
 
     space_basis = basis.space
 	tb = time_basis = basis.time
@@ -313,7 +275,7 @@ function farfieldlocal!(zlocal,op,refspace,y,el,qr)
 
 end
 
-function BEAST.farfieldlocal!(zlocal,op,trialrefs, timerefs,
+function farfieldlocal!(zlocal,op,trialrefs, timerefs,
         p, testel, q, trialel, k, timeel, tb,quadrule)
 
 	M,N = size(zlocal)

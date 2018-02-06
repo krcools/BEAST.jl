@@ -1,4 +1,4 @@
-export MWFarField3DTD
+
 
 """
 Operator to compute the far field of a current distribution in the time domain.
@@ -17,7 +17,7 @@ type MWFarField3DTD{K}
   sol::K
 end
 
-function BEAST.quaddata(op::MWFarField3DTD, trialrefs, timerefs, trialels, timeels)
+function quaddata(op::MWFarField3DTD, trialrefs, timerefs, trialels, timeels)
 
     trialqd = quadpoints(trialrefs, trialels, (3,))
 
@@ -25,14 +25,14 @@ function BEAST.quaddata(op::MWFarField3DTD, trialrefs, timerefs, trialels, timee
 
 end
 
-function BEAST.quadrule(op::MWFarField3DTD,trialrefs, timerefs,
+function quadrule(op::MWFarField3DTD,trialrefs, timerefs,
         p, testel, q, trialel, r, timeel, qd)
     qd[1][1,q], nothing
 end
 
-BEAST.kernelvals(op::MWFarField3DTD,test,source) = dot(test,cartesian(source))/op.sol
+kernelvals(op::MWFarField3DTD,test,source) = dot(test,cartesian(source))/op.sol
 
-function BEAST.integrand(op::MWFarField3DTD,krn,testels, trialvals, t, T)
+function integrand(op::MWFarField3DTD,krn,testels, trialvals, t, T)
     τ = krn
     timevals = T(t - τ)
 

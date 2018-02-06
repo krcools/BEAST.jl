@@ -1,6 +1,6 @@
-using BEAST.LinearSpace
+using .LinearSpace
 
-export assemble
+
 
 import Base: transpose, +, -, *
 

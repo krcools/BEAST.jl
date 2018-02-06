@@ -1,4 +1,4 @@
-export ∂n
+
 
 struct HH3DPlaneWave{T,P} <: Functional
     direction::P

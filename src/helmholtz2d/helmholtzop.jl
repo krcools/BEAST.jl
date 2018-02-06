@@ -1,17 +1,4 @@
-export SingleLayer
-export DoubleLayer
-export DoubleLayerTransposed
-export HyperSingular
 
-export kernelvals
-export integrand
-export shapevals
-
-export ScalarTrace
-export strace
-
-export PlaneWaveDirichlet
-export PlaneWaveNeumann
 
 abstract type HelmholtzOperator2D <: IntegralOperator end
 scalartype(::HelmholtzOperator2D) = Complex128

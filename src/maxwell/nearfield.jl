@@ -1,4 +1,4 @@
-export MWSingleLayerField3D
+
 
 type MWSingleLayerField3D{K}
     wavenumber::K

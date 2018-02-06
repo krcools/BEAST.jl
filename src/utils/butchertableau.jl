@@ -1,7 +1,6 @@
 using StaticArrays
 
-export butcher_tableau_radau_2stages
-export butcher_tableau_radau_3stages
+
 
 """
     butcher_tableau_radau_2stages()

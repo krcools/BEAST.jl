@@ -1,4 +1,4 @@
-export NitscheHH3
+
 
 type NitscheHH3{T} <: MaxwellOperator3D
     gamma::T

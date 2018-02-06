@@ -1,5 +1,3 @@
-export HH3DSingleLayerTDBIO
-export HH3DDoubleLayerTDBIO
 
 # T: fieldtype
 immutable HH3DSingleLayerTDBIO{T} <: RetardedPotential{T}

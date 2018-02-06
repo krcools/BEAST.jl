@@ -1,4 +1,4 @@
-export SingleLayerTrace
+
 
 """
 Describe a single layer operator from the surface to a line.
