@@ -20,7 +20,7 @@ duration, delay, amplitude = 8.0/sol, 12.0/sol, 1.0
 gaussian = creategaussian(duration, delay, duration)
 
 direction, polarisation = z, x
-E = planewave(polarisation, direction, derive(gaussian), sol)
+E = BEAST.planewave(polarisation, direction, derive(gaussian), sol)
 T = MWSingleLayerTDIO(sol,-1/sol,-sol,2,0)
 
 #Z = assemble(T,W,V);
@@ -31,7 +31,7 @@ tdefie = @discretise T[j′,j] == -1E[j′]   j∈V  j′∈W
 xefie = solve(tdefie)
 
 using PlotlyJS
-include(Pkg.dir("CompScienceMeshes","examples","plotlyjs_patches.jl"))
+#include(Pkg.dir("CompScienceMeshes","examples","plotlyjs_patches.jl"))
 
 
 Xefie, Δω, ω0 = fouriertransform(xefie, Δt, 0.0, 2)
@@ -41,6 +41,7 @@ _, i1 = findmin(abs.(ω-1.0*sol))
 ω1 = ω[i1]
 ue = Xefie[:,i1] / fouriertransform(gaussian)(ω1)
 
+using PlotlyJS
 fcre, geo = facecurrents(ue, X)
 t2 = patch(geo, norm.(fcre))
 PlotlyJS.plot(t2)
