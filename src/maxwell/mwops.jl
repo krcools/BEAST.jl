@@ -256,9 +256,9 @@ function qrib(op::MaxwellOperator3D, g::RTRefSpace, f::RTRefSpace, i, τ, j, σ,
 #  )
 
 #end
-hits == 3   && return BogaertSelfPatchStrategy(20)
-hits == 2   && return BogaertEdgePatchStrategy(12, 20)
-hits == 1   && return BogaertPointPatchStrategy(12, 20)
+hits == 3   && return BogaertSelfPatchStrategy(5)
+hits == 2   && return BogaertEdgePatchStrategy(8, 4)
+hits == 1   && return BogaertPointPatchStrategy(2, 3)
 xmin < xtol && return WiltonSEStrategy(
   qd.tpoints[1,i],
   DoubleQuadStrategy(
