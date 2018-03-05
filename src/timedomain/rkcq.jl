@@ -24,7 +24,7 @@ struct RungeKuttaConvolutionQuadrature{LK, T, N, NN}
 	zTransformedTermCount :: Int
 	contourRadius         :: T
 end
-scalartype{LK, T, N, NN}(rkcq::RungeKuttaConvolutionQuadrature{LK, T, N, NN}) = Complex{T};
+scalartype(rkcq::RungeKuttaConvolutionQuadrature{LK, T, N, NN}) where {LK, T, N, NN} = Complex{T};
 
 # M = H*diagm(D)*invH
 struct DiagonalizedMatrix{T,N,NN}
@@ -34,7 +34,7 @@ struct DiagonalizedMatrix{T,N,NN}
 end
 
 # M = H*diagm(D)*invH
-function diagonalizedmatrix{T,N,NN}(M :: SArray{Tuple{N,N},Complex{T},2,NN})
+function diagonalizedmatrix(M :: SArray{Tuple{N,N},Complex{T},2,NN}) where {T,N,NN}
 	ef = eigfact(Array{Complex{T},2}(M));
 
 	efValues = SVector{N,Complex{T}}(ef.values)  :: SVector{N,Complex{T}};

@@ -9,8 +9,8 @@ The scalar field over which the argument to a basis function or operator's integ
 kernel are defined. This is always a salar data type, even if the function or kernel
 is defined over a multi-dimensional space.
 """
-scalartype{T}(s::RefSpace{T}) = T
-scalartype{T}(s::Space{T}) = T
+scalartype(s::RefSpace{T}) where {T} = T
+scalartype(s::Space{T}) where {T} = T
 
 """
     refspace(basis)
@@ -25,7 +25,7 @@ function refspace end
 
 Return the number of functions in a `Space` or `RefSpace`.
 """
-numfunctions{T,D}(rs::RefSpace{T,D}) = D
+numfunctions(rs::RefSpace{T,D}) where {T,D} = D
 
 
 """
@@ -51,15 +51,15 @@ geometry(s::Space) = s.geo
 basisfunction(s::Space, i) = s.fns[i]
 numfunctions(space::Space) = length(space.fns)
 
-type DirectProductSpace{T} <: AbstractSpace
+mutable struct DirectProductSpace{T} <: AbstractSpace
     factors::Vector{Space{T}}
 end
 
 import Base.cross
-cross{T}(a::Space{T}, b::Space{T}) = DirectProductSpace(Space{T}[a,b])
-cross{T}(a::DirectProductSpace{T}, b::Space{T}) = DirectProductSpace(Space{T}[a.factors; b])
+cross(a::Space{T}, b::Space{T}) where {T} = DirectProductSpace(Space{T}[a,b])
+cross(a::DirectProductSpace{T}, b::Space{T}) where {T} = DirectProductSpace(Space{T}[a.factors; b])
 numfunctions(S::DirectProductSpace) = sum([numfunctions(s) for s in S.factors])
-scalartype{T}(s::DirectProductSpace{T}) = T
+scalartype(s::DirectProductSpace{T}) where {T} = T
 geometry(x::DirectProductSpace) = weld(x.geo...)
 
 struct Shape{T}
@@ -97,7 +97,7 @@ Base.next(it::ADIterator, i) = (it.ad.data[i,it.r,it.c], i+1)
 Base.done(it::ADIterator, i) = (it.I < i || it.ad.data[i,it.r,it.c][1] < 1)
 
 
-function add!{T}(bf::Vector{Shape{T}}, cellid, refid, coeff)
+function add!(bf::Vector{Shape{T}}, cellid, refid, coeff) where T
     push!(bf, Shape(cellid, refid, coeff))
 end
 

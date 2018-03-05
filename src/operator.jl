@@ -13,18 +13,18 @@ abstract type AbstractOperator end
 """
 abstract type Operator <: AbstractOperator end
 
-type TransposedOperator <: Operator
+mutable struct TransposedOperator <: Operator
     op::Operator
 end
 
 scalartype(op::TransposedOperator) = scalartype(op.op)
 
-type LinearCombinationOfOperators{T} <: AbstractOperator
+mutable struct LinearCombinationOfOperators{T} <: AbstractOperator
     coeffs::Vector{T}
     ops::Vector
 end
 
-function scalartype{T}(op::LinearCombinationOfOperators{T})
+function scalartype(op::LinearCombinationOfOperators{T}) where T
     W = promote_type(T, scalartype(op.ops[1]))
     for i in 2:length(op.ops)
         W = promote_type(W, scalartype(op.ops[i]))

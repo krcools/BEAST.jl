@@ -1,4 +1,4 @@
-type PlaneWaveMW{T,P}
+mutable struct PlaneWaveMW{T,P}
   direction::P
   polarisation::P
   wavenumber::T
@@ -23,7 +23,7 @@ planewavemw3d(;
     amplitude    = 1,
     ) = PlaneWaveMW(direction, polarization, wavenumber, amplitude)
 
-@compat function (e::PlaneWaveMW)(x)
+function (e::PlaneWaveMW)(x)
   k = e.wavenumber
   d = e.direction
   u = e.polarisation
@@ -43,25 +43,25 @@ end
 
 *(a::Number, e::PlaneWaveMW) = PlaneWaveMW(e.direction, e.polarisation, e.wavenumber, a*e.amplitude)
 
-type CrossTraceMW{F} <: Functional
+mutable struct CrossTraceMW{F} <: Functional
   field::F
 end
 
-type TangTraceMW{F} <: Functional
+mutable struct TangTraceMW{F} <: Functional
   field::F
 end
 
 cross(::NormalVector, p) = CrossTraceMW(p)
 cross(t::CrossTraceMW, ::NormalVector) = TangTraceMW(t.field)
 
-@compat function (ϕ::CrossTraceMW)(p)
+function (ϕ::CrossTraceMW)(p)
   F = ϕ.field
   x = cartesian(p)
   n = normal(p)
   return n × F(x)
 end
 
-@compat function (ϕ::TangTraceMW)(p)
+function (ϕ::TangTraceMW)(p)
   F = ϕ.field
   x = cartesian(p)
   n = normal(p)

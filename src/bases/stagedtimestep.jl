@@ -16,5 +16,5 @@ struct StagedTimeStep{SB, T, N}
 	Nt :: Int
 end
 
-scalartype{SB, T, N}(sts :: StagedTimeStep{SB, T, N}) = T;
-temporalbasis{SB, T, N}(sts :: StagedTimeStep{SB, T, N}) = timebasisdelta(sts.Δt, sts.Nt)
+scalartype(sts :: StagedTimeStep{SB, T, N}) where {SB, T, N} = T;
+temporalbasis(sts :: StagedTimeStep{SB, T, N}) where {SB, T, N} = timebasisdelta(sts.Δt, sts.Nt)

@@ -1,6 +1,6 @@
 
 
-immutable Gaussian{T}
+struct Gaussian{T}
     scaling::T
     width::T
     delay::T

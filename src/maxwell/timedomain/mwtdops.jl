@@ -1,6 +1,6 @@
 
 
-type MWSingleLayerTDIO{T} <: RetardedPotential{T}
+mutable struct MWSingleLayerTDIO{T} <: RetardedPotential{T}
     "speed of light in medium"
     speed_of_light::T
     "weight of the weakly singular term"
@@ -13,7 +13,7 @@ type MWSingleLayerTDIO{T} <: RetardedPotential{T}
     hs_diffs::Int
 end
 
-type MWDoubleLayerTDIO{T} <: RetardedPotential{T}
+mutable struct MWDoubleLayerTDIO{T} <: RetardedPotential{T}
     speed_of_light::T
     weight::T
     num_diffs::Int

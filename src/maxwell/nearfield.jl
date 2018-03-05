@@ -1,6 +1,6 @@
 
 
-type MWSingleLayerField3D{K}
+mutable struct MWSingleLayerField3D{K}
     wavenumber::K
 end
 

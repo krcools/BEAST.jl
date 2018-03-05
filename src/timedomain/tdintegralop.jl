@@ -1,10 +1,10 @@
 using WiltonInts84
 
 abstract type RetardedPotential{T} <: Operator end
-Base.eltype{T}(::RetardedPotential{T}) = T
-scalartype{T}(A::RetardedPotential{T}) = T
+Base.eltype(::RetardedPotential{T}) where {T} = T
+scalartype(A::RetardedPotential{T}) where {T} = T
 
-type EmptyRP{T} <: RetardedPotential{T}
+mutable struct EmptyRP{T} <: RetardedPotential{T}
     speed_of_light::T
 end
 Base.eltype(::EmptyRP) = Int
