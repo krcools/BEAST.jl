@@ -183,7 +183,7 @@ p(v,u) = \int_{\gamma} v(x) \int_{Γ} \frac{e^{-ik|x-y|}}{4π|x-y|} u(y) dy dx
 </script>
 </p>
 <p>Note that $u(x)$ is supported by a 2D surface $Γ$ whereas $v(y)$ is supported by a 1D curve $γ$. The complete implementation of this operator could look like</p>
-<pre><code class="julia">type SingleLayerTrace{T} &lt;: MaxwellOperator3D
+<pre><code class="julia">mutable struct SingleLayerTrace{T} &lt;: MaxwellOperator3D
     gamma::T
 end
 
