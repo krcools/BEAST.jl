@@ -1,6 +1,6 @@
 export divergence
 
-function divergence{T}(X::DirectProductSpace{T})
+function divergence(X::DirectProductSpace{T}) where T
     x = Space{T}[divergence(s) for s in X.factors]
     DirectProductSpace(x)
 end

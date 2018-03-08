@@ -11,7 +11,7 @@ function lagdimension end
 # M: mesh type
 # T: field type
 # NF: number of local shape functions
-type LagrangeBasis{D,C,M,T,NF,P} <: Space{T}
+mutable struct LagrangeBasis{D,C,M,T,NF,P} <: Space{T}
   geo::M
   fns::Vector{Vector{Shape{T}}}
   pos::Vector{P}
@@ -25,7 +25,7 @@ function LagrangeBasis{D,C,N}(mesh::M, fns::Vector{Vector{Shape{T}}}, pos::Vecto
     LagrangeBasis{D,C,M,T,N,P}(mesh, fns, pos)
 end
 
-refspace{D,C,M,T,NF}(space::LagrangeBasis{D,C,M,T,NF}) = LagrangeRefSpace{T,D,dimension(geometry(space))+1,NF}()
+refspace(space::LagrangeBasis{D,C,M,T,NF}) where {D,C,M,T,NF} = LagrangeRefSpace{T,D,dimension(geometry(space))+1,NF}()
 subset(s::S,I) where {S <: Space} = S(s.geo, s.fns[I], s.pos[I])
 
 function lagrangecxd0(mesh)

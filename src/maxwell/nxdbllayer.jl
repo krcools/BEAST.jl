@@ -1,6 +1,6 @@
 
 
-type DoubleLayerRotatedMW3D{T} <: MaxwellOperator3D
+mutable struct DoubleLayerRotatedMW3D{T} <: MaxwellOperator3D
     "im times the wavenumber"
     gamma::T
 end

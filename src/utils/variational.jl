@@ -9,7 +9,7 @@ numchds(xp) = length(xp.args) + 1
 child(xp, idx) = idx == 1 ? xp.head : xp.args[idx-1]
 
 
-type DepthFirst
+mutable struct DepthFirst
     xp::Expr
 end
 
@@ -23,7 +23,7 @@ args are visited before the Expr they define.
 depthfirst(xp) = DepthFirst(xp)
 
 
-type DepthFirstState
+mutable struct DepthFirstState
     val
     par
     idx
@@ -91,31 +91,31 @@ export LinForm, LinTerm, BilForm, BilTerm
 
 import Base: +, -, *, dot, getindex, ^, print
 
-type HilbertVector
+mutable struct HilbertVector
     idx
     space
     opstack
 end
 
-type LinForm
+mutable struct LinForm
   test_space
   terms
 end
 
-type LinTerm
+mutable struct LinTerm
   test_id
   test_ops
   coeff
   functional
 end
 
-type BilForm
+mutable struct BilForm
   test_space
   trial_space
   terms
 end
 
-type BilTerm
+mutable struct BilTerm
   test_id
   trial_id
   test_ops
@@ -124,7 +124,7 @@ type BilTerm
   kernel
 end
 
-type Equation
+mutable struct Equation
     lhs
     rhs
 end

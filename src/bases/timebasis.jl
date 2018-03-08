@@ -2,12 +2,12 @@
 
 using Compat
 
-type MonomialBasis{T,Degree,NF} <: RefSpace{T,NF} end
+mutable struct MonomialBasis{T,Degree,NF} <: RefSpace{T,NF} end
 
-valuetype{T}(::MonomialBasis{T}) = T
-degree{T,D}(::MonomialBasis{T,D}) = D
+valuetype(::MonomialBasis{T}) where {T} = T
+degree(::MonomialBasis{T,D}) where {T,D} = D
 numfunctions(x::MonomialBasis) = degree(x)+1
-@compat function (x::MonomialBasis)(p)
+function (x::MonomialBasis)(p)
     t = cartesian(p)[1]
     valuetype(x)[t^d for d in 0 : degree(x)]
 end
@@ -22,14 +22,14 @@ N: the number of intervals in the support (this included the semi infinite inter
     stretching to +∞)
 D1: the degree of the TBF restricted to each of the intervals **plus one**
 """
-type TimeBasisFunction{T,N,D1,D} <: AbstractTimeBasisFunction
+mutable struct TimeBasisFunction{T,N,D1,D} <: AbstractTimeBasisFunction
     timestep::T
     numfunctions::Int
     polys::SVector{N,Polynomial{D1,T}}
 end
 
 
-function derive{T,N,D1,D}(tbf::TimeBasisFunction{T,N,D1,D})
+function derive(tbf::TimeBasisFunction{T,N,D1,D}) where {T,N,D1,D}
     dpolys = Polynomial{D1-1,T}[ derive(p) for p in tbf.polys ]
     TimeBasisFunction{T,N,D1-1,D-1}(
         tbf.timestep,
@@ -39,30 +39,30 @@ function derive{T,N,D1,D}(tbf::TimeBasisFunction{T,N,D1,D})
 end
 
 
-type TimeBasisDelta{T} <: AbstractTimeBasisFunction
+mutable struct TimeBasisDelta{T} <: AbstractTimeBasisFunction
     timestep::T
     numfunctions::Int
 end
 
-type DiracBoundary{T} <: RefSpace{T,1} end
+mutable struct DiracBoundary{T} <: RefSpace{T,1} end
 numfunctions(x::DiracBoundary) = 1
 
-scalartype{T}(x::TimeBasisDelta{T}) = T
+scalartype(x::TimeBasisDelta{T}) where {T} = T
 numfunctions(x::TimeBasisDelta) = x.numfunctions
-refspace{T}(x::TimeBasisDelta{T}) = DiracBoundary{T}()
+refspace(x::TimeBasisDelta{T}) where {T} = DiracBoundary{T}()
 timestep(x::TimeBasisDelta) = x.timestep
 numintervals(x::TimeBasisDelta) = 1
 
 
 timebasisdelta(dt, Nt)= TimeBasisDelta(dt, Nt)
 
-numintervals{T,N,D1,D}(tbf::TimeBasisFunction{T,N,D1,D}) = N
-degree{T,N,D1,D}(tbf::TimeBasisFunction{T,N,D1,D}) = D
+numintervals(tbf::TimeBasisFunction{T,N,D1,D}) where {T,N,D1,D} = N
+degree(tbf::TimeBasisFunction{T,N,D1,D}) where {T,N,D1,D} = D
 timestep(tbf::TimeBasisFunction) = tbf.timestep
-scalartype{T,N,D1,D}(tbf::TimeBasisFunction{T,N,D1,D}) = T
+scalartype(tbf::TimeBasisFunction{T,N,D1,D}) where {T,N,D1,D} = T
 
 numfunctions(t::TimeBasisFunction) = t.numfunctions
-refspace{T,N,D1,D}(t::TimeBasisFunction{T,N,D1,D}) = MonomialBasis{T,D,D1}()
+refspace(t::TimeBasisFunction{T,N,D1,D}) where {T,N,D1,D} = MonomialBasis{T,D,D1}()
 
 
 

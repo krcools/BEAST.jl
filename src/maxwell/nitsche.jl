@@ -8,7 +8,7 @@ Describe a single layer operator from the surface to a line.
 <v, Su> = ∫_γ dx v(x) ∫_Γ dy \frac{e^{-ikR}}{4πR} u(y)
 ```
 """
-type SingleLayerTrace{T} <: MaxwellOperator3D
+mutable struct SingleLayerTrace{T} <: MaxwellOperator3D
     gamma::T
 end
 

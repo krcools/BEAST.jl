@@ -1,4 +1,4 @@
-immutable PlaneWaveHH3DTD{T,P,F} <: TDFunctional{T}
+struct PlaneWaveHH3DTD{T,P,F} <: TDFunctional{T}
     direction::P
     speed_of_light::T
     signature::F

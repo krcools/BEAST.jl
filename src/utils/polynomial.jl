@@ -1,10 +1,10 @@
 using StaticArrays
 
-immutable Polynomial{N,T}
+struct Polynomial{N,T}
     data::SVector{N,T}
 end
-Polynomial{T}(x::T...) = Polynomial{length(x),T}(SVector{length(x),T}(x))
-Polynomial{T<:Number}(a::T) = Polynomial{1,T}(SVector{1,T}(a))
+Polynomial(x::T...) where {T} = Polynomial{length(x),T}(SVector{length(x),T}(x))
+Polynomial(a::T) where {T<:Number} = Polynomial{1,T}(SVector{1,T}(a))
 
 Base.length(p::Polynomial) = length(p.data)
 Base.eltype(p::Polynomial) = eltype(p.data)
@@ -95,7 +95,7 @@ function substitute(p::Polynomial, q::Polynomial)
     return r
 end
 
-type PieceWisePolynomial
+mutable struct PieceWisePolynomial
 end
 
 function Bernstein(n,u)

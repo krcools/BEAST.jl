@@ -6,13 +6,13 @@
 Compute the normal trace of basis X on mesh γ. γ is assumed to be part of the
 boundary of geometry(X).
 """
-function ntrace{T}(X::DirectProductSpace{T}, γ)
+function ntrace(X::DirectProductSpace{T}, γ) where T
     x = Space{T}[ntrace(s, γ) for s in X.factors]
     return DirectProductSpace(x)
 end
 
 
-function strace{T}(X::DirectProductSpace{T}, γ)
+function strace(X::DirectProductSpace{T}, γ) where T
     x = Space{T}[strace(s,γ) for s in X.factors]
     return DirectProductSpace(x)
 end

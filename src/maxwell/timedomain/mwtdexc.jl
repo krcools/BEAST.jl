@@ -1,4 +1,4 @@
-type PlaneWaveMWTD{T,F,P} <: TDFunctional{T}
+mutable struct PlaneWaveMWTD{T,F,P} <: TDFunctional{T}
   direction::P
   polarisation::P
   speedoflight::T
@@ -32,7 +32,7 @@ cross(k, pw::PlaneWaveMWTD) = PlaneWaveMWTD(
     pw.amplitude
 )
 
-@compat function (f::PlaneWaveMWTD)(r,t)
+function (f::PlaneWaveMWTD)(r,t)
     #dr = zero(typeof(t))
     t = cartesian(t)[1]
     #dr = zero(eltype(cartesian(r)))

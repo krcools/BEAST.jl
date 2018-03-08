@@ -1,6 +1,6 @@
 module SparseND
 
-type Banded3D{T} <: AbstractArray{T,3}
+mutable struct Banded3D{T} <: AbstractArray{T,3}
     k0::Array{Int,2}
     k1::Array{Int,2}
     data::Array{T,3}
@@ -11,7 +11,7 @@ type Banded3D{T} <: AbstractArray{T,3}
     end
 end
 
-Banded3D{T}(k0,k1,data::Array{T}) = Banded3D{T}(k0,k1,data)
+Banded3D(k0,k1,data::Array{T}) where {T} = Banded3D{T}(k0,k1,data)
 
 import Base: size, getindex, setindex!, linearindexing
 
@@ -34,7 +34,7 @@ Compute the *space-time* convolution of A and x.
 Returns an array `y` of size `(size(A,1),size(x,2))` such that
 `y[m,i] = sum([A[]])``
 """
-function convolve{T}(A::Banded3D, x::Array{T,2})
+function convolve(A::Banded3D, x::Array{T,2}) where T
     V = promote_type(eltype(A),eltype(x))
     y = zeros(V,size(A,1),size(x,2))
     for i in 1:size(A,1)
