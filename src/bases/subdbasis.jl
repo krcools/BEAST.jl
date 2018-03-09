@@ -1,7 +1,7 @@
 import CompScienceMeshes.chart,CompScienceMeshes.subd_chart,CompScienceMeshes.GSubdMesh,CompScienceMeshes.subdMesh
 
 
-type subdBasis{T,M,P} <: Space{T}
+mutable struct subdBasis{T,M,P} <: Space{T}
   geo::M
   fns::Vector{Vector{Shape{T}}}
   pos::Vector{P}
@@ -14,7 +14,7 @@ function subset(s::S,I) where {S<:subdBasis}
 end
 
 
-type subReferenceSpace{T,D} <: RefSpace{T,D} end
+mutable struct subReferenceSpace{T,D} <: RefSpace{T,D} end
 
 refspace(s::subdBasis{T,M,P}) where {T,M,P} = subReferenceSpace{T,12}()
 # 12 only for regular case

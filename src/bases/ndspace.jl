@@ -1,4 +1,4 @@
-immutable NDBasis{T,M} <: Space{T}
+struct NDBasis{T,M} <: Space{T}
     geo::M
     fns::Vector{Vector{Shape{T}}}
 end

@@ -13,7 +13,7 @@ where ``̂x`` is the unit vector in the direction of observation.
 Note that the assembly routing expects the observation directions to be normalised by the caller.
 """
 
-type MWFarField3DTD{K}
+mutable struct MWFarField3DTD{K}
   sol::K
 end
 

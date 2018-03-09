@@ -1,4 +1,4 @@
-type NDRefSpace{T} <: RefSpace{T,3} end
+mutable struct NDRefSpace{T} <: RefSpace{T,3} end
 
 function (ϕ::NDRefSpace)(nbd)
 

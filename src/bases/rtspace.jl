@@ -1,6 +1,6 @@
 
 
-type RTBasis{T,M,P} <: Space{T}
+mutable struct RTBasis{T,M,P} <: Space{T}
   geo::M
   fns::Vector{Vector{Shape{T}}}
   pos::Vector{P}
@@ -9,11 +9,11 @@ end
 RTBasis(geo, fns) = RTBasis(geo, fns, Vector{vertextype(geo)}(length(fns)))
 
 positions(rt) = rt.pos
-refspace{T}(space::RTBasis{T}) = RTRefSpace{T}()
+refspace(space::RTBasis{T}) where {T} = RTRefSpace{T}()
 subset(rt::RTBasis,I) = RTBasis(rt.geo, rt.fns[I], rt.pos[I])
 
 
-type ValDiv end
+mutable struct ValDiv end
 
 
 

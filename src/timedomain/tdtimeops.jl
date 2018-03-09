@@ -18,7 +18,7 @@ function assemble(op::Identity,
     return z
 end
 
-type TensorOperator <: Operator
+mutable struct TensorOperator <: Operator
     spatial_factor
     temporal_factor
 end
@@ -79,7 +79,7 @@ function assemble!(operator::TensorOperator, testfns, trialfns, store)
 end
 
 
-type TemporalDifferentiation
+mutable struct TemporalDifferentiation
     operator
 end
 

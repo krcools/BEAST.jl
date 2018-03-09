@@ -1,6 +1,6 @@
 
 
-type MWSingleLayerPotential3D{K}
+mutable struct MWSingleLayerPotential3D{K}
     wavenumber::K
 end
 

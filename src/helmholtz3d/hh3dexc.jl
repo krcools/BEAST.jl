@@ -25,7 +25,7 @@ end
 const ∂n = Val{:normalderivative}
 (::Type{Val{:normalderivative}})(f) = NormalDerivative(f)
 
-function (f::NormalDerivative{T}){T<:HH3DPlaneWave}(manipoint)
+function (f::NormalDerivative{T})(manipoint) where T<:HH3DPlaneWave
     d = f.field.direction
     k = f.field.wavenumber
     a = f.field.amplitude

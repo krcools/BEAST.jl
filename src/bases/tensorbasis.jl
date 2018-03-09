@@ -1,7 +1,7 @@
 
 
 
-type SpaceTimeBasis{S,T}
+mutable struct SpaceTimeBasis{S,T}
     space::S
     time::T
 end

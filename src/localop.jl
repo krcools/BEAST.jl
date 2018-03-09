@@ -2,7 +2,7 @@
 
 using CollisionDetection
 
-type SingleQuadStrategy{T}
+mutable struct SingleQuadStrategy{T}
     coords::Vector{T}
     weights::Vector{T}
 end

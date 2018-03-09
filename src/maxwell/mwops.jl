@@ -7,7 +7,7 @@ struct sauterschwabstrategy <: Any end
 abstract type MaxwellOperator3D <: IntegralOperator end
 abstract type MaxwellOperator3DReg <: MaxwellOperator3D end
 
-immutable KernelValsMaxwell3D{T,U,P,Q}
+struct KernelValsMaxwell3D{T,U,P,Q}
     "gamma = im * wavenumber"
     gamma::U
     vect::P
@@ -44,7 +44,7 @@ function kernelvals(kernel::MaxwellOperator3DReg, p, q)
     KernelValsMaxwell3D(γ, r, R, green, gradgreen)
 end
 
-immutable MWSingleLayer3D{T,U} <: MaxwellOperator3D
+struct MWSingleLayer3D{T,U} <: MaxwellOperator3D
   gamma::T
   α::U
   β::U
@@ -107,15 +107,15 @@ function integrand(biop::MWSL3DGen, kerneldata, tvals, tgeo, bvals, bgeo)
   t = (α * dot(gx, fy) + β * (dgx*dfy)) * G
 end
 
-immutable MWDoubleLayer3D{T} <: MaxwellOperator3D
+struct MWDoubleLayer3D{T} <: MaxwellOperator3D
   gamma::T
 end
 
-immutable MWDoubleLayer3DSng{T} <: MaxwellOperator3D
+struct MWDoubleLayer3DSng{T} <: MaxwellOperator3D
     gamma::T
 end
 
-immutable MWDoubleLayer3DReg{T} <: MaxwellOperator3DReg
+struct MWDoubleLayer3DReg{T} <: MaxwellOperator3DReg
     gamma::T
 end
 
@@ -256,9 +256,9 @@ function qrib(op::MaxwellOperator3D, g::RTRefSpace, f::RTRefSpace, i, τ, j, σ,
 #  )
 
 #end
-hits == 3   && return BogaertSelfPatchStrategy(20)
-hits == 2   && return BogaertEdgePatchStrategy(12, 20)
-hits == 1   && return BogaertPointPatchStrategy(12, 20)
+hits == 3   && return BogaertSelfPatchStrategy(5)
+hits == 2   && return BogaertEdgePatchStrategy(8, 4)
+hits == 1   && return BogaertPointPatchStrategy(2, 3)
 xmin < xtol && return WiltonSEStrategy(
   qd.tpoints[1,i],
   DoubleQuadStrategy(

@@ -18,7 +18,7 @@ gaussian = creategaussian(duration, delay, duration)
 direction, polarisation = z, x
 E = planewave(polarisation, direction, derive(gaussian), sol)
 
-LaplaceEFIO{T}(s::T) = MWSingleLayer3D(-s/sol, s*s/sol, T(sol));
+LaplaceEFIO(s::T) where {T} = MWSingleLayer3D(-s/sol, s*s/sol, T(sol));
 kmax = 15;
 rho = 1.0001;
 T = RungeKuttaConvolutionQuadrature(LaplaceEFIO, A, b, Δt, kmax, rho);

@@ -1,6 +1,6 @@
 
 # T: fieldtype
-immutable HH3DSingleLayerTDBIO{T} <: RetardedPotential{T}
+struct HH3DSingleLayerTDBIO{T} <: RetardedPotential{T}
     "speed of light"
     speed_of_light::T
     "number of temporal differentiations"
