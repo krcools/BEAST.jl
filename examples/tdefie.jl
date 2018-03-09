@@ -2,12 +2,12 @@ using CompScienceMeshes, BEAST
 o, x, y, z = euclidianbasis(3)
 
 sol = 5.0
-#Δt, Nt = 0.08/sol,400
 Δt, Nt = 0.12/sol,400
 
 D, Δx = 1.0, 0.25
 #D, Δx = 1.0, 0.35
-Γ = meshsphere(D, Δx)
+#Γ = meshsphere(D, Δx)
+Γ = readmesh(joinpath(dirname(@__FILE__),"sphere2.in"))
 X = raviartthomas(Γ)
 
 T = timebasisshiftedlagrange(Δt, Nt, 3)
@@ -23,16 +23,10 @@ direction, polarisation = z, x
 E = BEAST.planewave(polarisation, direction, derive(gaussian), sol)
 T = MWSingleLayerTDIO(sol,-1/sol,-sol,2,0)
 
-#Z = assemble(T,W,V);
-
 @hilbertspace j
 @hilbertspace j′
 tdefie = @discretise T[j′,j] == -1E[j′]   j∈V  j′∈W
 xefie = solve(tdefie)
-
-using PlotlyJS
-#include(Pkg.dir("CompScienceMeshes","examples","plotlyjs_patches.jl"))
-
 
 Xefie, Δω, ω0 = fouriertransform(xefie, Δt, 0.0, 2)
 ω = collect(ω0 + (0:Nt-1)*Δω)
@@ -44,4 +38,3 @@ ue = Xefie[:,i1] / fouriertransform(gaussian)(ω1)
 using PlotlyJS
 fcre, geo = facecurrents(ue, X)
 t2 = patch(geo, norm.(fcre))
-PlotlyJS.plot(t2)
