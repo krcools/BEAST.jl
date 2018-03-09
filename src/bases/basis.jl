@@ -55,7 +55,9 @@ type DirectProductSpace{T} <: AbstractSpace
     factors::Vector{Space{T}}
 end
 
-import Base.cross
+#import Base.cross
+export cross, ×
+
 cross{T}(a::Space{T}, b::Space{T}) = DirectProductSpace(Space{T}[a,b])
 cross{T}(a::DirectProductSpace{T}, b::Space{T}) = DirectProductSpace(Space{T}[a.factors; b])
 numfunctions(S::DirectProductSpace) = sum([numfunctions(s) for s in S.factors])

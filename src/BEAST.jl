@@ -1,5 +1,12 @@
 module BEAST
 
+import LinearAlgebra: cross, dot
+import LinearAlgebra: ×, ⋅
+
+import SharedArrays: sdata
+
+export dot
+
 export RefSpace, numfunctions, coordtype, scalartype, assemblydata, geometry, refspace, valuetype
 export lagrangecxd0, lagrangec0d1, duallagrangec0d1
 export duallagrangecxd0
