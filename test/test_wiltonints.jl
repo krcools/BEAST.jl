@@ -6,7 +6,7 @@ T = Float64
 P = SVector{3,T}
 tol = eps(T)*10^3
 
-immutable IntegrationDomain{T,P}
+struct IntegrationDomain{T,P}
     signed_height::T
     dist_to_plane::T
     center::P
@@ -56,7 +56,7 @@ wiltonints(a,b,c,center) = wiltonints(IntegrationDomain(a,b,c,center))
 
 # This function implements the Wilton algorithm for Integration of
 # linear potentials on triangular domains
-function wiltonints{T,Q}(domain::IntegrationDomain{T,Q}, tol=eps(T)*10^3)
+function wiltonints(domain::IntegrationDomain{T,Q}, tol=eps(T)*10^3) where {T,Q}
 
     dim = 3
 

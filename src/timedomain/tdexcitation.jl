@@ -1,5 +1,5 @@
 abstract type TDFunctional{T} end
-Base.eltype{T}(x::TDFunctional{T}) = T
+Base.eltype(x::TDFunctional{T}) where {T} = T
 
 
 function quaddata(exc::TDFunctional, testrefs, timerefs, testels, timeels)
@@ -106,13 +106,13 @@ end
 
 abstract type NumQuadStrategy end
 
-type MultiQuadStrategy{P,R} <: NumQuadStrategy
+mutable struct MultiQuadStrategy{P,R} <: NumQuadStrategy
     quad_points::P
     inner_rule::R
 end
 
 # TODO: consolidate with the existing definition of SingleQuadStrategy
-type SingleQuadStrategy2{P} <: NumQuadStrategy
+mutable struct SingleQuadStrategy2{P} <: NumQuadStrategy
     quad_points::P
 end
 

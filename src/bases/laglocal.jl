@@ -1,27 +1,27 @@
 # T: coeff type
 # Degree: degree
 # Dim1: dimension of the support + 1
-type LagrangeRefSpace{T,Degree,Dim1,NF} <: RefSpace{T,NF} end
+mutable struct LagrangeRefSpace{T,Degree,Dim1,NF} <: RefSpace{T,NF} end
 
-numfunctions{T,D}(s::LagrangeRefSpace{T,D,2}) = D+1
-numfunctions{T}(s::LagrangeRefSpace{T,0,3}) = 1
-numfunctions{T}(s::LagrangeRefSpace{T,1,3}) = 3
+numfunctions(s::LagrangeRefSpace{T,D,2}) where {T,D} = D+1
+numfunctions(s::LagrangeRefSpace{T,0,3}) where {T} = 1
+numfunctions(s::LagrangeRefSpace{T,1,3}) where {T} = 3
 
-valuetype{T}(ref::LagrangeRefSpace{T}, charttype) =
+valuetype(ref::LagrangeRefSpace{T}, charttype) where {T} =
         SVector{numfunctions(ref), Tuple{T,T}}
 
 # Evaluate constant lagrange elements on anything
-(ϕ::LagrangeRefSpace{T,0}){T}(tp) = SVector(((one(T),zero(T)),))
+(ϕ::LagrangeRefSpace{T,0})(tp) where {T} = SVector(((one(T),zero(T)),))
 
 # Evaluate linear Lagrange elements on a segment
-function (f::LagrangeRefSpace{T,1,2}){T}(mp)
+function (f::LagrangeRefSpace{T,1,2})(mp) where T
     u = mp.bary[1]
     j = jacobian(mp)
     SVector((u,-1/j), (1-u,1/j))
 end
 
 # Evaluete linear lagrange elements on a triangle
-function (f::LagrangeRefSpace{T,1,3}){T}(t)
+function (f::LagrangeRefSpace{T,1,3})(t) where T
     u,v,w, = barycentric(t)
     SVector(u, v, w)
 end
@@ -32,7 +32,7 @@ end
 
 Compute the values of the shape functions together with their curl.
 """
-function (f::LagrangeRefSpace{T,1,3}){T}(t, ::Type{Val{:withcurl}})
+function (f::LagrangeRefSpace{T,1,3})(t, ::Type{Val{:withcurl}}) where T
     # Evaluete linear Lagrange elements on a triange, together with their curl
     j = jacobian(t)
     u,v,w, = barycentric(t)
@@ -46,7 +46,7 @@ end
 
 
 # Evaluate constant Lagrange elements on a triangle, with their curls
-function (f::LagrangeRefSpace{T,0,3}){T}(t, ::Type{Val{:withcurl}})
+function (f::LagrangeRefSpace{T,0,3})(t, ::Type{Val{:withcurl}}) where T
     i = one(T)
     z = zero(cartesian(t))
     (
@@ -87,11 +87,11 @@ function strace(x::LagrangeRefSpace, cell, localid, face)
 end
 
 
-function restrict{T}(refs::LagrangeRefSpace{T,0}, dom1, dom2)
+function restrict(refs::LagrangeRefSpace{T,0}, dom1, dom2) where T
     Q = eye(T, numfunctions(refs))
 end
 
-function restrict{T}(f::LagrangeRefSpace{T,1}, dom1, dom2)
+function restrict(f::LagrangeRefSpace{T,1}, dom1, dom2) where T
 
     D = numfunctions(f)
     Q = zeros(T, D, D)

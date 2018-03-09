@@ -3,19 +3,19 @@
 abstract type HelmholtzOperator2D <: IntegralOperator end
 scalartype(::HelmholtzOperator2D) = Complex128
 
-immutable SingleLayer{T} <: HelmholtzOperator2D
+struct SingleLayer{T} <: HelmholtzOperator2D
     wavenumber::T
 end
 
-immutable HyperSingular{T} <: HelmholtzOperator2D
+struct HyperSingular{T} <: HelmholtzOperator2D
     wavenumber::T
 end
 
-immutable DoubleLayer{T} <: HelmholtzOperator2D
+struct DoubleLayer{T} <: HelmholtzOperator2D
     wavenumber::T
 end
 
-immutable DoubleLayerTransposed{T} <: HelmholtzOperator2D
+struct DoubleLayerTransposed{T} <: HelmholtzOperator2D
     wavenumber::T
 end
 
@@ -52,7 +52,7 @@ function quadrule(op::HelmholtzOperator2D, g::LagrangeRefSpace, f::LagrangeRefSp
 end
 
 
-type KernelValsHelmholtz2D
+mutable struct KernelValsHelmholtz2D
     wavenumber
     vect
     dist
@@ -118,28 +118,28 @@ function integrand(biop::DoubleLayerTransposed, kernel, fp, mp, fq, mq)
     fp[1] * dot(np, kernel.gradgreen) * fq[1]
 end
 
-type PlaneWaveDirichlet{T,P} <: Functional
+mutable struct PlaneWaveDirichlet{T,P} <: Functional
     wavenumber::T
     direction::P
 end
 
-type PlaneWaveNeumann{T,P} <: Functional
+mutable struct PlaneWaveNeumann{T,P} <: Functional
     wavenumber::T
     direction::P
 end
 
-type ScalarTrace{F} <: Functional
+mutable struct ScalarTrace{F} <: Functional
     f::F
 end
 
 strace(f::Functional, mesh) = ScalarTrace(f)
 
-@compat (s::ScalarTrace)(x) = s.f(cartesian(x))
+(s::ScalarTrace)(x) = s.f(cartesian(x))
 integrand(s::ScalarTrace, tx, fx) = tx[1] * fx
 
 shapevals(f::Functional, ϕ, ts) = shapevals(ValOnly(), ϕ, ts)
 
-@compat function (field::PlaneWaveDirichlet)(mp)
+function (field::PlaneWaveDirichlet)(mp)
 
     wavenumber = field.wavenumber
     direction  = field.direction
@@ -149,7 +149,7 @@ shapevals(f::Functional, ϕ, ts) = shapevals(ValOnly(), ϕ, ts)
 end
 
 
-@compat function(field::PlaneWaveNeumann)(mp)
+function(field::PlaneWaveNeumann)(mp)
 
     wavenumber = field.wavenumber
     direction  = field.direction

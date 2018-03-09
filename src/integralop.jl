@@ -332,7 +332,7 @@ end end end end end
 #     #print(" done. ")
 # end
 
-immutable DoubleQuadStrategy{P,Q}
+struct DoubleQuadStrategy{P,Q}
   outer_quad_points::P
   inner_quad_points::Q
 end
@@ -383,7 +383,7 @@ function momintegrals!(biop, tshs, bshs, tcell, bcell, z, strat::DoubleQuadStrat
     return z
 end
 
-type SauterSchwabStrategy
+mutable struct SauterSchwabStrategy
     hits::Int64
 end
 function momintegrals!(biop, tshs::subReferenceSpace, bshs::subReferenceSpace, tcell, bcell, z, strat::SauterSchwabStrategy)
@@ -460,7 +460,7 @@ function momintegrals!(op, g, f, t, s, z, strat::SingularityExtractionStrategy)
 
 end
 
-type QuadData{WPV1,WPV2}
+mutable struct QuadData{WPV1,WPV2}
   tpoints::Matrix{Vector{WPV1}}
   bpoints::Matrix{Vector{WPV2}}
 end

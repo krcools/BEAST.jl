@@ -1,4 +1,4 @@
-type WiltonSEStrategy{P,Q} <: SingularityExtractionStrategy
+mutable struct WiltonSEStrategy{P,Q} <: SingularityExtractionStrategy
     outer_quad_points::P
     regularpart_quadrule::DoubleQuadStrategy{P,Q}
 end

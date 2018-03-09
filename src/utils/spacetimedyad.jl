@@ -6,7 +6,7 @@ part and a temporal part.
 Using a dedicated storage type for these operators saves both on memory and computation
 time for convolutions with space-time data.
 """
-type SpaceTimeDyad{A,B,T} <: AbstractArray{3,T}
+mutable struct SpaceTimeDyad{A,B,T} <: AbstractArray{3,T}
     spatial_factor::A
     temporal_factor::B
 end
@@ -16,7 +16,7 @@ end
 # the dyadic structure during element modification.
 import Base: size, getindex, linearindexing
 size(X::SpaceTimeDyad) = (size(X.spatial_factor)..., length(X.temporal_factor))
-linearindexing{T<:SpaceTimeDyad}(::Type{T}) = Base.LinearSlow()
+linearindexing(::Type{T}) where {T<:SpaceTimeDyad} = Base.LinearSlow()
 function getindex(X::SpaceTimeDyad, m::Int, n::Int, k::Int)
     T = promote_type(eltype(X.spatial_factor), eltype(X.temporal_factor))
     k > length(X.spacetial_factor) && return zero(T)

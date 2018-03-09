@@ -1,11 +1,11 @@
-immutable Identity <: LocalOperator
+struct Identity <: LocalOperator
 end
 
 kernelvals(biop::Identity, x) = Void
 integrand(op::Identity, kernel, x, g, f) = dot(f[1], g[1])
 scalartype(op::Identity) = Union{}
 
-immutable NCross <: LocalOperator
+struct NCross <: LocalOperator
 end
 
 kernelvals(op::NCross, mp) = Void()

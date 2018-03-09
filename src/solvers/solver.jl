@@ -2,7 +2,7 @@ using .Variational
 
 
 
-type DiscreteEquation
+mutable struct DiscreteEquation
   equation
   trial_space_dict # dictionary mapping indices into trial space to FE spaces
   test_space_dict  # dictionary mapping indices into test space to FE spaces

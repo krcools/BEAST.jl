@@ -1,6 +1,6 @@
-type RTRefSpace{T} <: RefSpace{T,3} end
+mutable struct RTRefSpace{T} <: RefSpace{T,3} end
 
-valuetype{T}(ref::RTRefSpace{T}, charttype) = SVector{3,Tuple{Pt{universedimension(charttype),T},T}}
+valuetype(ref::RTRefSpace{T}, charttype) where {T} = SVector{3,Tuple{Pt{universedimension(charttype),T},T}}
 
 function (ϕ::RTRefSpace)(mp)
 
@@ -37,7 +37,7 @@ function ntrace(x::RTRefSpace, el, q, fc)
     return t
 end
 
-function restrict{T}(ϕ::RTRefSpace{T}, dom1, dom2)
+function restrict(ϕ::RTRefSpace{T}, dom1, dom2) where T
 
     K = numfunctions(ϕ)
     D = dimension(dom1)
