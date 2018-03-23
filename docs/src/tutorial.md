@@ -27,7 +27,7 @@ nothing # hide
 Next, we create the finite element space of Raviart-Thomas aka Rao-Wilton-Glisson functions subordinate to the triangulation `Γ` constructed above:
 
 ```@example 1
-RT = raviartthomas(Γ)
+X = raviartthomas(Γ)
 nothing # hide
 ```
 
@@ -35,7 +35,7 @@ The scattering problem is defined by specifying the single layer operator and th
 
 ```@example 1
 κ = 1.0
-E = planewavemw3d(direction=z, polarization=x, wavenumber=κ)
+E = Maxwell3D.planewave(direction=ẑ, polarization=x̂, wavenumber=κ)
 e = (n × E) × n
 nothing # hide
 ```
@@ -43,7 +43,7 @@ nothing # hide
 The single layer potential is also predefined by the `BEAST` package:
 
 ```@example 1
-t = MWSingleLayer3D(κ*im)
+t = Maxwell3D.singlelayer(wavenumber=κ)
 nothing # hide
 ```
 
@@ -56,17 +56,16 @@ t(\vt{k},\vt{j}) = \frac{1}{ik} \int_{\Gamma} \int_{\Gamma'} \nabla \cdot \vt{k}
 Using the `LinearForms` package, which implements a simple form compiler for Julia (`@varform`), the EFIE can be defined and discretised by
 
 ```@example 1
-j, = hilbertspace(:j)
-k, = hilbertspace(:k)
-EFIE = @varform t[k,j] == e[k]
-efie = @discretise EFIE  j∈RT k∈RT
+@hilbertspace j
+@hilbertspace k
+efie = @discretise t[k,j]==e[k]  j∈X k∈X
 nothing # hide
 ```
 Solving and computing the values of the induced current in the centers of the triangles of the mesh is now straightforward:
 
 ```@example 1
 u = solve(efie)
-fcr, geo = facecurrents(u,RT)
+fcr, geo = facecurrents(u,X)
 nothing # hide
 ```
 
