@@ -1,11 +1,9 @@
-isdefined(:plotresults) || (plotresults = false)
-plotresults && (postproc = true)
 isdefined(:postproc) || (postproc = false)
 
 if postproc
 
     Φ, Θ = [0.0], linspace(0,π,100)
-    pts = [point(cos(ϕ)*sin(θ), sin(ϕ)*sin(θ), cos(θ)) for ϕ in [0.0] for θ in Θ]
+    pts = [point(cos(ϕ)*sin(θ), sin(ϕ)*sin(θ), cos(θ)) for ϕ in Φ for θ in Θ]
     ffd = potential(MWFarField3D(im*κ), pts, u, X)
 
     fcr, geo = facecurrents(u, X)
