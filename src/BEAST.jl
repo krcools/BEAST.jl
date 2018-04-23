@@ -130,6 +130,7 @@ include("maxwell/nitsche.jl")
 include("maxwell/farfield.jl")
 include("maxwell/nearfield.jl")
 include("maxwell/spotential.jl")
+include("maxwell/maxwell.jl")
 
 # Support for the Helmholtz equation
 include("helmholtz2d/helmholtzop.jl")
