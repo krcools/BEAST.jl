@@ -85,6 +85,8 @@ export PlaneWaveNeumann
 
 struct NormalVector end
 
+using CompScienceMeshes
+using Combinatorics
 
 include("utils/polynomial.jl")
 include("utils/sparsend.jl")
@@ -159,8 +161,7 @@ include("solvers/solver.jl")
 include("solvers/lusolver.jl")
 include("solvers/itsolver.jl")
 
-using CompScienceMeshes
-using Combinatorics
+
 
 
 const x̂ = point(1,0,0)
