@@ -1,4 +1,4 @@
-
+using SpecialFunctions
 
 abstract type HelmholtzOperator2D <: IntegralOperator end
 scalartype(::HelmholtzOperator2D) = Complex128
