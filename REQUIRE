@@ -5,3 +5,4 @@ Compat
 CompScienceMeshes 0.1.1
 IterativeSolvers
 SauterSchwabQuadrature
+StaticArrays
