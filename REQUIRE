@@ -7,5 +7,6 @@ CompScienceMeshes 0.1.1
 FFTW
 IterativeSolvers
 SauterSchwabQuadrature
+SparseArrays
 SpecialFunctions
 StaticArrays
