@@ -87,6 +87,7 @@ struct NormalVector end
 
 using CompScienceMeshes
 using Combinatorics
+using FFTW
 
 include("utils/polynomial.jl")
 include("utils/sparsend.jl")
