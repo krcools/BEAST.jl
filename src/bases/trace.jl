@@ -1,4 +1,4 @@
-
+using SparseArrays
 
 """
     ntrace(X::Space, γ::Mesh)
