@@ -6,6 +6,8 @@ Compat
 CompScienceMeshes 0.1.1
 FFTW
 IterativeSolvers
+LinearAlgebra
 SauterSchwabQuadrature
+SharedArrays
 SpecialFunctions
 StaticArrays
