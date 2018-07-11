@@ -23,7 +23,7 @@ scalartype(op::HH3DHyperSingularFDBIO) = promote_type(typeof(op.alpha), typeof(o
 ```math
 a(u,v) = α ∬_{Γ×Γ} u(x) G_{γ}(|x-y|) v(y)
 ```
-with ``G_{γ}(r) = \frac{e^{-γr}}{4πr}``.
+with ``G_{γ}(r) = \\frac{e^{-γr}}{4πr}``.
 """
 struct HH3DSingleLayerFDBIO{T,K} <: Helmholtz3DOp
     alpha::T
