@@ -1,14 +1,14 @@
 struct Identity <: LocalOperator
 end
 
-kernelvals(biop::Identity, x) = Void
+kernelvals(biop::Identity, x) = Nothing
 integrand(op::Identity, kernel, x, g, f) = dot(f[1], g[1])
 scalartype(op::Identity) = Union{}
 
 struct NCross <: LocalOperator
 end
 
-kernelvals(op::NCross, mp) = Void()
+kernelvals(op::NCross, mp) = Nothing()
 integrand(op::NCross, kernel, x, g, f) = dot(g[1], normal(x) × f[1])
 scalartype(op::NCross) = Union{}
 
@@ -47,7 +47,7 @@ function quadrule(op::LocalOperator, ψ::RefSpace, ϕ::RefSpace, τ, qd)
     q = qd[1]
     w, p = q[1], neighborhood(τ,q[2])
     a = (w, p, ψ(p), ϕ(p))
-    A = Vector{typeof(a)}(length(qd))
+    A = Vector{typeof(a)}(undef,length(qd))
     A[1] = a
     for i in 2:length(qd)
         q = qd[i]

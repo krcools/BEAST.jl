@@ -34,7 +34,7 @@ function subdsurface(mesh)
     subd_elements = subd_mesh.elements
     nvertices = length(vertices)
     nelem = length(subd_elements)
-    funs=Array{Vector{BEAST.Shape{Float64}}}(nvertices)
+    funs=Array{Vector{BEAST.Shape{Float64}}}(undef,nvertices)
     for i = 1 : nvertices funs[i] = [] end
     for ie = 1:nelem
         inodes = subd_elements[ie].RingNodes

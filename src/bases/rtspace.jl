@@ -33,8 +33,8 @@ function raviartthomas(mesh, cellpairs::Array{Int,2})
 
     # combine now the pairs of monopolar RWGs in div-conforming RWGs
     numpairs = size(cellpairs,2)
-    functions = Vector{Vector{Shape{Float64}}}(numpairs)
-    positions = Vector{vertextype(mesh)}(numpairs)
+    functions = Vector{Vector{Shape{Float64}}}(undef,numpairs)
+    positions = Vector{vertextype(mesh)}(undef,numpairs)
     for i in 1:numpairs
         if cellpairs[2,i] > 0
             c1 = cellpairs[1,i]; cell1 = mesh.faces[c1]
@@ -80,7 +80,7 @@ Returns the RT basis object.
 function raviartthomas(mesh)
     edges = skeleton(mesh, 1)
     cps = cellpairs(mesh, edges, dropjunctionpair=true)
-    ids = find(x -> x>0, cps[2,:])
+    ids = findall(x -> x>0, cps[2,:])
     raviartthomas(mesh, cps[:,ids])
 end
 
@@ -141,7 +141,7 @@ function rt_cedge(cps::Array{Int,2}, weight)
   numpairs = size(cps,2)
   @assert numpairs > 0
   weight = weight / numpairs #total current leaving and entering equal 1
-  functions =  Vector{Shape{Float64}}(numpairs) #note: not a Vector{Vector}
+  functions =  Vector{Shape{Float64}}(undef,numpairs) #note: not a Vector{Vector}
     for i in 1:numpairs
         c1 = cps[1,i]
         e1 = cps[2,i]
@@ -163,7 +163,7 @@ function rt_vedge(cps::Array{Int,2}, weight)
   numpairs = size(cps,2)
   @assert numpairs > 0
   #adjacent cells are considered a pair, so we have one less numpairs
-  functions =  Vector{Vector{Shape{Float64}}}(numpairs - 1)
+  functions =  Vector{Vector{Shape{Float64}}}(undef,numpairs - 1)
     for i in 1:numpairs
       if i < numpairs # stop when on last cellpair
         c1 = cps[1,i]; e1 = cps[2,i]
@@ -206,7 +206,7 @@ function rt_ports(Γ, γ...)
         ce1 = rt_cedge(port1, +1.0)
         ce2 = rt_cedge(port2, -1.0)
 
-        ffs = Vector{Shape{T}}(length(ce1) + length(ce2))
+        ffs = Vector{Shape{T}}(undef,length(ce1) + length(ce2))
         ffs = [ce1;ce2]
 
         ve1 = rt_vedge(port1, +1.0)

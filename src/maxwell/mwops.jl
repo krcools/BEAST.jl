@@ -133,31 +133,15 @@ end
 
 
 
-# function select_quadrule()
-#     try
-#         Pkg.installed("BogaertInts10")
-#         info("`BogaertInts10` detected: enhanced quadrature enabled.")
-#         @eval using BogaertInts10
-#         @eval include("bogaertints.jl")
-#         @eval quadrule(op::MaxwellOperator3D, g::RTRefSpace, f::RTRefSpace, i, τ, j, σ, qd) = qrib(op, g, f, i, τ, j, σ, qd)
-#     catch
-#         info("Cannot find package `BogaertInts10`. Default quadrature strategy used.")
-#         @eval quadrule(op::MaxwellOperator3D, g::RTRefSpace, f::RTRefSpace, i, τ, j, σ, qd) = qrdf(op, g, f, i, τ, j, σ, qd)
-#     end
-#end
-#
-# select_quadrule()
-
-
 function select_quadrule()
          try
              Pkg.installed("BogaertInts10")
-             info("`BogaertInts10` detected: enhanced quadrature enabled.")
+             @info "`BogaertInts10` detected: enhanced quadrature enabled."
              @eval using BogaertInts10
              @eval include("bogaertints.jl")
              @eval quadrule(op::MaxwellOperator3D, g::RTRefSpace, f::RTRefSpace, i, τ, j, σ, qd) = qrib(op, g, f, i, τ, j, σ, qd)
          catch
-             info("Cannot find package `BogaertInts10`. Default quadrature strategy used.")
+             @info "Cannot find package `BogaertInts10`. Default quadrature strategy used."
              @eval quadrule(op::MaxwellOperator3D, g::RTRefSpace, f::RTRefSpace, i, τ, j, σ, qd) = qrdf(op, g, f, i, τ, j, σ, qd)
          end
 

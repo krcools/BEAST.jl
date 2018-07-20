@@ -4,6 +4,9 @@ using StaticArrays
 
 module PkgTests
 
+using Distributed
+using LinearAlgebra
+using SparseArrays
 using Test
 
 import BEAST

@@ -124,7 +124,7 @@ function facecurrents(u, X::DirectProductSpace)
 end
 
 function potential(op, points, coeffs, basis)
-	T = SVector{3,Complex128}
+	T = SVector{3,ComplexF64}
 	ff = zeros(T, length(points))
 	store(v,m,n) = (ff[m] += v*coeffs[n])
 	potential!(store, op, points, basis)
@@ -132,7 +132,7 @@ function potential(op, points, coeffs, basis)
 end
 
 function potential(op, points,coeffs, basis::SpaceTimeBasis)
-	T = SVector{3,Complex128}
+	T = SVector{3,ComplexF64}
 	ff = zeros(T, length(points), size(coeffs)[2])
 	store(v,m,n,k,o) = (ff[m,k] += v*coeffs[n,o])
 	potential!(store, op, points, basis)
@@ -140,7 +140,7 @@ function potential(op, points,coeffs, basis::SpaceTimeBasis)
 end
 
 function potential(op, points, coeffs, space::DirectProductSpace)
-	T = SVector{3,Complex128}
+	T = SVector{3,ComplexF64}
 	ff = zeros(T, length(points))
 
 	@assert length(coeffs) == numfunctions(space)
@@ -157,7 +157,7 @@ end
 
 function potential!(store, op, points, basis)
 
-	T = SVector{3,Complex128}
+	T = SVector{3,ComplexF64}
 	z = zeros(T,length(points))
 
 	els, ad = assemblydata(basis)
@@ -207,7 +207,7 @@ function potential!(store, op, points, basis::SpaceTimeBasis)
 	Nt = numfunctions(time_basis)
 	Δt = timestep(time_basis)
 
-	T = SVector{3,Complex128}
+	T = SVector{3,ComplexF64}
 
 	refs = refspace(space_basis)
 	trefs = refspace(time_basis)

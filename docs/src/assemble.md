@@ -101,7 +101,7 @@ end
 For both the test and trial local shape functions, the global indices at which they appear in the finite element space (and the corresponding weights) are retrieved from the assembly data objects. The contributing value `v = a*z*b` is constructed and its storage is delegated to the `store` method, which we received as one of the arguments passed to `assemble_chunk!`. In the simplest case, `assemble_chunk!` can be used like this:
 
 ```julia
-Z = zeros(Complex128, numfunctions(tfs), numfunctions(bfs))
+Z = zeros(ComplexF64, numfunctions(tfs), numfunctions(bfs))
 store(v, m, n) = (Z[m,n] += v)
 assemble_chunk!(kernel, tfs, bfs, store)
 ```

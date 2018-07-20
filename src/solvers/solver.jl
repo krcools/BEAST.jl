@@ -78,7 +78,7 @@ rhs(eq::DiscreteEquation) = assemble(eq.equation.rhs, eq.test_space_dict)
 function assemble(lform::LinForm, test_space_dict)
 
     terms = lform.terms
-    T = Complex128
+    T = ComplexF64
 
     I = Int[1]
     for p in 1:length(lform.test_space)
@@ -111,7 +111,7 @@ end
 function assemble(bilform::BilForm, test_space_dict, trial_space_dict)
 
   lhterms = bilform.terms
-  T = Complex128 # TDOD: Fix this
+  T = ComplexF64 # TDOD: Fix this
 
   # determine the offsets of the different blocks in the sys matrix
   I = Int[1]

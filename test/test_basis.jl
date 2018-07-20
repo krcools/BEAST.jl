@@ -125,12 +125,11 @@ x = refspace(X)
 @test length(X.fns[1]) == 9
 
 p = point(0.5, 0.0, 0.0)
-for s in X.fns[1]
-    cell = m.faces[s.cellid]
+for _s in X.fns[1]
+    cell = m.faces[_s.cellid]
     patch = chart(m, cell)
     bary = carttobary(patch, p)
     mp = neighborhood(patch, bary)
-
 end
 
 ## Test the dual pieweise constant lagrange elemetns
@@ -152,14 +151,14 @@ X = duallagrangecxd0(m, b)
 @test length(X.fns[2]) == 12
 
 fine = geometry(X)
-for fn in X.fns
-    n = length(fn)
-    for sh in fn
-        @test sh.refid == 1
-        cellid = sh.cellid
-        cell = fine.faces[cellid]
-        ptch = chart(fine, cell)
-        @test sh.coeff * volume(ptch) ≈ 1/n
+for _fn in X.fns
+    _n = length(_fn)
+    for _sh in _fn
+        @test _sh.refid == 1
+        cellid = _sh.cellid
+        _cell = fine.faces[cellid]
+        ptch = chart(fine, _cell)
+        @test _sh.coeff * volume(ptch) ≈ 1/_n
     end
 end
 

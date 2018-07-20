@@ -27,7 +27,7 @@ cps = cellpairs(mesh, edges)
 @test size(cps) == (2,16)
 
 # select only inner edges
-I = find(x->(x>0), cps[2,:])
+I = findall(x->(x>0), cps[2,:])
 cps = cps[:,I]
 @test size(cps) == (2,8)
 

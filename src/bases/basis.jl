@@ -228,7 +228,7 @@ end
 
 function instantiate_charts(geo, num_active_cells, active)
     E = typeof(chart(geo, first(cells(geo))))
-    elements = Vector{E}(num_active_cells)
+    elements = Vector{E}(undef,num_active_cells)
     j = 1
     for (i,cell) in enumerate(cells(geo))
         active[i] || continue

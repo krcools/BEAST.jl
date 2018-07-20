@@ -1,7 +1,7 @@
 using SpecialFunctions
 
 abstract type HelmholtzOperator2D <: IntegralOperator end
-scalartype(::HelmholtzOperator2D) = Complex128
+scalartype(::HelmholtzOperator2D) = ComplexF64
 
 struct SingleLayer{T} <: HelmholtzOperator2D
     wavenumber::T

@@ -15,7 +15,7 @@ function nedelec(surface, edges)
     rows = rowvals(C)
     vals = nonzeros(C)
 
-    fns = Vector{Vector{Shape{T}}}(num_edges)
+    fns = Vector{Vector{Shape{T}}}(undef,num_edges)
     for (i,edge) in enumerate(cells(edges))
 
         fns[i] = Vector{Shape{T}}()

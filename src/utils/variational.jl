@@ -89,7 +89,8 @@ export hilbertspace, @hilbertspace
 export @varform, Equation
 export LinForm, LinTerm, BilForm, BilTerm
 
-import Base: +, -, *, dot, getindex, ^, print
+import Base: +, -, *, getindex, ^, print
+import LinearAlgebra: dot
 
 mutable struct HilbertVector
     idx

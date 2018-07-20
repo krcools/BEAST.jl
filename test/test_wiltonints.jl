@@ -221,7 +221,7 @@ function wiltonints(domain::IntegrationDomain{T,Q}, tol=eps(T)*10^3) where {T,Q}
     s[6] += -1./5. * alpha * D*D*D*D*D
 
     # build gradients
-    g = Vector{Q}(4)
+    g = Vector{Q}(undef,4)
     g[1] = -1( v[1] - s[1] * n )
     g[2] = +1( v[2] - d*s[2]*n )
     g[3] = +2( v[3] - d*s[3]*n )
@@ -333,7 +333,7 @@ x = BEAST.refspace(X)
 op = BEAST.MWSingleLayer3D(κ)
 
 n = BE.numfunctions(x)
-z1 = zeros(Complex128, n, n)
+z1 = zeros(ComplexF64, n, n)
 z2 = zeros(z1)
 
 BE = BEAST

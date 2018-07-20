@@ -119,14 +119,14 @@ bc = buffachristiansen(mesh)
 int_pred = interior_tpredicate(mesh)
 bnd_pred(s) = !int_pred(s)
 
-leaky_edges = find(sum(abs.(isdivconforming(rt)),1))
+leaky_edges = findall(sum(abs.(isdivconforming(rt)),dims=1))
 @test length(leaky_edges) == 0
 
 bnd = boundary(mesh)
 bndtch_pred = touches_predicate(bnd)
 edges = interior(mesh)
-bndtch_edges = find(bndtch_pred, edges.faces)
-leaky_edges = find(sum(abs.(isdivconforming(bc)),1))
+bndtch_edges = findall(bndtch_pred, edges.faces)
+leaky_edges = findall(vec(sum(abs.(isdivconforming(bc)),dims=1)))
 @test bndtch_edges == leaky_edges
 
 

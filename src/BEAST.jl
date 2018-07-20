@@ -1,6 +1,10 @@
 module BEAST
 
+using Distributed
 using LinearAlgebra
+using Pkg
+using SharedArrays
+using SparseArrays
 
 import LinearAlgebra: cross, dot
 import LinearAlgebra: ×, ⋅
