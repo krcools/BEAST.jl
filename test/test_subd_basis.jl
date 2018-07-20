@@ -1,6 +1,6 @@
 using CompScienceMeshes
 using BEAST
-using Base.Test
+using Test
 G = readmesh(joinpath(dirname(@__FILE__),"assets","sphere872.in"))
  # G0 = readmesh(fn)
 # G0 = meshsphere(1.0, 0.5)

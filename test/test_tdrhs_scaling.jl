@@ -1,6 +1,6 @@
 using CompScienceMeshes
 using BEAST
-using Base.Test
+using Test
 
 D, Δx = 1.0, 0.35
 fn = joinpath(dirname(@__FILE__),"assets","sphere35.in")

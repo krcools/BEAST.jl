@@ -1,7 +1,7 @@
 using BEAST
 using CompScienceMeshes
 
-using Base.Test
+using Test
 
 Γ = meshrectangle(1.0,1.0,1.0)
 γ = meshsegment(1.0,1.0,3)
@@ -42,7 +42,7 @@ C = connectivity(edges, Γ)
 ## Test the curl of the linear Lagrange elements
 using CompScienceMeshes
 using BEAST
-using Base.Test
+using Test
 
 m = meshrectangle(1.0, 1.0, 0.25)
 X = duallagrangec0d1(m)

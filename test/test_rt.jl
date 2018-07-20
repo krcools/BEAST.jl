@@ -1,7 +1,7 @@
 using CompScienceMeshes
 using BEAST
 
-using Base.Test
+using Test
 using StaticArrays
 
 T = Float64

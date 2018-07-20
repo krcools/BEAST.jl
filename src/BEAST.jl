@@ -1,5 +1,7 @@
 module BEAST
 
+using LinearAlgebra
+
 import LinearAlgebra: cross, dot
 import LinearAlgebra: ×, ⋅
 

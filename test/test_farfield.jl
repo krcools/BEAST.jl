@@ -1,6 +1,6 @@
 using BEAST
 using CompScienceMeshes
-using Base.Test
+using Test
 
 m = readmesh(joinpath(dirname(@__FILE__),"assets","sphere824.in"))
 X = raviartthomas(m)

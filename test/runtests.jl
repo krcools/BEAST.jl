@@ -1,7 +1,10 @@
 # write your own tests here
+
+using StaticArrays
+
 module PkgTests
 
-using Base.Test
+using Test
 
 import BEAST
 

@@ -1,5 +1,5 @@
 using CompScienceMeshes, BEAST
-using Base.Test
+using Test
 
 o, x, y, z = euclidianbasis(3)
 

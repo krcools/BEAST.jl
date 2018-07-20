@@ -1,5 +1,5 @@
 using BEAST
-using Base.Test
+using Test
 
 width = 4.0
 delay = 6.0

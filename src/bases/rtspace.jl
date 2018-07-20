@@ -188,8 +188,8 @@ pair of ports. i.e. current leaving mesh Γ through γ₁ is accounted for in γ
 
 Returns the RT basis object.
 """
-#TODO: can include an extra argument for polarity applied to ports
 function rt_ports(Γ, γ...)
+    #TODO: can include an extra argument for polarity applied to ports
 
     T = coordtype(Γ)
 
@@ -224,17 +224,17 @@ end
 Returns the indices of the global half RWGs present in `RT`.
 `RT` is typically gotten from `rt_ports`
 """
-#TODO: use more reasonable condition to extract indices
-# or have rt_ports return indices with RTBasis
 function getindex_rtg(RT::RTBasis)
-idx=[]
-A = RT.fns
-  for i in 1:length(A)
-    if size(A[i])[1] > 2
-      push!(idx,i)
+    #TODO: use more reasonable condition to extract indices
+    # or have rt_ports return indices with RTBasis
+    idx=[]
+    A = RT.fns
+    for i in 1:length(A)
+        if size(A[i])[1] > 2
+            push!(idx,i)
+        end
     end
-  end
-  idx
+    idx
 end
 
 divergence(X::RTBasis, geo, fns) = LagrangeBasis{0,-1,1}(geo, fns, deepcopy(positions(X)))

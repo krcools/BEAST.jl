@@ -1,4 +1,4 @@
-using Base.Test
+using Test
 #using LinearForms
 using CompScienceMeshes
 using BEAST
@@ -29,7 +29,7 @@ I, J, V = findnz(Z)
 ## test the acutal value of the penalty terms
 using CompScienceMeshes
 using BEAST
-using Base.Test
+using Test
 
 p1 = point(0,0,0)
 p2 = point(1,0,0)

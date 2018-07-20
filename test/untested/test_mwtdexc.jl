@@ -1,6 +1,6 @@
 using BEAST
 using CompScienceMeshes
-using Base.Test
+using Test
 
 x = Vec(1.0,0.0,0.0)
 y = Vec(0.0,1.0,0.0)

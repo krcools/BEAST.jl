@@ -1,4 +1,4 @@
-julia 0.6
+julia 0.7
 WiltonInts84 0.1.0
 CollisionDetection
 Combinatorics
@@ -6,8 +6,6 @@ Compat
 CompScienceMeshes 0.1.1
 FFTW
 IterativeSolvers
-#LinearAlgebra
 SauterSchwabQuadrature
-#SharedArrays
 SpecialFunctions
 StaticArrays

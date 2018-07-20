@@ -1,5 +1,5 @@
 using CompScienceMeshes, BEAST
-using Base.Test
+using Test
 
 fn = joinpath(dirname(@__FILE__),"assets","sphere35.in")
 m = readmesh(fn)

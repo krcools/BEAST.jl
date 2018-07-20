@@ -1,6 +1,6 @@
 import BEAST; BE = BEAST;
 using CompScienceMeshes
-using Base.Test
+using Test
 
 T = Float64
 P = SVector{3,T}

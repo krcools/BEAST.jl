@@ -1,5 +1,5 @@
 ## Preamble
-using Base.Test
+using Test
 
 using CompScienceMeshes
 using BEAST
@@ -62,7 +62,7 @@ A = volume(s)
 ## Test the construction of continuous linear Lagrange elements on 2D surfaces
 using CompScienceMeshes
 using BEAST
-using Base.Test
+using Test
 
 m = meshrectangle(1.0, 1.0, 0.5, 3)
 X = lagrangec0d1(m)
@@ -76,7 +76,7 @@ x = refspace(X)
 ## test the scalar trace for Lagrange functions
 using CompScienceMeshes
 using BEAST
-using Base.Test
+using Test
 
 p1 = point(0,0,0)
 p2 = point(1,0,0)
@@ -112,7 +112,7 @@ Q = BEAST.strace(x, cell, 3, face)
 ## test Lagrange construction on Junctions
 using CompScienceMeshes
 using BEAST
-using Base.Test
+using Test
 
 m1 = meshrectangle(1.0, 0.5, 0.5)
 m2 = rotate(m1, 0.5π*[1,0,0])
@@ -136,7 +136,7 @@ end
 ## Test the dual pieweise constant lagrange elemetns
 using CompScienceMeshes
 using BEAST
-using Base.Test
+using Test
 
 width, height = 1.0, 1.0
 h = 0.5
@@ -166,7 +166,7 @@ end
 ## Test the construction of dual piecewise linear, globally continuous elements
 using CompScienceMeshes
 using BEAST
-using Base.Test
+using Test
 
 m = meshrectangle(1.0, 1.0, 0.25)
 j = meshsegment(1.0, 1.0, 3)
