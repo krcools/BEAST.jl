@@ -4,6 +4,14 @@ mutable struct MWSingleLayerField3D{K}
     wavenumber::K
 end
 
+"""
+    MWSingleLayerField3D(wavenumber = error())
+
+Create the single layer near field operator, for use with `potential`.
+"""
+MWSingleLayerField3D(;wavenumber = error("Missing arg: `wavenumber`")) = MWSingleLayerField3D(wavenumber)
+
+
 quaddata(op::MWSingleLayerField3D,rs,els) = quadpoints(rs,els,(2,))
 quadrule(op::MWSingleLayerField3D,refspace,p,y,q,el,qdata) = qdata[1,q]
 
