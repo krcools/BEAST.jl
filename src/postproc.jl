@@ -163,7 +163,7 @@ function potential!(store, op, points, basis)
 	els, ad = assemblydata(basis)
 	rs = refspace(basis)
 
-	zlocal = Array{T}(numfunctions(rs))
+	zlocal = Array{T}(undef,numfunctions(rs))
 	qdata = quaddata(op,rs,els)
 
 	#println("Computing nearfield.")

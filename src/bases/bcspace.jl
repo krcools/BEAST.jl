@@ -107,7 +107,7 @@ function buffachristiansen(Γ, γ=mesh(coordtype(Γ),1,3))
 
     vtof, vton = vertextocellmap(fine)
     jct_pred = overlap_gpredicate(γ)
-    bcs, k = Vector{Vector{Shape{T}}}(numfuncs), 1
+    bcs, k = Vector{Vector{Shape{T}}}(undef,numfuncs), 1
     for (i,edge) in enumerate(cells(edges))
 
         ch = chart(edges, edge)
@@ -160,8 +160,8 @@ function buildhalfbc(fine, S, v, p, onjunction)
     S = sortneighbors(S, share_edge)
     @assert all(0 .< S .<= numcells(fine))
 
-    port_faces = find(i -> p in fine.faces[i], S)
-    port_edges = [findfirst(fine.faces[S[i]],v) for i in port_faces]
+    port_faces = findall(i -> p in fine.faces[i], S)
+    port_edges = [something(findfirst(isequal(v), fine.faces[S[i]]),0) for i in port_faces]
 
     num_ports = length(port_faces)
     port_fluxes = ones(T,num_ports) / num_ports

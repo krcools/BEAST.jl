@@ -18,7 +18,7 @@ faces = skeleton(mesh, 2)
 idcs = faces.faces[1]
 verts = vertices(mesh, idcs)
 p = simplex(verts, Val{2})
-@test volume(p) == 1./8.
+@test volume(p) == 1/8
 
 edges = skeleton(mesh,1)
 @test numcells(edges) == 16

@@ -8,6 +8,7 @@ using Distributed
 using LinearAlgebra
 using SparseArrays
 using Test
+using Pkg
 
 import BEAST
 
@@ -41,10 +42,10 @@ include("test_farfield.jl")
 
 try
     Pkg.installed("BogaertInts10")
-    info("`BogaertInts10` detected. Including relevant tests.")
+    @info "`BogaertInts10` detected. Including relevant tests."
     include("test_bogaertints.jl")
 catch
-    info("`Could not load BogaertInts10`. Related tests skipped.")
+    @info "`Could not load BogaertInts10`. Related tests skipped."
 end
 
 

@@ -118,29 +118,29 @@ function wiltonints(domain::IntegrationDomain{T,Q}, tol=eps(T)*10^3) where {T,Q}
 
             s[1] += -at
             s[2] += p*lg + d*at
-            s[3] += 1./2. * p * (xb-xa)
-            pt1 = 1./6.*p*(xb*rb-xa*ra)
-            pt2 = (1./2.*d*d+1./6.*p*p)*p*lg
-            pt3 = 1./3.*d*d*d*at
+            s[3] += 1/2 * p * (xb-xa)
+            pt1 = 1/6*p*(xb*rb-xa*ra)
+            pt2 = (1/2*d*d+1/6*p*p)*p*lg
+            pt3 = 1/3*d*d*d*at
             s[4] += pt1 + pt2 + pt3
-            pt1 = 1./2.*xb*p*(1./6.*xb*xb+1./2.*p*p+d*d)
-            pt2 = 1./2.*xa*p*(1./6.*xa*xa+1./2.*p*p+d*d)
+            pt1 = 1/2*xb*p*(1/6*xb*xb+1/2*p*p+d*d)
+            pt2 = 1/2*xa*p*(1/6*xa*xa+1/2*p*p+d*d)
             s[5] += pt1 - pt2
-            pt1b = 1./20.*p*xb*rb*(xb*xb+1./2.*(9*d*d+5*p*p))
-            pt1a = 1./20.*p*xa*ra*(xa*xa+1./2.*(9*d*d+5*p*p))
-            pt2 = 1./40.*p*(15*d*d*d*d+10*d*d*p*p+3*p*p*p*p)*lg + 0.2*d*d*d*d*d*at;
+            pt1b = 1/20*p*xb*rb*(xb*xb+1/2*(9*d*d+5*p*p))
+            pt1a = 1/20*p*xa*ra*(xa*xa+1/2*(9*d*d+5*p*p))
+            pt2 = 1/40*p*(15*d*d*d*d+10*d*d*p*p+3*p*p*p*p)*lg + 0.2*d*d*d*d*d*at;
             s[6] += (pt1b - pt1a) + pt2
 
             v[1] += -lg * m
             v[2] += 0.5 *((xb*rb-xa*ra) + w*w*lg) * m
-            pt1b = 0.5 * xb * (1./3.*xb*xb + p*p)
-            pt1a = 0.5 * xa * (1./3.*xa*xa + p*p)
+            pt1b = 0.5 * xb * (1/3*xb*xb + p*p)
+            pt1a = 0.5 * xa * (1/3*xa*xa + p*p)
             v[3] += (pt1b - pt1a) * m
-            pt1 = 1./12.*(xb*rb*rb*rb-xa*ra*ra*ra) + 1./8.*w*w*(xb*rb-xa*ra)
-            pt2 = 1./8.*w*w*w*w*lg
+            pt1 = 1/12*(xb*rb*rb*rb-xa*ra*ra*ra) + 1/8*w*w*(xb*rb-xa*ra)
+            pt2 = 1/8*w*w*w*w*lg
             v[4] += (pt1 + pt2) * m
-            pt1b = 1./20.*xb*xb*xb*xb*xb + 1./6.*p*p*xb*xb*xb + 0.25*p*p*p*p*xb + 0.5*d*d*(1./3.*xb*xb*xb + p*p*xb)
-            pt1a = 1./20.*xa*xa*xa*xa*xa + 1./6.*p*p*xa*xa*xa + 0.25*p*p*p*p*xa + 0.5*d*d*(1./3.*xa*xa*xa + p*p*xa)
+            pt1b = 1/20*xb*xb*xb*xb*xb + 1/6*p*p*xb*xb*xb + 0.25*p*p*p*p*xb + 0.5*d*d*(1/3*xb*xb*xb + p*p*xb)
+            pt1a = 1/20*xa*xa*xa*xa*xa + 1/6*p*p*xa*xa*xa + 0.25*p*p*p*p*xa + 0.5*d*d*(1/3*xa*xa*xa + p*p*xa)
             v[5] += (pt1b - pt1a) * m
 
 
@@ -161,14 +161,14 @@ function wiltonints(domain::IntegrationDomain{T,Q}, tol=eps(T)*10^3) where {T,Q}
                 pt1 = 0.5*(xb*rb-xa*ra)
                 pt2 = 0.5*w*w*lg
                 v[2] += (pt1 + pt2) * m
-                pt1b = 1./6.*xb*xb*xb
-                pt1a = 1./6.*xa*xa*xa
+                pt1b = 1/6*xb*xb*xb
+                pt1a = 1/6*xa*xa*xa
                 v[3] += (pt1b - pt1a) * m
-                pt1 = 1./12.*(xb*rb*rb*rb-xa*ra*ra*ra) + 1./8.*w*w*(xb*rb-xa*ra)
-                pt2 = 1./8.*w*w*w*w*lg
+                pt1 = 1/12*(xb*rb*rb*rb-xa*ra*ra*ra) + 1/8*w*w*(xb*rb-xa*ra)
+                pt2 = 1/8*w*w*w*w*lg
                 v[4] += (pt1 + pt2) * m
-                pt1b = 1./20.*xb*xb*xb*xb*xb + 1./6.*p*p*xb*xb*xb + 0.25*p*p*p*p*xb + 0.5*d*d*(1./3.*xb*xb*xb + p*p*xb)
-                pt1a = 1./20.*xa*xa*xa*xa*xa + 1./6.*p*p*xa*xa*xa + 0.25*p*p*p*p*xa + 0.5*d*d*(1./3.*xa*xa*xa + p*p*xa)
+                pt1b = 1/20*xb*xb*xb*xb*xb + 1/6*p*p*xb*xb*xb + 0.25*p*p*p*p*xb + 0.5*d*d*(1/3*xb*xb*xb + p*p*xb)
+                pt1a = 1/20*xa*xa*xa*xa*xa + 1/6*p*p*xa*xa*xa + 0.25*p*p*p*p*xa + 0.5*d*d*(1/3*xa*xa*xa + p*p*xa)
                 v[5] += (pt1b - pt1a) * m
 
             else # D <= tol
@@ -181,14 +181,14 @@ function wiltonints(domain::IntegrationDomain{T,Q}, tol=eps(T)*10^3) where {T,Q}
 
                 v[1] += -lg * m
                 v[2] += 0.5*(xb*rb-xa*ra) * m
-                pt1b = 1./6.*xb*xb*xb
-                pt1a = 1./6.*xa*xa*xa
+                pt1b = 1/6*xb*xb*xb
+                pt1a = 1/6*xa*xa*xa
                 v[3] += (pt1b - pt1a) * m
-                pt1 = 1./12.*(xb*rb*rb*rb-xa*ra*ra*ra) + 1./8.*w*w*(xb*rb-xa*ra)
-                pt2 = 1./8.*w*w*w*w*lg
+                pt1 = 1/12*(xb*rb*rb*rb-xa*ra*ra*ra) + 1/8*w*w*(xb*rb-xa*ra)
+                pt2 = 1/8*w*w*w*w*lg
                 v[4] += (pt1 + pt2) * m
-                pt1b = 1./20.*xb*xb*xb*xb*xb + 1./6.*p*p*xb*xb*xb + 0.25*p*p*p*p*xb + 0.5*d*d*(1./3.*xb*xb*xb + p*p*xb)
-                pt1a = 1./20.*xa*xa*xa*xa*xa + 1./6.*p*p*xa*xa*xa + 0.25*p*p*p*p*xa + 0.5*d*d*(1./3.*xa*xa*xa + p*p*xa)
+                pt1b = 1/20*xb*xb*xb*xb*xb + 1/6*p*p*xb*xb*xb + 0.25*p*p*p*p*xb + 0.5*d*d*(1/3*xb*xb*xb + p*p*xb)
+                pt1a = 1/20*xa*xa*xa*xa*xa + 1/6*p*p*xa*xa*xa + 0.25*p*p*p*p*xa + 0.5*d*d*(1/3*xa*xa*xa + p*p*xa)
                 v[5] += (pt1b - pt1a) * m
 
             end # if D < tol
@@ -217,8 +217,8 @@ function wiltonints(domain::IntegrationDomain{T,Q}, tol=eps(T)*10^3) where {T,Q}
 
     s[1] += alpha * sgn
     s[2] += -alpha * D
-    s[4] += -1./3. * alpha * D*D*D
-    s[6] += -1./5. * alpha * D*D*D*D*D
+    s[4] += -1/3 * alpha * D*D*D
+    s[6] += -1/5 * alpha * D*D*D*D*D
 
     # build gradients
     g = Vector{Q}(undef,4)
@@ -301,9 +301,9 @@ pts = [
     (tr[1]+tr[2]+tr[3])/3 + point(0.0, 0.0, 100.0)
 ]
 
-for p in pts
-    s1, v1, g1 = wiltonints(tr[1],tr[2],tr[3],p)
-    s2, v2, g2 = withquadrules(tr,p,13)
+for _p in pts
+    s1, v1, g1 = wiltonints(tr[1],tr[2],tr[3],_p)
+    s2, v2, g2 = withquadrules(tr,_p,13)
 
     for i in length(s1)
         @test norm(s1[i]-s2[i]) < 1.0e-5
@@ -314,8 +314,8 @@ for p in pts
     end
 
     for i in 1:length(g1)
-        for j in 1:3
-            @test norm(g1[i][j]-g2[i][j]) < 1.0e-5
+        for _j in 1:3
+            @test norm(g1[i][_j]-g2[i][_j]) < 1.0e-5
         end
     end
 end
@@ -334,7 +334,7 @@ op = BEAST.MWSingleLayer3D(κ)
 
 n = BE.numfunctions(x)
 z1 = zeros(ComplexF64, n, n)
-z2 = zeros(z1)
+z2 = zeros(ComplexF64, n, n)
 
 BE = BEAST
 

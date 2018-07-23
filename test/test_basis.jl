@@ -126,8 +126,8 @@ x = refspace(X)
 
 p = point(0.5, 0.0, 0.0)
 for _s in X.fns[1]
-    cell = m.faces[_s.cellid]
-    patch = chart(m, cell)
+    _cell = m.faces[_s.cellid]
+    patch = chart(m, _cell)
     bary = carttobary(patch, p)
     mp = neighborhood(patch, bary)
 end
@@ -177,12 +177,12 @@ x = refspace(X)
 
 isonjunction = inclosure_gpredicate(j)
 els, ad = BEAST.assemblydata(X)
-for p in 1:numcells(m)
-    el = els[p]
+for _p in 1:numcells(m)
+    el = els[_p]
     for r in 1:numfunctions(x)
         vert = el[r]
         isonjunction(vert) || continue
-        for (i,w) in ad[p,r]
+        for (i,w) in ad[_p,r]
             @test w == 0
         end
     end

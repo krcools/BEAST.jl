@@ -19,7 +19,7 @@ n = 0
 on_bnd = overlap_gpredicate(b)
 for i in eachindex(rwg.fns)
     length(nt.fns[i]) == 1 || continue
-    n += 1
+    global n += 1
     c = nt.fns[i][1].cellid
     edge = chart(Σ, Σ.faces[c])
     @test on_bnd(edge)
@@ -44,7 +44,7 @@ X = lagrangec0d1(m,b)
 
 Y = strace(X,b)
 #A = findall(length(f) for f in Y.fns)
-A = findall(length.(Y.fns))
+A = findall(length.(Y.fns) .!= 0)
 
 @test length(A) == 1
 @test length(Y.fns[1]) == 2

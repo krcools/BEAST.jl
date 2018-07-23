@@ -88,7 +88,8 @@ end
 
 
 function restrict(refs::LagrangeRefSpace{T,0}, dom1, dom2) where T
-    Q = eye(T, numfunctions(refs))
+    #Q = eye(T, numfunctions(refs))
+    Q = Matrix{T}(I, numfunctions(refs), numfunctions(refs))
 end
 
 function restrict(f::LagrangeRefSpace{T,1}, dom1, dom2) where T

@@ -51,16 +51,16 @@ end
 function touches_predicate(mesh)
 
     verts = skeleton(mesh,0)
-    verts = sort(verts.faces, lt=lexless)
+    verts = sort(verts.faces, lt=isless)
 
     edges = skeleton(mesh,1)
-    edges = sort(edges.faces, lt=lexless)
+    edges = sort(edges.faces, lt=isless)
 
     function pred(s)
 
         num_hits = 0
         for i in 1:length(s)
-            if !isempty(searchsorted(verts, SVector(s[i]), lt=lexless))
+            if !isempty(searchsorted(verts, SVector(s[i]), lt=isless))
                 num_hits += 1
             end
         end
@@ -68,7 +68,7 @@ function touches_predicate(mesh)
         @assert num_hits < 3
         num_hits == 0 && return false
         num_hits == 1 && return true
-        isempty(searchsorted(edges, s, lt=lexless)) && return true
+        isempty(searchsorted(edges, s, lt=isless)) && return true
         return false
     end
 
@@ -119,14 +119,14 @@ bc = buffachristiansen(mesh)
 int_pred = interior_tpredicate(mesh)
 bnd_pred(s) = !int_pred(s)
 
-leaky_edges = findall(sum(abs.(isdivconforming(rt)),dims=1))
+leaky_edges = findall(sum(abs.(isdivconforming(rt)),dims=1) .!= 0)
 @test length(leaky_edges) == 0
 
 bnd = boundary(mesh)
 bndtch_pred = touches_predicate(bnd)
 edges = interior(mesh)
 bndtch_edges = findall(bndtch_pred, edges.faces)
-leaky_edges = findall(vec(sum(abs.(isdivconforming(bc)),dims=1)))
+leaky_edges = findall(vec(sum(abs.(isdivconforming(bc)),dims=1)) .!= 0)
 @test bndtch_edges == leaky_edges
 
 
@@ -142,12 +142,12 @@ for fn in bc.fns
     abs_charge = 0.0
     net_charge = 0.0
     fill!(charges,0)
-    for  sh in fn
-        cellid = sh.cellid
+    for  _sh in fn
+        cellid = _sh.cellid
 
         #cell = simplex(vertices(fine, fine.faces[cellid]))
-        net_charge += sh.coeff
-        charges[cellid] += sh.coeff
+        net_charge += _sh.coeff
+        charges[cellid] += _sh.coeff
     end
     abs_charge = sum(abs.(charges))
     @test net_charge + 1 ≈ 1

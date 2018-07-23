@@ -59,7 +59,7 @@ qps = BEAST.quadpoints(y, [t], (10,))[1,1]
 estimate = 0.0
 for qp in qps
     igd = qp.value[1][1] * qp.value[2][1]
-    estimate += qp.weight * igd
+    global estimate += qp.weight * igd
 end
 actual = Iyy[1,2]
 @test norm(estimate - actual) < 1e-6

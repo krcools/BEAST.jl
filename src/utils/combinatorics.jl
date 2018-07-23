@@ -13,7 +13,7 @@ function relorientation(face, simplex)
     s = (-1)^(i-1)
 
     # remove that vertex from the simplex
-    face2 = Array{Int}(length(simplex)-1)
+    face2 = Array{Int}(undef,length(simplex)-1)
     for j in 1 : i-1
         face2[j] = simplex[j]
     end

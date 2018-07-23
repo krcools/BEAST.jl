@@ -6,7 +6,7 @@ mutable struct RTBasis{T,M,P} <: Space{T}
   pos::Vector{P}
 end
 
-RTBasis(geo, fns) = RTBasis(geo, fns, Vector{vertextype(geo)}(length(fns)))
+RTBasis(geo, fns) = RTBasis(geo, fns, Vector{vertextype(geo)}(undef,length(fns)))
 
 positions(rt) = rt.pos
 refspace(space::RTBasis{T}) where {T} = RTRefSpace{T}()
