@@ -6,6 +6,8 @@ using Pkg
 using SharedArrays
 using SparseArrays
 
+using SauterSchwabQuadrature
+
 import LinearAlgebra: cross, dot
 import LinearAlgebra: ×, ⋅
 
@@ -131,6 +133,9 @@ include("identityop.jl")
 include("integralop.jl")
 include("postproc.jl")
 
+include("quadrature/double_quadrature.jl")
+include("quadrature/singularity_extraction.jl")
+
 include("timedomain/tdintegralop.jl")
 include("timedomain/tdexcitation.jl")
 include("timedomain/motlu.jl")
@@ -142,6 +147,7 @@ include("timedomain/zdomain.jl")
 include("maxwell/mwexc.jl")
 include("maxwell/mwops.jl")
 include("maxwell/wiltonints.jl")
+include("maxwell/sauterschwabints.jl")
 include("maxwell/nxdbllayer.jl")
 include("maxwell/nitsche.jl")
 include("maxwell/farfield.jl")

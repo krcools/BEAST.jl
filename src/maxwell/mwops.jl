@@ -134,10 +134,10 @@ end
 
 
 function select_quadrule()
-         try
+        try
              Pkg.installed("BogaertInts10")
-             @info "`BogaertInts10` detected: enhanced quadrature enabled."
              @eval using BogaertInts10
+             @info "`BogaertInts10` detected: enhanced quadrature enabled."
              @eval include("bogaertints.jl")
              @eval quadrule(op::MaxwellOperator3D, g::RTRefSpace, f::RTRefSpace, i, τ, j, σ, qd) = qrib(op, g, f, i, τ, j, σ, qd)
          catch
@@ -155,9 +155,6 @@ function select_quadrule()
         # end
 end
 select_quadrule()
-
-
-
 
 
 

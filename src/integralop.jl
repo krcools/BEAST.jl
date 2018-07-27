@@ -303,161 +303,60 @@ end end end end end
 
 
 
-
-
-#     #print("dots out of 10: ")
-#     todo, done, pctg = length(test_elements), 0, 0
-#     for p in eachindex(test_elements)
-#         tcell = test_elements[p]
-#         num_tshapes = tcell.N
-#         for q in eachindex(bsis_elements)
-#             bcell = bsis_elements[q]
-#             num_bshapes = tcell.N
-#             zlocal = zeros(T, num_tshapes, num_bshapes)
-#             fill!(zlocal, 0)
-#             strat = quadrule(biop, tshapes, bshapes, p, tcell, q, bcell, qd)
-#             momintegrals!(biop, tshapes, bshapes, tcell, bcell, zlocal, strat)
+# mutable struct SauterSchwabStrategy
+#     hits::Int64
+# end
+# function momintegrals!(biop, tshs::subReferenceSpace, bshs::subReferenceSpace, tcell, bcell, z, strat::SauterSchwabStrategy)
 #
-#             for j in 1 : num_bshapes, i in 1 : num_tshapes
-#                 z = zlocal[i,j]
-#                 for (n,b) in bad[q][j], (m,a) in tad[p][i]
-#                     store(a*z*b, m, n)
-#         end end end
+#     A = biop.alpha
+#     k = biop.gamma
 #
-#         done += 1
-#         new_pctg = round(Int, done / todo * 100)
-#         #(new_pctg > pctg + 9) && (print("."); pctg = new_pctg)
+#     M, N = size(z)
+#
+#     hits = strat.hits
+#     print(hits)
+#     acc = 3
+#
+#     if hits == 0
+#         ssm = PositiveDistance(acc)
+#     elseif hits == 1
+#         ssm = CommonVertex(acc)
+#     elseif hits == 2
+#         ssm = CommonEdge(acc)
+#     elseif hits == 3
+#         ssm = CommonFace(acc)
+#     else
+#         error("hits can not exceed 3")
 #     end
-#     #print(" done. ")
+#     M= tcell.N
+#     N= bcell.N
+#     print("M = $(M) and N = $(N) \n")
+#     z = Array{Complex{Float64},2}(M,N)
+#     for i = 1:M
+#         for j = 1:N
+#             # print("i = $(i) and j = $(j) \n")
+#             function integrand(u,v)
+#                 upt = neighborhood(tcell,u)
+#                 vpt = neighborhood(bcell,v)
+#                 tshape = shapefuns(upt)
+#                 bshape = shapefuns(vpt)
+#                 y = cartesian(upt)
+#                 x = cartesian(vpt)
+#                 kernel = A * exp(-complex(0,1)*k*norm(x-y))/(4.0*π*norm(x-y))
+#                 # kernel = kernelvals(biop, upt, vpt)
+#                 ujac = jacobian(upt)
+#                 vjac = jacobian(vpt)
+#                 return tshape[i]*bshape[j]*kernel* ujac * vjac
+#                 # return kernel* ujac * vjac
+#             end
+#             z[i,j] = (sauterschwab_parameterized(tcell,bcell,integrand,ssm))
+#             end
+#     end
+#
+#     return z
 # end
 
-struct DoubleQuadStrategy{P,Q}
-  outer_quad_points::P
-  inner_quad_points::Q
-end
 
-
-"""
-    regularcellcellinteractions!(biop, tshs, bshs, tcell, bcell, interactions, strat)
-
-Function for the computation of moment integrals using simple double quadrature.
-"""
-function momintegrals!(biop, tshs, bshs, tcell, bcell, z, strat::DoubleQuadStrategy)
-
-    # memory allocation here is a result from the type instability on strat
-    # which is on purpose, i.e. the momintegrals! method is chosen based
-    # on dynamic polymorphism.
-    womps = strat.outer_quad_points
-    wimps = strat.inner_quad_points
-
-    M, N = size(z)
-
-    for womp in womps
-        tgeo = womp.point
-        tvals = womp.value
-        jx = womp.weight
-
-        for wimp in wimps
-            bgeo = wimp.point
-            bvals = wimp.value
-            jy = wimp.weight
-
-            j = jx * jy
-            kernel = kernelvals(biop, tgeo, bgeo)
-
-            #for m in 1 : M
-            for m in 1 : length(tvals)
-                tval = tvals[m]
-                #for n in 1 : N
-                for n in 1 : length(bvals)
-                    bval = bvals[n]
-
-                    igd = integrand(biop, kernel, tval, tgeo, bval, bgeo)
-                    z[m,n] += j * igd
-                end
-            end
-        end
-    end
-
-    return z
-end
-
-mutable struct SauterSchwabStrategy
-    hits::Int64
-end
-function momintegrals!(biop, tshs::subReferenceSpace, bshs::subReferenceSpace, tcell, bcell, z, strat::SauterSchwabStrategy)
-
-    A = biop.alpha
-    k = biop.gamma
-
-    M, N = size(z)
-
-    hits = strat.hits
-    print(hits)
-    acc = 3
-
-    if hits == 0
-        ssm = PositiveDistance(acc)
-    elseif hits == 1
-        ssm = CommonVertex(acc)
-    elseif hits == 2
-        ssm = CommonEdge(acc)
-    elseif hits == 3
-        ssm = CommonFace(acc)
-    else
-        error("hits can not exceed 3")
-    end
-    M= tcell.N
-    N= bcell.N
-    print("M = $(M) and N = $(N) \n")
-    z = Array{Complex{Float64},2}(M,N)
-    for i = 1:M
-        for j = 1:N
-            # print("i = $(i) and j = $(j) \n")
-            function integrand(u,v)
-                upt = neighborhood(tcell,u)
-                vpt = neighborhood(bcell,v)
-                tshape = shapefuns(upt)
-                bshape = shapefuns(vpt)
-                y = cartesian(upt)
-                x = cartesian(vpt)
-                kernel = A * exp(-complex(0,1)*k*norm(x-y))/(4.0*π*norm(x-y))
-                # kernel = kernelvals(biop, upt, vpt)
-                ujac = jacobian(upt)
-                vjac = jacobian(vpt)
-                return tshape[i]*bshape[j]*kernel* ujac * vjac
-                # return kernel* ujac * vjac
-            end
-            z[i,j] = (sauterschwab_parameterized(tcell,bcell,integrand,ssm))
-            end
-    end
-
-    return z
-end
-
-abstract type SingularityExtractionStrategy end
-regularpart_quadrule(qr::SingularityExtractionStrategy) = qr.regularpart_quadrule
-
-function momintegrals!(op, g, f, t, s, z, strat::SingularityExtractionStrategy)
-
-
-    womps = strat.outer_quad_points
-
-    sop = singularpart(op)
-    rop = regularpart(op)
-
-    # compute the regular part
-    rstrat = regularpart_quadrule(strat)
-    momintegrals!(rop, g, f, t, s, z, rstrat)
-
-    for p in 1 : length(womps)
-        x = womps[p].point
-        dx = womps[p].weight
-
-        innerintegrals!(sop, x, g, f, t, s, z, strat, dx)
-    end # next quadrature point
-
-end
 
 mutable struct QuadData{WPV1,WPV2}
   tpoints::Matrix{Vector{WPV1}}

@@ -1,4 +1,4 @@
-isdefined(:plotresults) || (plotresults = false)
+@isdefined(plotresults) || (plotresults = false)
 
 if plotresults
 
