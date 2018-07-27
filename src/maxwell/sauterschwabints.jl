@@ -31,8 +31,12 @@ function momintegrals!(op::MWSingleLayer3D,
     test_local_space::RTRefSpace, trial_local_space::RTRefSpace,
     test_triangular_element, trial_triangular_element, out, strat::SauterSchwabStrategy)
 
-    I = indexin(test_triangular_element.vertices, trial_triangular_element.vertices)
-    @assert I == [1,2,3]
+    I, J, K, L = SauterSchwabQuadrature.reorder(
+        test_triangular_element.vertices,
+        trial_triangular_element.vertices)
+
+    test_triangular_element  = simplex(test_triangular_element.vertices[I])
+    trial_triangular_element = simplex(trial_triangular_element.vertices[I])
 
     α = op.α
     β = op.β
@@ -66,7 +70,9 @@ function momintegrals!(op::MWSingleLayer3D,
 
     end
 
-    out .+= sauterschwab_parameterized(igd, strat)
+
+    ssq = sauterschwab_parameterized(igd, strat)
+    out .+= ssq[K,L]
 
     nothing
 end
