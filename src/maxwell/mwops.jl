@@ -3,7 +3,7 @@ import WiltonInts84
 
 
 
-struct sauterschwabstrategy <: Any end
+#struct sauterschwabstrategy <: Any end
 abstract type MaxwellOperator3D <: IntegralOperator end
 abstract type MaxwellOperator3DReg <: MaxwellOperator3D end
 
@@ -142,7 +142,7 @@ function select_quadrule()
              @eval quadrule(op::MaxwellOperator3D, g::RTRefSpace, f::RTRefSpace, i, τ, j, σ, qd) = qrib(op, g, f, i, τ, j, σ, qd)
          catch
              @info "Cannot find package `BogaertInts10`. Default quadrature strategy used."
-             @eval quadrule(op::MaxwellOperator3D, g::RTRefSpace, f::RTRefSpace, i, τ, j, σ, qd) = qrdf(op, g, f, i, τ, j, σ, qd)
+             @eval quadrule(op::MaxwellOperator3D, g::RTRefSpace, f::RTRefSpace, i, τ, j, σ, qd) = qrss(op, g, f, i, τ, j, σ, qd)
          end
 
         #  try
@@ -158,7 +158,7 @@ select_quadrule()
 
 
 
-function q(op, g, f, i, τ, j, σ, qd)
+function qrss(op, g, f, i, τ, j, σ, qd)
     # defines coincidence of points
     dtol = 1.0e3 * eps(eltype(eltype(τ.vertices)))
 
@@ -181,9 +181,9 @@ function q(op, g, f, i, τ, j, σ, qd)
     end
 
 
-  hits == 3   && return sauterschwabstrategy()
-  hits == 2   && return sauterschwabstrategy()
-  hits == 1   && return sauterschwabstrategy()
+  hits == 3   && return SauterSchwabQuadrature.CommonFace(3)
+  hits == 2   && return SauterSchwabQuadrature.CommonEdge(3)
+  hits == 1   && return SauterSchwabQuadrature.CommonVertex(3)
   xmin < xtol && return WiltonSEStrategy(
     qd.tpoints[1,i],
     DoubleQuadStrategy(
@@ -192,8 +192,8 @@ function q(op, g, f, i, τ, j, σ, qd)
     ),
   )
   return DoubleQuadStrategy(
-    qd.tpoints[2,i],
-    qd.bpoints[2,j],
+    qd.tpoints[1,i],
+    qd.bpoints[1,j],
   )
 
 end
