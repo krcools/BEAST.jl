@@ -37,8 +37,8 @@ function quaddata(op::HelmholtzOperator2D, g::LagrangeRefSpace, f::LagrangeRefSp
   tqd = quadpoints(g, tels, (4,))
   bqd = quadpoints(f, bels, (3,))
 
-  return QuadData(tqd, bqd)
-
+  #return QuadData(tqd, bqd)
+  return (tpoints=tqd, bpoints=bqd)
 end
 
 

@@ -12,7 +12,8 @@ function quaddata(operator::NitscheHH3,
   tqd = quadpoints(localtestbasis,  testelements,  (10,))
   bqd = quadpoints(x -> localtrialbasis(x, Val{:withcurl}), trialelements, (8,))
 
-  return QuadData(tqd, bqd)
+  #return QuadData(tqd, bqd)
+  return (tpoints=tqd, bpoints=bqd)
 end
 
 function quadrule(op::NitscheHH3, g::LagrangeRefSpace, f::LagrangeRefSpace, i, τ, j, σ, qd)

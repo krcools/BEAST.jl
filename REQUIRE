@@ -4,7 +4,8 @@ CollisionDetection
 Combinatorics
 Compat
 CompScienceMeshes 0.2.0
-FastClosures
+#FastClosures
+FastGaussQuadrature
 FFTW
 IterativeSolvers
 SauterSchwabQuadrature

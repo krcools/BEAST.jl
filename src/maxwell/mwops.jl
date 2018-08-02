@@ -76,12 +76,22 @@ regularpart(op::MWSingleLayer3D) = MWSingleLayer3DReg(op.gamma, op.α, op.β)
 singularpart(op::MWSingleLayer3D) = MWSingleLayer3DSng(op.gamma, op.α, op.β)
 
 
+function _legendre(n,a,b)
+    x, w = FastGaussQuadrature.gausslegendre(n)
+    w .*= (b-a)/2
+    x = (x.+1)/2*(b-a).+a
+    collect(zip(x,w))
+end
+
 function quaddata(op::MaxwellOperator3D, g::RefSpace, f::RefSpace, tels, bels)
 
     tqd = quadpoints(g, tels, (2,6))
     bqd = quadpoints(f, bels, (3,7))
 
-    return QuadData(tqd, bqd)
+    a, b = 0.0, 1.0
+    leg = (_legendre(3,a,b), _legendre(4,a,b), _legendre(5,a,b),)
+
+    return (tpoints=tqd, bpoints=bqd, gausslegendre=leg)
 end
 
 
@@ -144,15 +154,6 @@ function select_quadrule()
              @info "Cannot find package `BogaertInts10`. Default quadrature strategy used."
              @eval quadrule(op::MaxwellOperator3D, g::RTRefSpace, f::RTRefSpace, i, τ, j, σ, qd) = qrss(op, g, f, i, τ, j, σ, qd)
          end
-
-        #  try
-        #      Pkg.installed("SauterSchwabQuadrature")
-        #      info("`SauterSchwabQuadrature` detected.")
-        #      @eval using SauterSchwabQuadrature
-        #      @eval include("sauterschwabints.jl")
-        #      @eval quadrule(op::MaxwellOperator3D, g::RTRefSpace, f::RTRefSpace, i, τ, j, σ, qd) = q(op, g, f, i, τ, j, σ, qd)
-        # catch
-        # end
 end
 select_quadrule()
 
@@ -164,7 +165,6 @@ function qrss(op, g, f, i, τ, j, σ, qd)
 
     # decides on whether to use singularity extraction
     xtol = 0.2
-
     k = norm(op.gamma)
 
     hits = 0
@@ -181,9 +181,9 @@ function qrss(op, g, f, i, τ, j, σ, qd)
     end
 
 
-  hits == 3   && return SauterSchwabQuadrature.CommonFace(3)
-  hits == 2   && return SauterSchwabQuadrature.CommonEdge(3)
-  hits == 1   && return SauterSchwabQuadrature.CommonVertex(3)
+  hits == 3   && return SauterSchwabQuadrature.CommonFace(qd.gausslegendre[3])
+  hits == 2   && return SauterSchwabQuadrature.CommonEdge(qd.gausslegendre[2])
+  hits == 1   && return SauterSchwabQuadrature.CommonVertex(qd.gausslegendre[1])
   xmin < xtol && return WiltonSEStrategy(
     qd.tpoints[1,i],
     DoubleQuadStrategy(

@@ -130,7 +130,7 @@ function quaddata(operator::SingleLayerTrace,
   tqd = quadpoints(localtestbasis,  testelements,  (10,))
   bqd = quadpoints(localtrialbasis, trialelements, (8,))
 
-  return QuadData(tqd, bqd)
+  return (tpoints=tqd, bpoints=bqd)
 end
 
 function quadrule(op::SingleLayerTrace, g::LagrangeRefSpace, f::LagrangeRefSpace, i, τ, j, σ, qd)

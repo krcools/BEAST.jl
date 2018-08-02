@@ -7,6 +7,7 @@ using SharedArrays
 using SparseArrays
 
 using SauterSchwabQuadrature
+using FastGaussQuadrature
 
 import LinearAlgebra: cross, dot
 import LinearAlgebra: ×, ⋅

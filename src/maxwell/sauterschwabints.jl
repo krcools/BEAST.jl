@@ -1,5 +1,3 @@
-using FastClosures
-
 struct MWSL3DIntegrand{C,O,L}
         test_triangular_element::C
         trial_triangular_element::C

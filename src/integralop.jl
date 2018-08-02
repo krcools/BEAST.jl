@@ -358,7 +358,7 @@ end end end end end
 
 
 
-mutable struct QuadData{WPV1,WPV2}
-  tpoints::Matrix{Vector{WPV1}}
-  bpoints::Matrix{Vector{WPV2}}
-end
+# mutable struct QuadData{WPV1,WPV2}
+#   tpoints::Matrix{Vector{WPV1}}
+#   bpoints::Matrix{Vector{WPV2}}
+# end

@@ -31,7 +31,7 @@ t1, t2 = solve(te_efie), solve(te_mfie)
 
 
 using Plots
-plotlyjs()
+#plotlyjs()
 
 nx = numfunctions(X);
 Δα = 2π/nx; α = (collect(1:nx) - 0.5) * Δα

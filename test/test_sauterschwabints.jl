@@ -38,7 +38,7 @@ SE_strategy = BEAST.WiltonSEStrategy(
 	bqd[1,1],
   ),
 )
-SS_strategy = SauterSchwabQuadrature.CommonFace(8)
+SS_strategy = SauterSchwabQuadrature.CommonFace(BEAST._legendre(8,0.0,1.0))
 
 z_se = zeros(3,3)
 z_ss = zeros(3,3)
@@ -62,7 +62,7 @@ SE_strategy = BEAST.WiltonSEStrategy(
   BEAST.DoubleQuadStrategy(
 	tqd[1,1],
 	bqd[1,2]))
-SS_strategy = SauterSchwabQuadrature.CommonVertex(12)
+SS_strategy = SauterSchwabQuadrature.CommonVertex(BEAST._legendre(12,0.0,1.0))
 
 z_cv_se_1 = zeros(3,3)
 z_cv_ss_1 = zeros(3,3)
@@ -106,7 +106,7 @@ SE_strategy = BEAST.WiltonSEStrategy(
     BEAST.DoubleQuadStrategy(
         tqd[1,1],
         bqd[1,2]))
-SS_strategy = SauterSchwabQuadrature.CommonEdge(12)
+SS_strategy = SauterSchwabQuadrature.CommonEdge(BEAST._legendre(12,0.0,1.0))
 
 z_ce_se_1 = zeros(3,3)
 z_ce_ss_1 = zeros(3,3)
@@ -132,7 +132,7 @@ BEAST.momintegrals!(op3, rt, rt, t1, t2, z_ce_ss_3, SS_strategy)
 @show norm(z_ce_se_3 - z_ce_ss_3)
 @test z_ce_se_3 ≈ z_ce_ss_3 atol=1e-5
 
-SS_strategy = SauterSchwabQuadrature.CommonEdge(18)
+SS_strategy = SauterSchwabQuadrature.CommonEdge(BEAST._legendre(18,0.0,1.0))
 z_ce_ss_3_18 = zeros(3,3)
 BEAST.momintegrals!(op3, rt, rt, t1, t2, z_ce_ss_3_18, SS_strategy)
 @show norm(z_ce_ss_3 - z_ce_ss_3_18)

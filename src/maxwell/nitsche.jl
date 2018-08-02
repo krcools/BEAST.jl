@@ -21,7 +21,8 @@ function quaddata(operator::SingleLayerTrace,
   tqd = quadpoints(localtestbasis,  testelements,  (10,))
   bqd = quadpoints(localtrialbasis, trialelements, (8,))
 
-  return QuadData(tqd, bqd)
+  #return QuadData(tqd, bqd)
+  return (tpoints=tqd, bpoints=bqd)
 end
 
 # Use numerical quadrature for now
