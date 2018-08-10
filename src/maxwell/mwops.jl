@@ -1,9 +1,3 @@
-#import Base.cross
-import WiltonInts84
-
-
-
-#struct sauterschwabstrategy <: Any end
 abstract type MaxwellOperator3D <: IntegralOperator end
 abstract type MaxwellOperator3DReg <: MaxwellOperator3D end
 
@@ -143,21 +137,21 @@ end
 
 
 
-function select_quadrule()
-        try
-             Pkg.installed("BogaertInts10")
-             @eval using BogaertInts10
-             @info "`BogaertInts10` detected: enhanced quadrature enabled."
-             @eval include("bogaertints.jl")
-             @eval quadrule(op::MaxwellOperator3D, g::RTRefSpace, f::RTRefSpace, i, τ, j, σ, qd) = qrib(op, g, f, i, τ, j, σ, qd)
-         catch
-             @info "Cannot find package `BogaertInts10`. Default quadrature strategy used."
-             @eval quadrule(op::MaxwellOperator3D, g::RTRefSpace, f::RTRefSpace, i, τ, j, σ, qd) = qrss(op, g, f, i, τ, j, σ, qd)
-         end
-end
-select_quadrule()
+# function select_quadrule()
+#         try
+#              Pkg.installed("BogaertInts10")
+#              @eval using BogaertInts10
+#              @info "`BogaertInts10` detected: enhanced quadrature enabled."
+#              @eval include("bogaertints.jl")
+#              @eval quadrule(op::MaxwellOperator3D, g::RTRefSpace, f::RTRefSpace, i, τ, j, σ, qd) = qrib(op, g, f, i, τ, j, σ, qd)
+#          catch
+#              @info "Cannot find package `BogaertInts10`. Default quadrature strategy used."
+#              @eval quadrule(op::MaxwellOperator3D, g::RTRefSpace, f::RTRefSpace, i, τ, j, σ, qd) = qrss(op, g, f, i, τ, j, σ, qd)
+#          end
+# end
+# select_quadrule()
 
-
+quadrule(op::MaxwellOperator3D, g::RTRefSpace, f::RTRefSpace, i, τ, j, σ, qd) = qrss(op, g, f, i, τ, j, σ, qd)
 
 function qrss(op, g, f, i, τ, j, σ, qd)
     # defines coincidence of points
