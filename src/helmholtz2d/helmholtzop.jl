@@ -31,13 +31,9 @@ end
 
 function quaddata(op::HelmholtzOperator2D, g::LagrangeRefSpace, f::LagrangeRefSpace, tels, bels)
 
-  # tqd = quaddata(g, tels, (4,))
-  # bqd = quaddata(f, bels, (3,))
-
   tqd = quadpoints(g, tels, (4,))
   bqd = quadpoints(f, bels, (3,))
 
-  #return QuadData(tqd, bqd)
   return (tpoints=tqd, bpoints=bqd)
 end
 

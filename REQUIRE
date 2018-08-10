@@ -1,13 +1,12 @@
 julia 0.7
-WiltonInts84 0.1.0
-CollisionDetection
+WiltonInts84 0.2.0
+CollisionDetection 0.1.0
 Combinatorics
 Compat
 CompScienceMeshes 0.2.0
-#FastClosures
 FastGaussQuadrature
 FFTW
 IterativeSolvers
-SauterSchwabQuadrature
+SauterSchwabQuadrature 2.1.0
 SpecialFunctions
 StaticArrays

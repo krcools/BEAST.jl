@@ -93,9 +93,10 @@ struct ADIterator{T}
     ad::AssemblyData{T}
 end
 
-Base.start(it::ADIterator) = 1
-Base.next(it::ADIterator, i) = (it.ad.data[i,it.r,it.c], i+1)
-Base.done(it::ADIterator, i) = (it.I < i || it.ad.data[i,it.r,it.c][1] < 1)
+function Base.iterate(it::ADIterator, i = 1)
+    (it.I < i || it.ad.data[i,it.r,it.c][1] < 1) && return nothing
+    (it.ad.data[i,it.r,it.c], i+1)
+end
 
 
 function add!(bf::Vector{Shape{T}}, cellid, refid, coeff) where T
