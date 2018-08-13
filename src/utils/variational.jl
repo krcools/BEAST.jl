@@ -1,6 +1,6 @@
 module Variational
 
-import Base: start, done, next
+# import Base: start, done, next
 
 export transposecalls!
 
@@ -29,14 +29,26 @@ mutable struct DepthFirstState
     idx
 end
 
-
-function start(itr::DepthFirst)
+function Base.iterate(itr::DepthFirst)
     head = DepthFirstState(itr.xp, nothing, -1)
-    return DepthFirstState(itr.xp, head, 0)
+    state = DepthFirstState(itr.xp, head, 0)
+    return iterate(itr, state)
 end
 
 
-done(itr::DepthFirst, state::DepthFirstState) = (state.par == nothing)
+# function start(itr::DepthFirst)
+#     head = DepthFirstState(itr.xp, nothing, -1)
+#     return DepthFirstState(itr.xp, head, 0)
+# end
+
+
+function Base.iterate(itr::DepthFirst, state)
+
+    state.par == nothing && return nothing
+    return next(itr, state)
+end
+
+# done(itr::DepthFirst, state::DepthFirstState) = (state.par == nothing)
 
 
 function next(itr::DepthFirst, state::DepthFirstState)
