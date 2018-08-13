@@ -294,7 +294,7 @@ function duallagrangec0d1(mesh, refined, jct_pred, ::Type{Val{3}})
 
         # get the index in fine.vertices of the centroid of coarse_cell
         centroid = barytocart(coarse_cell, uv_ctr)
-        I = find(fine_vertices, centroid)
+        I = CollisionDetection.find(fine_vertices, centroid)
         @assert length(I) == 1
         centroid_id = I[1]
 
@@ -308,7 +308,7 @@ function duallagrangec0d1(mesh, refined, jct_pred, ::Type{Val{3}})
             uv_face_ctr = uv_face_ctr[1:end-1]
 
             face_ctr = barytocart(coarse_cell, uv_face_ctr)
-            I = find(fine_vertices, face_ctr)
+            I = CollisionDetection.find(fine_vertices, face_ctr)
             @assert length(I) == 1
             face_center_ids[f] = I[1]
         end

@@ -29,7 +29,9 @@ mutable struct DepthFirstState
     idx
 end
 
-function Base.iterate(itr::DepthFirst)
+import Base: iterate
+
+function iterate(itr::DepthFirst)
     head = DepthFirstState(itr.xp, nothing, -1)
     state = DepthFirstState(itr.xp, head, 0)
     return iterate(itr, state)
@@ -42,7 +44,7 @@ end
 # end
 
 
-function Base.iterate(itr::DepthFirst, state)
+function iterate(itr::DepthFirst, state)
 
     state.par == nothing && return nothing
     return next(itr, state)
