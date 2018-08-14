@@ -1,7 +1,7 @@
 using BEAST, CompScienceMeshes, MieSeries
 
-Θ = linspace(0, π, 100)
-Φ = linspace(0, 0,   1)
+Θ = range(0, stop=π, length=100)
+Φ = 0.0
 P = [ [cos(ϕ)*sin(θ), sin(ϕ)*sin(θ), cos(θ)] for θ in Θ for ϕ in Φ]
 
 ## Solve the scatering problem using BEM

@@ -9,7 +9,7 @@ mutable struct subdBasis{T,M,P} <: Space{T}
 end
 
 function subset(s::S,I) where {S<:subdBasis}
-    warn("No parallel assembly supported when using subdivision bases!")
+    @warn "No parallel assembly supported when using subdivision bases!"
     return s
 end
 
@@ -56,13 +56,13 @@ end
 
 function assembly(subdG::subdMesh)
     nelem = length(subdG.elements)
-    assemblydata = Array{Array{Array{Tuple}}}(nelem)
-    ElementCharts = Array{subd_chart}(nelem)
+    assemblydata = Array{Array{Array{Tuple}}}(undef,nelem)
+    ElementCharts = Array{subd_chart}(undef,nelem)
     for e = 1:nelem
         cha = chart(subdG,e)
         ringnodes = cha.RingNodes
         nnodes = length(ringnodes)
-        line=Array{Array{Tuple}}(nnodes)
+        line=Array{Array{Tuple}}(undef,nnodes)
         for inode = 1:nnodes
             Node = ringnodes[inode]
             entries=[]

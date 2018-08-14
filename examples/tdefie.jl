@@ -5,8 +5,6 @@ sol = 5.0
 Δt, Nt = 0.12/sol,400
 
 D, Δx = 1.0, 0.25
-#D, Δx = 1.0, 0.35
-#Γ = meshsphere(D, Δx)
 Γ = readmesh(joinpath(dirname(@__FILE__),"sphere2.in"))
 X = raviartthomas(Γ)
 
@@ -29,12 +27,11 @@ tdefie = @discretise T[j′,j] == -1E[j′]   j∈V  j′∈W
 xefie = solve(tdefie)
 
 Xefie, Δω, ω0 = fouriertransform(xefie, Δt, 0.0, 2)
-ω = collect(ω0 + (0:Nt-1)*Δω)
-_, i1 = findmin(abs.(ω-1.0*sol))
+ω = collect(ω0 .+ (0:Nt-1)*Δω)
+_, i1 = findmin(abs.(ω.-1.0*sol))
 
 ω1 = ω[i1]
 ue = Xefie[:,i1] / fouriertransform(gaussian)(ω1)
 
-using PlotlyJS
-fcre, geo = facecurrents(ue, X)
-t2 = patch(geo, norm.(fcre))
+using Plots
+plot(xefie[1,:])

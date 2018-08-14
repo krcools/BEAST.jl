@@ -18,7 +18,6 @@ D = connectivity(edges, faces)
 
 M = assemble(k+0.5n,Y,X)
 h = nullspace(M,0.051)
-#@assert size(h,2) == 1
 
 fcr, geo = facecurrents(h[:,end],X)
 

@@ -12,8 +12,8 @@ if postproc
 
     nx, nz = 50, 100
     xs, zs = range(-2,stop=2,length=nx), range(-4,stop=4,length=nz)
-    grid = [point(x,0,z) for x in xs, z in zs]
-    nfd = potential(MWSingleLayerField3D(wavenumber = κ), grid, u, X)
+    gridpoints = [point(x,0,z) for x in xs, z in zs]
+    nfd = potential(MWSingleLayerField3D(wavenumber = κ), gridpoints, u, X)
     nfd = reshape(nfd, (nx,nz))
-    nfd .-= E.(grid)
+    nfd .-= E.(gridpoints)
 end

@@ -29,10 +29,10 @@ pmchwt = @discretise(
 
 u = solve(pmchwt)
 
-## Post-processing
-u1 = u[1:numfunctions(X)]
-fcr, geo = facecurrents(u1,X)
+Θ, Φ = range(0.0,stop=2π,length=100), 0.0
+ffpoints = [point(cos(ϕ)*sin(θ), sin(ϕ)*sin(θ), cos(θ)) for θ in Θ for ϕ in Φ]
+farfield = potential(MWFarField3D(κ*im), ffpoints, u, X)
 
-using PlotlyJS
-p = patch(geo, norm.(fcr))
-PlotlyJS.plot(p)
+using Plots
+using LinearAlgebra
+plot(Θ,norm.(farfield))

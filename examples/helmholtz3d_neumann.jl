@@ -1,8 +1,6 @@
 using CompScienceMeshes, BEAST
 
-o, x, y, z = euclidianbasis(3)
-
-Γ = meshsphere(1.0, 0.11)
+Γ = readmesh(joinpath(@__DIR__,"sphere2.in"))
 X = lagrangec0d1(Γ)
 @show numfunctions(X)
 
@@ -10,10 +8,9 @@ X = lagrangec0d1(Γ)
 a = -1Helmholtz3D.hypersingular(gamma=γ)
 b = Helmholtz3D.doublelayer(gamma=γ) - 0.5Identity()
 
-uⁱ = Helmholtz3D.planewave(wavenumber=κ, direction=z)
+uⁱ = Helmholtz3D.planewave(wavenumber=κ, direction=ẑ)
 f = strace(uⁱ,Γ)
 g = ∂n(uⁱ)
-
 
 @hilbertspace u
 @hilbertspace v
@@ -26,6 +23,8 @@ x2 = solve(eq2)
 fcr1, geo1 = facecurrents(x1, X)
 fcr2, geo2 = facecurrents(x2, X)
 
-include(Pkg.dir("CompScienceMeshes","examples","plotlyjs_patches.jl"))
-p1 = patch(geo1, real.(norm.(fcr1)))
-p2 = patch(geo2, real.(norm.(fcr2)))
+using Plots
+using LinearAlgebra
+plot(title="Comparse 1st and 2nd kind eqs.")
+plot!(norm.(fcr1),c=:blue,label="1st")
+scatter!(norm.(fcr2),c=:red,label="2nd")

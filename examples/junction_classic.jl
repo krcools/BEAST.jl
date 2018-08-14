@@ -1,28 +1,26 @@
 using CompScienceMeshes, BEAST
-o, x, y, z = euclidianbasis(3)
 
 width, height, h = 1.0, 0.5, 0.05
 G1 = meshrectangle(width, height, h)
-G2 = CompScienceMeshes.rotate(G1, 0.5π * [1,0,0])
-G3 = CompScienceMeshes.rotate(G1, 1.0π * [1,0,0])
+G2 = CompScienceMeshes.rotate(G1, 0.5π * x̂)
+G3 = CompScienceMeshes.rotate(G1, 1.0π * x̂)
 G = weld(G1, G2, G3)
 
 X = raviartthomas(G)
 
 κ = 1.0
-E = planewavemw3d(direction=z, polarization=x, wavenumber=κ)
+E = Maxwell3D.planewave(direction=ẑ, polarization=x̂, wavenumber=κ)
 e = (n × E) × n
-T = MWSingleLayer3D(-im*κ)
+T = Maxwell3D.singlelayer(wavenumber=κ)
 
 @hilbertspace j; @hilbertspace k
-efie = @discretise T[k,j] == e[k]  j∈X k∈X
-u = solve(efie)
+efie = @discretise T[k,j]==e[k]  j∈X k∈X
+u = gmres(efie)
 
-Θ, Φ = linspace(0.0,π,7), 0.0
-ffpoints = vec([point(cos(ϕ)*sin(θ), sin(ϕ)*sin(θ), cos(θ)) for θ in Θ, ϕ in Φ])
-ff = potential(MWFarField3D(κ*im), ffpoints, u, X)
+Θ, Φ = range(0.0,stop=π,length=100), 0.0
+ffpoints = [point(cos(ϕ)*sin(θ), sin(ϕ)*sin(θ), cos(θ)) for θ in Θ for ϕ in Φ]
+farfield = potential(MWFarField3D(κ*im), ffpoints, u, X)
 
-include(Pkg.dir("CompScienceMeshes","examples","plotlyjs_patches.jl"))
-fcr, geo = facecurrents(u, X)
-p = patch(geo, real.(norm.(fcr)))
-PlotlyJS.plot(p)
+using Plots
+using LinearAlgebra
+plot(Θ,norm.(farfield))

@@ -268,7 +268,7 @@ end
 
 
 function convolve(f::TimeBasisFunction, g::TimeBasisFunction)
-    warn("BEAST.convolve only returns correct result for constant * continuous,linear")
+    @warn "BEAST.convolve only returns correct result for constant * continuous,linear"
     dt = timestep(f)
     fg = timebasisspline2(dt, numfunctions(f), scalartype(f))
     fg.polys = dt * fg.polys

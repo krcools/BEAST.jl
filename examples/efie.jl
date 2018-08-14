@@ -1,13 +1,13 @@
-using CompScienceMeshes, BEAST
+using CompScienceMeshes
+using BEAST
 
-Γ = readmesh(joinpath(dirname(@__FILE__),"sphere2.in"))
+Γ = readmesh(joinpath(@__DIR__,"sphere2.in"))
 X = raviartthomas(Γ)
 
 κ = 1.0
 t = Maxwell3D.singlelayer(wavenumber=κ)
 E = Maxwell3D.planewave(direction=ẑ, polarization=x̂, wavenumber=κ)
 e = (n × E) × n
-
 
 @hilbertspace j
 @hilbertspace k
