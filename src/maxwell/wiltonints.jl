@@ -1,3 +1,5 @@
+import WiltonInts84
+
 mutable struct WiltonSEStrategy{P,Q} <: SingularityExtractionStrategy
     outer_quad_points::P
     regularpart_quadrule::DoubleQuadStrategy{P,Q}

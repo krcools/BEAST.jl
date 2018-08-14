@@ -1,4 +1,4 @@
-using Base.Test
+using Test
 using BEAST
 using CompScienceMeshes
 
@@ -18,7 +18,7 @@ faces = skeleton(mesh, 2)
 idcs = faces.faces[1]
 verts = vertices(mesh, idcs)
 p = simplex(verts, Val{2})
-@test volume(p) == 1./8.
+@test volume(p) == 1/8
 
 edges = skeleton(mesh,1)
 @test numcells(edges) == 16
@@ -27,7 +27,7 @@ cps = cellpairs(mesh, edges)
 @test size(cps) == (2,16)
 
 # select only inner edges
-I = find(x->(x>0), cps[2,:])
+I = findall(x->(x>0), cps[2,:])
 cps = cps[:,I]
 @test size(cps) == (2,8)
 

@@ -135,7 +135,7 @@ function timebasisshiftedlagrange(dt, numfunctions, degree, T::Type=Float64)
         end
         push!(polys, f*g)
     end
-    push!(polys, 0*(t^degree))
+    push!(polys, 0*Base.power_by_squaring(t, degree))
     @assert length(polys) == degree+2
     polys = SVector{degree+2,Polynomial{degree+1,T}}(polys...)
     TimeBasisFunction{T,degree+2,degree+1,degree}(dt, numfunctions, polys)
@@ -268,7 +268,7 @@ end
 
 
 function convolve(f::TimeBasisFunction, g::TimeBasisFunction)
-    warn("BEAST.convolve only returns correct result for constant * continuous,linear")
+    @warn "BEAST.convolve only returns correct result for constant * continuous,linear"
     dt = timestep(f)
     fg = timebasisspline2(dt, numfunctions(f), scalartype(f))
     fg.polys = dt * fg.polys

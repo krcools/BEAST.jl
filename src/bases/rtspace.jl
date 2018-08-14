@@ -6,7 +6,7 @@ mutable struct RTBasis{T,M,P} <: Space{T}
   pos::Vector{P}
 end
 
-RTBasis(geo, fns) = RTBasis(geo, fns, Vector{vertextype(geo)}(length(fns)))
+RTBasis(geo, fns) = RTBasis(geo, fns, Vector{vertextype(geo)}(undef,length(fns)))
 
 positions(rt) = rt.pos
 refspace(space::RTBasis{T}) where {T} = RTRefSpace{T}()
@@ -33,8 +33,8 @@ function raviartthomas(mesh, cellpairs::Array{Int,2})
 
     # combine now the pairs of monopolar RWGs in div-conforming RWGs
     numpairs = size(cellpairs,2)
-    functions = Vector{Vector{Shape{Float64}}}(numpairs)
-    positions = Vector{vertextype(mesh)}(numpairs)
+    functions = Vector{Vector{Shape{Float64}}}(undef,numpairs)
+    positions = Vector{vertextype(mesh)}(undef,numpairs)
     for i in 1:numpairs
         if cellpairs[2,i] > 0
             c1 = cellpairs[1,i]; cell1 = mesh.faces[c1]
@@ -80,7 +80,7 @@ Returns the RT basis object.
 function raviartthomas(mesh)
     edges = skeleton(mesh, 1)
     cps = cellpairs(mesh, edges, dropjunctionpair=true)
-    ids = find(x -> x>0, cps[2,:])
+    ids = findall(x -> x>0, cps[2,:])
     raviartthomas(mesh, cps[:,ids])
 end
 
@@ -141,7 +141,7 @@ function rt_cedge(cps::Array{Int,2}, weight)
   numpairs = size(cps,2)
   @assert numpairs > 0
   weight = weight / numpairs #total current leaving and entering equal 1
-  functions =  Vector{Shape{Float64}}(numpairs) #note: not a Vector{Vector}
+  functions =  Vector{Shape{Float64}}(undef,numpairs) #note: not a Vector{Vector}
     for i in 1:numpairs
         c1 = cps[1,i]
         e1 = cps[2,i]
@@ -163,7 +163,7 @@ function rt_vedge(cps::Array{Int,2}, weight)
   numpairs = size(cps,2)
   @assert numpairs > 0
   #adjacent cells are considered a pair, so we have one less numpairs
-  functions =  Vector{Vector{Shape{Float64}}}(numpairs - 1)
+  functions =  Vector{Vector{Shape{Float64}}}(undef,numpairs - 1)
     for i in 1:numpairs
       if i < numpairs # stop when on last cellpair
         c1 = cps[1,i]; e1 = cps[2,i]
@@ -188,8 +188,8 @@ pair of ports. i.e. current leaving mesh Γ through γ₁ is accounted for in γ
 
 Returns the RT basis object.
 """
-#TODO: can include an extra argument for polarity applied to ports
 function rt_ports(Γ, γ...)
+    #TODO: can include an extra argument for polarity applied to ports
 
     T = coordtype(Γ)
 
@@ -206,7 +206,7 @@ function rt_ports(Γ, γ...)
         ce1 = rt_cedge(port1, +1.0)
         ce2 = rt_cedge(port2, -1.0)
 
-        ffs = Vector{Shape{T}}(length(ce1) + length(ce2))
+        ffs = Vector{Shape{T}}(undef,length(ce1) + length(ce2))
         ffs = [ce1;ce2]
 
         ve1 = rt_vedge(port1, +1.0)
@@ -224,17 +224,17 @@ end
 Returns the indices of the global half RWGs present in `RT`.
 `RT` is typically gotten from `rt_ports`
 """
-#TODO: use more reasonable condition to extract indices
-# or have rt_ports return indices with RTBasis
 function getindex_rtg(RT::RTBasis)
-idx=[]
-A = RT.fns
-  for i in 1:length(A)
-    if size(A[i])[1] > 2
-      push!(idx,i)
+    #TODO: use more reasonable condition to extract indices
+    # or have rt_ports return indices with RTBasis
+    idx=[]
+    A = RT.fns
+    for i in 1:length(A)
+        if size(A[i])[1] > 2
+            push!(idx,i)
+        end
     end
-  end
-  idx
+    idx
 end
 
 divergence(X::RTBasis, geo, fns) = LagrangeBasis{0,-1,1}(geo, fns, deepcopy(positions(X)))

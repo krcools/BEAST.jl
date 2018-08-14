@@ -1,7 +1,7 @@
-
+using SpecialFunctions
 
 abstract type HelmholtzOperator2D <: IntegralOperator end
-scalartype(::HelmholtzOperator2D) = Complex128
+scalartype(::HelmholtzOperator2D) = ComplexF64
 
 struct SingleLayer{T} <: HelmholtzOperator2D
     wavenumber::T
@@ -31,14 +31,10 @@ end
 
 function quaddata(op::HelmholtzOperator2D, g::LagrangeRefSpace, f::LagrangeRefSpace, tels, bels)
 
-  # tqd = quaddata(g, tels, (4,))
-  # bqd = quaddata(f, bels, (3,))
-
   tqd = quadpoints(g, tels, (4,))
   bqd = quadpoints(f, bels, (3,))
 
-  return QuadData(tqd, bqd)
-
+  return (tpoints=tqd, bpoints=bqd)
 end
 
 

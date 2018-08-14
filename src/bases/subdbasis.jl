@@ -9,7 +9,7 @@ mutable struct subdBasis{T,M,P} <: Space{T}
 end
 
 function subset(s::S,I) where {S<:subdBasis}
-    warn("No parallel assembly supported when using subdivision bases!")
+    @warn "No parallel assembly supported when using subdivision bases!"
     return s
 end
 
@@ -34,7 +34,7 @@ function subdsurface(mesh)
     subd_elements = subd_mesh.elements
     nvertices = length(vertices)
     nelem = length(subd_elements)
-    funs=Array{Vector{BEAST.Shape{Float64}}}(nvertices)
+    funs=Array{Vector{BEAST.Shape{Float64}}}(undef,nvertices)
     for i = 1 : nvertices funs[i] = [] end
     for ie = 1:nelem
         inodes = subd_elements[ie].RingNodes
@@ -56,13 +56,13 @@ end
 
 function assembly(subdG::subdMesh)
     nelem = length(subdG.elements)
-    assemblydata = Array{Array{Array{Tuple}}}(nelem)
-    ElementCharts = Array{subd_chart}(nelem)
+    assemblydata = Array{Array{Array{Tuple}}}(undef,nelem)
+    ElementCharts = Array{subd_chart}(undef,nelem)
     for e = 1:nelem
         cha = chart(subdG,e)
         ringnodes = cha.RingNodes
         nnodes = length(ringnodes)
-        line=Array{Array{Tuple}}(nnodes)
+        line=Array{Array{Tuple}}(undef,nnodes)
         for inode = 1:nnodes
             Node = ringnodes[inode]
             entries=[]

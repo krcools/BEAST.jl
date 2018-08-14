@@ -18,12 +18,27 @@ place for the 3D Helmholtz and Maxwell equations.
 
 ## Installation
 
-Installation is done simply by cloning this repo from within Julia (v0.6):
+Installing `BEAST` is done by entering the package manager (enter `]` at the julia REPL) and issuing:
 
-* `Pkg.clone("https://github.com/krcools/BEAST.jl")`
+```
+pkg>add BEAST
+```
 
-Prequisite packages will be pulled in automatically. In addition, some functionality requires `gmsh` to
-be installed and on the system path.
+To run the examples, the following steps are required in addition:
+
+```
+pkg> add CompScienceMeshes # For the creation of scatterer geometries
+pkg> add Plots             # For visualising the results
+pkg> add GR                # Other Plots compatible back-ends can be chosen
+```
+
+Examples can be run by:
+
+```
+julia>using BEAST
+julia>d = dirname(pathof(BEAST))
+julia>include(joinpath(d,"../examples/efie.jl"))
+```
 
 ## Hello World
 
@@ -32,19 +47,18 @@ sphere:
 
 ```julia
 using CompScienceMeshes, BEAST
-o, x, y, z = euclidianbasis(3)
 
-Γ = meshsphere(1.0, 0.25)
-RT = raviartthomas(Γ)
+d = joinpath(dirname(pathof(BEAST)),"../examples/sphere2.in")
+Γ = readmesh(d)
+X = raviartthomas(Γ)
 
 κ = 1.0
 t = Maxwell3D.singlelayer(wavenumber=κ)
-E = Maxwell3D.planewave(direction=z, polarization=x, wavenumber=κ)
+E = Maxwell3D.planewave(direction=ẑ, polarization=x̂, wavenumber=κ)
 e = (n × E) × n
 
 @hilbertspace j
 @hilbertspace k
-efie = @discretise t[k,j]==e[k]  j∈RT k∈RT
-
+efie = @discretise t[k,j]==e[k]  j∈X k∈X
 u = gmres(efie)
 ```

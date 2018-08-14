@@ -31,10 +31,9 @@ t1, t2 = solve(te_efie), solve(te_mfie)
 
 
 using Plots
-plotlyjs()
 
 nx = numfunctions(X);
-Δα = 2π/nx; α = (collect(1:nx) - 0.5) * Δα
+Δα = 2π/nx; α = (collect(1:nx) .- 0.5) * Δα
 plt1 = Plots.plot(α, real(u1), c=:blue, label="TM-EFIE")
 Plots.scatter!(α, real(u2), c=:red, m=:circle, label="TM-MFIE")
 Plots.title!("current vs. angle")

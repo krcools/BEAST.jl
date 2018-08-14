@@ -1,6 +1,6 @@
 module Variational
 
-import Base: start, done, next
+# import Base: start, done, next
 
 export transposecalls!
 
@@ -29,14 +29,28 @@ mutable struct DepthFirstState
     idx
 end
 
+import Base: iterate
 
-function start(itr::DepthFirst)
+function iterate(itr::DepthFirst)
     head = DepthFirstState(itr.xp, nothing, -1)
-    return DepthFirstState(itr.xp, head, 0)
+    state = DepthFirstState(itr.xp, head, 0)
+    return iterate(itr, state)
 end
 
 
-done(itr::DepthFirst, state::DepthFirstState) = (state.par == nothing)
+# function start(itr::DepthFirst)
+#     head = DepthFirstState(itr.xp, nothing, -1)
+#     return DepthFirstState(itr.xp, head, 0)
+# end
+
+
+function iterate(itr::DepthFirst, state)
+
+    state.par == nothing && return nothing
+    return next(itr, state)
+end
+
+# done(itr::DepthFirst, state::DepthFirstState) = (state.par == nothing)
 
 
 function next(itr::DepthFirst, state::DepthFirstState)
@@ -89,7 +103,8 @@ export hilbertspace, @hilbertspace
 export @varform, Equation
 export LinForm, LinTerm, BilForm, BilTerm
 
-import Base: +, -, *, dot, getindex, ^, print
+import Base: +, -, *, getindex, ^, print
+import LinearAlgebra: dot
 
 mutable struct HilbertVector
     idx

@@ -1,18 +1,18 @@
 using BEAST
 using CompScienceMeshes
-using Base.Test
+using Test
+using DelimitedFiles
 
 m = readmesh(joinpath(dirname(@__FILE__),"assets","sphere824.in"))
 X = raviartthomas(m)
 κ = ω = c = 1.0
 
-#fn = Pkg.dir("BEAST","test","efie_solution.txt")
 fn = joinpath(dirname(@__FILE__),"efie_solution.txt")
-u = map(x->eval(parse(x)), readcsv(fn))
+u = map(x->eval(Meta.parse(x)), readdlm(fn,','))
 
 fcr = facecurrents(u,X)
 
-T, P = linspace(0.0,π,7), 0.0
+T, P = range(0.0,stop=π,length=7), 0.0
 points = vec([point(cos(ϕ)*sin(θ), sin(ϕ)*sin(θ), cos(θ)) for θ in T, ϕ in P])
 utheta = vec([point(cos(ϕ)*cos(θ), sin(ϕ)*cos(θ), -sin(θ)) for θ in T, ϕ in P])
 uphi   = vec([point(-sin(ϕ)*sin(θ), cos(ϕ)*sin(θ), 0) for θ in T, ϕ in P])

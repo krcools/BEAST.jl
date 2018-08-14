@@ -1,5 +1,5 @@
 using BEAST
-using Base.Test
+using Test
 
 Id = ones(1,1)
 Δt = 0.05

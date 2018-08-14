@@ -1,6 +1,6 @@
 using BEAST
 using CompScienceMeshes
-using Base.Test
+using Test
 
 # function Base.length(it::BEAST.ADIterator)
 #     l = 0

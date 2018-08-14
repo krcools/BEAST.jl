@@ -1,4 +1,4 @@
-using Base.Test
+using Test
 using CompScienceMeshes, BEAST
 
 fn = joinpath(dirname(@__FILE__),"assets","sphere35.in")

@@ -1,6 +1,6 @@
 using CompScienceMeshes
 using BEAST
-using Base.Test
+using Test
 
 m = meshrectangle(1.0, 1.0, 0.5)
 b = meshsegment(1.0, 0.3, 3)
@@ -19,7 +19,7 @@ n = 0
 on_bnd = overlap_gpredicate(b)
 for i in eachindex(rwg.fns)
     length(nt.fns[i]) == 1 || continue
-    n += 1
+    global n += 1
     c = nt.fns[i][1].cellid
     edge = chart(Σ, Σ.faces[c])
     @test on_bnd(edge)
@@ -32,7 +32,7 @@ end
 ## test the scalar trace of a lgrange basis
 using CompScienceMeshes
 using BEAST
-using Base.Test
+using Test
 m = meshrectangle(1.0, 1.0, 0.5)
 b = meshsegment(1.0, 0.3, 3)
 
@@ -43,7 +43,8 @@ X = lagrangec0d1(m,b)
 @test length(X.fns[2]) == 6
 
 Y = strace(X,b)
-A = find(length(f) for f in Y.fns)
+#A = findall(length(f) for f in Y.fns)
+A = findall(length.(Y.fns) .!= 0)
 
 @test length(A) == 1
 @test length(Y.fns[1]) == 2

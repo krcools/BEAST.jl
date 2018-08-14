@@ -1,4 +1,4 @@
-using Base.Test
+using Test
 
 using CompScienceMeshes
 using BEAST
@@ -18,10 +18,10 @@ m = readmesh(fn)
 rt = raviartthomas(m)
 bc = buffachristiansen(m)
 
-G1 = zeros(Complex128, numfunctions(rt), numfunctions(rt))
+G1 = zeros(ComplexF64, numfunctions(rt), numfunctions(rt))
 BEAST.assemble_local_matched!(id, rt, rt, (v,m,n)->(G1[m,n]+=v))
 
-G2 = zeros(Complex128, numfunctions(rt), numfunctions(rt))
+G2 = zeros(ComplexF64, numfunctions(rt), numfunctions(rt))
 BEAST.assemble_local_mixed!(id, rt, rt, (v,m,n)->(G2[m,n]+=v))
 
 # G1 = BEAST.assemble_local_matched(id, rt, rt)
@@ -31,11 +31,11 @@ BEAST.assemble_local_mixed!(id, rt, rt, (v,m,n)->(G2[m,n]+=v))
 @test norm(G1-G1', Inf) ≈ 0 atol = sqrt(eps())
 @test norm(G2-G2', Inf) ≈ 0 atol = sqrt(eps())
 
-G = zeros(Complex128, numfunctions(rt), numfunctions(bc))
+G = zeros(ComplexF64, numfunctions(rt), numfunctions(bc))
 BEAST.assemble_local_mixed!(nc, rt, bc, (v,m,n)->(G[m,n]+=v))
 @test cond(G) ≈ 2.919026332637947
 
-G = zeros(Complex128, numfunctions(rt), numfunctions(rt))
+G = zeros(ComplexF64, numfunctions(rt), numfunctions(rt))
 BEAST.assemble_local_mixed!(nc, rt, rt, (v,m,n)->(G[m,n]+=v))
 @test norm(G+G',  Inf) ≈ 0 atol = sqrt(eps())
 

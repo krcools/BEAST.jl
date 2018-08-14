@@ -1,4 +1,4 @@
-using Base.Test
+using Test
 
 using CompScienceMeshes
 using BEAST
@@ -37,10 +37,10 @@ fn = joinpath(dirname(@__FILE__),"assets","sphere316.in")
 m = readmesh(fn)
 rt = raviartthomas(m)
 
-G1 = zeros(Complex128, numfunctions(rt), numfunctions(rt))
+G1 = zeros(ComplexF64, numfunctions(rt), numfunctions(rt))
 BEAST.assemble_local_matched!(id, rt, rt, (v,m,n)->(G1[m,n]+=v))
 
-G2 = zeros(Complex128, numfunctions(rt), numfunctions(rt))
+G2 = zeros(ComplexF64, numfunctions(rt), numfunctions(rt))
 BEAST.assemble_local_mixed!(id, rt, rt, (v,m,n)->(G2[m,n]+=v))
 
 # Test wether the gram matrix assembled works for

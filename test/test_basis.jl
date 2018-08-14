@@ -1,5 +1,5 @@
 ## Preamble
-using Base.Test
+using Test
 
 using CompScienceMeshes
 using BEAST
@@ -62,7 +62,7 @@ A = volume(s)
 ## Test the construction of continuous linear Lagrange elements on 2D surfaces
 using CompScienceMeshes
 using BEAST
-using Base.Test
+using Test
 
 m = meshrectangle(1.0, 1.0, 0.5, 3)
 X = lagrangec0d1(m)
@@ -76,7 +76,7 @@ x = refspace(X)
 ## test the scalar trace for Lagrange functions
 using CompScienceMeshes
 using BEAST
-using Base.Test
+using Test
 
 p1 = point(0,0,0)
 p2 = point(1,0,0)
@@ -112,7 +112,7 @@ Q = BEAST.strace(x, cell, 3, face)
 ## test Lagrange construction on Junctions
 using CompScienceMeshes
 using BEAST
-using Base.Test
+using Test
 
 m1 = meshrectangle(1.0, 0.5, 0.5)
 m2 = rotate(m1, 0.5π*[1,0,0])
@@ -125,18 +125,17 @@ x = refspace(X)
 @test length(X.fns[1]) == 9
 
 p = point(0.5, 0.0, 0.0)
-for s in X.fns[1]
-    cell = m.faces[s.cellid]
-    patch = chart(m, cell)
+for _s in X.fns[1]
+    _cell = m.faces[_s.cellid]
+    patch = chart(m, _cell)
     bary = carttobary(patch, p)
     mp = neighborhood(patch, bary)
-
 end
 
 ## Test the dual pieweise constant lagrange elemetns
 using CompScienceMeshes
 using BEAST
-using Base.Test
+using Test
 
 width, height = 1.0, 1.0
 h = 0.5
@@ -152,21 +151,21 @@ X = duallagrangecxd0(m, b)
 @test length(X.fns[2]) == 12
 
 fine = geometry(X)
-for fn in X.fns
-    n = length(fn)
-    for sh in fn
-        @test sh.refid == 1
-        cellid = sh.cellid
-        cell = fine.faces[cellid]
-        ptch = chart(fine, cell)
-        @test sh.coeff * volume(ptch) ≈ 1/n
+for _fn in X.fns
+    _n = length(_fn)
+    for _sh in _fn
+        @test _sh.refid == 1
+        cellid = _sh.cellid
+        _cell = fine.faces[cellid]
+        ptch = chart(fine, _cell)
+        @test _sh.coeff * volume(ptch) ≈ 1/_n
     end
 end
 
 ## Test the construction of dual piecewise linear, globally continuous elements
 using CompScienceMeshes
 using BEAST
-using Base.Test
+using Test
 
 m = meshrectangle(1.0, 1.0, 0.25)
 j = meshsegment(1.0, 1.0, 3)
@@ -178,12 +177,12 @@ x = refspace(X)
 
 isonjunction = inclosure_gpredicate(j)
 els, ad = BEAST.assemblydata(X)
-for p in 1:numcells(m)
-    el = els[p]
+for _p in 1:numcells(m)
+    el = els[_p]
     for r in 1:numfunctions(x)
         vert = el[r]
         isonjunction(vert) || continue
-        for (i,w) in ad[p,r]
+        for (i,w) in ad[_p,r]
             @test w == 0
         end
     end

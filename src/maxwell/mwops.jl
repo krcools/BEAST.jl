@@ -1,9 +1,3 @@
-import Base.cross
-import WiltonInts84
-
-
-
-struct sauterschwabstrategy <: Any end
 abstract type MaxwellOperator3D <: IntegralOperator end
 abstract type MaxwellOperator3DReg <: MaxwellOperator3D end
 
@@ -76,12 +70,22 @@ regularpart(op::MWSingleLayer3D) = MWSingleLayer3DReg(op.gamma, op.α, op.β)
 singularpart(op::MWSingleLayer3D) = MWSingleLayer3DSng(op.gamma, op.α, op.β)
 
 
+function _legendre(n,a,b)
+    x, w = FastGaussQuadrature.gausslegendre(n)
+    w .*= (b-a)/2
+    x = (x.+1)/2*(b-a).+a
+    collect(zip(x,w))
+end
+
 function quaddata(op::MaxwellOperator3D, g::RefSpace, f::RefSpace, tels, bels)
 
     tqd = quadpoints(g, tels, (2,6))
     bqd = quadpoints(f, bels, (3,7))
 
-    return QuadData(tqd, bqd)
+    a, b = 0.0, 1.0
+    leg = (_legendre(3,a,b), _legendre(4,a,b), _legendre(5,a,b),)
+
+    return (tpoints=tqd, bpoints=bqd, gausslegendre=leg)
 end
 
 
@@ -134,56 +138,27 @@ end
 
 
 # function select_quadrule()
-#     try
-#         Pkg.installed("BogaertInts10")
-#         info("`BogaertInts10` detected: enhanced quadrature enabled.")
-#         @eval using BogaertInts10
-#         @eval include("bogaertints.jl")
-#         @eval quadrule(op::MaxwellOperator3D, g::RTRefSpace, f::RTRefSpace, i, τ, j, σ, qd) = qrib(op, g, f, i, τ, j, σ, qd)
-#     catch
-#         info("Cannot find package `BogaertInts10`. Default quadrature strategy used.")
-#         @eval quadrule(op::MaxwellOperator3D, g::RTRefSpace, f::RTRefSpace, i, τ, j, σ, qd) = qrdf(op, g, f, i, τ, j, σ, qd)
-#     end
-#end
-#
+#         try
+#              Pkg.installed("BogaertInts10")
+#              @eval using BogaertInts10
+#              @info "`BogaertInts10` detected: enhanced quadrature enabled."
+#              @eval include("bogaertints.jl")
+#              @eval quadrule(op::MaxwellOperator3D, g::RTRefSpace, f::RTRefSpace, i, τ, j, σ, qd) = qrib(op, g, f, i, τ, j, σ, qd)
+#          catch
+#              @info "Cannot find package `BogaertInts10`. Default quadrature strategy used."
+#              @eval quadrule(op::MaxwellOperator3D, g::RTRefSpace, f::RTRefSpace, i, τ, j, σ, qd) = qrss(op, g, f, i, τ, j, σ, qd)
+#          end
+# end
 # select_quadrule()
 
+quadrule(op::MaxwellOperator3D, g::RTRefSpace, f::RTRefSpace, i, τ, j, σ, qd) = qrss(op, g, f, i, τ, j, σ, qd)
 
-function select_quadrule()
-         try
-             Pkg.installed("BogaertInts10")
-             info("`BogaertInts10` detected: enhanced quadrature enabled.")
-             @eval using BogaertInts10
-             @eval include("bogaertints.jl")
-             @eval quadrule(op::MaxwellOperator3D, g::RTRefSpace, f::RTRefSpace, i, τ, j, σ, qd) = qrib(op, g, f, i, τ, j, σ, qd)
-         catch
-             info("Cannot find package `BogaertInts10`. Default quadrature strategy used.")
-             @eval quadrule(op::MaxwellOperator3D, g::RTRefSpace, f::RTRefSpace, i, τ, j, σ, qd) = qrdf(op, g, f, i, τ, j, σ, qd)
-         end
-
-        #  try
-        #      Pkg.installed("SauterSchwabQuadrature")
-        #      info("`SauterSchwabQuadrature` detected.")
-        #      @eval using SauterSchwabQuadrature
-        #      @eval include("sauterschwabints.jl")
-        #      @eval quadrule(op::MaxwellOperator3D, g::RTRefSpace, f::RTRefSpace, i, τ, j, σ, qd) = q(op, g, f, i, τ, j, σ, qd)
-        # catch
-        # end
-end
-select_quadrule()
-
-
-
-
-
-
-function q(op, g, f, i, τ, j, σ, qd)
+function qrss(op, g, f, i, τ, j, σ, qd)
     # defines coincidence of points
     dtol = 1.0e3 * eps(eltype(eltype(τ.vertices)))
 
     # decides on whether to use singularity extraction
     xtol = 0.2
-
     k = norm(op.gamma)
 
     hits = 0
@@ -200,9 +175,9 @@ function q(op, g, f, i, τ, j, σ, qd)
     end
 
 
-  hits == 3   && return sauterschwabstrategy()
-  hits == 2   && return sauterschwabstrategy()
-  hits == 1   && return sauterschwabstrategy()
+  hits == 3   && return SauterSchwabQuadrature.CommonFace(qd.gausslegendre[3])
+  hits == 2   && return SauterSchwabQuadrature.CommonEdge(qd.gausslegendre[2])
+  hits == 1   && return SauterSchwabQuadrature.CommonVertex(qd.gausslegendre[1])
   xmin < xtol && return WiltonSEStrategy(
     qd.tpoints[1,i],
     DoubleQuadStrategy(
@@ -211,8 +186,8 @@ function q(op, g, f, i, τ, j, σ, qd)
     ),
   )
   return DoubleQuadStrategy(
-    qd.tpoints[2,i],
-    qd.bpoints[2,j],
+    qd.tpoints[1,i],
+    qd.bpoints[1,j],
   )
 
 end

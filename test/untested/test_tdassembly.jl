@@ -1,7 +1,7 @@
 using BEAST
 using CompScienceMeshes
 using WiltonInts84
-using Base.Test
+using Test
 
 
 p1 = point(0,0,0)

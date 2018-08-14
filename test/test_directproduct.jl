@@ -1,7 +1,7 @@
 using CompScienceMeshes
 using BEAST
 
-using Base.Test
+using Test
 
 m1 = meshrectangle(1.0, 1.0, 0.5)
 m2 = translate!(meshrectangle(1.0, 1.0, 0.5), point(0,0,1))

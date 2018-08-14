@@ -1,4 +1,4 @@
-using Base.Test
+using Test
 using CompScienceMeshes
 using StaticArrays
 
@@ -17,7 +17,7 @@ x = BEAST.refspace(X)
 op = BEAST.MWSingleLayer3D(κ)
 
 n = BE.numfunctions(x)
-z1 = zeros(Complex128, n, n)
+z1 = zeros(ComplexF64, n, n)
 z2 = zeros(z1)
 
 tqd = BE.quadpoints(x, [t], (12,13))
@@ -40,11 +40,11 @@ t = chart(Γ, Γ.faces[1])
 s = chart(Γ, Γ.faces[2])
 
 
-z3 = zeros(Complex128, n, n)
+z3 = zeros(ComplexF64, n, n)
 EE_strategy = BEAST.BogaertEdgePatchStrategy(13,30)
 BEAST.momintegrals!(op, x, x, t, s, z3, EE_strategy)
 
-z4 = zeros(Complex128, n, n)
+z4 = zeros(ComplexF64, n, n)
 tqd = BE.quadpoints(x, [t], (12,13))
 bqd = BE.quadpoints(x, [s], (13,))
 SE_strategy = BE.WiltonSEStrategy(
@@ -66,11 +66,11 @@ p = [
 t = simplex(p[1], p[2], p[3])
 s = simplex(p[1], p[4], p[5])
 
-z5 = zeros(Complex128, n, n)
+z5 = zeros(ComplexF64, n, n)
 EE_strategy = BEAST.BogaertPointPatchStrategy(9,10)
 BEAST.momintegrals!(op, x, x, t, s, z5, EE_strategy)
 
-z6 = zeros(Complex128, n, n)
+z6 = zeros(ComplexF64, n, n)
 tqd = BE.quadpoints(x, [t], (12,13))
 bqd = BE.quadpoints(x, [s], (13,))
 SE_strategy = BE.WiltonSEStrategy(
@@ -108,9 +108,9 @@ t3 = simplex(p[1], p[2], p[5])
 
 
 # test the edge patch integral
-z1 = zeros(Complex128, BE.numfunctions(x), BE.numfunctions(x))
-z2 = zeros(Complex128, BE.numfunctions(x), BE.numfunctions(x))
-z3 = zeros(Complex128, BE.numfunctions(x), BE.numfunctions(x))
+z1 = zeros(ComplexF64, BE.numfunctions(x), BE.numfunctions(x))
+z2 = zeros(ComplexF64, BE.numfunctions(x), BE.numfunctions(x))
+z3 = zeros(ComplexF64, BE.numfunctions(x), BE.numfunctions(x))
 
 s1 = BEAST.BogaertEdgePatchStrategy(13, 30)
 tqd = BE.quadpoints(x, [t1], (12,13))

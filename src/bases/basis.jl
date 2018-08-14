@@ -55,7 +55,8 @@ mutable struct DirectProductSpace{T} <: AbstractSpace
     factors::Vector{Space{T}}
 end
 
-import Base.cross
+export cross, ×
+
 cross(a::Space{T}, b::Space{T}) where {T} = DirectProductSpace(Space{T}[a,b])
 cross(a::DirectProductSpace{T}, b::Space{T}) where {T} = DirectProductSpace(Space{T}[a.factors; b])
 numfunctions(S::DirectProductSpace) = sum([numfunctions(s) for s in S.factors])
@@ -92,9 +93,10 @@ struct ADIterator{T}
     ad::AssemblyData{T}
 end
 
-Base.start(it::ADIterator) = 1
-Base.next(it::ADIterator, i) = (it.ad.data[i,it.r,it.c], i+1)
-Base.done(it::ADIterator, i) = (it.I < i || it.ad.data[i,it.r,it.c][1] < 1)
+function Base.iterate(it::ADIterator, i = 1)
+    (it.I < i || it.ad.data[i,it.r,it.c][1] < 1) && return nothing
+    (it.ad.data[i,it.r,it.c], i+1)
+end
 
 
 function add!(bf::Vector{Shape{T}}, cellid, refid, coeff) where T
@@ -132,51 +134,51 @@ function assemblydata(basis::Space)
 
     @assert numfunctions(basis) != 0
 
-    #T = coordtype(basis)
     T = scalartype(basis)
 
     geo = geometry(basis)
     num_cells = numcells(geo)
 
     num_bfs  = numfunctions(basis)
-    #zhaowei: should be modified
     num_refs = numfunctions(refspace(basis))
 
-    # determine the maximum number of function defined over a given cell
-    celltonum = zeros(Int, num_cells, num_refs)
-    for b in 1 : num_bfs
-        basisfunc = basisfunction(basis, b)
-        # num_refs = length(basisfunc)
-        for shape in basisfunc
-            c = shape.cellid
-            r = shape.refid
-            celltonum[c,r] += 1
-        end
-    end
+    # # determine the maximum number of function defined over a given cell
+    # celltonum = zeros(Int, num_cells, num_refs)
+    # for b in 1 : num_bfs
+    #     basisfunc = basisfunction(basis, b)
+    #     # num_refs = length(basisfunc)
+    #     for shape in basisfunc
+    #         c = shape.cellid
+    #         r = shape.refid
+    #         celltonum[c,r] += 1
+    #     end
+    # end
+    celltonum =make_celltonum(num_cells, num_refs, num_bfs, basis)
 
-    # mark the active elements, i.e. elements over which
-    # at least one function is defined.
-    active = falses(num_cells)
-    index_among_actives = fill(0, num_cells)
-    num_active_cells = 0
-    for i in 1:num_cells
-        if maximum(@view celltonum[i,:]) > 0
-            num_active_cells += 1
-            active[i] = true
-            index_among_actives[i] = num_active_cells
-        end
-    end
+    # # mark the active elements, i.e. elements over which
+    # # at least one function is defined.
+    # active = falses(num_cells)
+    # index_among_actives = fill(0, num_cells)
+    # num_active_cells = 0
+    # for i in 1:num_cells
+    #     if maximum(@view celltonum[i,:]) > 0
+    #         num_active_cells += 1
+    #         active[i] = true
+    #         index_among_actives[i] = num_active_cells
+    #     end
+    # end
+    active, index_among_actives, num_active_cells = index_actives(num_cells, celltonum)
 
     @assert num_active_cells != 0
-    E = typeof(chart(geo, first(cells(geo))))
-    elements = Vector{E}(num_active_cells)
-    j = 1
-    for (i,cell) in enumerate(cells(geo))
-        active[i] || continue
-        elements[j] = chart(geo, cell)
-        j += 1
-    end
-    #elements = map(x->chart(geo,x[2]), filter(x->x[1], zip(active, cells(geo))))
+    # E = typeof(chart(geo, first(cells(geo))))
+    # elements = Vector{E}(num_active_cells)
+    # j = 1
+    # for (i,cell) in enumerate(cells(geo))
+    #     active[i] || continue
+    #     elements[j] = chart(geo, cell)
+    #     j += 1
+    # end
+    elements = instantiate_charts(geo, num_active_cells, active)
 
     max_celltonum = maximum(celltonum)
     fill!(celltonum, 0)
@@ -194,4 +196,45 @@ function assemblydata(basis::Space)
     end
 
     return elements, AssemblyData(data)
+end
+
+
+function make_celltonum(num_cells, num_refs, num_bfs, basis)
+    celltonum = zeros(Int, num_cells, num_refs)
+    for b in 1 : num_bfs
+        basisfunc = basisfunction(basis, b)
+        for shape in basisfunc
+            c = shape.cellid
+            r = shape.refid
+            celltonum[c,r] += 1
+        end
+    end
+    return celltonum
+end
+
+function index_actives(num_cells, celltonum)
+    active = falses(num_cells)
+    index_among_actives = fill(0, num_cells)
+    num_active_cells = 0
+    for i in 1:num_cells
+        if maximum(@view celltonum[i,:]) > 0
+            num_active_cells += 1
+            active[i] = true
+            index_among_actives[i] = num_active_cells
+        end
+    end
+    return active, index_among_actives  , num_active_cells
+end
+
+
+function instantiate_charts(geo, num_active_cells, active)
+    E = typeof(chart(geo, first(cells(geo))))
+    elements = Vector{E}(undef,num_active_cells)
+    j = 1
+    for (i,cell) in enumerate(cells(geo))
+        active[i] || continue
+        elements[j] = chart(geo, cell)
+        j += 1
+    end
+    return elements
 end

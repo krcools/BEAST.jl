@@ -12,7 +12,6 @@ ffd = n × ∫_Γ j(r', t - R/c} dy
 where ``̂x`` is the unit vector in the direction of observation.
 Note that the assembly routing expects the observation directions to be normalised by the caller.
 """
-
 mutable struct MWFarField3DTD{K}
   sol::K
 end

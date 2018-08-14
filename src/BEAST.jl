@@ -1,5 +1,21 @@
 module BEAST
 
+using Distributed
+using LinearAlgebra
+using Pkg
+using SharedArrays
+using SparseArrays
+
+using SauterSchwabQuadrature
+using FastGaussQuadrature
+
+import LinearAlgebra: cross, dot
+import LinearAlgebra: ×, ⋅
+
+import SharedArrays: sdata
+
+export dot
+
 export RefSpace, numfunctions, coordtype, scalartype, assemblydata, geometry, refspace, valuetype
 export lagrangecxd0, lagrangec0d1, duallagrangec0d1
 export duallagrangecxd0
@@ -36,7 +52,6 @@ export MWDoubleLayer3D
 export PlaneWaveMW
 export TangTraceMW, CrossTraceMW
 export curl
-export sauterschwabstrategy
 export MWSingleLayerField3D
 export SingleLayerTrace
 export DoubleLayerRotatedMW3D
@@ -78,6 +93,10 @@ export PlaneWaveNeumann
 
 struct NormalVector end
 
+using CompScienceMeshes
+using Combinatorics
+using FFTW
+using SparseArrays
 
 include("utils/polynomial.jl")
 include("utils/sparsend.jl")
@@ -114,6 +133,9 @@ include("identityop.jl")
 include("integralop.jl")
 include("postproc.jl")
 
+include("quadrature/double_quadrature.jl")
+include("quadrature/singularity_extraction.jl")
+
 include("timedomain/tdintegralop.jl")
 include("timedomain/tdexcitation.jl")
 include("timedomain/motlu.jl")
@@ -125,6 +147,7 @@ include("timedomain/zdomain.jl")
 include("maxwell/mwexc.jl")
 include("maxwell/mwops.jl")
 include("maxwell/wiltonints.jl")
+include("maxwell/sauterschwabints.jl")
 include("maxwell/nxdbllayer.jl")
 include("maxwell/nitsche.jl")
 include("maxwell/farfield.jl")
@@ -153,8 +176,7 @@ include("solvers/solver.jl")
 include("solvers/lusolver.jl")
 include("solvers/itsolver.jl")
 
-using CompScienceMeshes
-using Combinatorics
+
 
 
 const x̂ = point(1,0,0)

@@ -37,8 +37,8 @@ function lagrangecxd0(mesh)
     num_cells = numcells(mesh)
 
     # create the local shapes
-    fns = Vector{Vector{Shape{Float64}}}(num_cells)
-    pos = Vector{vertextype(mesh)}(num_cells)
+    fns = Vector{Vector{Shape{Float64}}}(undef,num_cells)
+    pos = Vector{vertextype(mesh)}(undef,num_cells)
     for (i,cell) in enumerate(cells(mesh))
         fns[i] = [Shape(i, 1, 1.0)]
         pos[i] = cartesian(center(chart(mesh, cell)))
@@ -69,7 +69,7 @@ function lagrangec0d1_dirichlet(mesh)
         notonbnd[v] = false
     end
 
-    vertexlist = find(notonbnd .& .!detached)
+    vertexlist = findall(notonbnd .& .!detached)
     lagrangec0d1(mesh, vertexlist, Val{dimension(mesh)+1})
 end
 
@@ -101,7 +101,7 @@ function interior_and_junction_vertices(mesh, jct)
         end
     end
 
-    vertexlist = find(broadcast(|, onjct, notonbnd) .& broadcast(!,detached))
+    vertexlist = findall(broadcast(|, onjct, notonbnd) .& broadcast(!,detached))
 end
 
 """
@@ -119,7 +119,7 @@ function duallagrangecxd0(mesh, vertexlist::Vector)
 
     T = coordtype(mesh)
 
-    fns = Vector{Vector{Shape{T}}}(length(vertexlist))
+    fns = Vector{Vector{Shape{T}}}(undef,length(vertexlist))
     pos = Vector{vertextype(mesh)}()
 
     fine = barycentric_refinement(mesh)
@@ -193,12 +193,12 @@ function lagrangec0d1(mesh, vertexlist::Vector, ::Type{Val{3}})
         numshapes = ncells[v]
         numshapes == 0 && continue
 
-        shapes = Vector{Shape{Float64}}(numshapes)
+        shapes = Vector{Shape{Float64}}(undef,numshapes)
         for s in 1: numshapes
             c = cellids[v,s]
             cell = mesh.faces[c]
 
-            localid = findfirst(cell, v)
+            localid = something(findfirst(isequal(v), cell),0)
             @assert localid != 0
 
             shapes[s] = Shape(c, localid, 1.0)
@@ -236,7 +236,7 @@ function lagrangec0d1(mesh, vertexlist, ::Type{Val{2}})
         numshapes = ncells[v]
         numshapes == 0 && continue # skip detached vertices
 
-        shapes = Vector{Shape{Float64}}(numshapes)
+        shapes = Vector{Shape{Float64}}(undef,numshapes)
         for s in 1: numshapes
             c = cellids[v,s]
             cell = mesh.faces[c]
@@ -276,7 +276,7 @@ function duallagrangec0d1(mesh, refined, jct_pred, ::Type{Val{3}})
     T = coordtype(mesh)
     num_faces = dimension(mesh)+1
 
-    fns = Vector{Vector{Shape{T}}}(numcells(mesh))
+    fns = Vector{Vector{Shape{T}}}(undef,numcells(mesh))
     pos = Vector{vertextype(mesh)}()
 
     # store the fine mesh's vertices in an octree for fast retrieval
@@ -294,12 +294,12 @@ function duallagrangec0d1(mesh, refined, jct_pred, ::Type{Val{3}})
 
         # get the index in fine.vertices of the centroid of coarse_cell
         centroid = barytocart(coarse_cell, uv_ctr)
-        I = find(fine_vertices, centroid)
+        I = CollisionDetection.find(fine_vertices, centroid)
         @assert length(I) == 1
         centroid_id = I[1]
 
         # get the indx in fine.vertices of the centroid of the faces of coarse_cell
-        face_center_ids = Vector{Int}(num_faces)
+        face_center_ids = Vector{Int}(undef,num_faces)
         for f in 1:num_faces
 
             # prepare the barycentric coordinate
@@ -308,7 +308,7 @@ function duallagrangec0d1(mesh, refined, jct_pred, ::Type{Val{3}})
             uv_face_ctr = uv_face_ctr[1:end-1]
 
             face_ctr = barytocart(coarse_cell, uv_face_ctr)
-            I = find(fine_vertices, face_ctr)
+            I = CollisionDetection.find(fine_vertices, face_ctr)
             @assert length(I) == 1
             face_center_ids[f] = I[1]
         end
@@ -316,7 +316,7 @@ function duallagrangec0d1(mesh, refined, jct_pred, ::Type{Val{3}})
         n = vton[centroid_id]
         for c in vtoc[centroid_id,1:n]
             fine_idcs = refined.faces[c]
-            local_id = findfirst(fine_idcs, centroid_id)
+            local_id = something(findfirst(isequal(centroid_id), fine_idcs), 0)
             @assert local_id != 0
             shape = Shape(c, local_id, 1.0)
             push!(fns[i], shape)
@@ -328,7 +328,7 @@ function duallagrangec0d1(mesh, refined, jct_pred, ::Type{Val{3}})
             n = vton[v]
             for c in vtoc[v,1:n]
                 fine_idcs = refined.faces[c]
-                local_id = findfirst(fine_idcs, v)
+                local_id = something(findfirst(isequal(v), fine_idcs),0)
                 @assert local_id != 0
                 shape = Shape(c, local_id, 1/n/2)
                 push!(fns[i], shape)
@@ -341,7 +341,7 @@ function duallagrangec0d1(mesh, refined, jct_pred, ::Type{Val{3}})
             n = vton[v]
             for c in vtoc[v,1:n]
                 fine_idcs = refined.faces[c]
-                local_id = findfirst(fine_idcs, v)
+                local_id = something(findfirst(isequal(v), fine_idcs),0)
                 @assert local_id != 0
                 shape = Shape(c, local_id, 1/n/2)
                 push!(fns[i], shape)
@@ -380,17 +380,17 @@ function duallagrangec0d1(mesh, mesh2, pred, ::Type{Val{2}})
   geometry = mesh2
   cellids2, ncells2 = vertextocellmap(mesh2)
 
-  fns = Vector{Vector{Shape{T}}}(num_cells1)
+  fns = Vector{Vector{Shape{T}}}(undef,num_cells1)
   pos = Vector{vertextype(mesh)}()
   # We will iterate over the coarse mesh segments to assign all the functions to it.
   for segment_coarse in 1 : num_cells1
     # For the dual Lagrange there is a 6 shapes per segment
     numshapes = (ncells1[segment_coarse]*4) -2
-    shapes = Vector{Shape{T}}(numshapes)
+    shapes = Vector{Shape{T}}(undef,numshapes)
     # Now we will get all the smaller faces within the coarse segment
     #i.e The coose segment will have two points, and these tow points are connected to two segmesnts in the finer mesh
     # This will give us a 4 smaller faces per Dual lagrange basis, we store them first in all_faces
-    all_faces= Array{SVector{2,Int}}(4)                      # faces in the original segment (4)
+    all_faces= Array{SVector{2,Int}}(undef,4)                      # faces in the original segment (4)
     # the follwoing code get the verteciec for each coarse segment
     # then it looks for the two faces connected to each point in the finer mesh
     # if for example the segment would connect to more than two faces we will have

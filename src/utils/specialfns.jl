@@ -25,11 +25,6 @@ function  fouriertransform(g::Gaussian)
 end
 
 
-"""
-```math
-    F(w) = 1/\\sqrt{2pi} \int f(t) e^{-i ω t} dt
-```
-"""
 function fouriertransform(a::Array, dt, t0, dim=1)
     n = size(a,dim)
     dω = 2π / (n*dt)

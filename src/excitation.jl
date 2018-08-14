@@ -13,7 +13,7 @@ Assemble the vector of test coefficients corresponding to functional
 """
 function assemble(field::Functional, tfs)
 
-    b = zeros(Complex128, numfunctions(tfs))
+    b = zeros(ComplexF64, numfunctions(tfs))
     store(v,m) = (b[m] += v)
     assemble!(field, tfs, store)
     return b
@@ -77,7 +77,7 @@ end
 function celltestvalues(tshs, tcell, field, qr)
 
     num_tshs = numfunctions(tshs)
-    interactions = zeros(Complex128, num_tshs)
+    interactions = zeros(ComplexF64, num_tshs)
 
     num_oqp = length(qr)
 
@@ -104,7 +104,7 @@ function celltestvalues(tshs::subReferenceSpace, tcell, field, qr)
 
     num_oqp = length(qr)
     num_tshs = length(qr[1].value[1])
-    interactions = (Complex128, num_tshs)
+    interactions = (ComplexF64, num_tshs)
     for p in 1 : num_oqp
         mp = qr[p].point
 
@@ -113,7 +113,7 @@ function celltestvalues(tshs::subReferenceSpace, tcell, field, qr)
         fval = field(mp)
         tvals = qr[p].value
 
-        interactions = zeros(Complex128, num_tshs)
+        interactions = zeros(ComplexF64, num_tshs)
         for m in 1 : num_tshs
             tval = tvals[1][m]
 

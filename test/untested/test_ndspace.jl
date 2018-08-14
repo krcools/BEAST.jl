@@ -1,6 +1,6 @@
 using CompScienceMeshes
 using BEAST
-using Base.Test
+using Test
 
 fn = joinpath(dirname(@__FILE__),"assets","rect1.in")
 

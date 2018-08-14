@@ -1,5 +1,6 @@
 using BEAST
-using Base.Test
+using Test
+using LinearAlgebra
 
 width = 4.0
 delay = 6.0
@@ -13,7 +14,7 @@ n = length(x)
 y = g.(x)
 
 Y, dω, ω0 = BEAST.fouriertransform(y, dx, x0)
-ω = collect(ω0 + (0:n-1)*dω)
+ω = collect(ω0 .+ (0:n-1)*dω)
 Z = G.(ω)
 
 # using Plots

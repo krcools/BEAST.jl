@@ -1,4 +1,4 @@
-using Base.Test
+using Test
 #using LinearForms
 using CompScienceMeshes
 using BEAST
@@ -21,7 +21,10 @@ y = ntrace(X,γ)
 Z = assemble(S,y,x)
 
 # test for the correct sparsity pattern
-I, J, V = findnz(Z)
+# I, J, V = findall(!iszero, Z)
+Q = findall(!iszero, Z)
+I = getindex.(Q,1)
+J = getindex.(Q,2)
 @test length(unique(I)) == 4
 @test length(unique(J)) == 44
 
@@ -29,7 +32,7 @@ I, J, V = findnz(Z)
 ## test the acutal value of the penalty terms
 using CompScienceMeshes
 using BEAST
-using Base.Test
+using Test
 
 p1 = point(0,0,0)
 p2 = point(1,0,0)
@@ -75,20 +78,20 @@ Y = ntrace(X,boundary(m))
 
 @test numfunctions(D) == 3
 @test isa(refspace(X), BEAST.RTRefSpace)
-for f in D.fns
-    @test length(f) == 1
-    @test f[1].cellid == 1
-    @test f[1].refid == 1
-    @test f[1].coeff ≈ (1 / volume(sx))
+for _f in D.fns
+    @test length(_f) == 1
+    @test _f[1].cellid == 1
+    @test _f[1].refid == 1
+    @test _f[1].coeff ≈ (1 / volume(sx))
 end
 
 Σ = geometry(Y)
 @test numfunctions(Y) == 3
 @test isa(refspace(Y), BEAST.LagrangeRefSpace)
-for f in Y.fns
-    @test length(f) == 1
-    @test 0 < f[1].cellid < 4
-    seg = chart(Σ, Σ.faces[f[1].cellid])
-    @test f[1].refid == 1
-    @test f[1].coeff ≈ (1 / volume(seg))
+for _f in Y.fns
+    @test length(_f) == 1
+    @test 0 < _f[1].cellid < 4
+    seg = chart(Σ, Σ.faces[_f[1].cellid])
+    @test _f[1].refid == 1
+    @test _f[1].coeff ≈ (1 / volume(seg))
 end

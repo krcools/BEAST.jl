@@ -1,7 +1,14 @@
 # write your own tests here
+
+using StaticArrays
+
 module PkgTests
 
-using Base.Test
+using Distributed
+using LinearAlgebra
+using SparseArrays
+using Test
+using Pkg
 
 import BEAST
 
@@ -23,6 +30,7 @@ include("test_vector_gram.jl")
 include("test_assemblerow.jl")
 
 include("test_wiltonints.jl")
+include("test_sauterschwabints.jl")
 include("test_nitsche.jl")
 include("test_nitschehh3d.jl")
 
@@ -35,10 +43,10 @@ include("test_farfield.jl")
 
 try
     Pkg.installed("BogaertInts10")
-    info("`BogaertInts10` detected. Including relevant tests.")
+    @info "`BogaertInts10` detected. Including relevant tests."
     include("test_bogaertints.jl")
 catch
-    info("`Could not load BogaertInts10`. Related tests skipped.")
+    @info "`Could not load BogaertInts10`. Related tests skipped."
 end
 
 

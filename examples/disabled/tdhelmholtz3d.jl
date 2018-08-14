@@ -8,7 +8,7 @@ S = BEAST.HH3DSingleLayerTDBIO(c)
 
 width, delay, scaling = 8.0, 12.0, 1.0
 gaussian = creategaussian(width, delay, scaling)
-e = planewave(point(0,0,1), c, gaussian)
+e = BEAST.planewave(point(0,0,1), c, gaussian)
 
 X = lagrangecxd0(G)
 

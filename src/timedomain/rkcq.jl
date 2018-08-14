@@ -65,9 +65,9 @@ function assemble(rkcq :: RungeKuttaConvolutionQuadrature,
 	M = numfunctions(test_spatial_basis);
 	N = numfunctions(trial_spatial_basis);
 	Tz = promote_type(scalartype(rkcq), scalartype(testfns), scalartype(trialfns));
-	Zz = Vector{Array{Tz,2}}(Qmax);
-	blocksEigenvalues = Vector{Array{Tz,2}}(p);
-	tmpDiag = Vector{Tz}(p);
+	Zz = Vector{Array{Tz,2}}(undef,Qmax);
+	blocksEigenvalues = Vector{Array{Tz,2}}(undef,p);
+	tmpDiag = Vector{Tz}(undef,p);
 	for q = 0:Qmax-1
 		# Build a temporary matrix for each eigenvalue
 		s = laplace_to_z(rho, q, Q, Δt, A, b);

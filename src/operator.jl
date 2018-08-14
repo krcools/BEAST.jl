@@ -123,7 +123,7 @@ function assemble!(operator::Operator, test_functions::Space, trial_functions::S
     if length(P) > 1; P = P[2:end]; end
     numchunks = length(P)
     @assert numchunks >= 1
-    splits = [round(Int,s) for s in linspace(0, numfunctions(test_functions), numchunks+1)]
+    splits = [round(Int,s) for s in range(0, stop=numfunctions(test_functions), length=numchunks+1)]
 
     T = typeof(test_functions)
     S = eltype(test_functions.fns)
@@ -138,6 +138,32 @@ function assemble!(operator::Operator, test_functions::Space, trial_functions::S
         end
     end
 
+end
+
+
+function assemble_st!(operator::Operator, test_functions::Space, trial_functions::Space, store)
+
+    # This method should only be called for `atomic` discrete operators, this means
+    # in particular that the spaces of test and trial functions are fully conforming
+    # to the Space concept and that the operator/space combinations conform the
+    # concept implicitly defined by the assemble! function in itegralop.jl
+    # (no more transposes or repositioning in a larger system for example)
+
+    @warn "Parallel assembly support disabled."
+
+    P = procs()
+
+    @assert length(P) == 1
+
+    if length(P) > 1; P = P[2:end]; end
+    numchunks = length(P)
+    @assert numchunks >= 1
+    splits = [round(Int,s) for s in linspace(0, numfunctions(test_functions), numchunks+1)]
+
+    T = typeof(test_functions)
+    S = eltype(test_functions.fns)
+
+    assemblechunk!(operator, test_functions, trial_functions, store)
 end
 
 

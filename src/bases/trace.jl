@@ -1,4 +1,4 @@
-
+using SparseArrays
 
 """
     ntrace(X::Space, γ::Mesh)
@@ -36,7 +36,7 @@ function ntrace(X::Space, γ)
     Γ = geo
     Σ = skeleton(Γ,1)
 
-    D = transpose(connectivity(Σ, Γ, abs))
+    D = copy(transpose(connectivity(Σ, Γ, abs)))
     rows, vals = rowvals(D), nonzeros(D)
 
     T = scalartype(X)
@@ -86,7 +86,7 @@ function strace(X::Space, γ, dim1::Type{Val{2}})
     Σ = skeleton(Γ,1)
 
     # Allows for quick retrieval of the faces in Σ in a given cell of Γ.
-    D = transpose(connectivity(Σ, Γ, abs))
+    D = copy(transpose(connectivity(Σ, Γ, abs)))
     rows, vals = rowvals(D), nonzeros(D)
 
     T = scalartype(X)

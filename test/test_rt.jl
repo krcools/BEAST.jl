@@ -1,7 +1,7 @@
 using CompScienceMeshes
 using BEAST
 
-using Base.Test
+using Test
 using StaticArrays
 
 T = Float64
@@ -14,7 +14,7 @@ function shapevals(ϕ, ts)
     numpoints = length(ts)
     numshapes = numfunctions(ϕ)
 
-    y = Array{P}(numshapes, numpoints)
+    y = Array{P}(undef, numshapes, numpoints)
     for i in 1 : numpoints
         t = ts[i]
         u = ϕ(t)

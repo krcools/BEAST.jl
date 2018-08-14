@@ -13,10 +13,10 @@ end
 
 Banded3D(k0,k1,data::Array{T}) where {T} = Banded3D{T}(k0,k1,data)
 
-import Base: size, getindex, setindex!, linearindexing
+import Base: size, getindex, setindex!
 
 size(A::Banded3D) = size(A.data)
-#linearindexing{T<:Banded3D}(::Type{T}) = Base.LinearSlow()
+
 function getindex(A::Banded3D, m::Int, n::Int, k::Int)
     (A.k0[m,n] <= k <= A.k1[m,n]) || return zero(eltype(A.data))
     A.data[m,n,k-A.k0[m,n]+1]
