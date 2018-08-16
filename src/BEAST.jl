@@ -115,6 +115,7 @@ include("bases/ndlocal.jl")
 
 include("bases/lagrange.jl")
 include("bases/rtspace.jl")
+include("bases/rtxspace.jl")
 include("bases/bcspace.jl")
 include("bases/ndspace.jl")
 

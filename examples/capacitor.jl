@@ -1,4 +1,6 @@
-using BEAST, CompScienceMeshes
+using BEAST
+using CompScienceMeshes
+using LinearAlgebra
 
 # define geometry & material parameters
 f₀= 3.0e6 # 3 GHz

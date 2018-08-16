@@ -18,6 +18,8 @@ include("test_basis.jl")
 include("test_directproduct.jl")
 include("test_raviartthomas.jl")
 include("test_rt.jl")
+include("test_rtx.jl")
+
 include("test_dvg.jl")
 include("test_bcspace.jl")
 include("test_trace.jl")
