@@ -11,8 +11,8 @@ function (f::BDMRefSpace)(p)
     d = 1/j
 
     return @SVector[
-        (value=(u+v-1)*tu/j,   divergence=d),
         (value=(-v*tu+v*tv)/j, divergence=d),
+        (value=(u+v-1)*tu/j,   divergence=d),
         (value=(u+v-1)*tv/j,   divergence=d),
         (value=(u*tu-u*tv)/j,  divergence=d),
         (value=u*tu/j,         divergence=d),
