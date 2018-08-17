@@ -1,4 +1,4 @@
-mutable struct RTRefSpace{T} <: RefSpace{T,3} end
+struct RTRefSpace{T} <: RefSpace{T,3} end
 
 valuetype(ref::RTRefSpace{T}, charttype) where {T} = SVector{3,Tuple{Pt{universedimension(charttype),T},T}}
 

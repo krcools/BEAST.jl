@@ -56,8 +56,9 @@ function (igd::MWSL3DIntegrand)(u,v)
             dot(f3,G3) + c3*H3,)
 end
 
+const TriVectorSpace = Union{RTRefSpace, BDMRefSpace}
 function momintegrals!(op::MWSingleLayer3D,
-    test_local_space::RTRefSpace, trial_local_space::RTRefSpace,
+    test_local_space::TriVectorSpace, trial_local_space::TriVectorSpace,
     test_triangular_element, trial_triangular_element, out, strat::SauterSchwabStrategy)
 
     I, J, K, L = SauterSchwabQuadrature.reorder(

@@ -22,6 +22,7 @@ export duallagrangecxd0
 export lagdimension
 export restrict
 export raviartthomas, raowiltonglisson, positions
+export brezzidouglasmarini
 export portcells, rt_ports, getindex_rtg, subset
 export StagedTimeStep
 export subdsurface,subdBasis,assemblydata,refspace
@@ -109,15 +110,17 @@ include("bases/trace.jl")
 include("bases/restrict.jl")
 include("bases/divergence.jl")
 
-include("bases/laglocal.jl")
-include("bases/rtlocal.jl")
-include("bases/ndlocal.jl")
+include("bases/local/laglocal.jl")
+include("bases/local/rtlocal.jl")
+include("bases/local/ndlocal.jl")
+include("bases/local/bdmlocal.jl")
 
 include("bases/lagrange.jl")
 include("bases/rtspace.jl")
 include("bases/rtxspace.jl")
 include("bases/bcspace.jl")
 include("bases/ndspace.jl")
+include("bases/bdmdiv.jl")
 
 
 include("bases/subdbasis.jl")
