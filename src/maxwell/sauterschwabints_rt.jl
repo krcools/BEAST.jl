@@ -56,9 +56,8 @@ function (igd::MWSL3DIntegrand)(u,v)
             dot(f3,G3) + c3*H3,)
 end
 
-const TriVectorSpace = Union{RTRefSpace, BDMRefSpace}
 function momintegrals!(op::MWSingleLayer3D,
-    test_local_space::TriVectorSpace, trial_local_space::TriVectorSpace,
+    test_local_space::RTRefSpace, trial_local_space::RTRefSpace,
     test_triangular_element, trial_triangular_element, out, strat::SauterSchwabStrategy)
 
     I, J, K, L = SauterSchwabQuadrature.reorder(
@@ -75,57 +74,6 @@ function momintegrals!(op::MWSingleLayer3D,
         trial_triangular_element.vertices[J[2]],
         trial_triangular_element.vertices[J[3]])
 
-    # function igd(u,v)
-    #
-    #     α = op.α
-    #     β = op.β
-    #     γ = op.gamma
-    #
-    #     x = neighborhood(test_triangular_element,u)
-    #     y = neighborhood(trial_triangular_element,v)
-    #
-    #     r = cartesian(x) - cartesian(y)
-    #     R = norm(r)
-    #     G = exp(-γ*R)/(4π*R)
-    #
-    #     f = test_local_space(x)
-    #     g = trial_local_space(y)
-    #
-    #     jx = jacobian(x)
-    #     jy = jacobian(y)
-    #     j = jx*jy
-    #
-    #     αjG = α*j*G
-    #     βjG = β*j*G
-    #
-    #     G1 = αjG*g[1][1]
-    #     G2 = αjG*g[2][1]
-    #     G3 = αjG*g[3][1]
-    #
-    #     H1 = βjG*g[1][2]
-    #     H2 = βjG*g[2][2]
-    #     H3 = βjG*g[3][2]
-    #
-    #     f1 = f[1][1]
-    #     f2 = f[2][1]
-    #     f3 = f[3][1]
-    #
-    #     c1 = f[1][2]
-    #     c2 = f[2][2]
-    #     c3 = f[3][2]
-    #
-    #     SMatrix{3,3}(
-    #         dot(f1,G1) + c1*H1,
-    #         dot(f2,G1) + c2*H1,
-    #         dot(f3,G1) + c3*H1,
-    #         dot(f1,G2) + c1*H2,
-    #         dot(f2,G2) + c2*H2,
-    #         dot(f3,G2) + c3*H2,
-    #         dot(f1,G3) + c1*H3,
-    #         dot(f2,G3) + c2*H3,
-    #         dot(f3,G3) + c3*H3,)
-    # end
-
     igd = MWSL3DIntegrand(test_triangular_element, trial_triangular_element,
         op, test_local_space, trial_local_space)
     G = sauterschwab_parameterized(igd, strat)
@@ -134,10 +82,6 @@ function momintegrals!(op::MWSingleLayer3D,
             out[i,j] += G[K[i],L[j]]
         end
     end
-    # out .+= [
-    #     G[K[1],L[1]] G[K[1],L[2]] G[K[1],L[3]]
-    #     G[K[2],L[1]] G[K[2],L[2]] G[K[2],L[3]]
-    #     G[K[3],L[1]] G[K[3],L[2]] G[K[3],L[3]] ]
 
     nothing
 end
@@ -213,50 +157,6 @@ function momintegrals!(op::MWDoubleLayer3D,
         trial_triangular_element.vertices[J[1]],
         trial_triangular_element.vertices[J[2]],
         trial_triangular_element.vertices[J[3]])
-
-    # γ = op.gamma
-    #
-    # function igd(u,v)
-    #
-    #     x = neighborhood(test_triangular_element,u)
-    #     y = neighborhood(trial_triangular_element,v)
-    #
-    #     r = cartesian(x) - cartesian(y)
-    #     R = norm(r)
-    #
-    #     expn = exp(-γ*R)
-    #     G = expn / (4π*R)
-    #     GG = -(γ + 1/R) * G / R * r
-    #     T = @SMatrix [
-    #         0 -GG[3] GG[2]
-    #         GG[3] 0 -GG[1]
-    #         -GG[2] GG[1] 0 ]
-    #
-    #     f = test_local_space(x)
-    #     g = trial_local_space(y)
-    #
-    #     jx = jacobian(x)
-    #     jy = jacobian(y)
-    #
-    #     T1 = T*g[1][1]
-    #     T2 = T*g[2][1]
-    #     T3 = T*g[3][1]
-    #
-    #     f1 = f[1][1]
-    #     f2 = f[2][1]
-    #     f3 = f[3][1]
-    #
-    #     jx*jy*SMatrix{3,3}(
-    #         dot(f1, T1),
-    #         dot(f2, T1),
-    #         dot(f3, T1),
-    #         dot(f1, T2),
-    #         dot(f2, T2),
-    #         dot(f3, T2),
-    #         dot(f1, T3),
-    #         dot(f2, T3),
-    #         dot(f3, T3),);
-    # end
 
     igd = MWDL3DIntegrand(test_triangular_element, trial_triangular_element,
         op, test_local_space, trial_local_space)
