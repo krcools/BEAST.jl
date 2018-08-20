@@ -62,3 +62,13 @@ e = (n × E) × n
 efie = @discretise t[k,j]==e[k]  j∈X k∈X
 u = gmres(efie)
 ```
+![](output.png)
+
+## Features
+
+- General framework allowing to easily add support for more kernels, finite element spaces, and excitations.
+- Assembly routines that take in symbolic representations of the defining bilinear form. Support for block systems and finite element spaces defined in terms of direct products or tensor products of atomic spaces.
+- LU and iterative solution of the resulting system.
+- Computation of secondary quantities of interest such as the near field and the limiting far field.
+- Support for space-time Galerkin and convolution quadrature approaches to the solution of time domain boundary integral equations.
+- Implementation of Lagrange zeroth and first order space, Raviart-Thomas, Brezzi-Douglas-Marini, and Buffa-Christianssen vector elemenents.
