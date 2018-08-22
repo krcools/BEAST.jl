@@ -13,9 +13,9 @@ function (ϕ::RTRefSpace)(mp)
     d = 2/j
 
     return SVector((
-        ((tu*(u-1) + tv*v    ) / j, d),
-        ((tu*u     + tv*(v-1)) / j, d),
-        ((tu*u     + tv*v    ) / j, d)
+        (value=(tu*(u-1) + tv*v    )/j, divergence=d),
+        (value=(tu*u     + tv*(v-1))/j, divergence=d),
+        (value=(tu*u     + tv*v    )/j, divergence=d)
     ))
 end
 

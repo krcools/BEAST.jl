@@ -11,19 +11,24 @@ valuetype(ref::LagrangeRefSpace{T}, charttype) where {T} =
         SVector{numfunctions(ref), Tuple{T,T}}
 
 # Evaluate constant lagrange elements on anything
-(ϕ::LagrangeRefSpace{T,0})(tp) where {T} = SVector(((one(T),zero(T)),))
+(ϕ::LagrangeRefSpace{T,0})(tp) where {T} = SVector(((value=one(T), derivative=zero(T)),))
 
 # Evaluate linear Lagrange elements on a segment
 function (f::LagrangeRefSpace{T,1,2})(mp) where T
     u = mp.bary[1]
     j = jacobian(mp)
-    SVector((u,-1/j), (1-u,1/j))
+    SVector(
+        (value=  u, derivative=-1/j),
+        (value=1-u, derivative= 1/j))
 end
 
 # Evaluete linear lagrange elements on a triangle
 function (f::LagrangeRefSpace{T,1,3})(t) where T
     u,v,w, = barycentric(t)
-    SVector(u, v, w)
+    SVector(
+        (value=u,),
+        (value=v,),
+        (value=w,))
 end
 
 
@@ -38,9 +43,9 @@ function (f::LagrangeRefSpace{T,1,3})(t, ::Type{Val{:withcurl}}) where T
     u,v,w, = barycentric(t)
     p = t.patch
     SVector(
-        (u, (p[3]-p[2])/j),
-        (v, (p[1]-p[3])/j),
-        (w, (p[2]-p[1])/j)
+        (value=u, curl=(p[3]-p[2])/j),
+        (value=v, curl=(p[1]-p[3])/j),
+        (value=w, curl=(p[2]-p[1])/j)
     )
 end
 
@@ -50,7 +55,7 @@ function (f::LagrangeRefSpace{T,0,3})(t, ::Type{Val{:withcurl}}) where T
     i = one(T)
     z = zero(cartesian(t))
     (
-        (i,z,),
+        (value=i, curl=z,),
     )
 end
 
@@ -79,8 +84,8 @@ function strace(x::LagrangeRefSpace, cell, localid, face)
     vals2 = x(P2)
 
     for j in 1:numfunctions(x)
-        Q[1,j] = vals1[j]
-        Q[2,j] = vals2[j]
+        Q[1,j] = vals1[j].value
+        Q[2,j] = vals2[j].value
     end
 
     Q

@@ -80,8 +80,9 @@ end
 
 
 
-function quadrule(op::HH3DSingleLayerFDBIO, test_refspace, trial_refspace, i,
-        test_element, j, trial_element, quadrature_data)
+function quadrule(op::HH3DSingleLayerFDBIO,
+        test_refspace::RefSpace, trial_refspace::RefSpace,
+        i, test_element, j, trial_element, quadrature_data)
 
     tol, hits = sqrt(eps(eltype(eltype(test_element.vertices)))), 0
     for t in test_element.vertices
@@ -136,8 +137,9 @@ function quadrule(op::HH3DSingleLayerFDBIO, test_refspace::subReferenceSpace,
 end
 
 
-function quadrule(op::Helmholtz3DOp, test_refspace, trial_refspace, i,
-        test_element, j, trial_element, quadrature_data)
+function quadrule(op::Helmholtz3DOp,
+    test_refspace::RefSpace, trial_refspace::RefSpace,
+    i, test_element, j, trial_element, quadrature_data)
 
     test_quadpoints  = quadrature_data[1]
     trial_quadpoints = quadrature_data[2]

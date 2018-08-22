@@ -48,13 +48,11 @@ sphere:
 ```julia
 using CompScienceMeshes, BEAST
 
-d = joinpath(dirname(pathof(BEAST)),"../examples/sphere2.in")
-Γ = readmesh(d)
+Γ = readmesh(joinpath(dirname(pathof(BEAST)),"../examples/sphere2.in"))
 X = raviartthomas(Γ)
 
-κ = 1.0
-t = Maxwell3D.singlelayer(wavenumber=κ)
-E = Maxwell3D.planewave(direction=ẑ, polarization=x̂, wavenumber=κ)
+t = Maxwell3D.singlelayer(wavenumber=1.0)
+E = Maxwell3D.planewave(direction=ẑ, polarization=x̂, wavenumber=1.0)
 e = (n × E) × n
 
 @hilbertspace j

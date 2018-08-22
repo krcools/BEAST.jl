@@ -129,12 +129,12 @@ include("bases/stagedtimestep.jl")
 include("bases/timebasis.jl")
 include("bases/tensorbasis.jl")
 
-include("quaddata.jl")
 include("excitation.jl")
 include("operator.jl")
 include("localop.jl")
 include("identityop.jl")
 include("integralop.jl")
+include("quaddata.jl")
 include("postproc.jl")
 
 include("quadrature/double_quadrature.jl")
@@ -159,6 +159,8 @@ include("maxwell/farfield.jl")
 include("maxwell/nearfield.jl")
 include("maxwell/spotential.jl")
 include("maxwell/maxwell.jl")
+
+include("decoupled/dpops.jl")
 
 # Support for the Helmholtz equation
 include("helmholtz2d/helmholtzop.jl")

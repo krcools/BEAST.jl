@@ -2,11 +2,11 @@ using CompScienceMeshes, BEAST
 
 o, x, y, z = euclidianbasis(3)
 
-# Γ = meshsphere(1.0, 0.11)
+Γ = meshsphere(1.0, 0.11)
 # Γ = readmesh("/Users/Benjamin/Documents/sphere.in")
-Γ = readmesh(joinpath(@__DIR__,"sphere_subd1.in"))
-# X = lagrangec0d1(Γ)
-X = subdsurface(Γ)
+# Γ = readmesh(joinpath(@__DIR__,"sphere_subd1.in"))
+X = lagrangecxd0(Γ)
+# X = subdsurface(Γ)
 # X = raviartthomas(Γ)
 @show numfunctions(X)
 
@@ -36,20 +36,20 @@ fcr2, geo2 = facecurrents(x2, X)
 
 ## test the results
 Z = assemble(a,X,X);
-m, n = 1, numfunctions(X)
-chm, chn = chart(Γ,cells(Γ)[m]), chart(Γ,cells(Γ)[n])
+m1, m2 = 1, numfunctions(X)
+chm, chn = chart(Γ,cells(Γ)[m1]), chart(Γ,cells(Γ)[m2])
 ctm, ctn = center(chm), center(chn)
 R = norm(cartesian(ctm)-cartesian(ctn))
 G = exp(-im*κ*R)/(4π*R)
 Wmn = volume(chm) * volume(chn) * G
-@show abs(Wmn-Z[m,n]) / abs(Z[m,n])
-@test abs(Wmn-Z[m,n]) / abs(Z[m,n]) < 2.0e-3
+@show abs(Wmn-Z[m1,m2]) / abs(Z[m1,m2])
+@test abs(Wmn-Z[m1,m2]) / abs(Z[m1,m2]) < 2.0e-3
 
 r = assemble(f,X)
-m = 1
-chm = chart(Γ,cells(Γ)[m])
+m1 = 1
+chm = chart(Γ,cells(Γ)[m1])
 ctm = center(chm)
 sm = volume(chm) * f(ctm)
-r[m]
-@show abs(sm - r[m]) / abs(r[m])
-@test abs(sm - r[m]) / abs(r[m]) < 1e-3
+r[m1]
+@show abs(sm - r[m1]) / abs(r[m1])
+@test abs(sm - r[m1]) / abs(r[m1]) < 1e-3
