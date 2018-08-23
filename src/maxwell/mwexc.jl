@@ -70,3 +70,11 @@ end
 
 integrand(::TangTraceMW, gx, ϕx) = gx[1] ⋅ ϕx
 integrand(::CrossTraceMW, test_vals, field_val) = test_vals[1] ⋅ field_val
+
+struct NDotTrace{F} <: Functional
+  field::F
+end
+
+(ϕ::NDotTrace)(p) = dot(normal(p), ϕ.field(cartesian(p)))
+integrand(::NDotTrace, g, ϕ) = dot(g.value, ϕ)
+LinearAlgebra.dot(::NormalVector, f) = NDotTrace(f)

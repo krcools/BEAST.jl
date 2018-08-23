@@ -183,12 +183,11 @@ function integrand(op::Union{HH3DSingleLayerFDBIO,HH3DSingleLayerReg},
 
     α = op.alpha
     G = kernel.green
-    #g, curlg = test_values
-    #f, curlf = trial_values
-    g = test_values[1]
-    f = trial_values[1]
 
-    α*g*f*G
+    g = test_values.value
+    f = trial_values.value
+
+    α*dot(g, G*f)
 end
 
 
@@ -236,10 +235,32 @@ module Helmholtz3D
     using ..BEAST
     const Mod = BEAST
 
-    singlelayer(;
-            gamma=error("propagation constant is a required argument"),
-            alpha=one(gamma)) =
+    function singlelayer(;
+        gamma=nothing,
+        wavenumber=nothing,
+        alpha=nothing)
+
+        if (gamma == nothing) && (wavenumber == nothing)
+            error("Supply one of (not both) gamma or wavenumber")
+        end
+
+        if (gamma != nothing) && (wavenumber != nothing)
+            error("Supply one of (not both) gamma or wavenumber")
+        end
+
+        if gamma == nothing
+            if iszero(real(wavenumber))
+                gamma = -imag(wavenumber)
+            else
+                gamma = im*wavenumber
+            end
+        end
+
+        @assert gamma != nothing
+        alpha == nothing && (alpha = one(real(typeof(gamma))))
+
         Mod.HH3DSingleLayerFDBIO(alpha,gamma)
+    end
 
     hypersingular(;
             gamma=error("propagation constant is a required argument"),

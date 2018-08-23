@@ -128,10 +128,10 @@ mutable struct ScalarTrace{F} <: Functional
     f::F
 end
 
-strace(f::Functional, mesh) = ScalarTrace(f)
+strace(f, mesh::Mesh) = ScalarTrace(f)
 
 (s::ScalarTrace)(x) = s.f(cartesian(x))
-integrand(s::ScalarTrace, tx, fx) = tx[1] * fx
+integrand(s::ScalarTrace, tx, fx) = dot(tx.value, fx)
 
 shapevals(f::Functional, ϕ, ts) = shapevals(ValOnly(), ϕ, ts)
 

@@ -30,25 +30,6 @@ function discretise(eq, space_mappings::Pair...)
     DiscreteEquation(eq, trial_space_dict, test_space_dict)
 end
 
-# export discretisation, @discretisation
-# function discretisation(space_mappings::Pair...)
-#     space_dict = Dict()
-#     for sm in space_mappings
-#         space_dict[sm.first.idx] = sm.second
-#     end
-#     space_dict
-# end
-#
-# macro discretisation(pairs...)
-#     r = :(discretisation())
-#     for p in pairs
-#         x = p.args[2]
-#         X = p.args[3]
-#         push!(r.args, :($x=>$X))
-#     end
-#     return esc(r)
-# end
-
 
 """
     discr(eq, pairs...)
@@ -69,8 +50,6 @@ macro discretise(eq, pairs...)
     return esc(r)
 end
 
-
-export sysmatrix, rhs
 
 sysmatrix(eq::DiscreteEquation) = assemble(eq.equation.lhs, eq.test_space_dict, eq.trial_space_dict)
 rhs(eq::DiscreteEquation) = assemble(eq.equation.rhs, eq.test_space_dict)
@@ -98,7 +77,7 @@ function assemble(lform::LinForm, test_space_dict)
         # act with the various ops on X
         for op in reverse(o)
             Y = X;
-            X = op[1](Y, op[2:end]...)
+            X = op[end](op[1:end-1]..., Y)
         end
 
         b = assemble(a, X)
@@ -139,13 +118,13 @@ function assemble(bilform::BilForm, test_space_dict, trial_space_dict)
       m = t.test_id
       x = test_space_dict[m]
       for op in reverse(t.test_ops)
-          x = op[1](x, op[2:end]...)
+          x = op[end](op[1:end-1]..., x)
       end
 
       n = t.trial_id
       y = trial_space_dict[n]
       for op in reverse(t.trial_ops)
-          y = op[1](y, op[2:end]...)
+          y = op[end](op[1:end-1]..., y)
       end
 
       r = I[m] : (I[m+1] - 1)

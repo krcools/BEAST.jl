@@ -64,3 +64,10 @@ function momintegrals!(op::CurlSingleLayerDP3D,
 
     nothing
 end
+
+function quadrule(op::BEAST.HH3DSingleLayerFDBIO,
+    test_local_space::BEAST.RTRefSpace, trial_local_space::BEAST.RTRefSpace,
+    test_index, test_chart, trial_index, trial_chart, quadrature_data)
+
+    qrdf(op, test_local_space, trial_local_space, test_index, test_chart, trial_index, trial_chart, quadrature_data)
+end

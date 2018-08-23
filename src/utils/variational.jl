@@ -38,19 +38,11 @@ function iterate(itr::DepthFirst)
 end
 
 
-# function start(itr::DepthFirst)
-#     head = DepthFirstState(itr.xp, nothing, -1)
-#     return DepthFirstState(itr.xp, head, 0)
-# end
-
-
 function iterate(itr::DepthFirst, state)
 
     state.par == nothing && return nothing
     return next(itr, state)
 end
-
-# done(itr::DepthFirst, state::DepthFirstState) = (state.par == nothing)
 
 
 function next(itr::DepthFirst, state::DepthFirstState)
@@ -81,7 +73,7 @@ end
     transposecall!(xp, skip=[])
 
 Goes through the syntax tree and replace all function calls
-`f(x,p1,p2,...)` with `x(f,p1,p2,...)`.
+`f(p1,p2,...,x)` with `x(f,p1,p2,...)`.
 """
 function transposecalls!(xp, skip=[])
     isa(xp, Expr) || return xp
@@ -89,8 +81,8 @@ function transposecalls!(xp, skip=[])
         if isa(x, Expr) && x.head == :call && !(x.args[1] in skip)
             @assert length(x.args) >= 2
             tmp = x.args[1]
-            x.args[1] = x.args[2]
-            x.args[2] = tmp
+            x.args[1] = x.args[end]
+            x.args[end] = tmp
         end
     end
     return xp
@@ -309,7 +301,7 @@ E.g:
     PMCH = @varform M[k,j] - η*T[k,m] + 1/η*T[l,j] + M[l,m] = e[k] + h[l]
 """
 macro varform(x)
-    y = transposecalls!(x, [:+, :-, :*, :(==)])
+    y = transposecalls!(x, [:+, :-, :*, :^, :(==)])
     esc(y)
 end
 

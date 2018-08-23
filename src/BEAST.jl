@@ -160,14 +160,14 @@ include("maxwell/nearfield.jl")
 include("maxwell/spotential.jl")
 include("maxwell/maxwell.jl")
 
-include("decoupled/dpops.jl")
-
 # Support for the Helmholtz equation
 include("helmholtz2d/helmholtzop.jl")
 
 include("helmholtz3d/hh3dexc.jl")
 include("helmholtz3d/hh3dops.jl")
 include("helmholtz3d/nitsche.jl")
+
+include("decoupled/dpops.jl")
 
 include("helmholtz3d/timedomain/tdhh3dops.jl")
 include("helmholtz3d/timedomain/tdhh3dexc.jl")

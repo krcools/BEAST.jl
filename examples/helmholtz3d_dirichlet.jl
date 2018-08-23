@@ -11,8 +11,8 @@ X = lagrangecxd0(Γ)
 @show numfunctions(X)
 
 κ = 1.0; γ = im*κ
-a = Helmholtz3D.singlelayer(gamma=γ)
-b = Helmholtz3D.doublelayer_transposed(gamma=γ) +0.5Identity()
+a = Helmholtz3D.singlelayer(wavenumber=κ)
+b = Helmholtz3D.doublelayer_transposed(gamma=κ*im) +0.5Identity()
 
 uⁱ = Helmholtz3D.planewave(wavenumber=κ, direction=z)
 f = strace(uⁱ,Γ)
@@ -33,6 +33,8 @@ fcr2, geo2 = facecurrents(x2, X)
 # include(Pkg.dir("CompScienceMeshes","examples","plotlyjs_patches.jl"))
 # p1 = patch(geo1, real.(norm.(fcr1)))
 # p2 = patch(geo2, real.(norm.(fcr2)))
+
+using LinearAlgebra
 
 ## test the results
 Z = assemble(a,X,X);
