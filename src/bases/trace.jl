@@ -73,7 +73,7 @@ function ntrace(X::Space, γ)
 end
 
 
-strace(X::Space, γ) = strace(X, γ, Val{dimension(γ)+1})
+strace(X::Space, γ::Mesh) = strace(X, γ, Val{dimension(γ)+1})
 
 function strace(X::Space, γ, dim1::Type{Val{2}})
 

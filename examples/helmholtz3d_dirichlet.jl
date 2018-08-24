@@ -2,7 +2,8 @@ using CompScienceMeshes, BEAST
 
 o, x, y, z = euclidianbasis(3)
 
-Γ = meshsphere(1.0, 0.11)
+# Γ = meshsphere(1.0, 0.11)
+Γ = readmesh(joinpath(@__DIR__,"sphere2.in"))
 # Γ = readmesh("/Users/Benjamin/Documents/sphere.in")
 # Γ = readmesh(joinpath(@__DIR__,"sphere_subd1.in"))
 X = lagrangecxd0(Γ)
@@ -35,6 +36,7 @@ fcr2, geo2 = facecurrents(x2, X)
 # p2 = patch(geo2, real.(norm.(fcr2)))
 
 using LinearAlgebra
+using Test
 
 ## test the results
 Z = assemble(a,X,X);

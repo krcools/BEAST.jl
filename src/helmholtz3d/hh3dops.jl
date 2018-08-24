@@ -81,7 +81,8 @@ end
 
 
 function quadrule(op::HH3DSingleLayerFDBIO,
-        test_refspace::RefSpace, trial_refspace::RefSpace,
+        test_refspace::LagrangeRefSpace{T,0} where T,
+        trial_refspace::LagrangeRefSpace{T,0} where T,
         i, test_element, j, trial_element, quadrature_data)
 
     tol, hits = sqrt(eps(eltype(eltype(test_element.vertices)))), 0
@@ -149,6 +150,18 @@ function quadrule(op::Helmholtz3DOp,
         quadrature_data[2][1,j])
 end
 
+function quadrule(op::Helmholtz3DOp,
+    test_refspace::RTRefSpace, trial_refspace::RTRefSpace,
+    i, test_element, j, trial_element, quadrature_data)
+
+    test_quadpoints  = quadrature_data[1]
+    trial_quadpoints = quadrature_data[2]
+
+    return DoubleQuadStrategy(
+        quadrature_data[1][1,i],
+        quadrature_data[2][1,j])
+end
+
 
 
 
@@ -191,9 +204,10 @@ function integrand(op::Union{HH3DSingleLayerFDBIO,HH3DSingleLayerReg},
 end
 
 
-function innerintegrals!(op::HH3DSingleLayerSng,
-        test_neighborhood, test_refspace, trial_refspace, test_elements,
-        trial_element, zlocal, quadrature_rule::WiltonSEStrategy, dx)
+function innerintegrals!(op::HH3DSingleLayerSng, test_neighborhood,
+        test_refspace::LagrangeRefSpace{T,0} where {T},
+        trial_refspace::LagrangeRefSpace{T,0} where {T},
+        test_elements, trial_element, zlocal, quadrature_rule::WiltonSEStrategy, dx)
 
     γ = op.gamma
     α = op.alpha

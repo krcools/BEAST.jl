@@ -20,6 +20,8 @@ eq2 = @discretise b[v,u] == f[v] u∈X v∈X
 x1 = solve(eq1)
 x2 = solve(eq2)
 
+@assert norm(x1-x2)/norm(x1+x2) <  0.5e-2
+
 fcr1, geo1 = facecurrents(x1, X)
 fcr2, geo2 = facecurrents(x2, X)
 
