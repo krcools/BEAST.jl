@@ -4,8 +4,9 @@ using BEAST
 Γ = readmesh(joinpath(@__DIR__,"sphere2.in"))
 X = raviartthomas(Γ)
 
-t = Maxwell3D.singlelayer(wavenumber=1.0)
-E = Maxwell3D.planewave(direction=ẑ, polarization=x̂, wavenumber=1.0)
+κ = 1.0
+t = Maxwell3D.singlelayer(wavenumber=κ)
+E = Maxwell3D.planewave(direction=ẑ, polarization=x̂, wavenumber=κ)
 e = (n × E) × n
 
 @hilbertspace j
