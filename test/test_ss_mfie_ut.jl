@@ -16,7 +16,7 @@ edges = skeleton(m,1)
 faces = skeleton(m,2)
 Λ = connectivity(verts, edges)
 Σᵀ = connectivity(edges, faces)
-all(sum(Σᵀ,dims=1) .== 0)
+@assert all(sum(Σᵀ,dims=1) .== 0)
 
 op = k
 

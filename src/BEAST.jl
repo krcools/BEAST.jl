@@ -106,6 +106,7 @@ include("utils/combinatorics.jl")
 include("utils/linearspace.jl")
 
 include("bases/basis.jl")
+include("bases/lincomb.jl")
 include("bases/trace.jl")
 include("bases/restrict.jl")
 include("bases/divergence.jl")
