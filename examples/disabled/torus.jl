@@ -1,27 +1,47 @@
-using CompScienceMeshes, BEAST, BogaertInts10
+using CompScienceMeshes, BEAST
 
-fn = joinpath(dirname(@__FILE__),"assets","torus.msh")
+fn = joinpath(dirname(@__FILE__),"../assets","torus.msh")
 m = CompScienceMeshes.read_gmsh_mesh(fn)
 
 X = raviartthomas(m)
 Y = buffachristiansen(m)
 
-κ = 1.0
+κ = 0.0
 t = Maxwell3D.singlelayer(wavenumber=κ)
 k = Maxwell3D.doublelayer(wavenumber=κ)
-n = BEAST.NCross()
+b = BEAST.NCross()
 
 verts = skeleton(m,0)
 edges = skeleton(m,1)
 faces = skeleton(m,2)
-D = connectivity(edges, faces)
+Λ = connectivity(verts, edges)
+Σᵀ = connectivity(edges, faces)
+all(sum(Σᵀ,dims=1) .== 0)
 
-M = assemble(k+0.5n,Y,X)
-h = nullspace(M,0.051)
+op = k
 
-fcr, geo = facecurrents(h[:,end],X)
+M = assemble(k+0.5b,Y,X)
 
-using MATLAB
-mat"""
-patch('Vertices',$(vertexarray(m)), 'Faces',$(cellarray(m)), 'FaceColor','flat', 'FaceVertexCData',$(norm.(fcr)))
-"""
+using LinearAlgebra
+
+norm(Σᵀ*M*Λ)
+
+G = assemble(b, Y, X)
+norm(M)
+norm(Σᵀ*G*Λ)
+
+
+# s = svdvals(M)
+# h = nullspace(M,s[end]*1.0001)
+#
+# fcr, geo = facecurrents(h[:,end],X)
+#
+# V,F = vertexarray(m), cellarray(m)
+# B = [real(f[i]) for f in fcr, i in 1:3]
+
+# using MATLAB
+# mat"mesh = Mesh($V,$F)"
+# mat"[C,N] = faceNormals(mesh)"
+# mat"figure; hold on"
+# mat"patch(mesh,$(norm.(fcr)))"
+# mat"quiver3x(C,$B)"

@@ -79,11 +79,15 @@ end
 
 function quaddata(op::MaxwellOperator3D, g::RefSpace, f::RefSpace, tels, bels)
 
-    tqd = quadpoints(g, tels, (2,6))
-    bqd = quadpoints(f, bels, (3,7))
+    # tqd = quadpoints(g, tels, (2,6))
+    # bqd = quadpoints(f, bels, (3,7))
+
+    tqd = quadpoints(g, tels, (6,6))
+    bqd = quadpoints(f, bels, (7,7))
 
     a, b = 0.0, 1.0
-    leg = (_legendre(3,a,b), _legendre(4,a,b), _legendre(5,a,b),)
+    #leg = (_legendre(3,a,b), _legendre(4,a,b), _legendre(5,a,b),)
+    leg = (_legendre(6,a,b), _legendre(20,a,b), _legendre(6,a,b),)
 
     return (tpoints=tqd, bpoints=bqd, gausslegendre=leg)
 end
@@ -135,22 +139,6 @@ function integrand(biop::MWDL3DGen, kerneldata, tvals, tgeo, bvals, bgeo)
 end
 
 
-
-
-# function select_quadrule()
-#         try
-#              Pkg.installed("BogaertInts10")
-#              @eval using BogaertInts10
-#              @info "`BogaertInts10` detected: enhanced quadrature enabled."
-#              @eval include("bogaertints.jl")
-#              @eval quadrule(op::MaxwellOperator3D, g::RTRefSpace, f::RTRefSpace, i, τ, j, σ, qd) = qrib(op, g, f, i, τ, j, σ, qd)
-#          catch
-#              @info "Cannot find package `BogaertInts10`. Default quadrature strategy used."
-#              @eval quadrule(op::MaxwellOperator3D, g::RTRefSpace, f::RTRefSpace, i, τ, j, σ, qd) = qrss(op, g, f, i, τ, j, σ, qd)
-#          end
-# end
-# select_quadrule()
-
 quadrule(op::MaxwellOperator3D, g::RTRefSpace, f::RTRefSpace, i, τ, j, σ, qd) = qrss(op, g, f, i, τ, j, σ, qd)
 
 function qrss(op, g, f, i, τ, j, σ, qd)
@@ -178,6 +166,7 @@ function qrss(op, g, f, i, τ, j, σ, qd)
   hits == 3   && return SauterSchwabQuadrature.CommonFace(qd.gausslegendre[3])
   hits == 2   && return SauterSchwabQuadrature.CommonEdge(qd.gausslegendre[2])
   hits == 1   && return SauterSchwabQuadrature.CommonVertex(qd.gausslegendre[1])
+  #max(xmin, rmin/h) < xtol && return WiltonSEStrategy(
   xmin < xtol && return WiltonSEStrategy(
     qd.tpoints[1,i],
     DoubleQuadStrategy(
@@ -231,20 +220,22 @@ function qrib(op::MaxwellOperator3D, g::RTRefSpace, f::RTRefSpace, i, τ, j, σ,
 #  )
 
 #end
-hits == 3   && return BogaertSelfPatchStrategy(5)
-hits == 2   && return BogaertEdgePatchStrategy(8, 4)
-hits == 1   && return BogaertPointPatchStrategy(2, 3)
-xmin < xtol && return WiltonSEStrategy(
-  qd.tpoints[1,i],
-  DoubleQuadStrategy(
-    qd.tpoints[2,i],
-    qd.bpoints[2,j],
-  ),
-)
-return DoubleQuadStrategy(
-  qd.tpoints[1,i],
-  qd.bpoints[1,j],
-)
+    hits == 3   && return BogaertSelfPatchStrategy(5)
+    hits == 2   && return BogaertEdgePatchStrategy(8, 4)
+    hits == 1   && return BogaertPointPatchStrategy(2, 3)
+    rmin = xmin/k
+    #max(xmin, rmin/h) < xtol && return WiltonSEStrategy(
+    xmin < xtol && return WiltonSEStrategy(
+      qd.tpoints[1,i],
+      DoubleQuadStrategy(
+        qd.tpoints[2,i],
+        qd.bpoints[2,j],
+      ),
+    )
+    return DoubleQuadStrategy(
+      qd.tpoints[1,i],
+      qd.bpoints[1,j],
+    )
 
 end
 

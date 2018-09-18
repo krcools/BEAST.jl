@@ -105,7 +105,7 @@ end
 
 
 """
-    assemblydata(basis)
+    charts, admap = assemblydata(basis)
 
 Given a Basis this function returns a data structure containing the information
 required for matrix assemble. More precise the following expressions are valid
