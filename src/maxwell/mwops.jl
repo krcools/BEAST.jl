@@ -79,15 +79,15 @@ end
 
 function quaddata(op::MaxwellOperator3D, g::RefSpace, f::RefSpace, tels, bels)
 
-    # tqd = quadpoints(g, tels, (2,6))
-    # bqd = quadpoints(f, bels, (3,7))
+    tqd = quadpoints(g, tels, (2,6))
+    bqd = quadpoints(f, bels, (3,7))
 
-    tqd = quadpoints(g, tels, (6,6))
-    bqd = quadpoints(f, bels, (7,7))
+    # tqd = quadpoints(g, tels, (6,6))
+    # bqd = quadpoints(f, bels, (7,7))
 
     a, b = 0.0, 1.0
-    #leg = (_legendre(3,a,b), _legendre(4,a,b), _legendre(5,a,b),)
-    leg = (_legendre(6,a,b), _legendre(20,a,b), _legendre(6,a,b),)
+    leg = (_legendre(3,a,b), _legendre(4,a,b), _legendre(5,a,b),)
+    # leg = (_legendre(6,a,b), _legendre(20,a,b), _legendre(6,a,b),)
 
     return (tpoints=tqd, bpoints=bqd, gausslegendre=leg)
 end
