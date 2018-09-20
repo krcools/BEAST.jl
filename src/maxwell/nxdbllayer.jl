@@ -5,6 +5,8 @@ mutable struct DoubleLayerRotatedMW3D{T} <: MaxwellOperator3D
     gamma::T
 end
 
+LinearAlgebra.cross(::NormalVector, a::MWDoubleLayer3D) = DoubleLayerRotatedMW3D(a.gamma)
+
 function quaddata(operator::DoubleLayerRotatedMW3D,
         local_test_basis::RTRefSpace,
         local_trial_basis::RTRefSpace,

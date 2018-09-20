@@ -84,14 +84,14 @@ function quaddata(op::MaxwellOperator3D,
     a, b = 0.0, 1.0
     # CommonVertex, CommonEdge, CommonFace rules
 
-    # tqd = quadpoints(g, tels, (2,6))
-    # bqd = quadpoints(f, bels, (3,7))
-    # leg = (_legendre(3,a,b), _legendre(4,a,b), _legendre(5,a,b),)
+    tqd = quadpoints(test_local_space, test_charts, (2,6))
+    bqd = quadpoints(trial_local_space, trial_charts, (3,7))
+    leg = (_legendre(3,a,b), _legendre(4,a,b), _legendre(5,a,b),)
 
     # High accuracy rules (use them e.g. in LF MFIE scenarios)
-    tqd = quadpoints(test_local_space, test_charts, (8,8))
-    bqd = quadpoints(trial_local_space, trial_charts, (8,9))
-    leg = (_legendre(8,a,b), _legendre(10,a,b), _legendre(5,a,b),)
+    # tqd = quadpoints(test_local_space, test_charts, (8,8))
+    # bqd = quadpoints(trial_local_space, trial_charts, (8,9))
+    # leg = (_legendre(8,a,b), _legendre(10,a,b), _legendre(5,a,b),)
 
     return (tpoints=tqd, bpoints=bqd, gausslegendre=leg)
 end
