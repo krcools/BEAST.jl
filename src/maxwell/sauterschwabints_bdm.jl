@@ -21,57 +21,15 @@ function (igd::MWSL3DIntegrand2)(u,v)
         f = igd.test_local_space(x)
         g = igd.trial_local_space(y)
 
-        jx = jacobian(x)
-        jy = jacobian(y)
-        j = jx*jy
+        j = jacobian(x) * jacobian(y)
 
         αjG = α*j*G
         βjG = β*j*G
 
-        # G1 = αjG*g[1].value
-        # G2 = αjG*g[2].value
-        # G3 = αjG*g[3].value
-        # G4 = αjG*g[4].value
-        # G5 = αjG*g[5].value
-        # G6 = αjG*g[6].value
-
         G = @SVector[αjG*g[i].value for i in 1:6]
-
-        # H1 = βjG*g[1].divergence
-        # H2 = βjG*g[2].divergence
-        # H3 = βjG*g[3].divergence
-        # H4 = βjG*g[4].divergence
-        # H5 = βjG*g[5].divergence
-        # H6 = βjG*g[6].divergence
-
         H = @SVector[βjG*g[i].divergence for i in 1:6]
 
-        # f1 = f[1].value
-        # f2 = f[2].value
-        # f3 = f[3].value
-        # f4 = f[4].value
-        # f5 = f[5].value
-        # f6 = f[6].value
-
-        # c1 = f[1].divergence
-        # c2 = f[2].divergence
-        # c3 = f[3].divergence
-        # c4 = f[4].divergence
-        # c5 = f[5].divergence
-        # c6 = f[6].divergence
-
         @SMatrix[dot(f[i].value,G[j])+f[i].divergence*H[j] for i in 1:6, j in 1:6]
-
-        # SMatrix{6,6}(
-        #     dot(f1,G1) + c1*H1,
-        #     dot(f2,G1) + c2*H1,
-        #     dot(f3,G1) + c3*H1,
-        #     dot(f1,G2) + c1*H2,
-        #     dot(f2,G2) + c2*H2,
-        #     dot(f3,G2) + c3*H2,
-        #     dot(f1,G3) + c1*H3,
-        #     dot(f2,G3) + c2*H3,
-        #     dot(f3,G3) + c3*H3,)
 end
 
 function momintegrals!(op::MWSingleLayer3D,

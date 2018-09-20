@@ -45,7 +45,6 @@ module Maxwell3D
         Mod.MWSingleLayer3D(gamma, alpha, beta)
     end
 
-
     """
         doublelayer(;gamma)
         doublelaher(;wavenumber)

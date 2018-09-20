@@ -1,6 +1,9 @@
+# Conclusion: Sauter-Schwab quadrature does not work when the trial and
+# test meshes are not geometrically conforming.
+
 using CompScienceMeshes, BEAST
 
-fn = joinpath(dirname(@__FILE__),"./assets","torus.msh")
+fn = joinpath(dirname(@__FILE__),"./assets","torus264.msh")
 m = CompScienceMeshes.read_gmsh_mesh(fn)
 V, F = vertexarray(m), cellarray(m)
 
@@ -27,8 +30,8 @@ M2 = assemble(k,Y,X)
 
 using LinearAlgebra
 
-G = assemble(b,X,X)
-@show norm(Λ'*G*Λ)
+G = assemble(b,Y,X)
+@show norm(Σᵀ*G*Λ)
 
 @show norm(Λ'*M1*Λ)
 @show norm(Λ'*M2*Λ)
