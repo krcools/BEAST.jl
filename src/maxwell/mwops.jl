@@ -93,6 +93,7 @@ function quaddata(op::MaxwellOperator3D,
     # bqd = quadpoints(trial_local_space, trial_charts, (8,9))
     # leg = (_legendre(8,a,b), _legendre(10,a,b), _legendre(5,a,b),)
 
+
     return (tpoints=tqd, bpoints=bqd, gausslegendre=leg)
 end
 
