@@ -155,7 +155,6 @@ function qrss(op, g, f, i, τ, j, σ, qd)
     k = norm(op.gamma)
 
     hits = 0
-    # xmin = floatmax(eltype(eltype(τ.vertices)))
     dmin = floatmax(eltype(eltype(τ.vertices)))
     for t in τ.vertices
         for s in σ.vertices
@@ -174,7 +173,6 @@ function qrss(op, g, f, i, τ, j, σ, qd)
 
     h = sqrt(volume(σ))
     max(dmin*k, dmin/4h) < xtol && return WiltonSEStrategy(
-    #dmin*k < xtol && return WiltonSEStrategy(
         qd.tpoints[2,i],
         DoubleQuadStrategy(
             qd.tpoints[2,i],
@@ -211,7 +209,6 @@ function qrib(op::MaxwellOperator3D, g::RTRefSpace, f::RTRefSpace, i, τ, j, σ,
     hits == 2   && return BogaertEdgePatchStrategy(8, 4)
     hits == 1   && return BogaertPointPatchStrategy(2, 3)
     rmin = xmin/k
-    #max(xmin, rmin/h) < xtol && return WiltonSEStrategy(
     xmin < xtol && return WiltonSEStrategy(
       qd.tpoints[1,i],
       DoubleQuadStrategy(

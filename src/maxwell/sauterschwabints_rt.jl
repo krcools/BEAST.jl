@@ -164,11 +164,10 @@ function momintegrals_nested!(op::MWOperator3D,
     end
 end
 
-function momintegrals_nested!(op::MWOperator3D,
-    test_local_space::RTRefSpace, trial_local_space::RTRefSpace,
+function momintegrals_nested!(op::IntegralOperator,
+    test_local_space::RefSpace, trial_local_space::RefSpace,
     test_chart, trial_chart, out, strat)
 
     momintegrals!(op, test_local_space, trial_local_space,
         test_chart, trial_chart, out, strat)
-
 end
