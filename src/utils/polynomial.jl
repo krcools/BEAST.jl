@@ -11,6 +11,10 @@ Base.eltype(p::Polynomial) = eltype(p.data)
 Base.getindex(p::Polynomial,i::Int) = p.data[i+1]
 Base.setindex!(p::Polynomial,v,i::Int) = (p.data[i+1] = v)
 
+# Deals with corner cases of Base.power_by_squaring
+Base.copy(p::BEAST.Polynomial{}) = p
+Base.one(p::BEAST.Polynomial{N,T}) where{N,T} = BEAST.Polynomial(@SVector[one(T)])
+
 degree(p::Polynomial) = length(p.data)-1
 
 function derive(p)

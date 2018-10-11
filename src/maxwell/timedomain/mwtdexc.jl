@@ -18,6 +18,9 @@ function planewave(polarisation,direction,amplitude,speedoflight)
     PlaneWaveMWTD(direction,polarisation,speedoflight,amplitude)
 end
 
+planewave(;signature, polarization, direction, speedoflight) =
+    PlaneWaveMWTD(direction, polarization, speedoflight, signature)
+
 *(a, pw::PlaneWaveMWTD) = PlaneWaveMWTD(
     pw.direction,
     a * pw.polarisation,

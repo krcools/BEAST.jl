@@ -119,7 +119,7 @@ function timebasisspline2(dt, numfunctions, T::Type=Float64)
     TimeBasisFunction{T,4,3,2}(dt, numfunctions, polys)
 end
 
-function timebasisshiftedlagrange(dt, numfunctions, degree, T::Type=Float64)
+function timebasisshiftedlagrange(dt, numfunctions, degree, T::Type=typeof(dt))
     z, i = zero(T), one(T)
     c = Polynomial(SVector(i))
     t = Polynomial(SVector(z,i/dt))
@@ -268,14 +268,23 @@ end
 
 
 function convolve(f::TimeBasisFunction, g::TimeBasisFunction)
-    @warn "BEAST.convolve only returns correct result for constant * continuous,linear"
+    @warn "BEAST.convolve: computing quadratic spline out of a pulse and a hat"
     dt = timestep(f)
     fg = timebasisspline2(dt, numfunctions(f), scalartype(f))
     fg.polys = dt * fg.polys
     return fg
 end
 
+function convolve(f::TimeBasisFunction{T,2,1,0}, g::TimeBasisFunction{T,2,1,0}) where {T}
+    @info "Convolving two pulses into a hat"
+    dt = timestep(f)
+    fg = timebasisshiftedlagrange(dt, numfunctions(f), 1, scalartype(f))
+    fg.polys = dt * fg.polys
+    return fg
+end
+
 function convolve(δ::TimeBasisDelta, g::TimeBasisFunction)
+    @info "Computing the trivial convolution between a delta and something else"
     return g
 end
 

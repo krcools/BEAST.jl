@@ -5,7 +5,7 @@ sol = 5.0
 Δt, Nt = 0.12/sol,400
 
 D, Δx = 1.0, 0.25
-Γ = readmesh(joinpath(dirname(@__FILE__),"sphere2.in"))
+Γ = readmesh(joinpath(@__DIR__,"sphere2.in"))
 X = raviartthomas(Γ)
 
 T = timebasisshiftedlagrange(Δt, Nt, 3)
