@@ -77,17 +77,22 @@ function _legendre(n,a,b)
     collect(zip(x,w))
 end
 
-function quaddata(op::MaxwellOperator3D, g::RefSpace, f::RefSpace, tels, bels)
-
-    tqd = quadpoints(g, tels, (2,6))
-    bqd = quadpoints(f, bels, (3,7))
-
-    # tqd = quadpoints(g, tels, (6,6))
-    # bqd = quadpoints(f, bels, (7,7))
+function quaddata(op::MaxwellOperator3D,
+    test_local_space::RefSpace, trial_local_space::RefSpace,
+    test_charts, trial_charts)
 
     a, b = 0.0, 1.0
+    # CommonVertex, CommonEdge, CommonFace rules
+
+    tqd = quadpoints(test_local_space, test_charts, (2,6))
+    bqd = quadpoints(trial_local_space, trial_charts, (3,7))
     leg = (_legendre(3,a,b), _legendre(4,a,b), _legendre(5,a,b),)
-    # leg = (_legendre(6,a,b), _legendre(20,a,b), _legendre(6,a,b),)
+
+    # High accuracy rules (use them e.g. in LF MFIE scenarios)
+    # tqd = quadpoints(test_local_space, test_charts, (8,8))
+    # bqd = quadpoints(trial_local_space, trial_charts, (8,9))
+    # leg = (_legendre(8,a,b), _legendre(10,a,b), _legendre(5,a,b),)
+
 
     return (tpoints=tqd, bpoints=bqd, gausslegendre=leg)
 end
@@ -150,35 +155,31 @@ function qrss(op, g, f, i, τ, j, σ, qd)
     k = norm(op.gamma)
 
     hits = 0
-    xmin = xtol
+    dmin = floatmax(eltype(eltype(τ.vertices)))
     for t in τ.vertices
-      for s in σ.vertices
-        d = norm(t-s)
-        xmin = min(xmin, k*d)
-        if d < dtol
-          hits +=1
-          break
+        for s in σ.vertices
+            d = norm(t-s)
+            dmin = min(dmin, d)
+            if d < dtol
+                hits +=1
+                break
+            end
         end
-      end
     end
 
+    hits == 3 && return SauterSchwabQuadrature.CommonFace(qd.gausslegendre[3])
+    hits == 2 && return SauterSchwabQuadrature.CommonEdge(qd.gausslegendre[2])
+    hits == 1 && return SauterSchwabQuadrature.CommonVertex(qd.gausslegendre[1])
 
-  hits == 3   && return SauterSchwabQuadrature.CommonFace(qd.gausslegendre[3])
-  hits == 2   && return SauterSchwabQuadrature.CommonEdge(qd.gausslegendre[2])
-  hits == 1   && return SauterSchwabQuadrature.CommonVertex(qd.gausslegendre[1])
-  #max(xmin, rmin/h) < xtol && return WiltonSEStrategy(
-  xmin < xtol && return WiltonSEStrategy(
-    qd.tpoints[1,i],
-    DoubleQuadStrategy(
-      qd.tpoints[2,i],
-      qd.bpoints[2,j],
-    ),
-  )
-  return DoubleQuadStrategy(
-    qd.tpoints[1,i],
-    qd.bpoints[1,j],
-  )
-
+    h = sqrt(volume(σ))
+    max(dmin*k, dmin/4h) < xtol && return WiltonSEStrategy(
+        qd.tpoints[2,i],
+        DoubleQuadStrategy(
+            qd.tpoints[2,i],
+            qd.bpoints[2,j],),)
+    return DoubleQuadStrategy(
+        qd.tpoints[1,i],
+        qd.bpoints[1,j],)
 end
 
 
@@ -204,27 +205,10 @@ function qrib(op::MaxwellOperator3D, g::RTRefSpace, f::RTRefSpace, i, τ, j, σ,
     end
   end
 
-#  hits == 3   && return BogaertSelfPatchStrategy(5)
-#  hits == 2   && return BogaertEdgePatchStrategy(8, 4)
-#  hits == 1   && return BogaertPointPatchStrategy(2, 3)
-#  xmin < xtol && return WiltonSEStrategy(
-#    qd.tpoints[1,i],
-#    DoubleQuadStrategy(
-#      qd.tpoints[2,i],
-#      qd.bpoints[2,j],
-#    ),
-# )
-#  return DoubleQuadStrategy(
-#    qd.tpoints[1,i],
-#    qd.bpoints[1,j],
-#  )
-
-#end
     hits == 3   && return BogaertSelfPatchStrategy(5)
     hits == 2   && return BogaertEdgePatchStrategy(8, 4)
     hits == 1   && return BogaertPointPatchStrategy(2, 3)
     rmin = xmin/k
-    #max(xmin, rmin/h) < xtol && return WiltonSEStrategy(
     xmin < xtol && return WiltonSEStrategy(
       qd.tpoints[1,i],
       DoubleQuadStrategy(

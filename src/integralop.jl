@@ -76,10 +76,17 @@ function assemblechunk!(biop::IntegralOperator, tfs::Space, bfs::Space, store)
     qd = quaddata(biop, tshapes, bshapes, test_elements, bsis_elements)
     zlocal = zeros(scalartype(biop, tfs, bfs), 2num_tshapes, 2num_bshapes)
 
-    assemblechunk_body!(biop,
-        tshapes, test_elements, tad,
-        bshapes, bsis_elements, bad,
-        qd, zlocal, store)
+    if tfs.geo == bfs.geo
+        assemblechunk_body!(biop,
+            tshapes, test_elements, tad,
+            bshapes, bsis_elements, bad,
+            qd, zlocal, store)
+    else
+        assemblechunk_body_nested_meshes!(biop,
+            tshapes, test_elements, tad,
+            bshapes, bsis_elements, bad,
+            qd, zlocal, store)
+    end
 end
 
 
@@ -88,20 +95,59 @@ function assemblechunk_body!(biop,
         trial_shapes, trial_elements, trial_assembly_data,
         qd, zlocal, store)
 
+    print("dots out of 10: ")
+    todo, done, pctg = length(test_elements), 0, 0
     for (p,tcell) in enumerate(test_elements)
-        #print("Compute test_element $(p)\n")
         for (q,bcell) in enumerate(trial_elements)
 
         fill!(zlocal, 0)
-            strat = quadrule(biop, test_shapes, trial_shapes, p, tcell, q, bcell, qd)
-            momintegrals!(biop, test_shapes, trial_shapes, tcell, bcell, zlocal, strat)
-            I = length(test_assembly_data[p])
-            J = length(trial_assembly_data[q])
-            # print(zlocal)
-            for j in 1 : J, i in 1 : I
-                for (n,b) in trial_assembly_data[q][j], (m,a) in test_assembly_data[p][i]
-                    store(a*zlocal[i,j]*b, m, n)
-end end end end end
+        strat = quadrule(biop, test_shapes, trial_shapes, p, tcell, q, bcell, qd)
+        momintegrals!(biop, test_shapes, trial_shapes, tcell, bcell, zlocal, strat)
+        I = length(test_assembly_data[p])
+        J = length(trial_assembly_data[q])
+        for j in 1 : J, i in 1 : I
+            for (n,b) in trial_assembly_data[q][j], (m,a) in test_assembly_data[p][i]
+                store(a*zlocal[i,j]*b, m, n)
+        end end end
+
+        done += 1
+        new_pctg = round(Int, done / todo * 100)
+        if new_pctg > pctg + 9
+            print(".")
+            pctg = new_pctg
+    end end
+    println("")
+end
+
+
+function assemblechunk_body_nested_meshes!(biop,
+        test_shapes, test_elements, test_assembly_data,
+        trial_shapes, trial_elements, trial_assembly_data,
+        qd, zlocal, store)
+
+    print("dots out of 10: ")
+    todo, done, pctg = length(test_elements), 0, 0
+    for (p,tcell) in enumerate(test_elements)
+        for (q,bcell) in enumerate(trial_elements)
+
+        fill!(zlocal, 0)
+        strat = quadrule(biop, test_shapes, trial_shapes, p, tcell, q, bcell, qd)
+        momintegrals_nested!(biop, test_shapes, trial_shapes, tcell, bcell, zlocal, strat)
+        I = length(test_assembly_data[p])
+        J = length(trial_assembly_data[q])
+        for j in 1 : J, i in 1 : I
+            for (n,b) in trial_assembly_data[q][j], (m,a) in test_assembly_data[p][i]
+                store(a*zlocal[i,j]*b, m, n)
+        end end end
+
+        done += 1
+        new_pctg = round(Int, done / todo * 100)
+        if new_pctg > pctg + 9
+            print(".")
+            pctg = new_pctg
+    end end
+    println("")
+end
 
 
 
