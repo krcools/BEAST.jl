@@ -14,7 +14,7 @@ T = timebasisshiftedlagrange(Δt, Nt, 2)
 V = X ⊗ T
 W = Y ⊗ δ
 
-width, delay, scaling = 8.0/sol, 12.0/sol, 1.0
+width, delay, scaling = 8.0, 12.0, 1.0
 gaussian = creategaussian(width, delay, scaling)
 
 direction, polarisation = ẑ, x̂

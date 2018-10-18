@@ -7,7 +7,7 @@ D, Δx = 1.0, 0.25
 Γ = readmesh(joinpath(@__DIR__,"sphere2.in"))
 X = raviartthomas(Γ)
 
-Δt, Nt = 0.6/sol, 200
+Δt, Nt = 0.6, 200
 T = timebasisshiftedlagrange(Δt, Nt, 3)
 U = timebasisdelta(Δt, Nt)
 

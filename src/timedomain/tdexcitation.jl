@@ -168,8 +168,8 @@ function timeintegrals!(z, exc::TDFunctional,
 
         # since timeelement uses barycentric coordinates,
         # the first/left vertex has coords u = 1.0!
-        testtime = neighborhood(timeelement, point(1.0))
-        @assert cartesian(testtime)[1] ≈ timeelement.vertices[1][1]
+        testtime = neighborhood(timeelement, point(0.0))
+        @assert cartesian(testtime)[1] ≈ timeelement.vertices[2][1]
 
         for i in 1 : numfunctions(spacerefs)
             z[i,1] += dot(testvals[i][1], exc(testpoint, testtime)) * dx

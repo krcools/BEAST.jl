@@ -259,8 +259,8 @@ function assemblydata(tbf::TimeBasisDelta)
 
     els = [ simplex(point((i-0)*Δt),point((i+1)*Δt)) for i in 1:num_cells ]
 
-    for k in 1 : numfunctions(tbf)
-        data[1,1,k] = (k,w)
+    for k in 1 : numfunctions(tbf)-1
+        data[1,1,k] = (k+1,w)
     end
 
     return els, AssemblyData(data)
