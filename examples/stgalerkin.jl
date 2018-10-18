@@ -7,7 +7,7 @@ o, x, y, z = euclidianbasis(3)
 X = raviartthomas(Γ)
 
 #Δt, Nt = 0.08, 400
-Δt, Nt = 1.1, 200
+Δt, Nt = 0.6, 200
 T = timebasisc0d1(Δt, Nt)
 U = timebasiscxd0(Δt, Nt)
 
@@ -18,11 +18,12 @@ width, delay, scaling = 8.0, 12.0, 1.0
 gaussian = creategaussian(width, delay, scaling)
 
 direction, polarisation = ẑ, x̂
-E = BEAST.planewave(polarisation, direction, derive(gaussian), 1.0)
-T = MWSingleLayerTDIO(1.0,-1.0,-1.0,2,0)
 
-@hilbertspace j
-@hilbertspace j′
+E = BEAST.planewave(polarisation, direction, derive(gaussian), 1.0)
+
+
+@hilbertspace j; @hilbertspace j′
+T = MWSingleLayerTDIO(1.0,-1.0,-1.0,2,0)
 tdefie = @discretise T[j′,j] == -1E[j′]   j∈V  j′∈W
 xefie = solve(tdefie)
 
