@@ -3,7 +3,8 @@ o, x, y, z = euclidianbasis(3)
 
 #D, Δx = 1.0, 0.25
 
-Γ = readmesh(joinpath(dirname(@__FILE__),"sphere2.in"))
+D, Δx = 1.0, 0.25
+Γ = readmesh(joinpath(@__DIR__,"sphere2.in"))
 X = raviartthomas(Γ)
 
 sol = 1.0

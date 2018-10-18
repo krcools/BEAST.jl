@@ -33,6 +33,7 @@ include("test_assemblerow.jl")
 
 include("test_wiltonints.jl")
 include("test_sauterschwabints.jl")
+include("test_ss_nested_meshes.jl")
 include("test_nitsche.jl")
 include("test_nitschehh3d.jl")
 

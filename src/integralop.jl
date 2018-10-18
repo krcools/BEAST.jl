@@ -115,7 +115,9 @@ function assemblechunk_body!(biop,
         if new_pctg > pctg + 9
             print(".")
             pctg = new_pctg
-end end end
+    end end
+    println("")
+end
 
 
 function assemblechunk_body_nested_meshes!(biop,
@@ -143,7 +145,9 @@ function assemblechunk_body_nested_meshes!(biop,
         if new_pctg > pctg + 9
             print(".")
             pctg = new_pctg
-end end end
+    end end
+    println("")
+end
 
 
 
