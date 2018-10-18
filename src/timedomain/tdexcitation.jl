@@ -149,7 +149,7 @@ function timeintegrals!(z, exc::TDFunctional, testrefs, timerefs, testpoint, tim
         t = p.point
         w = p.weight
         U = p.value
-        dt = w * jacobian(t) # * volume(timeelement)
+        dt = w #* jacobian(t) # * volume(timeelement)
 
         for i in 1 : numfunctions(testrefs)
             for k in 1 : numfunctions(timerefs)

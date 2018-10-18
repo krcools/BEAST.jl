@@ -268,7 +268,7 @@ end
 
 
 function convolve(f::TimeBasisFunction, g::TimeBasisFunction)
-    @warn "BEAST.convolve: computing quadratic spline out of a pulse and a hat"
+    @info "BEAST.convolve: computing quadratic spline out of a pulse and a hat"
     dt = timestep(f)
     fg = timebasisspline2(dt, numfunctions(f), scalartype(f))
     fg.polys = dt * fg.polys

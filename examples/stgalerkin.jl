@@ -3,9 +3,9 @@ o, x, y, z = euclidianbasis(3)
 
 # D, Δx = 1.0, 0.35
 # Γ = meshsphere(D, Δx)
+
 Γ = readmesh(joinpath(@__DIR__,"sphere2.in"))
 X = raviartthomas(Γ)
-
 #Δt, Nt = 0.08, 400
 Δt, Nt = 0.6, 200
 T = timebasisc0d1(Δt, Nt)
@@ -18,8 +18,8 @@ width, delay, scaling = 8.0, 12.0, 1.0
 gaussian = creategaussian(width, delay, scaling)
 
 direction, polarisation = ẑ, x̂
-
 E = BEAST.planewave(polarisation, direction, derive(gaussian), 1.0)
+
 
 
 @hilbertspace j; @hilbertspace j′
@@ -33,6 +33,3 @@ _, i1 = findmin(abs.(ω.-1.0))
 
 ω1 = ω[i1]
 ue = Xefie[:,i1]/ fouriertransform(gaussian)(ω1)
-
-using Plots
-t1 = plot(0:Δt:(Nt-1)Δt, xefie[1,:])
