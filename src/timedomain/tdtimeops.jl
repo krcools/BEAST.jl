@@ -1,16 +1,28 @@
 function assemble(op::Identity,
         testnfs::AbstractTimeBasisFunction,
         trialfns::AbstractTimeBasisFunction)
-# function assemble(op,
-#         testnfs::AbstractTimeBasisFunction,
-#         trialfns::AbstractTimeBasisFunction)
 
     tbf = convolve(testnfs, trialfns)
+    has_zero_tail = all(tbf.polys[end].data .== 0)
+    @show has_zero_tail
+
     T = scalartype(tbf)
-    z = zeros(T, numintervals(tbf)-1)
+    if has_zero_tail
+        z = zeros(T, numintervals(tbf)-1)
+    else
+        z = zeros(T, numfunctions(tbf))
+    end
+
     Δt = timestep(tbf)
-    for i in eachindex(z)
+    #for i in eachindex(z)
+    for i in 1:numintervals(tbf)-1
         p = tbf.polys[i]
+        t = (i-1)*Δt
+        z[i] = evaluate(p,t)
+    end
+
+    for i in numintervals(tbf):length(z)
+        p = tbf.polys[end]
         t = (i-1)*Δt
         z[i] = evaluate(p,t)
     end
@@ -31,31 +43,31 @@ function scalartype(A::TensorOperator)
 end
 
 
-function assemble(operator::TensorOperator, testfns, trialfns)
-
-    test_spatial_basis  = spatialbasis(testfns)
-    trial_spatial_basis = spatialbasis(trialfns)
-
-    M = numfunctions(test_spatial_basis)
-    N = numfunctions(trial_spatial_basis)
-
-    tbf = convolve(
-        temporalbasis(testfns),
-        temporalbasis(trialfns))
-
-    kmax = numintervals(tbf) - 1
-    k0 = fill(1,    (M,N))
-    k1 = fill(kmax, (M,N))
-
-    T = promote_type(scalartype(operator), scalartype(testfns), scalartype(trialfns))
-    data = zeros(T, M, N, kmax)
-    Z = SparseND.Banded3D(k0, k1, data)
-
-    store(v, m, n, k) = (Z[m,n,k] += v)
-    assemble!(operator, testfns, trialfns, store)
-    return Z
-
-end
+# function assemble(operator::TensorOperator, testfns, trialfns)
+#
+#     test_spatial_basis  = spatialbasis(testfns)
+#     trial_spatial_basis = spatialbasis(trialfns)
+#
+#     M = numfunctions(test_spatial_basis)
+#     N = numfunctions(trial_spatial_basis)
+#
+#     tbf = convolve(
+#         temporalbasis(testfns),
+#         temporalbasis(trialfns))
+#
+#     kmax = numintervals(tbf) - 1
+#     k0 = fill(1,    (M,N))
+#     k1 = fill(kmax, (M,N))
+#
+#     T = promote_type(scalartype(operator), scalartype(testfns), scalartype(trialfns))
+#     data = zeros(T, M, N, kmax)
+#     Z = SparseND.Banded3D(k0, k1, data)
+#
+#     store(v, m, n, k) = (Z[m,n,k] += v)
+#     assemble!(operator, testfns, trialfns, store)
+#     return Z
+#
+# end
 
 function assemble!(operator::TensorOperator, testfns, trialfns, store)
 
@@ -69,6 +81,22 @@ function assemble!(operator::TensorOperator, testfns, trialfns, store)
     time_trialfns = temporalbasis(trialfns)
 
     zt = assemble(time_operator, time_testfns, time_trialfns)
+
+    # Truncate to a reasonable size in case the tbf has a semi-infinite support
+    tbf = convolve(time_testfns, time_trialfns)
+    has_zero_tail = all(tbf.polys[end].data .== 0)
+    if !has_zero_tail
+        #speedoflight = op.speed_of_light
+        speedoflight = 1.0
+        @warn "Assuming speed of light to be equal to 1!"
+        Δt = timestep(tbf)
+        ct, hs = boundingbox(geometry(space_trialfns).vertices)
+        diam = 2 * sqrt(3) * hs
+        kmax = ceil(Int, (numintervals(tbf)-1) + diam/speedoflight/Δt)+1
+        zt = zt[1:kmax]
+    end
+
+
     function store1(v,m,n)
         for (k,w) in enumerate(zt)
             store(w*v,m,n,k)

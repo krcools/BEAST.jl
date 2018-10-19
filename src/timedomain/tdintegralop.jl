@@ -50,82 +50,6 @@ function assemble!(op::LinearCombinationOfOperators, tfs::SpaceTimeBasis, bfs::S
 end
 
 
-# function assemble_unstable!(op::RetardedPotential, testST, trialST, store)
-#
-#     testspace  = spatialbasis(testST)
-#     trialspace = spatialbasis(trialST)
-#     timebasisfunction = convolve(temporalbasis(testST), temporalbasis(trialST))
-#
-# 	testels, testad   = assemblydata(testspace)
-# 	trialels, trialad = assemblydata(trialspace)
-#
-#     timeels, timead = assemblydata(timebasisfunction)
-#     speedoflight = op.speed_of_light
-#
-# 	Δt = timestep(timebasisfunction)
-# 	ΔR = Δt * speedoflight
-#     @show Δt ΔR
-# 	Nt = numfunctions(timebasisfunction)
-# 	tmax = (Nt-1) * Δt
-#
-#     U = refspace(testspace)
-#     V = refspace(trialspace)
-#     W = refspace(timebasisfunction)
-#
-#     qd = quaddata(op, U, V, W, testels, trialels, timeels)
-#
-#     udim = numfunctions(U)
-#     vdim = numfunctions(V)
-#     wdim = numfunctions(W)
-#     z = zeros(eltype(op), udim, vdim, wdim)
-#
-#     print("dots out of 10: ")
-#     todo, done, pctg = length(testels), 0, 0
-#     for p in eachindex(testels)
-#         τ = testels[p]
-#         for q in eachindex(trialels)
-#             σ = trialels[q]
-# 	        for r in rings(τ,σ,ΔR)
-# 				r > numfunctions(timebasisfunction) && continue
-# 	            ι = ring(r,ΔR)
-#
-# 	            # compute interactions between reference shape functions
-# 	            fill!(z, 0)
-# 	            qr = quadrule(op, U, V, W, p, τ, q, σ, r, ι, qd)
-# 				momintegrals!(z, op, U, V, W, τ, σ, tmax, ι, qr)
-#
-# 		        # assemble in the global matrix
-# 		        for i in 1 : udim
-# 		            for j in 1 : vdim
-# 		                for d in 1 : wdim
-#
-# 		                    v = z[i,j,d]
-#
-#                             for (m,a) in testad[p,i]
-#                                 for (n,b) in trialad[q,j]
-#                                     for (k,c) in timead[Nt-r,d]
-# 										store(a*b*c*v, m, n, Nt-k+1)
-# 									end # next κ
-# 		                        end # next ν
-# 		                    end # next μ
-# 		                end # next d
-# 		            end # next j
-# 		        end #next i
-# 		    end # next r
-# 		end # next q
-#
-#         done += 1
-#         new_pctg = round(Int, done / todo * 100)
-#         if new_pctg > pctg + 9
-#             print(".")
-#             pctg = new_pctg
-#         end
-#     end # next p
-#
-#     println("")
-# end
-
-
 function assemble!(op::RetardedPotential, testST, trialST, store)
 
     testspace  = spatialbasis(testST)
@@ -135,8 +59,13 @@ function assemble!(op::RetardedPotential, testST, trialST, store)
 	testels, testad   = assemblydata(testspace)
 	trialels, trialad = assemblydata(trialspace)
 
-    timead = temporalassemblydata(timebasisfunction)
-    speedoflight = op.speed_of_light
+	speedoflight = op.speed_of_light
+	Δt = timestep(timebasisfunction)
+	ct, hs = boundingbox(geometry(trialspace).vertices)
+	diam = 2 * sqrt(3) * hs
+	#kmax = ceil(Int, diam/speedoflight/timestep(timebasisfunction)) + (numintervals(timebasisfunction)-1)
+	kmax = ceil(Int, (numintervals(timebasisfunction)-1) + diam/speedoflight/Δt)+1
+    timead = temporalassemblydata(timebasisfunction, kmax=kmax)
 
 	Δt = timestep(timebasisfunction)
 	ΔR = Δt * speedoflight
@@ -168,7 +97,6 @@ function assemble!(op::RetardedPotential, testST, trialST, store)
 	            # compute interactions between reference shape functions
 	            fill!(z, 0)
 	            qr = quadrule(op, U, V, W, p, τ, q, σ, r, ι, qd)
-				#momintegrals!(z, op, U, V, W, τ, σ, 0, ι, qr)
                 momintegrals!(z, op, U, V, W, τ, σ, ι, qr)
 
 		        # assemble in the global matrix
@@ -180,7 +108,6 @@ function assemble!(op::RetardedPotential, testST, trialST, store)
 
                             for (m,a) in testad[p,i]
                                 for (n,b) in trialad[q,j]
-                                    #for (k,c) in timead[Nt-r,d]
                                     for (k,c) in timead[r,d]
                                         #@assert 1 <= s <= Nt
 										store(a*b*c*v, m, n, k)

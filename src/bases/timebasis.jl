@@ -194,19 +194,8 @@ function assemblydata(tbf::TimeBasisFunction)
 end
 
 
-# struct TemporalAssemblyData{D}
-#     data::D
-# end
-#
-# struct TemporalAssemblyDataSlice{D}
-#     data::D
-#     cellindex::Int
-# end
-#
-# Base.getindex(ad::TemporalAssemblyData,c) = TemporalAssemblyDataSlice(ad.data,c)
-# Base.getindex(ads::TemporalAssemblyDataSlice,r) = ads.data[:,r,c]
 
-function temporalassemblydata(tbf)
+function temporalassemblydata(tbf; kmax=typemax(Int))
 
     T = scalartype(tbf)
     Δt = timestep(tbf)
@@ -216,13 +205,20 @@ function temporalassemblydata(tbf)
     num_cells = numfunctions(tbf)
     num_refs  = degree(tbf)+1
 
-    max_num_funcs = numintervals(tbf)
+    has_zero_tail = all(tbf.polys[end].data .== 0)
+    @show has_zero_tail
+
+    if has_zero_tail
+        max_num_funcs = numintervals(tbf) # 3
+    else
+        max_num_funcs = min(kmax, numfunctions(tbf))
+    end
+
     numfuncs = zeros(Int, num_cells, num_refs)
     data = fill((0,zero(T)), max_num_funcs, num_refs, num_cells)
-    for k in 1 : numfunctions(tbf)
+    for k in 1 : min(kmax, numfunctions(tbf))
         tk = (k-1) * Δt
-        for i in 1 : numintervals(tbf)
-        #for shape in basisfunction(basis, b)
+        for i in 1 : numintervals(tbf)-1
             p = tbf.polys[i]
             q = substitute(p,t+tk)
 
@@ -234,6 +230,22 @@ function temporalassemblydata(tbf)
 
                 j = (numfuncs[c,r] += 1)
                 data[j,r,c] = (k,w)
+            end
+        end
+
+        # Treat the half-open interval separately
+        if !has_zero_tail
+            p = tbf.polys[numintervals(tbf)]
+            q = substitute(p, t+tk)
+            c = k - numintervals(tbf) + 1
+            while c > 0
+                for d = 0 : degree(q)
+                    r = d+1
+                    w = q[d]
+                    j = (numfuncs[c,r] += 1)
+                    data[j,r,c] = (k,w)
+                end
+                c = c-1
             end
         end
     end
