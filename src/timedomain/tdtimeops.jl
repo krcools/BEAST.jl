@@ -87,12 +87,12 @@ function assemble!(operator::TensorOperator, testfns, trialfns, store)
     has_zero_tail = all(tbf.polys[end].data .== 0)
     if !has_zero_tail
         #speedoflight = op.speed_of_light
-        speedoflight = 1.0
-        @warn "Assuming speed of light to be equal to 1!"
-        Δt = timestep(tbf)
-        ct, hs = boundingbox(geometry(space_trialfns).vertices)
-        diam = 2 * sqrt(3) * hs
-        kmax = ceil(Int, (numintervals(tbf)-1) + diam/speedoflight/Δt)+1
+            speedoflight = 1.0
+            @warn "Assuming speed of light to be equal to 1!"
+            Δt = timestep(tbf)
+            ct, hs = boundingbox(geometry(space_trialfns).vertices)
+            diam = 2 * sqrt(3) * hs
+            kmax = ceil(Int, (numintervals(tbf)-1) + diam/speedoflight/Δt)+1
         zt = zt[1:kmax]
     end
 
