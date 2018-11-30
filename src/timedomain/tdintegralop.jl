@@ -38,7 +38,7 @@ function allocatestorage(op::RetardedPotential, testST, basisST)
     kmax = maximum(K1);
     Z = zeros(eltype(op), M, N, kmax+1)
     store1(v,m,n,k) = (Z[m,n,k] += v)
-    return Z, store1
+    return MatrixConvolution(Z), store1
 end
 
 
