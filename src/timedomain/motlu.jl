@@ -47,8 +47,3 @@ function marchonintime(W0,Z,B,I)
     end
     return x
 end
-
-
-function companion(Z)
-    M, N, K = size(Z)
-end

@@ -68,7 +68,7 @@ export laplace_to_z, inverse_z_transform, real_inverse_z_transform
 export butcher_tableau_radau_2stages
 export butcher_tableau_radau_3stages
 export creategaussian
-export derive
+export derive, integrate
 export fouriertransform
 export assemble
 export Identity
