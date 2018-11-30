@@ -69,6 +69,36 @@ end
 #
 # end
 
+
+function allocatestorage(op::TensorOperator, test_functions, trial_functions)
+
+    M = numfunctions(spatialbasis(test_functions))
+    N = numfunctions(spatialbasis(trial_functions))
+
+    time_basis_function = BEAST.convolve(
+        temporalbasis(test_functions),
+        temporalbasis(trial_functions))
+
+    tbf = time_basis_function
+    has_zero_tail = all(tbf.polys[end].data .== 0)
+    @show has_zero_tail
+
+    if has_zero_tail
+        K = numintervals(time_basis_function)-1
+    else
+        speedoflight = 1.0
+        @warn "Assuming speed of light to be equal to 1!"
+        Δt = timestep(tbf)
+        ct, hs = boundingbox(geometry(BEAST.spatialbasis(trial_functions)).vertices)
+        diam = 2 * sqrt(3) * hs
+        K = ceil(Int, (BEAST.numintervals(tbf)-1) + diam/speedoflight/Δt)+1
+    end
+    @assert K > 0
+
+    Z = zeros(M, N, K)
+    return Z, (v,m,n,k)->(Z[m,n,k] += v)
+end
+
 function assemble!(operator::TensorOperator, testfns, trialfns, store)
 
     space_operator = operator.spatial_factor

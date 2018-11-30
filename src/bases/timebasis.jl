@@ -39,6 +39,28 @@ function derive(tbf::TimeBasisFunction{T,N,D1,D}) where {T,N,D1,D}
 end
 
 
+function integrate(tbf::TimeBasisFunction{T,NI,D1,D}) where {T,NI,D1,D}
+
+    timestep = tbf.timestep
+    numfunctions = tbf.numfunctions
+
+    polys = Vector{Polynomial{D1+1,T}}(undef, length(tbf.polys))
+    c = zero(timestep)
+    for i in 1:length(polys)
+        t0 = (i-2) * timestep
+        t1 = (i-1) * timestep
+        polys[i] = integrate(tbf.polys[i],t0,c)
+        c = polys[i](t1)
+    end
+
+    TimeBasisFunction{T,NI,D1+1,D+1}(
+        tbf.timestep,
+        tbf.numfunctions,
+        SVector(polys...)
+    )
+end
+
+
 mutable struct TimeBasisDelta{T} <: AbstractTimeBasisFunction
     timestep::T
     numfunctions::Int
@@ -287,17 +309,58 @@ function convolve(f::TimeBasisFunction, g::TimeBasisFunction)
     return fg
 end
 
+# function convolve(f::TimeBasisFunction{T,2,1,0}, g::TimeBasisFunction{T,2,1,0}) where {T}
+#     @info "Convolving two pulses into a hat"
+#     dt = timestep(f)
+#     fg = timebasisshiftedlagrange(dt, numfunctions(f), 1, scalartype(f))
+#     fg.polys = dt * fg.polys
+#     return fg
+# end
+
+function convolve(δ::TimeBasisDelta, g::TimeBasisFunction)
+    @info "Computing the trivial convolution between a delta and something else"
+    return g
+end
+
 function convolve(f::TimeBasisFunction{T,2,1,0}, g::TimeBasisFunction{T,2,1,0}) where {T}
     @info "Convolving two pulses into a hat"
-    dt = timestep(f)
+    dt = BEAST.timestep(f)
     fg = timebasisshiftedlagrange(dt, numfunctions(f), 1, scalartype(f))
     fg.polys = dt * fg.polys
     return fg
 end
 
-function convolve(δ::TimeBasisDelta, g::TimeBasisFunction)
-    @info "Computing the trivial convolution between a delta and something else"
-    return g
+function BEAST.convolve(
+    f::TimeBasisFunction{T,2,1,0},
+    g::TimeBasisFunction{T,N,D1,D}) where {T,N,D1,D}
+
+    @info "Convolving a left-of-origin pulse with a piecewise poly"
+
+    @assert degree(f.polys[1]) == 0
+
+    # The result of convolving with a LoO pulse extends the support
+    # by Δt to the right.
+    P = Polynomial{D1+1,T}
+    polys = Vector{P}(undef, N+1)
+    t = Polynomial{2,T}(SVector{2,T}(0, 1))
+
+    # Treat the leftmost interval separately
+    polys[1] = integrate(g.polys[1], -Δt, 0)
+
+    for i in 2:N
+        q1 = -1 * substitute(integrate(g.polys[i-1], (i-2)*Δt, 0), t-Δt)
+        q2 = integrate(g.polys[i], (i-2)*Δt, 0)
+        polys[i] = q1 + q2
+    end
+
+    q1 = -1 * substitute(integrate(g.polys[N], (N-1)*Δt, 0), t-Δt)
+    q2 = integrate(g.polys[N], (N-1)*Δt, 0)
+    polys[N+1] = q1 + q2
+
+    TimeBasisFunction{T,N+1,D1+1,D+1}(
+        g.timestep,
+        g.numfunctions,
+        polys)
 end
 
 """

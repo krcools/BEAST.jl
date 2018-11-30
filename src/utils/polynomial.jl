@@ -6,6 +6,9 @@ end
 Polynomial(x::T...) where {T} = Polynomial{length(x),T}(SVector{length(x),T}(x))
 Polynomial(a::T) where {T<:Number} = Polynomial{1,T}(SVector{1,T}(a))
 
+Base.copy(p::Polynomial) = p
+Base.one(p::Polynomial{N,T}) where{N,T} = Polynomial(@SVector[one(T)])
+
 Base.length(p::Polynomial) = length(p.data)
 Base.eltype(p::Polynomial) = eltype(p.data)
 Base.getindex(p::Polynomial,i::Int) = p.data[i+1]
@@ -20,6 +23,19 @@ degree(p::Polynomial) = length(p.data)-1
 function derive(p)
     x = eltype(p)[d*p[d] for d in 1:degree(p)]
     Polynomial(x...)
+end
+
+function integrate(p::Polynomial{N,T},x0,y0) where {N,T}
+
+    coeffs = similar(p.data, length(p.data)+1)
+    fill!(coeffs, 0)
+    for i in 2:length(coeffs)
+        coeffs[i] = p.data[i-1]/(i-1)
+    end
+    temp = Polynomial(SVector(coeffs...))
+    coeffs[1] = y0 - temp(x0)
+    # TODO: Remove high order terms with zero coefficient
+    return Polynomial(SVector(coeffs...))
 end
 
 function evaluate(p::Polynomial, t)

@@ -35,3 +35,18 @@ end
 
 
 derive(g::Gaussian) =  s -> g(s) * (-8 * (s-g.delay)/g.width) * (4/g.width)
+
+
+struct ErrorFunction{T}
+    scaling::T
+    width::T
+    delay::T
+end
+
+function (f::ErrorFunction)(s)
+    scaling * 0.5 * (1 + erf(4*(s-delay)/width))
+end
+
+function integrate(f::Gaussian)
+    return ErrorFunction(f.scaling, f.width, f.delay)
+end
