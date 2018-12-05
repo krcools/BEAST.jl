@@ -96,7 +96,7 @@ function allocatestorage(op::TensorOperator, test_functions, trial_functions)
     @assert K > 0
 
     Z = zeros(M, N, K)
-    return Z, (v,m,n,k)->(Z[m,n,k] += v)
+    return MatrixConvolution(Z), (v,m,n,k)->(Z[m,n,k] += v)
 end
 
 function assemble!(operator::TensorOperator, testfns, trialfns, store)

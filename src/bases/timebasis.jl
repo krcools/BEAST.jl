@@ -337,9 +337,11 @@ function BEAST.convolve(
     @info "Convolving a left-of-origin pulse with a piecewise poly"
 
     @assert degree(f.polys[1]) == 0
+    @assert timestep(f) ≈ timestep(g)
 
     # The result of convolving with a LoO pulse extends the support
     # by Δt to the right.
+    Δt = timestep(f)
     P = Polynomial{D1+1,T}
     polys = Vector{P}(undef, N+1)
     t = Polynomial{2,T}(SVector{2,T}(0, 1))

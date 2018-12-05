@@ -62,6 +62,8 @@ end
 
 
 Base.:*(a::Number, x::MatrixConvolution) = MatrixConvolution(a * x.arr)
+Base.:*(x::MatrixConvolution, a::Number) = MatrixConvolution(x.arr * a)
+Base.:/(x::MatrixConvolution, a::Number) = MatrixConvolution(x.arr / a)
 
 
 convolve(x::MatrixConvolution, y::Matrix, i, j) = convolve(x.arr, y, i, j)
