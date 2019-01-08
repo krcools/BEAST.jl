@@ -26,8 +26,8 @@ include("test_trace.jl")
 include("test_timebasis.jl")
 include("test_rtports.jl")
 
-#include("test_gram.jl")
-#include("test_vector_gram.jl")
+include("test_gram.jl")
+include("test_vector_gram.jl")
 
 include("test_assemblerow.jl")
 
