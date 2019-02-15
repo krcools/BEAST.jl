@@ -19,8 +19,15 @@ mutable struct MWDoubleLayerTDIO{T} <: RetardedPotential{T}
     num_diffs::Int
 end
 
-MWSingleLayerTDIO(c) = MWSingleLayerTDIO(c,-1/c,-c,2,0)
-MWDoubleLayerTDIO(c) = MWDoubleLayerTDIO(c, one(c), 0)
+MWSingleLayerTDIO(;speedoflight) = MWSingleLayerTDIO(speedoflight,-1/speedoflight,-speedoflight,2,0)
+MWDoubleLayerTDIO(;speedoflight) = MWDoubleLayerTDIO(speedoflight, one(speedoflight), 0)
+
+module TimeDomain
+module Maxwell3D
+import ...BEAST
+SingleLayer(;speedoflight) = BEAST.MWSingleLayerTDIO(speedoflight,-1/speedoflight,-speedoflight,2,0)
+end
+end
 
 function quaddata(op::MWSingleLayerTDIO, testrefs, trialrefs, timerefs,
         testels, trialels, timeels)

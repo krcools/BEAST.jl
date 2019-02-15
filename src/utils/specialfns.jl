@@ -6,6 +6,7 @@ struct Gaussian{T}
     delay::T
 end
 
+Gaussian(;scaling=1.0, width, delay) = Gaussian(scaling, width, delay)
 
 (g::Gaussian)(s::Real) = 4*g.scaling/(g.width*√π) * exp(-(4*(s-g.delay)/g.width)^2)
 
@@ -32,6 +33,8 @@ function fouriertransform(a::Array, dt, t0, dim=1)
     ω0 = -dω * div(n,2)
     b, dω, ω0
 end
+
+fouriertransform(a::Array; stepsize, offset, dim=1) = fouriertransform(a, stepsize, offset, dim)
 
 
 derive(g::Gaussian) =  s -> g(s) * (-8 * (s-g.delay)/g.width) * (4/g.width)
