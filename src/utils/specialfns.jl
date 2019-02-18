@@ -47,7 +47,7 @@ struct ErrorFunction{T}
 end
 
 function (f::ErrorFunction)(s)
-    scaling * 0.5 * (1 + erf(4*(s-delay)/width))
+    f.scaling * 0.5 * (1 + erf(4*(s-f.delay)/f.width))
 end
 
 function integrate(f::Gaussian)
