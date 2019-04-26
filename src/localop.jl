@@ -11,7 +11,7 @@ abstract type LocalOperator <: Operator end
 
 
 function assemble!(biop::LocalOperator, tfs::Space, bfs::Space, store)
-    if tfs == bfs
+    if geometry(tfs) == geometry(bfs)
         return assemble_local_matched!(biop, tfs, bfs, store)
     else
         return assemble_local_mixed!(biop, tfs, bfs, store)
