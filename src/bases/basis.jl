@@ -143,41 +143,14 @@ function assemblydata(basis::Space)
     num_refs = numfunctions(refspace(basis))
 
     # # determine the maximum number of function defined over a given cell
-    # celltonum = zeros(Int, num_cells, num_refs)
-    # for b in 1 : num_bfs
-    #     basisfunc = basisfunction(basis, b)
-    #     # num_refs = length(basisfunc)
-    #     for shape in basisfunc
-    #         c = shape.cellid
-    #         r = shape.refid
-    #         celltonum[c,r] += 1
-    #     end
-    # end
-    celltonum =make_celltonum(num_cells, num_refs, num_bfs, basis)
+    celltonum = make_celltonum(num_cells, num_refs, num_bfs, basis)
 
     # # mark the active elements, i.e. elements over which
     # # at least one function is defined.
-    # active = falses(num_cells)
-    # index_among_actives = fill(0, num_cells)
-    # num_active_cells = 0
-    # for i in 1:num_cells
-    #     if maximum(@view celltonum[i,:]) > 0
-    #         num_active_cells += 1
-    #         active[i] = true
-    #         index_among_actives[i] = num_active_cells
-    #     end
-    # end
-    active, index_among_actives, num_active_cells = index_actives(num_cells, celltonum)
+    active, index_among_actives, num_active_cells, act_to_global =
+        index_actives(num_cells, celltonum)
 
     @assert num_active_cells != 0
-    # E = typeof(chart(geo, first(cells(geo))))
-    # elements = Vector{E}(num_active_cells)
-    # j = 1
-    # for (i,cell) in enumerate(cells(geo))
-    #     active[i] || continue
-    #     elements[j] = chart(geo, cell)
-    #     j += 1
-    # end
     elements = instantiate_charts(geo, num_active_cells, active)
 
     max_celltonum = maximum(celltonum)
@@ -195,7 +168,7 @@ function assemblydata(basis::Space)
         end
     end
 
-    return elements, AssemblyData(data)
+    return elements, AssemblyData(data), act_to_global
 end
 
 
@@ -213,17 +186,21 @@ function make_celltonum(num_cells, num_refs, num_bfs, basis)
 end
 
 function index_actives(num_cells, celltonum)
+    @assert num_cells == size(celltonum,1)
     active = falses(num_cells)
     index_among_actives = fill(0, num_cells)
+    act_to_global = fill(0, num_cells)
     num_active_cells = 0
     for i in 1:num_cells
         if maximum(@view celltonum[i,:]) > 0
             num_active_cells += 1
             active[i] = true
             index_among_actives[i] = num_active_cells
+            act_to_global[num_active_cells] = i
         end
     end
-    return active, index_among_actives  , num_active_cells
+    resize!(act_to_global, num_active_cells)
+    return active, index_among_actives, num_active_cells, act_to_global
 end
 
 

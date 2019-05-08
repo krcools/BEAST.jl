@@ -13,7 +13,7 @@ function facecurrents(coeffs, basis)
 	refs = refspace(basis)
 	numrefs = numfunctions(refs)
 
-	cells, tad = assemblydata(basis)
+	cells, tad, a2g = assemblydata(basis)
 
 	mesh = geometry(basis)
 	D = dimension(mesh)
@@ -32,7 +32,8 @@ function facecurrents(coeffs, basis)
 		for i in 1 : numrefs
 			fx = vals[i][1]
             for (m,a) in tad[t,i]
-				fcr[t] += coeffs[m] * a * fx
+				# fcr[t] += coeffs[m] * a * fx
+				fcr[a2g[t]] += coeffs[m] * a * fx
 			end
 		end
 	end

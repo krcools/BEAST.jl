@@ -52,6 +52,7 @@ mutable struct TangTraceMW{F} <: Functional
 end
 
 cross(::NormalVector, p::Function) = CrossTraceMW(p)
+cross(::NormalVector, p::PlaneWaveMW) = CrossTraceMW(p)
 cross(t::CrossTraceMW, ::NormalVector) = TangTraceMW(t.field)
 
 function (ϕ::CrossTraceMW)(p)
