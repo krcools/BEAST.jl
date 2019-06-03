@@ -10,6 +10,8 @@ refspace(s::NDBasis) = NDRefSpace{scalartype(s)}()
 function nedelec(surface, edges=skeleton(surface,1))
 
     T = coordtype(surface)
+    # P = eltype(surface.vertices)
+    P = vertextype(surface)
     num_edges = numcells(edges)
 
     C = connectivity(edges, surface, identity)
@@ -17,9 +19,11 @@ function nedelec(surface, edges=skeleton(surface,1))
     vals = nonzeros(C)
 
     fns = Vector{Vector{Shape{T}}}(undef,num_edges)
+    pos = Vector{P}(undef,num_edges)
     for (i,edge) in enumerate(cells(edges))
 
         fns[i] = Vector{Shape{T}}()
+        pos[i] = cartesian(center(chart(edges,edge)))
 
         for k in nzrange(C,i)
 
@@ -31,8 +35,7 @@ function nedelec(surface, edges=skeleton(surface,1))
         end
     end
 
-    P = eltype(surface.vertices)
-    NDBasis(surface, fns, P[])
+    NDBasis(surface, fns, pos)
 end
 
 function LinearAlgebra.cross(::NormalVector, s::NDBasis)
