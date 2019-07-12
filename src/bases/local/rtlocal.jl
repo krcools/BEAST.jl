@@ -1,6 +1,9 @@
 struct RTRefSpace{T} <: RefSpace{T,3} end
 
-valuetype(ref::RTRefSpace{T}, charttype) where {T} = SVector{3,Tuple{Pt{universedimension(charttype),T},T}}
+# valuetype(ref::RTRefSpace{T}, charttype) where {T} = SVector{3,Tuple{SVector{universedimension(charttype),T},T}}
+function valuetype(ref::RTRefSpace{T}, charttype::Type) where {T}
+    SVector{universedimension(charttype),T}
+end
 
 function (ϕ::RTRefSpace)(mp)
 
