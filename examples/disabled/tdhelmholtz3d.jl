@@ -28,8 +28,8 @@ W = inv(Z[:,:,1])
 u = marchonintime(W,Z,-b,Nt)
 
 U, Δω, ω0 = fouriertransform(u, Δt, 0.0, 2)
-ω = collect(ω0 + (0:Nt-1)*Δω)
-_, i1 = findmin(abs(ω-1.0)); ω1 = ω[i1]
+ω = collect(ω0 .+ (0:Nt-1)*Δω)
+_, i1 = findmin(abs.(ω.-1.0)); ω1 = ω[i1]
 
 U1 = U[:,i1]
 fgaussian = fouriertransform(gaussian)
@@ -37,6 +37,9 @@ U1 /= fgaussian(ω1)
 Fcr, geo = facecurrents(U1, X)
 
 #A = [real(norm(f)) for f in Fcr]
-include(Pkg.dir("CompScienceMeshes","examples","plotlyjs_patches.jl"))
-p = patch(geo, real.(norm.(fcr)))
+d = joinpath(dirname(pathof(CompScienceMeshes)),"..","examples","plotlyjs_patches.jl")
+include(d)
+# include(Pkg.dir("CompScienceMeshes","examples","plotlyjs_patches.jl"))
+using LinearAlgebra
+p = patch(geo, real.(norm.(Fcr)))
 #PlotlyJS.plot([p])

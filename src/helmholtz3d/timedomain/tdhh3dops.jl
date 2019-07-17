@@ -14,7 +14,12 @@ function quaddata(operator::HH3DSingleLayerTDBIO,
         test_local_space, trial_local_space, time_local_space,
         test_element, trial_element, time_element)
 
-    quaddata(test_local_space, test_element, (3,))
+    dmax = numfunctions(time_local_space)-1
+    bn = binomial.((0:dmax),(0:dmax)')
+
+    V = eltype(test_element[1].vertices)
+    ws = WiltonInts84.workspace(V)
+    quadpoints(test_local_space, test_element, (3,)), bn, ws
 
 end
 
@@ -25,13 +30,15 @@ function quadrule(operator::HH3DSingleLayerTDBIO,
         p, test_element, q, trial_element, r, time_element,
         quad_data)
 
-    WiltonInts84Strat(quad_data[1,p])
+    # WiltonInts84Strat(quad_data[1,p])
+    qd = quad_data
+    WiltonInts84Strat(qd[1][1,p],qd[2],qd[3])
 
 end
 
 
 function innerintegrals!(zlocal, operator::HH3DSingleLayerTDBIO,
-        test_point, test_time,
+        test_point,
         test_local_space, trial_local_space, time_local_space,
         test_element, trial_element, time_element,
         quad_rule, quad_weight)
@@ -60,15 +67,22 @@ function innerintegrals!(zlocal, operator::HH3DSingleLayerTDBIO,
     @assert numfunctions(test_local_space)  == 1
     @assert numfunctions(trial_local_space) == 1
 
-    # aux fn to compute \int (t-R)^d / R
-    @inline function tmRoR(d, t, iG)
-        r = zero(t)
-        for q in 0:d
-            sgn = isodd(q) ? -1 : 1
-            r += binomial(d,q) * sgn * t^(d-q) * iG[q+2]
-        end
-        r
+    # # aux fn to compute \int (t-R)^d / R
+    # @inline function tmRoR(d, t, iG)
+    #     r = zero(t)
+    #     for q in 0:d
+    #         sgn = isodd(q) ? -1 : 1
+    #         r += binomial(d,q) * sgn * t^(d-q) * iG[q+2]
+    #     end
+    #     r
+    # end
+
+    @inline function tmRoR(d, iG, bns)
+        sgn = isodd(d) ? -1 : 1
+        r = sgn * iG[d+2]
     end
+
+    bns = quad_rule.binomials
 
     for k in 1 : numfunctions(time_local_space)
         d = k - 1
@@ -77,10 +91,12 @@ function innerintegrals!(zlocal, operator::HH3DSingleLayerTDBIO,
             for p in 0 : D-1
                 q *= (d-p)
             end
-            zlocal[1,1,k] += a * q * tmRoR(d-D, test_time, ∫G)
+            # zlocal[1,1,k] += a * q * tmRoR(d-D, test_time, ∫G)
+            zlocal[1,1,k] += a * q * tmRoR(d-D, ∫G, bns)
             # sgn = isodd(d) ? -1 : 1
             # zlocal[1,1,k] += a * sgn * q * ∫G[d+2-D]
         end
     end # k
+    # comment
 
 end

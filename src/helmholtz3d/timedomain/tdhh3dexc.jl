@@ -24,5 +24,5 @@ function(f::PlaneWaveHH3DTD)(r,t)
     a = f.amplitude
     c = f.speed_of_light
     h = f.signature
-    a * h(c*t - u)
+    a * h(c*cartesian(t)[1] - u)
 end
