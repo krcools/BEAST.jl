@@ -140,6 +140,7 @@ include("identityop.jl")
 include("integralop.jl")
 include("quaddata.jl")
 include("postproc.jl")
+include("postproc/segcurrents.jl")
 
 include("quadrature/double_quadrature.jl")
 include("quadrature/singularity_extraction.jl")
