@@ -24,8 +24,8 @@ W = X ⊗ U # test space
 b = assemble(e, W)
 Z = assemble(S, W, V)
 
-W = inv(Z[:,:,1])
-u = marchonintime(W,Z,-b,Nt)
+iZ1 = inv(Z[:,:,1])
+u = marchonintime(iZ1,Z,-b,Nt)
 
 U, Δω, ω0 = fouriertransform(u, Δt, 0.0, 2)
 ω = collect(ω0 .+ (0:Nt-1)*Δω)
