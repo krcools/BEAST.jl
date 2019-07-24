@@ -40,6 +40,8 @@ include("test_ss_nested_meshes.jl")
 include("test_nitsche.jl")
 include("test_nitschehh3d.jl")
 
+include("test_hh3dtd_exc.jl")
+
 include("test_tdop_scaling.jl")
 include("test_tdrhs_scaling.jl")
 

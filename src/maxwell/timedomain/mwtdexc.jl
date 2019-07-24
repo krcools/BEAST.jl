@@ -5,14 +5,6 @@ mutable struct PlaneWaveMWTD{T,F,P} <: TDFunctional{T}
   amplitude::F
 end
 
-# """
-#     speedoflight(excitation)
-#
-# Returns the speed of light of the medium the excitation is defined in.
-# """
-# speedoflight(exc::PlaneWaveMWTD) = exc.speedoflight
-
-
 
 function planewave(polarisation,direction,amplitude,speedoflight)
     PlaneWaveMWTD(direction,polarisation,speedoflight,amplitude)
@@ -20,6 +12,8 @@ end
 
 planewave(;signature, polarization, direction, speedoflight) =
     PlaneWaveMWTD(direction, polarization, speedoflight, signature)
+
+scalartype(p::PlaneWaveMWTD) = eltype(p.polarisation)
 
 *(a, pw::PlaneWaveMWTD) = PlaneWaveMWTD(
     pw.direction,
@@ -36,9 +30,7 @@ cross(k, pw::PlaneWaveMWTD) = PlaneWaveMWTD(
 )
 
 function (f::PlaneWaveMWTD)(r,t)
-    #dr = zero(typeof(t))
     t = cartesian(t)[1]
-    #dr = zero(eltype(cartesian(r)))
     dr = zero(typeof(t))
     for i in 1 : 3
         dr += r[i]*f.direction[i]

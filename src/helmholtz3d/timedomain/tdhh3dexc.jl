@@ -6,9 +6,6 @@ struct PlaneWaveHH3DTD{T,P,F} <: TDFunctional{T}
 end
 
 
-#speedoflight(f::PlaneWaveHH3DTD) = f.speed_of_light
-
-
 function planewave(direction, speedoflight::Number, signature, amplitude=one(speedoflight)::Number)
     PlaneWaveHH3DTD(direction, speedoflight, signature, amplitude)
 end
@@ -25,4 +22,30 @@ function(f::PlaneWaveHH3DTD)(r,t)
     c = f.speed_of_light
     h = f.signature
     a * h(c*cartesian(t)[1] - u)
+end
+
+
+function gradient(f::PlaneWaveHH3DTD)
+    @assert f.amplitude ≈ 1
+    PlaneWaveMWTD(
+        f.direction,
+        -f.direction,
+        f.speed_of_light,
+        derive(f.signature)
+    )
+end
+
+
+struct DotTraceHH{T,F} <: TDFunctional{T}
+    field::F
+end
+
+
+dot(::NormalVector, field::TDFunctional) = DotTraceHH{scalartype(field), typeof(field)}(field)
+
+
+function (f::DotTraceHH)(p,t)
+    n = normal(p)
+    # x = cartesian(p)
+    return dot(n, f.field(p,t))
 end
