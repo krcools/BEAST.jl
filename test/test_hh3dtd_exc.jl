@@ -24,7 +24,7 @@ pw2 = BEAST.gradient(pw)
 dsig = derive(sig)
 @test pw2(x,t) ≈ -dir*dsig(t-dot(dir,x))
 
-trc = dot(n,pw2)
+trc = dot(BEAST.n,pw2)
 ch = simplex(
     point(0,0,0),
     point(1,0,0),

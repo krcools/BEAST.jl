@@ -26,7 +26,8 @@ refs = refspace(X)
 vals = refs(nbd)
 
 Z = assemble(S, W, V)
-b = assemble(e, W)
+h = dot(n,BEAST.gradient(e))
+b = assemble(h, W)
 
 iZ1 = inv(Z[:,:,1])
 u = marchonintime(iZ1,Z,-b,Nt)
