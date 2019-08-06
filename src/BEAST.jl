@@ -176,6 +176,7 @@ include("decoupled/dpops.jl")
 
 include("helmholtz3d/timedomain/tdhh3dops.jl")
 include("helmholtz3d/timedomain/tdhh3dexc.jl")
+include("helmholtz3d/timedomain/tdhh3dpp.jl")
 
 include("maxwell/timedomain/mwtdops.jl")
 include("maxwell/timedomain/mwtdexc.jl")

@@ -28,7 +28,7 @@ struct HH3DDoubleLayerTDBIO{T} <: HH3DTDBIO{T}
     num_diffs::Int
 end
 
-HH3DDoubleLayerTDBIO(;speed_of_light) = HH3DDoubleLayerTDBIO(c,one(speed_of_light),0)
+HH3DDoubleLayerTDBIO(;speed_of_light) = HH3DDoubleLayerTDBIO(speed_of_light,one(speed_of_light),0)
 
 
 # See: ?BEAST.quaddata for help
@@ -41,7 +41,9 @@ function quaddata(operator::HH3DTDBIO,
 
     V = eltype(test_element[1].vertices)
     ws = WiltonInts84.workspace(V)
-    quadpoints(test_local_space, test_element, (3,)), bn, ws
+    order = 4
+    @show order
+    quadpoints(test_local_space, test_element, (order,)), bn, ws
 
 end
 
@@ -136,7 +138,7 @@ function innerintegrals!(zlocal, operator::HH3DHyperSingularTDBIO,
         trial_element[3],
         x, r, R, Val{N-1},quad_rule.workspace)
 
-    @assert numfunctions(test_local_space)  == 3
+    @assert numfunctions(test_local_space)  <= 3
     @assert numfunctions(trial_local_space) == 3
 
     @inline function tmRoR(d, iG)
@@ -193,18 +195,15 @@ function innerintegrals!(zlocal, operator::HH3DDoubleLayerTDBIO,
         test_element, trial_element, time_element,
         quad_rule, quad_weight)
 
-    @assert numfunctions(test_local_space)  == 3
+    @assert numfunctions(test_local_space)  <= 3
     @assert numfunctions(trial_local_space) == 1
 
     dx = quad_weight
     x = cartesian(test_point)
-
     nx = normal(test_point)
-    ny = normal(trial_element)
-    ndotn = dot(nx,ny)
 
-    a = trial_element[1]
-    ξ = x - dot(x -a, ny) * ny
+    # a = trial_element[1]
+    # ξ = x - dot(x -a, ny) * ny
 
     r = time_element[1]
     R = time_element[2]
@@ -225,6 +224,9 @@ function innerintegrals!(zlocal, operator::HH3DDoubleLayerTDBIO,
     test_values = test_local_space(test_point, Val{:withcurl})
     trial_values = trial_local_space(center(trial_element), Val{:withcurl})
 
+    @assert all(getindex.(trial_values,1) .≈ [1])
+    @assert all(getindex.(trial_values,2) .≈ Ref([0,0,0]))
+
     # weakly singular term
     α = dx / (4π) * operator.weight
     D = operator.num_diffs
@@ -236,8 +238,11 @@ function innerintegrals!(zlocal, operator::HH3DDoubleLayerTDBIO,
                 d = k-1
                 d < D && continue
                 q = reduce(*, d-D+1:d ,init=1)
+                @assert q == 1
                 zlocal[i,j,k] += α * q * g * dot(nx, grad_tmRoR(d-D, ∫∇G)) * f
             end
         end
     end
+
+    # @assert all(zlocal[:,:,2] .≈ 0)
 end

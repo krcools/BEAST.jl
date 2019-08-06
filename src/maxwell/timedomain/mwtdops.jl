@@ -206,11 +206,9 @@ function innerintegrals!(z, op::MWDoubleLayerTDIO,
 	T = typeof(w)
 
     sol = op.speed_of_light
-    #Rmax = sol * tmax
 
     dx = w
     x = cartesian(p)
-    #n = normal(σ)
     n = cross(σ[1]-σ[3],σ[2]-σ[3])
     n /= norm(n)
     ξ = x - ((x-σ[1]) ⋅ n) * n
@@ -232,12 +230,6 @@ function innerintegrals!(z, op::MWDoubleLayerTDIO,
 	ds = op.num_diffs
 
     @inline function tmRoR(d, iGG)
-        # r = zero(t)
-        # for q in 0:d
-        #     sgn = isodd(q) ? -1 : 1
-        #     r += binomial(d,q) * sgn * t^(d-q) * iGG[q+1]
-        # end
-        # r
         sgn = isodd(d) ? -1 : 1
         r = sgn * iGG[d+1]
     end
