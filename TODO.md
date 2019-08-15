@@ -1,4 +1,4 @@
-[] Create wrapper type around Array{T,3} to make it behave like a convolution operator
+[x] Create wrapper type around Array{T,3} to make it behave like a convolution operator
 
 [] Properly implement the convolution of two piecewise polynomial time basis functions
 

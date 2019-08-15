@@ -67,23 +67,25 @@ function innerintegrals!(zlocal, operator::HH3DSingleLayerTDBIO,
         test_element, trial_element, time_element,
         quad_rule, quad_weight)
 
+    # error("Here!!!")
+
     dx = quad_weight
     x = cartesian(test_point)
-    n = normal(test_point)
+    # n = normal(test_point)
 
-    a = trial_element[1]
-    ξ = x - dot(x -a, n) * n
+    # a = trial_element[1]
+    # ξ = x - dot(x -a, n) * n
 
     r = time_element[1]
     R = time_element[2]
     @assert r < R
 
     N = max(degree(time_local_space), 1)
-    ∫G, = WiltonInts84.wiltonints(
+    ∫G, ∫vG, ∫∇G = WiltonInts84.wiltonints(
         trial_element[1],
         trial_element[2],
         trial_element[3],
-        x, r, R, Val{N-1},quad_rule.workspace)
+        x, r, R, Val{2}, quad_rule.workspace)
 
     a = dx / (4*pi)
     D = operator.num_diffs
@@ -91,22 +93,19 @@ function innerintegrals!(zlocal, operator::HH3DSingleLayerTDBIO,
     @assert numfunctions(test_local_space)  == 1
     @assert numfunctions(trial_local_space) == 1
 
-    @inline function tmRoR(d, iG, bns)
+    @inline function tmRoR_sl(d, iG)
         sgn = isodd(d) ? -1 : 1
         r = sgn * iG[d+2]
     end
 
-    bns = quad_rule.binomials
+    # bns = quad_rule.binomials
 
+    @assert D == 0
     for k in 1 : numfunctions(time_local_space)
         d = k - 1
-        if d >= D
-            q = 1
-            for p in 0 : D-1
-                q *= (d-p)
-            end
-            zlocal[1,1,k] += a * q * tmRoR(d-D, ∫G, bns)
-        end
+        d < D && continue
+        q = reduce(*, d-D+1:d ,init=1)
+        zlocal[1,1,k] += a * q * tmRoR_sl(d-D, ∫G)
     end # k
 end
 

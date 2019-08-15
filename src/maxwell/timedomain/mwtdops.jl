@@ -221,6 +221,7 @@ function innerintegrals!(z, op::MWDoubleLayerTDIO,
 
     #N = max(degree(W), 0)
     ∫G, ∫Gξy, ∫∇G = WiltonInts84.wiltonints(σ[1],σ[2],σ[3],x,r,R,Val{2},qr.workspace)
+	@assert isapprox(∫∇G[2] , point(0,0,0), atol=1e-8)
 
     αg = 1 / volume(τ) / 2
 	αf = 1 / volume(σ) / 2

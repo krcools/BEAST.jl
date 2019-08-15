@@ -286,7 +286,7 @@ module Helmholtz3D
             direction=error("direction is a required argument"),
             wavenumber=error("wavenumber is a required arguement"),
             amplitude=one(eltype(direction))) =
-        Mod.HH3DPlaneWave(direction, wavenumber, amplitude)
+        Mod.HH3DPlaneWave(direction, wavenumber)
 
     doublelayer(;gamma=error("gamma missing"), alpha=one(gamma)) =
         Mod.HH3DDoubleLayer(alpha, gamma)
