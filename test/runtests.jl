@@ -41,6 +41,7 @@ include("test_nitsche.jl")
 include("test_nitschehh3d.jl")
 
 include("test_hh3dtd_exc.jl")
+include("test_tdassembly.jl")
 include("test_tdhhdbl.jl")
 include("test_tdmwdbl.jl")
 

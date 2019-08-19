@@ -2,6 +2,7 @@ using Test
 
 using CompScienceMeshes
 using BEAST
+using LinearAlgebra
 
 sol = 1.0
 G = BEAST.HH3DSingleLayerTDBIO(sol)
@@ -54,7 +55,7 @@ function momintegrals!(z, op::typeof(G),
             R = norm(cartesian(x)-cartesian(y))
             first(ι) <= R <= last(ι) || continue
             maxdegree = numfunctions(T)-1
-            TR = [R^d for d in 0:maxdegree]
+            TR = [(-R)^d for d in 0:maxdegree]
             dxdy = wpv_τ.weight * wpv_σ.weight
 
             for i in 1 : numfunctions(g)
@@ -76,17 +77,5 @@ for r in BEAST.rings(τ1, τ2, ΔR)
     quad_rule = quadrule(G, x1, x2, q, 1, τ1, 1, τ2, r, ι, qd)
     BEAST.momintegrals!(z2, G, x1, x2, q, τ1, τ2, ι, quad_rule)
 end
-# function BEAST.quaddata(operator::typeof(G),
-#     test_local_space::typeof(x1), trial_local_space::typeof(x2), time_local_space::typeof(q),
-#     test_element::typeof(τ1), trial_element::typeof(τ2), time_element::typeof(ι))
-#
-#     dmax = numfunctions(time_local_space)-1
-#     bn = binomial.((0:dmax),(0:dmax)')
-#
-#     V = eltype(test_element[1].vertices)
-#     ws = WiltonInts84.workspace(V)
-#     order = 4
-#     @show order
-#     quadpoints(test_local_space, test_element, (order,)), bn, ws
-#
-# end
+
+@test z1≈z2 rtol=1e-6
