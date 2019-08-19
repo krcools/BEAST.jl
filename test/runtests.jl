@@ -14,6 +14,7 @@ import BEAST
 
 include("test_fourier.jl")
 include("test_specials.jl")
+include("test_sparsend.jl")
 
 include("test_basis.jl")
 include("test_directproduct.jl")
