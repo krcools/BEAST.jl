@@ -69,4 +69,4 @@ T = timebasisc0d1(Δt, Nt)
 
 W = X ⊗ U
 V = X ⊗ T
-@code_warntype BEAST.allocatestorage(Ts,W,V)
+@code_warntype BEAST.allocatestorage(Ts,W,V,Val{:densestorage})

@@ -24,8 +24,13 @@ H = direction × E
 
 @hilbertspace j; @hilbertspace m′
 K, I, N = MWDoubleLayerTDIO(1.0, 1.0, 0), Identity(), NCross()
-tdmfie = @discretise (0.5*(N⊗I) + 1.0*K)[m′,j] == -1H[m′]   j∈V  m′∈W
-xmfie = solve(tdmfie)
+# tdmfie = @discretise (0.5*(N⊗I) + 1.0*K)[m′,j] == -1H[m′]   j∈V  m′∈W
+# xmfie = solve(tdmfie)
+
+M = 0.5*(N⊗I) + 1.0*K
+Z_mfie = assemble(M, W, V, Val{:bandedstorage})
+b_mfie = assemble(H, W)
+marchonintime(inv(Z_mfie[:,:,1]), Z_mfie, b_mfie, Nt)
 
 Xmfie, Δω, ω0 = fouriertransform(xmfie, Δt, 0.0, 2)
 ω = collect(ω0 .+ (0:Nt-1)*Δω)

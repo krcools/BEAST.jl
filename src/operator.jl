@@ -67,28 +67,35 @@ transpose(op::TransposedOperator) = op.op
 transpose(op::Operator) = TransposedOperator(op)
 
 
-function assemble(operator::AbstractOperator, test_functions, trial_functions)
+function assemble(operator::AbstractOperator, test_functions, trial_functions,
+    storage_policy = Val{:densestorage})
     # This is a convenience function whose only job is to allocate
     # the storage for the interaction matrix. Further dispatch on
     # operator and space types is handled by the 4-argument version
-    Z, store = allocatestorage(operator, test_functions, trial_functions)
+    Z, store = allocatestorage(operator, test_functions, trial_functions, storage_policy)
     assemble!(operator, test_functions, trial_functions, store)
     sdata(Z)
 end
 
-function assemblerow(operator::AbstractOperator, test_functions, trial_functions)
-    Z, store = allocatestorage(operator, test_functions, trial_functions)
+function assemblerow(operator::AbstractOperator, test_functions, trial_functions,
+    storage_policy = Val{:densestorage})
+
+    Z, store = allocatestorage(operator, test_functions, trial_functions, storage_policy)
     assemblerow!(operator, test_functions, trial_functions, store)
     sdata(Z)
 end
 
-function assemblecol(operator::AbstractOperator, test_functions, trial_functions)
-    Z, store = allocatestorage(operator, test_functions, trial_functions)
+function assemblecol(operator::AbstractOperator, test_functions, trial_functions,
+    storage_policy = Val{:densestorage})
+
+    Z, store = allocatestorage(operator, test_functions, trial_functions, storage_policy)
     assemblecol!(operator, test_functions, trial_functions, store)
     sdata(Z)
 end
 
-function allocatestorage(operator::AbstractOperator, test_functions, trial_functions)
+function allocatestorage(operator::AbstractOperator, test_functions, trial_functions,
+    ::Type{Val{:densestorage}})
+
     T = promote_type(
         scalartype(operator)       ,
         scalartype(test_functions) ,
@@ -103,11 +110,20 @@ function allocatestorage(operator::AbstractOperator, test_functions, trial_funct
     return Z, store
 end
 
+
 function allocatestorage(operator::LinearCombinationOfOperators,
-        test_functions::SpaceTimeBasis, trial_functions::SpaceTimeBasis)
+        test_functions::SpaceTimeBasis, trial_functions::SpaceTimeBasis, storage_policy::Type{Val{:densestorage}})
 
     # TODO: remove this ugly, ugly patch
-    Z, store = allocatestorage(operator.ops[end], test_functions, trial_functions)
+    Z, store = allocatestorage(operator.ops[end], test_functions, trial_functions, storage_policy)
+end
+
+
+function allocatestorage(operator::LinearCombinationOfOperators,
+        test_functions::SpaceTimeBasis, trial_functions::SpaceTimeBasis, storage_policy::Type{Val{:bandedstorage}})
+
+    # TODO: remove this ugly, ugly patch
+    Z, store = allocatestorage(operator.ops[end], test_functions, trial_functions, storage_policy)
 end
 
 

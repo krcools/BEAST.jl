@@ -12,7 +12,7 @@ quaddata(op::EmptyRP, xs...) = nothing
 quadrule(op::EmptyRP, xs...) = nothing
 momintegrals!(z, op::EmptyRP, xs...) = nothing
 
-function allocatestorage(op::RetardedPotential, testST, basisST)
+function allocatestorage(op::RetardedPotential, testST, basisST, ::Type{Val{:densestorage}})
 
     tfs = spatialbasis(testST)
     bfs = spatialbasis(basisST)
@@ -29,9 +29,9 @@ function allocatestorage(op::RetardedPotential, testST, basisST)
     end
 
     aux = EmptyRP(op.speed_of_light)
-    println("Allocating memory for convolution operator....")
+    print("Allocating memory for convolution operator: ")
     assemble!(aux, testST, basisST, store)
-    println("Allocated memory for convolution operator.")
+    println("\nAllocated memory for convolution operator.")
     data = zeros(eltype(op), M, N, maximum(K1.-K0.+1))
 
     #Z = SparseND.Banded3D(K0,K1,data)
@@ -39,6 +39,40 @@ function allocatestorage(op::RetardedPotential, testST, basisST)
     Z = zeros(eltype(op), M, N, kmax+1)
     store1(v,m,n,k) = (Z[m,n,k] += v)
     return MatrixConvolution(Z), store1
+end
+
+
+function allocatestorage(op::RetardedPotential, testST, basisST, ::Type{Val{:bandedstorage}})
+
+    tfs = spatialbasis(testST)
+    bfs = spatialbasis(basisST)
+
+    M = numfunctions(tfs)
+    N = numfunctions(bfs)
+
+    K0 = zeros(Int, M, N)
+    K1 = zeros(Int, M, N)
+
+    function store(v,m,n,k)
+        K0[m,n] = (K0[m,n] == 0) ? K0[m,n] : min(K0[m,n],k)
+        K1[m,n] = max(K1[m,n],k)
+    end
+
+    aux = EmptyRP(op.speed_of_light)
+    print("Allocating memory for convolution operator: ")
+    assemble!(aux, testST, basisST, store)
+    println("\nAllocated memory for convolution operator.")
+    data = zeros(eltype(op), M, N, maximum(K1.-K0.+1))
+
+    #Z = SparseND.Banded3D(K0,K1,data)
+    # kmax = maximum(K1);
+    # Z = zeros(eltype(op), M, N, kmax+1)
+	maxk1 = maximum(K1)
+	bandwidth = maximum(K1 .- K0 .+ 1)
+	data = zeros(eltype(op), bandwidth, M, N)
+	Z = SparseND.Banded3D(K0, data, maxk1+1)
+    store1(v,m,n,k) = (Z[m,n,k] += v)
+    return Z, store1
 end
 
 
