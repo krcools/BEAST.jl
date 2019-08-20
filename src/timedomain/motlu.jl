@@ -19,10 +19,12 @@ function convolve(Z::SparseND.Banded3D,x,j,k_start)
     y = zeros(T,M)
     for n in 1:N
         for m in 1:M
-            k0 = Z.k0[m,n]
+            k0 = Z.k0[m,n] # k0 is 1-based
             l0 = max(1, k_start - k0 + 1)
-            for l in l0 : K
+            l1 = min(K, j - k0 + 1)
+            for l in l0 : l1
                 k = k0 + l - 1
+                # j - k + 1 < 1 && break
                 y[m] += Z.data[l,m,n] * x[n,j - k + 1]
             end
         end

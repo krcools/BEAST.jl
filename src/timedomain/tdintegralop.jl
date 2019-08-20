@@ -32,7 +32,7 @@ function allocatestorage(op::RetardedPotential, testST, basisST, ::Type{Val{:den
     print("Allocating memory for convolution operator: ")
     assemble!(aux, testST, basisST, store)
     println("\nAllocated memory for convolution operator.")
-    data = zeros(eltype(op), M, N, maximum(K1.-K0.+1))
+    # data = zeros(eltype(op), M, N, maximum(K1.-K0.+1))
 
     #Z = SparseND.Banded3D(K0,K1,data)
     kmax = maximum(K1);
@@ -54,7 +54,7 @@ function allocatestorage(op::RetardedPotential, testST, basisST, ::Type{Val{:ban
     K1 = zeros(Int, M, N)
 
     function store(v,m,n,k)
-        K0[m,n] = (K0[m,n] == 0) ? K0[m,n] : min(K0[m,n],k)
+        K0[m,n] = (K0[m,n] == 0) ? k : min(K0[m,n],k)
         K1[m,n] = max(K1[m,n],k)
     end
 
@@ -62,7 +62,10 @@ function allocatestorage(op::RetardedPotential, testST, basisST, ::Type{Val{:ban
     print("Allocating memory for convolution operator: ")
     assemble!(aux, testST, basisST, store)
     println("\nAllocated memory for convolution operator.")
-    data = zeros(eltype(op), M, N, maximum(K1.-K0.+1))
+    # data = zeros(eltype(op), M, N, maximum(K1.-K0.+1))
+
+	@show maximum(K0)
+	@show minimum(K1)
 
     #Z = SparseND.Banded3D(K0,K1,data)
     # kmax = maximum(K1);
