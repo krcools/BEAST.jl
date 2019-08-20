@@ -39,3 +39,20 @@ a = @varform s[k,j] + s[dvg(k),p] +
 Eq = @discretise a k∈X q∈Y j∈X p∈Y
 
 u = solve(Eq)
+
+uj = u[1:numfunctions(X)]
+up = u[numfunctions(X)+1:end]
+
+#xrange = range(-2.0, stop=2.0, length=40)
+xrange = [0.0]
+yrange = [0.0]
+zrange = range(-2.0, stop=2.0, length=40)
+pts = [point(x,y,z) for x ∈ xrange, y ∈ yrange, z ∈ zrange]
+
+A1 = BEAST.DPVectorialTerm(1.0, 1.0*im)
+A2 = BEAST.DPScalarTerm(1.0, 1.0*im)
+
+p1 = potential(A1,pts,uj,X)
+p2 = potential(A2,pts,up,Y)
+
+p = p1 + p2
