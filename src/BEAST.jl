@@ -173,6 +173,7 @@ include("helmholtz3d/hh3dops.jl")
 include("helmholtz3d/nitsche.jl")
 
 include("decoupled/dpops.jl")
+include("decoupled/potentials.jl")
 
 include("helmholtz3d/timedomain/tdhh3dops.jl")
 include("helmholtz3d/timedomain/tdhh3dexc.jl")
