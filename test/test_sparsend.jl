@@ -23,3 +23,25 @@ A = B3D(k0,data,maximum(k1))
 
 slice = A[:,:,2]
 @test slice == [4 6; 0 7]
+
+F = Array(A)
+for m in axes(F,1)
+    for n in axes(F,2)
+        for l in axes(F,3)
+            @test F[m,n,l] ≈ A[m,n,l]
+        end
+    end
+end
+
+st_data = rand(2,5)
+cv1 = BEAST.convolve(F, st_data, 4, 2)
+cv2 = BEAST.convolve(A, st_data, 4, 2)
+@test cv1 ≈ cv2
+
+cv1 = BEAST.convolve(F, st_data, 4, 1)
+cv2 = BEAST.convolve(A, st_data, 4, 1)
+@test cv1 ≈ cv2
+
+cv1 = BEAST.convolve(F, st_data, 4, 3)
+cv2 = BEAST.convolve(A, st_data, 4, 3)
+@test cv1 ≈ cv2

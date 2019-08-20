@@ -11,16 +11,19 @@ function convolve(Z::Array,x,j,k0)
     return y
 end
 
-function convolve(Z::SparseND.Banded3D,x,j,k0)
+function convolve(Z::SparseND.Banded3D,x,j,k_start)
     T = promote_type(eltype(Z), eltype(x))
-    M,N,K = size(Z)
+    M,N,L = size(Z)
+    K = size(Z.data,1)
     @assert M == size(x,1)
-y = zeros(T,M)
-    for m in 1:M
-        for n in 1:N
-            for k in k0:min(j,K)
-                i = j - k + 1
-                y[m] += Z[m,n,k] * x[n,i]
+    y = zeros(T,M)
+    for n in 1:N
+        for m in 1:M
+            k0 = Z.k0[m,n]
+            l0 = max(1, k_start - k0 + 1)
+            for l in l0 : K
+                k = k0 + l - 1
+                y[m] += Z.data[l,m,n] * x[n,j - k + 1]
             end
         end
     end
