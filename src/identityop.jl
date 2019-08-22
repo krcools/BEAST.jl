@@ -3,7 +3,8 @@ end
 
 kernelvals(biop::Identity, x) = Nothing
 integrand(op::Identity, kernel, x, g, f) = dot(f[1], g[1])
-scalartype(op::Identity) = Union{}
+# scalartype(op::Identity) = Union{}
+scalartype(op::Identity) = Float64
 
 struct NCross <: LocalOperator
 end

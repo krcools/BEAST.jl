@@ -4,10 +4,12 @@ o, x, y, z = euclidianbasis(3)
 # D, Δx = 1.0, 0.25
 # D, Δx = 1.0, 0.20
 Γ = readmesh(joinpath(@__DIR__,"sphere2.in"))
+Γ = meshsphere(1.0, 0.08)
+@show numcells(Γ)
 X = raviartthomas(Γ)
 
 # Δt, Nt = 0.6, 200
-Δt, Nt = 0.1, 200
+Δt, Nt = 0.05, 400
 T = timebasisshiftedlagrange(Δt, Nt, 3)
 U = timebasisdelta(Δt, Nt)
 

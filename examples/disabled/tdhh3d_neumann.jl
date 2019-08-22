@@ -37,13 +37,13 @@ H = timebasisc0d1(Δt, Nt)
 # assemble the right hand side
 
 bd  = assemble(n⋅h,     X ⊗ P)
-Z1d = assemble(Id ⊗ Id, X ⊗ P, X ⊗ P)
-Z0d = assemble(D,       X ⊗ P, X ⊗ P)
+Z1d = assemble(Id ⊗ Id, X ⊗ P, X ⊗ P, Val{:bandedstorage})
+Z0d = assemble(D,       X ⊗ P, X ⊗ P, Val{:bandedstorage})
 Zd = Z0d + (-0.5)*Z1d
 u = marchonintime(inv(Zd[:,:,1]), Zd, bd, Nt)
 
 bs = assemble(e, X ⊗ δ)
-Zs = assemble(S, X ⊗ δ, X ⊗ P)
+Zs = assemble(S, X ⊗ δ, X ⊗ P, Val{:bandedstorage})
 v = marchonintime(inv(Zs[:,:,1]), Zs, -bs, Nt)
 
 U, Δω, ω0 = fouriertransform(u, Δt, 0.0, 2)

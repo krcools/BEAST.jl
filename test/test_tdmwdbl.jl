@@ -22,6 +22,8 @@ T = timebasiscxd0(Δt, Nt)
 V = X ⊗ T
 W = Y ⊗ T
 
-Z, store1 = BEAST.allocatestorage(K, W, V, Val{:densestorage})
+Z, store1 = BEAST.allocatestorage(K, W, V,
+    Val{:densestorage}, BEAST.LongDelays{:ignore})
+    
 BEAST.assemble!(K, W, V, store1)
 @test all(==(0), Z[:,:,1])

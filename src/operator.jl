@@ -1,6 +1,6 @@
 using .LinearSpace
 
-
+struct LongDelays{T} end
 
 import Base: transpose, +, -, *
 
@@ -68,33 +68,40 @@ transpose(op::Operator) = TransposedOperator(op)
 
 
 function assemble(operator::AbstractOperator, test_functions, trial_functions,
-    storage_policy = Val{:densestorage})
+    storage_policy = Val{:densestorage},
+    long_delays_policy = LongDelays{:ignore})
     # This is a convenience function whose only job is to allocate
     # the storage for the interaction matrix. Further dispatch on
     # operator and space types is handled by the 4-argument version
-    Z, store = allocatestorage(operator, test_functions, trial_functions, storage_policy)
+    Z, store = allocatestorage(operator, test_functions, trial_functions,
+        storage_policy, long_delays_policy)
     assemble!(operator, test_functions, trial_functions, store)
     sdata(Z)
 end
 
 function assemblerow(operator::AbstractOperator, test_functions, trial_functions,
-    storage_policy = Val{:densestorage})
+    storage_policy = Val{:densestorage},
+    long_delays_policy = LongDelays{:ignore})
 
-    Z, store = allocatestorage(operator, test_functions, trial_functions, storage_policy)
+    Z, store = allocatestorage(operator, test_functions, trial_functions,
+        storage_policy, long_delays_policy)
     assemblerow!(operator, test_functions, trial_functions, store)
     sdata(Z)
 end
 
 function assemblecol(operator::AbstractOperator, test_functions, trial_functions,
-    storage_policy = Val{:densestorage})
+    storage_policy = Val{:densestorage},
+    long_delays_policy = LongDelays{:ignore})
 
-    Z, store = allocatestorage(operator, test_functions, trial_functions, storage_policy)
+    Z, store = allocatestorage(operator, test_functions, trial_functions,
+        storage_policy, long_delays_policy)
     assemblecol!(operator, test_functions, trial_functions, store)
     sdata(Z)
 end
 
 function allocatestorage(operator::AbstractOperator, test_functions, trial_functions,
-    ::Type{Val{:densestorage}})
+    ::Type{Val{:densestorage}},
+    ::Type{LongDelays{:ignore}})
 
     T = promote_type(
         scalartype(operator)       ,
@@ -112,18 +119,24 @@ end
 
 
 function allocatestorage(operator::LinearCombinationOfOperators,
-        test_functions::SpaceTimeBasis, trial_functions::SpaceTimeBasis, storage_policy::Type{Val{:densestorage}})
+        test_functions::SpaceTimeBasis, trial_functions::SpaceTimeBasis,
+        storage_policy::Type{Val{:densestorage}},
+        long_delays_policy::Type{LongDelays{:ignore}})
 
     # TODO: remove this ugly, ugly patch
-    Z, store = allocatestorage(operator.ops[end], test_functions, trial_functions, storage_policy)
+    Z, store = allocatestorage(operator.ops[end], test_functions, trial_functions,
+        storage_policy, long_delays_policy)
 end
 
 
 function allocatestorage(operator::LinearCombinationOfOperators,
-        test_functions::SpaceTimeBasis, trial_functions::SpaceTimeBasis, storage_policy::Type{Val{:bandedstorage}})
+        test_functions::SpaceTimeBasis, trial_functions::SpaceTimeBasis,
+        storage_policy::Type{Val{S}},
+        long_delays_policy::Type{LongDelays{L}}) where {L,S}
 
     # TODO: remove this ugly, ugly patch
-    Z, store = allocatestorage(operator.ops[end], test_functions, trial_functions, storage_policy)
+    Z, store = allocatestorage(operator.ops[end], test_functions, trial_functions,
+        storage_policy, long_delays_policy)
 end
 
 

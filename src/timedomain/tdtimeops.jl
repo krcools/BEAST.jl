@@ -1,3 +1,5 @@
+
+
 function assemble(op::Identity,
         testnfs::AbstractTimeBasisFunction,
         trialfns::AbstractTimeBasisFunction)
@@ -69,6 +71,44 @@ end
 #
 # end
 
+function allocatestorage(op::TensorOperator, test_functions, trial_functions,
+    ::Type{Val{:bandedstorage}}, ::Type{LongDelays{:ignore}},)
+
+    M = numfunctions(spatialbasis(test_functions))
+    N = numfunctions(spatialbasis(trial_functions))
+
+    time_basis_function = BEAST.convolve(
+        temporalbasis(test_functions),
+        temporalbasis(trial_functions))
+
+    # has_zero_tail = all(time_basis_function.polys[end].data .== 0)
+    # @show has_zero_tail
+
+    # if has_zero_tail
+        # Numintervals includes the semi-infinite interval stretching to +Inf
+        # K = numintervals(time_basis_function)-1
+    # else
+    #     speedoflight = 1.0
+    #     @warn "Assuming speed of light to be equal to 1!"
+    #     Δt = timestep(time_basis_function)
+    #     ct, hs = boundingbox(geometry(spatialbasis(trial_functions)).vertices)
+    #     diam = 2 * sqrt(3) * hs
+    #     K = ceil(Int, (numintervals(time_basis_function)-1) + diam/speedoflight/Δt)+1
+    # end
+    # @assert K > 0
+
+    space_operator = op.spatial_factor
+    A = assemble(space_operator, spatialbasis(test_functions), spatialbasis(trial_functions))
+
+    K0 = Int.(A .!= 0)
+    # K0 = ones(Int,M,N)
+    bandwidth = numintervals(time_basis_function) - 1
+    data = zeros(scalartype(op), bandwidth, M, N)
+    maxk1 = bandwidth
+    Z = SparseND.Banded3D(K0, data, maxk1)
+    return Z, (v,m,n,k)->(Z[m,n,k] += v)
+end
+
 
 function allocatestorage(op::TensorOperator, test_functions, trial_functions)
 
@@ -89,9 +129,9 @@ function allocatestorage(op::TensorOperator, test_functions, trial_functions)
         speedoflight = 1.0
         @warn "Assuming speed of light to be equal to 1!"
         Δt = timestep(tbf)
-        ct, hs = boundingbox(geometry(BEAST.spatialbasis(trial_functions)).vertices)
+        ct, hs = boundingbox(geometry(spatialbasis(trial_functions)).vertices)
         diam = 2 * sqrt(3) * hs
-        K = ceil(Int, (BEAST.numintervals(tbf)-1) + diam/speedoflight/Δt)+1
+        K = ceil(Int, (numintervals(tbf)-1) + diam/speedoflight/Δt)+1
     end
     @assert K > 0
 
@@ -116,13 +156,12 @@ function assemble!(operator::TensorOperator, testfns, trialfns, store)
     tbf = convolve(time_testfns, time_trialfns)
     has_zero_tail = all(tbf.polys[end].data .== 0)
     if !has_zero_tail
-        #speedoflight = op.speed_of_light
-            speedoflight = 1.0
-            @warn "Assuming speed of light to be equal to 1!"
-            Δt = timestep(tbf)
-            ct, hs = boundingbox(geometry(space_trialfns).vertices)
-            diam = 2 * sqrt(3) * hs
-            kmax = ceil(Int, (numintervals(tbf)-1) + diam/speedoflight/Δt)+1
+        speedoflight = 1.0
+        @warn "Assuming speed of light to be equal to 1!"
+        Δt = timestep(tbf)
+        ct, hs = boundingbox(geometry(space_trialfns).vertices)
+        diam = 2 * sqrt(3) * hs
+        kmax = ceil(Int, (numintervals(tbf)-1) + diam/speedoflight/Δt)+1
         zt = zt[1:kmax]
     end
 

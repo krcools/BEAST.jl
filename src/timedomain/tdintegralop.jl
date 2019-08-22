@@ -12,7 +12,9 @@ quaddata(op::EmptyRP, xs...) = nothing
 quadrule(op::EmptyRP, xs...) = nothing
 momintegrals!(z, op::EmptyRP, xs...) = nothing
 
-function allocatestorage(op::RetardedPotential, testST, basisST, ::Type{Val{:densestorage}})
+function allocatestorage(op::RetardedPotential, testST, basisST,
+	::Type{Val{:densestorage}},
+	::Type{LongDelays{:ignore}})
 
     tfs = spatialbasis(testST)
     bfs = spatialbasis(basisST)
@@ -42,7 +44,9 @@ function allocatestorage(op::RetardedPotential, testST, basisST, ::Type{Val{:den
 end
 
 
-function allocatestorage(op::RetardedPotential, testST, basisST, ::Type{Val{:bandedstorage}})
+function allocatestorage(op::RetardedPotential, testST, basisST,
+	::Type{Val{:bandedstorage}},
+	::Type{LongDelays{:ignore}})
 
     tfs = spatialbasis(testST)
     bfs = spatialbasis(basisST)
@@ -64,8 +68,10 @@ function allocatestorage(op::RetardedPotential, testST, basisST, ::Type{Val{:ban
     println("\nAllocated memory for convolution operator.")
     # data = zeros(eltype(op), M, N, maximum(K1.-K0.+1))
 
+	@show minimum(K0)
 	@show maximum(K0)
 	@show minimum(K1)
+	@show maximum(K1)
 
     #Z = SparseND.Banded3D(K0,K1,data)
     # kmax = maximum(K1);
