@@ -1,4 +1,5 @@
 using CompScienceMeshes, BEAST
+using LinearAlgebra
 
 Γ = meshcuboid(1.0, 1.0, 1.0, 0.15)
 X = raviartthomas(Γ)
