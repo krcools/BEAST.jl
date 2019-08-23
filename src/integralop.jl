@@ -106,9 +106,13 @@ function assemblechunk_body!(biop,
         I = length(test_assembly_data[p])
         J = length(trial_assembly_data[q])
         for j in 1 : J, i in 1 : I
-            for (n,b) in trial_assembly_data[q][j], (m,a) in test_assembly_data[p][i]
-                store(a*zlocal[i,j]*b, m, n)
-        end end end
+            zij = zlocal[i,j]
+            for (n,b) in trial_assembly_data[q][j]
+                zb = zij*b
+                for (m,a) in test_assembly_data[p][i]
+                    azb = a*zb
+                    store(azb, m, n)
+        end end end end
 
         done += 1
         new_pctg = round(Int, done / todo * 100)
