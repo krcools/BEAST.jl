@@ -2,7 +2,8 @@ using CompScienceMeshes
 using BEAST
 using Test
 
-sphere = readmesh(joinpath(dirname(@__FILE__),"assets","sphere3.in"))
+sphere = readmesh(joinpath(dirname(@__FILE__),"assets","sphere5.in"))
+numcells(sphere)
 
 κ = 2π
 direction = point(0,0,1)
@@ -17,7 +18,7 @@ v2 = f(point(0,0,0.5))
 import BEAST.∂n
 p = ∂n(f)
 
-s = chart(m,1)
+s = chart(m,first(cells(m)))
 c = neighborhood(s, [1,1]/3)
 
 r = cartesian(c)
@@ -29,8 +30,10 @@ w2 = -im*κ*dot(direction, n)*f(r)
 w1 ≈ w2
 
 N = BEAST.HH3DHyperSingularFDBIO(im*κ)
-X = BEAST.lagrangec0d1(m)
+X = BEAST.lagrangec0d1(sphere)
 
 numfunctions(X)
 
 Nxx = assemble(N, X, X)
+
+@test size(Nxx) == (numfunctions(X), numfunctions(X))

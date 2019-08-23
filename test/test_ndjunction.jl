@@ -38,6 +38,6 @@ function interior(mesh::Mesh, edges=skeleton(mesh,1))
 end
 
 interior_edges = interior(m)
-@test numcells(int_edges) == 1
+@test numcells(interior_edges) == 1
 Nd = BEAST.nedelec(m, interior_edges)
 @test numfunctions(Nd) == 1
