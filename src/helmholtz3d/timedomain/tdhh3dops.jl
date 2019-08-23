@@ -224,7 +224,7 @@ function innerintegrals!(zlocal, operator::HH3DDoubleLayerTDBIO,
     trial_values = trial_local_space(center(trial_element), Val{:withcurl})
 
     @assert all(getindex.(trial_values,1) .≈ [1])
-    @assert all(getindex.(trial_values,2) .≈ Ref([0,0,0]))
+    # @assert all(getindex.(trial_values,2) .≈ Ref([0,0,0]))
 
     # weakly singular term
     α = dx / (4π) * operator.weight
