@@ -24,14 +24,14 @@ function momintegrals!(op::MWSingleLayer3D, g::RTRefSpace, f::RTRefSpace, t, s, 
         Q[3,1]+Q[3,2]+Q[3,3],
     ]
 
-    Q = R*T.'
+    Q = R*transpose(T)
     ∫Gy = @SVector [
         Q[1,1]+Q[1,2]+Q[1,3],
         Q[2,1]+Q[2,2]+Q[2,3],
         Q[3,1]+Q[3,2]+Q[3,3]
     ]
 
-    Q = P*T*R.'
+    Q = P*T*transpose(R)
     ∫xGy = Q[1,1] + Q[2,2] + Q[3,3]
 
     c₁ = op.α
