@@ -30,10 +30,17 @@ pmchwt = @discretise(
 
 u = solve(pmchwt)
 
+nX = numfunctions(X)
+uj = u[1:nX]
+um = u[nX+1:end]
+
 Θ, Φ = range(0.0,stop=2π,length=100), 0.0
 ffpoints = [point(cos(ϕ)*sin(θ), sin(ϕ)*sin(θ), cos(θ)) for θ in Θ for ϕ in Φ]
-farfield = potential(MWFarField3D(κ*im), ffpoints, u, X)
+
+ffm = potential(MWFarField3D(κ*im), ffpoints, um, X)
+ffj = potential(MWFarField3D(κ*im), ffpoints, uj, X)
+ff = η*im*κ*ffj + im*κ*cross.(ffpoints, ffm)
 
 using Plots
-using LinearAlgebra
-plot(Θ,norm.(farfield))
+plot(xlabel="theta")
+plot!(Θ,norm.(ff),label="far field")
