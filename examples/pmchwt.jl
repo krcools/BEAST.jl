@@ -37,6 +37,7 @@ um = u[nX+1:end]
 Θ, Φ = range(0.0,stop=2π,length=100), 0.0
 ffpoints = [point(cos(ϕ)*sin(θ), sin(ϕ)*sin(θ), cos(θ)) for θ in Θ for ϕ in Φ]
 
+# Don't forgt the far field comprises two contributions
 ffm = potential(MWFarField3D(κ*im), ffpoints, um, X)
 ffj = potential(MWFarField3D(κ*im), ffpoints, uj, X)
 ff = η*im*κ*ffj + im*κ*cross.(ffpoints, ffm)
