@@ -146,7 +146,7 @@ function singleduallagd0(fine, F, v)
     T = coordtype(fine)
     fn = Shape{T}[]
     for cellid in F
-        cell = fine.faces[cellid]
+        cell = cells(fine)[cellid]
         ptch = chart(fine, cell)
         coeff = 1 / volume(ptch) / length(F)
         refid = 1
@@ -280,7 +280,7 @@ function duallagrangec0d1(mesh, refined, jct_pred, ::Type{Val{3}})
     pos = Vector{vertextype(mesh)}()
 
     # store the fine mesh's vertices in an octree for fast retrieval
-    fine_vertices = Octree(refined.vertices)
+    fine_vertices = Octree(vertices(refined))
     uv_ctr = ones(dimension(mesh))/(dimension(mesh)+1)
 
     vtoc, vton = vertextocellmap(refined)
@@ -315,7 +315,7 @@ function duallagrangec0d1(mesh, refined, jct_pred, ::Type{Val{3}})
 
         n = vton[centroid_id]
         for c in vtoc[centroid_id,1:n]
-            fine_idcs = refined.faces[c]
+            fine_idcs = cells(refined)[c]
             local_id = something(findfirst(isequal(centroid_id), fine_idcs), 0)
             @assert local_id != 0
             shape = Shape(c, local_id, 1.0)
@@ -324,10 +324,10 @@ function duallagrangec0d1(mesh, refined, jct_pred, ::Type{Val{3}})
 
         for f in 1:num_faces
             v = face_center_ids[f]
-            jct_pred(refined.vertices[v]) && continue
+            jct_pred(vertices(refined)[v]) && continue
             n = vton[v]
             for c in vtoc[v,1:n]
-                fine_idcs = refined.faces[c]
+                fine_idcs = cells(refined)[c]
                 local_id = something(findfirst(isequal(v), fine_idcs),0)
                 @assert local_id != 0
                 shape = Shape(c, local_id, 1/n/2)
@@ -337,10 +337,10 @@ function duallagrangec0d1(mesh, refined, jct_pred, ::Type{Val{3}})
 
         for f in 1:length(coarse_idcs)
             v = coarse_idcs[f]
-            jct_pred(refined.vertices[v]) && continue
+            jct_pred(vertices(refined)[v]) && continue
             n = vton[v]
             for c in vtoc[v,1:n]
-                fine_idcs = refined.faces[c]
+                fine_idcs = cells(refined)[c]
                 local_id = something(findfirst(isequal(v), fine_idcs),0)
                 @assert local_id != 0
                 shape = Shape(c, local_id, 1/n/2)

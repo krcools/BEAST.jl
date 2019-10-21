@@ -156,7 +156,7 @@ for _fn in X.fns
     for _sh in _fn
         @test _sh.refid == 1
         cellid = _sh.cellid
-        _cell = fine.faces[cellid]
+        _cell = cells(fine)[cellid]
         ptch = chart(fine, _cell)
         @test _sh.coeff * volume(ptch) ≈ 1/_n
     end

@@ -12,8 +12,10 @@ T′ = Maxwell3D.singlelayer(wavenumber=κ′)
 K  = Maxwell3D.doublelayer(wavenumber=κ)
 K′ = Maxwell3D.doublelayer(wavenumber=κ′)
 
-d = normalize(x̂+ŷ+ẑ)
-p = normalize(d × ẑ)
+# d = normalize(x̂+ŷ+ẑ)
+d = ẑ
+# p = normalize(d × ẑ)
+p = x̂
 E = Maxwell3D.planewave(direction=d, polarization=p, wavenumber=κ)
 H = -1/(im*κ*η)*curl(E)
 
@@ -44,3 +46,8 @@ ff = η*im*κ*ffj + im*κ*cross.(ffpoints, ffm)
 using Plots
 plot(xlabel="theta")
 plot!(Θ,norm.(ff),label="far field")
+
+import PlotlyJS
+using LinearAlgebra
+fcrj, _ = facecurrents(uj,X)
+PlotlyJS.plot(patch(Γ, norm.(fcrj)))

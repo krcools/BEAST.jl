@@ -76,7 +76,7 @@ function assemblechunk!(biop::IntegralOperator, tfs::Space, bfs::Space, store)
     qd = quaddata(biop, tshapes, bshapes, test_elements, bsis_elements)
     zlocal = zeros(scalartype(biop, tfs, bfs), 2num_tshapes, 2num_bshapes)
 
-    if tfs.geo == bfs.geo
+    if !CompScienceMeshes.refines(tfs.geo, bfs.geo)
         assemblechunk_body!(biop,
             tshapes, test_elements, tad,
             bshapes, bsis_elements, bad,

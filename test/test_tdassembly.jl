@@ -64,6 +64,7 @@ function momintegrals!(z, op::typeof(G),
                         z[i,j,k] += dxdy * gx[i] * fy[j] * TR[k] / (4π*R)
 end end end end end end
 
+# Compare results for a single monomial
 z1 = zeros(numfunctions(x1), numfunctions(x2), numfunctions(q))
 for r in BEAST.rings(τ1, τ2, ΔR)
     ι = BEAST.ring(r, ΔR)
@@ -79,3 +80,10 @@ for r in BEAST.rings(τ1, τ2, ΔR)
 end
 
 @test z1≈z2 rtol=1e-6
+
+# Compare results for a single basis function
+CSM = CompScienceMeshes
+distance = norm(cartesian(CSM.center(τ1)) - cartesian(CSM.center(τ2)))
+k = floor(Int, distance/Δt/sol)
+
+timead = BEAST.temporalassemblydata(Q, kmax=k)
