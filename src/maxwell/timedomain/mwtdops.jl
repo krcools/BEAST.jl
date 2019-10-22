@@ -250,7 +250,7 @@ function innerintegrals!(z, op::MWDoubleLayerTDIO,
 					for p in 0 : ds-1
 						q *= (d-p)
 					end
-                    @assert q == 1
+                    # @assert q == 1
                     z[i,j,k] += -α * q * ( fxg ⋅ tmRoR(d-ds, ∫∇G) ) / sol^(d-ds)
 				end
             end

@@ -176,7 +176,7 @@ function assemble!(operator::TensorOperator, testfns, trialfns, store)
 end
 
 
-mutable struct TemporalDifferentiation
+mutable struct TemporalDifferentiation <: Operator
     operator
 end
 
