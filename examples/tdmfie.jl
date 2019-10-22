@@ -15,7 +15,6 @@ T = timebasisshiftedlagrange(Δt, Nt, 2)
 
 V = X ⊗ T
 W = Y ⊗ δ
-
 # width, delay, scaling = 8.0, 12.0, 1.0
 duration = 20 * Δt
 delay = 1.5 * duration
