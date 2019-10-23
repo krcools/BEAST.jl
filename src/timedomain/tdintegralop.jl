@@ -108,6 +108,7 @@ function assemble!(op::RetardedPotential, testST, trialST, store)
 	diam = 2 * sqrt(3) * hs
 	#kmax = ceil(Int, diam/speedoflight/timestep(timebasisfunction)) + (numintervals(timebasisfunction)-1)
 	kmax = ceil(Int, (numintervals(timebasisfunction)-1) + diam/speedoflight/Δt)+1
+	kmax = max(kmax, numfunctions(timebasisfunction))
     timead = temporalassemblydata(timebasisfunction, kmax=kmax)
 
 	Δt = timestep(timebasisfunction)
