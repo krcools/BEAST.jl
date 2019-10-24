@@ -105,7 +105,6 @@ lc = isdivconforming(bc);
 @test maximum(lc) < eps(Float64) * 1000
 println("BC space is div-conforming")
 
-
 # Now repeat the exercise with an open mesh
 mesh = meshrectangle(1.0, 1.0, 0.2);
 fine = barycentric_refinement(mesh);
@@ -153,3 +152,11 @@ for fn in bc.fns
     @test net_charge + 1 ≈ 1
     @test abs_charge ≈ 2
 end
+
+# THe BC construction function should throw for non-oriented surfaces
+# width, height, h = 1.0, 0.5, 0.05
+G1 = meshrectangle(1.0, 1.0, 0.25)
+G2 = CompScienceMeshes.rotate(G1, 0.5π * x̂)
+G = CompScienceMeshes.weld(G1,G2)
+@test_throws AssertionError buffachristianssen(G)
+# G3 = CompScienceMeshes.rotate(G1, 1.0π * x̂)

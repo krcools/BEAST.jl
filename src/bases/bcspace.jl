@@ -89,6 +89,8 @@ enforcing zero normal components on ∂Γ ∖ γ.
 """
 function buffachristiansen(Γ, γ=mesh(coordtype(Γ),1,3))
 
+    @assert CompScienceMeshes.isoriented(Γ)
+
     T = coordtype(Γ)
 
     edges = skeleton(Γ, 1)
