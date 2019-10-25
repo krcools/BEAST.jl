@@ -109,7 +109,7 @@ end
 
 Build dual Lagrange piecewise constant elements. Boundary nodes are only considered if they are in the interior of `jct`.
 """
-function duallagrangecxd0(mesh, jct)
+function duallagrangecxd0(mesh, jct=CompScienceMeshes.mesh(coordtype(mesh), dimension(mesh)-1))
     vertexlist = interior_and_junction_vertices(mesh, jct)
     duallagrangecxd0(mesh, vertexlist)
 end

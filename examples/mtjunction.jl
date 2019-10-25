@@ -49,15 +49,42 @@ using LinearAlgebra
 # p2 = PlotlyJS.Plot(patch(G23, norm.(fcr23)))
 # p3 = PlotlyJS.Plot(patch(G31, norm.(fcr31)))
 
-PlotlyJS.plot([p1, p2, p3])
+# PlotlyJS.plot([p1, p2, p3])
+
+
+function blkdiagm(blks...)
+    m = sum(size(b,1) for b in blks)
+    n = sum(size(b,2) for b in blks)
+    A = zeros(eltype(first(blks)), m, n)
+    o1 = 1
+    o2 = 1
+    for b in blks
+        m1 = size(b,1)
+        n1 = size(b,2)
+        A[o1:o1+m1-1,o2:o2+n1-1] .= b
+        o1 += m1
+        o2 += n1
+    end
+    A
+end
 
 Sxx = BEAST.sysmatrix(mtefie)
-duality = @discretise N[k,j]==e[k] k∈X j∈Y
-Nxy = BEAST.sysmatrix(duality)
-
-bcefie = @discretise SL[k,j] == e[k] j∈Y k∈Y
-Syy = BEAST.sysmatrix(bcefie)
-
+N1 = assemble(N, X12, Y12)
+N2 = assemble(N, X23, Y23)
+N3 = assemble(N, X31, Y31)
+Nxy = blkdiagm(N1,N2,N3)
+Syy = assemble(SL, Y, Y)
 iNxy = inv(Nxy)
 
-gmres()
+cond(Sxx)
+ex = assemble(e,X)
+Q = transpose(iNxy) * Syy * iNxy * Sxx;
+R = transpose(iNxy) * Syy * iNxy * ex;
+
+
+u1, ch1 = solve(BEAST.GMRESSolver(Sxx),ex)
+u2, ch2 = solve(BEAST.GMRESSolver(Q),R)
+
+@show ch1.iters
+@show ch2.iters
+# gmres()
