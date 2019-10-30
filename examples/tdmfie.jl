@@ -1,21 +1,19 @@
 using CompScienceMeshes, BEAST
 o, x, y, z = euclidianbasis(3)
 
-# D, Δx = 1.0, 0.35
-
 Γ = readmesh(joinpath(@__DIR__,"sphere2.in"))
-# Γ = meshsphere(1.0, 0.08)
 @show numcells(Γ)
-X, Y = raviartthomas(Γ), buffachristiansen(Γ)
-# Δt, Nt = 0.11, 200
+
+X = raviartthomas(Γ)
+Y = buffachristiansen(Γ)
+
 Δt, Nt = 0.6, 200
-# Δt, Nt = 0.05, 400
 T = timebasisshiftedlagrange(Δt, Nt, 2)
 δ = timebasisdelta(Δt, Nt)
 
 V = X ⊗ T
 W = Y ⊗ δ
-# width, delay, scaling = 8.0, 12.0, 1.0
+
 duration = 20 * Δt
 delay = 1.5 * duration
 amplitude = 1.0
@@ -23,13 +21,12 @@ gaussian = creategaussian(duration, delay, amplitude)
 
 direction, polarisation = ẑ, x̂
 E = BEAST.planewave(polarisation, direction, gaussian, 1.0)
-# E = BEAST.planewave(polarisation, direction, derive(gaussian), 1.0)
 H = direction × E
 
 @hilbertspace j; @hilbertspace m′
-K, I, N = MWDoubleLayerTDIO(1.0, 1.0, 0), Identity(), NCross()
-# tdmfie = @discretise (0.5*(N⊗I) + 1.0*K)[m′,j] == -1H[m′]   j∈V  m′∈W
-# xmfie = solve(tdmfie)
+K = TDMaxwell3D.doublelayer(speedoflight=1.0)
+I = Identity()
+N = NCross()
 
 M = 0.5*(N⊗I) + 1.0*K
 Z_mfie = assemble(M, W, V, Val{:bandedstorage})

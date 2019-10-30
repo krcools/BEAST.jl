@@ -34,7 +34,7 @@ function td_solve(eq)
     V = eq.trial_space_dict[1]
     W = eq.test_space_dict[1]
 
-    A = assemble(op, W, V)
+    A = assemble(op, W, V, Val{:bandedstorage})
     S = inv(A[:,:,1])
     b = assemble(fn, W)
 

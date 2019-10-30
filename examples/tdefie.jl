@@ -28,11 +28,12 @@ E = BEAST.planewave(polarisation, direction, derive(gaussian), 1.0)
 
 
 @hilbertspace j; @hilbertspace j′
-T = MWSingleLayerTDIO(1.0,-1/1.0,-1.0,2,0)
+# SL = MWSingleLayerTDIO(1.0,-1/1.0,-1.0,2,0)
+SL = TDMaxwell3D.singlelayer(speedoflight=1.0, numdiffs=1)
 # tdefie = @discretise T[j′,j] == -1E[j′]   j∈V  j′∈W
 # xefie = solve(tdefie)
 
-Z_efie = assemble(T, W, V, Val{:bandedstorage})
+Z_efie = assemble(SL, W, V, Val{:bandedstorage})
 b_efie = assemble(E, W)
 xefie = marchonintime(inv(Z_efie[:,:,1]), Z_efie, b_efie, Nt)
 

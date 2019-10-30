@@ -43,7 +43,7 @@ Y = Y12 × Y23 × Y31
 
 E = Helmholtz3D.planewave(direction=ẑ, wavenumber=κ)
 e = strace(E, G12)
-
+ex = assemble(e, X)
 
 Sxx = assemble(SL, X, X)
 N1 = assemble(Identity(), X12, Y12)
@@ -54,7 +54,7 @@ Syy = assemble(HS, Y, Y)
 
 Dyx = inv(Nxy)
 Q = transpose(Dyx) * Syy * Dyx * Sxx
-R = transpose(iNxy) * Syy * iNxy * ex
+R = transpose(Dyx) * Syy * Dyx * ex
 
 u1, ch1 = solve(BEAST.GMRESSolver(Sxx),ex)
 u2, ch2 = solve(BEAST.GMRESSolver(Q),R)
@@ -62,7 +62,17 @@ u2, ch2 = solve(BEAST.GMRESSolver(Q),R)
 @show ch1.iters
 @show ch2.iters
 
+using LinearAlgebra
+cond(Sxx)
+cond(Q)
 
+w1 = eigvals(Sxx)
+w2 = eigvals(Q)
+
+using Plots
+plot()
+scatter!(w1)
+scatter!(w2)
 # u = gmres(mtefie)
 #
 # offset = 1; u12 = u[offset:offset+numfunctions(X12)-1]

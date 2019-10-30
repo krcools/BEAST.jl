@@ -180,6 +180,9 @@ mutable struct TemporalDifferentiation <: Operator
     operator
 end
 
+derive(op::Operator) = TemporalDifferentiation(op)
+scalartype(op::TemporalDifferentiation) = scalartype(op.operator)
+
 function assemble!(operator::TemporalDifferentiation, testfns, trialfns, store)
 
     trial_time_fns  = temporalbasis(trialfns)
@@ -188,6 +191,44 @@ function assemble!(operator::TemporalDifferentiation, testfns, trialfns, store)
     trialfns = SpaceTimeBasis(
         trial_space_fns,
         derive(trial_time_fns)
+    )
+
+    assemble!(operator.operator, testfns, trialfns, store)
+
+end
+
+struct TemporalIntegration <: Operator
+    operator::Operator
+end
+
+integrate(op::Operator) = TemporalIntegration(op)
+scalartype(op::TemporalIntegration) = scalartype(op.operator)
+
+function allocatestorage(op::TemporalIntegration, testfns, trialfns,
+	::Type{Val{:bandedstorage}},
+	::Type{LongDelays{:ignore}})
+
+	trial_time_fns  = temporalbasis(trialfns)
+	trial_space_fns = spatialbasis(trialfns)
+
+	trialfns = SpaceTimeBasis(
+		trial_space_fns,
+		integrate(trial_time_fns)
+	)
+
+	Z, store = allocatestorage(op.operator, testfns, trialfns, Val{:bandedstorage}, LongDelays{:ignore})
+	@show size(Z)
+	return Z, store
+end
+
+function assemble!(operator::TemporalIntegration, testfns, trialfns, store)
+
+    trial_time_fns  = temporalbasis(trialfns)
+    trial_space_fns = spatialbasis(trialfns)
+
+    trialfns = SpaceTimeBasis(
+        trial_space_fns,
+        integrate(trial_time_fns)
     )
 
     assemble!(operator.operator, testfns, trialfns, store)
