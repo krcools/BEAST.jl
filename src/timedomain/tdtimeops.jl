@@ -182,6 +182,7 @@ end
 
 derive(op::Operator) = TemporalDifferentiation(op)
 scalartype(op::TemporalDifferentiation) = scalartype(op.operator)
+Base.:*(a::Number, op::TemporalDifferentiation) = TemporalDifferentiation(a * op.operator)
 
 function assemble!(operator::TemporalDifferentiation, testfns, trialfns, store)
 
@@ -203,6 +204,7 @@ end
 
 integrate(op::Operator) = TemporalIntegration(op)
 scalartype(op::TemporalIntegration) = scalartype(op.operator)
+Base.:*(a::Number, op::TemporalIntegration) = TemporalIntegration(a * op.operator)
 
 function allocatestorage(op::TemporalIntegration, testfns, trialfns,
 	::Type{Val{:bandedstorage}},

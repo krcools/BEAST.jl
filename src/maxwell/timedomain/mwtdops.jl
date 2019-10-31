@@ -13,10 +13,28 @@ mutable struct MWSingleLayerTDIO{T} <: RetardedPotential{T}
     hs_diffs::Int
 end
 
+function Base.:*(a::Number, op::MWSingleLayerTDIO)
+	@info "scalar product a * op (SL)"
+	MWSingleLayerTDIO(
+		op.speed_of_light,
+		a * op.ws_weight,
+		a * op.hs_weight,
+		op.ws_diffs,
+		op.hs_diffs)
+end
+
 mutable struct MWDoubleLayerTDIO{T} <: RetardedPotential{T}
     speed_of_light::T
     weight::T
     num_diffs::Int
+end
+
+function Base.:*(a::Number, op::MWDoubleLayerTDIO)
+	@info "scalar product a * op (DL)"
+	MWDoubleLayerTDIO(
+		op.speed_of_light,
+		a * op.weight,
+		op.num_diffs)
 end
 
 MWSingleLayerTDIO(;speedoflight) = MWSingleLayerTDIO(speedoflight,-1/speedoflight,-speedoflight,2,0)

@@ -27,17 +27,35 @@ end
 
 function td_solve(eq)
 
-    @warn "very limited support for automated solution of TD equations...."
-    op = eq.equation.lhs.terms[1].kernel
-    fn = eq.equation.rhs.terms[1].functional
+    # @warn "very limited support for automated solution of TD equations...."
+    # op = eq.equation.lhs.terms[1].kernel
+    # fn = eq.equation.rhs.terms[1].functional
 
-    V = eq.trial_space_dict[1]
-    W = eq.test_space_dict[1]
+    # V = eq.trial_space_dict[1]
+    # W = eq.test_space_dict[1]
 
-    A = assemble(op, W, V, Val{:bandedstorage})
-    S = inv(A[:,:,1])
-    b = assemble(fn, W)
+    bilform = eq.equation.lhs
+    I = [numfunctions(spatialbasis(eq.test_space_dict[i])) for i in 1:length(bilform.test_space)]
+    J = [numfunctions(spatialbasis(eq.trial_space_dict[i])) for i in 1:length(bilform.trial_space)]
+
+    A = td_assemble(eq.equation.lhs, eq.test_space_dict, eq.trial_space_dict)
+
+    T = eltype(eltype(A))
+    S = PseudoBlockArray{T}(undef, I, J)
+
+    for i in 1:nblocks(A,1)
+        for j in 1:nblocks(A,2)
+            S[Block(i,j)] = A[Block(i,j)].banded[:,:,1]
+        end
+    end
+    # A = td_assemble(op, W, V, Val{:bandedstorage})
+
+    # S = inv(A[:,:,1])
+    # T = eltype(A)
+    # S = zeros(T, size(A))
+
+    b = td_assemble(eq.equation.rhs, eq.test_space_dict)
 
     nt = numfunctions(temporalbasis(V))
-    marchonintime(S, A, b, nt)
+    marchonintime(inv(S), A, b, nt)
 end
