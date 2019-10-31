@@ -32,6 +32,8 @@ pmchwt = @discretise(
     2.0K[l,j] + 2.0T[l,m] == H[k] + E[l],
     j∈V, m∈V, k∈W, l∈W)
 
+error("stop")
+
 u = solve(pmchwt)
 
 nX = numfunctions(X)
@@ -42,13 +44,14 @@ um = u[nX+1:end]
 ffpoints = [point(cos(ϕ)*sin(θ), sin(ϕ)*sin(θ), cos(θ)) for θ in Θ for ϕ in Φ]
 
 # Don't forgt the far field comprises two contributions
+κ, η = 1.0, 1.0
 ffm = potential(MWFarField3D(κ*im), ffpoints, um, X)
 ffj = potential(MWFarField3D(κ*im), ffpoints, uj, X)
 ff = η*im*κ*ffj + im*κ*cross.(ffpoints, ffm)
 
 using Plots
 plot(xlabel="theta")
-plot!(Θ,norm.(ff),label="far field")
+plot!(Θ,norm.(ffm),label="far field")
 
 import PlotlyJS
 using LinearAlgebra

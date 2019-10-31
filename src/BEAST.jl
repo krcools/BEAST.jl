@@ -2,9 +2,10 @@ module BEAST
 
 using Distributed
 using LinearAlgebra
-using Pkg
+# using Pkg
 using SharedArrays
 using SparseArrays
+using BlockArrays
 
 using SauterSchwabQuadrature
 using FastGaussQuadrature

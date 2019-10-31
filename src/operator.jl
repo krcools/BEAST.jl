@@ -68,7 +68,7 @@ transpose(op::Operator) = TransposedOperator(op)
 
 
 function assemble(operator::AbstractOperator, test_functions, trial_functions,
-    storage_policy = Val{:densestorage},
+    storage_policy = Val{:bandedstorage},
     long_delays_policy = LongDelays{:ignore})
     # This is a convenience function whose only job is to allocate
     # the storage for the interaction matrix. Further dispatch on
@@ -80,7 +80,7 @@ function assemble(operator::AbstractOperator, test_functions, trial_functions,
 end
 
 function assemblerow(operator::AbstractOperator, test_functions, trial_functions,
-    storage_policy = Val{:densestorage},
+    storage_policy = Val{:bandedstorage},
     long_delays_policy = LongDelays{:ignore})
 
     Z, store = allocatestorage(operator, test_functions, trial_functions,
@@ -90,7 +90,7 @@ function assemblerow(operator::AbstractOperator, test_functions, trial_functions
 end
 
 function assemblecol(operator::AbstractOperator, test_functions, trial_functions,
-    storage_policy = Val{:densestorage},
+    storage_policy = Val{:bandestorage},
     long_delays_policy = LongDelays{:ignore})
 
     Z, store = allocatestorage(operator, test_functions, trial_functions,
@@ -100,7 +100,7 @@ function assemblecol(operator::AbstractOperator, test_functions, trial_functions
 end
 
 function allocatestorage(operator::AbstractOperator, test_functions, trial_functions,
-    ::Type{Val{:densestorage}},
+    ::Type{Val{:bandedstorage}},
     ::Type{LongDelays{:ignore}})
 
     T = promote_type(
@@ -120,7 +120,7 @@ end
 
 function allocatestorage(operator::LinearCombinationOfOperators,
         test_functions::SpaceTimeBasis, trial_functions::SpaceTimeBasis,
-        storage_policy::Type{Val{:densestorage}},
+        storage_policy::Type{Val{:bandedstorage}},
         long_delays_policy::Type{LongDelays{:ignore}})
 
     # TODO: remove this ugly, ugly patch

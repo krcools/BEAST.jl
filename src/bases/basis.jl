@@ -38,6 +38,8 @@ determine the `eltype` of assembled discrete operators.
 """
 function scalartype end
 scalartype(x1, xs...) = Base.promote_type(scalartype(x1), scalartype(xs...))
+scalartype(x1::Number) = typeof(x1)
+scalartype(T::Type, x) = Base.promote_type(T, scalartype(x))
 
 
 """

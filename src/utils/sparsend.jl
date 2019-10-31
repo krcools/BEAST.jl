@@ -120,4 +120,17 @@ function Base.:+(A::Banded3D{T}, B::Banded3D{T}) where {T}
     Banded3D(K0, data, max(A.maxk1, B.maxk1))
 end
 
+
+struct MatrixOfConvolutions{T} <: AbstractArray{Vector{T},2}
+    banded::Banded3D{T}
+end
+
+function Base.eltype(x::MatrixOfConvolutions{T}) where {T}
+    Vector{T}
+end
+Base.size(x::MatrixOfConvolutions) = size(x.banded)[1:2]
+function Base.getindex(x::MatrixOfConvolutions, m, n)
+    return x.banded[m,n,:]
+end
+
 end # module
