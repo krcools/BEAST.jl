@@ -41,14 +41,54 @@ of a time translation invariant retarded potential operator. `W0` is the inverse
 the slice `Z[:,:,1]`.
 """
 function marchonintime(W0,Z,B,I)
-    T = eltype(Z)
-    M,N,K = size(Z)
+    T = eltype(W0)
+    M,N = size(Z)
     @assert M == size(B,1)
     x = zeros(T,N,I)
     for i in 1:I
         b = B[:,i] - convolve(Z,x,i,2)
-        x[:,i] = W0 * b
+        x[:,i] += W0 * b
         (i % 10 == 0) && print(i, "[", I, "] - ")
+    end
+    return x
+end
+
+
+function marchonintime(W0,Z::BlockArray,B,I)
+    T = eltype(W0)
+    M,N = size(W0)
+    @assert M == size(B,1)
+    x = zeros(T,N,I)
+    for i in 1:I
+        R = [ B[j][i] for j in 1:N ]
+        S = convolve(Z,x,i,2)
+        @show size(R)
+        @show size(S)
+        # b = R - convolve(Z,x,i,2)
+        b = R - S
+        x[:,i] += W0 * b
+        (i % 10 == 0) && print(i, "[", I, "] - ")
+    end
+    return x
+end
+
+
+using BlockArrays
+
+function convolve(Z::BlockArray, x, i, j_start)
+    cs = BlockArrays.cumulsizes(Z)
+    bs = [blocksize(Z, (i,1)) for i in 1:nblocks(Z,1)]
+    T = eltype(eltype(Z))
+    y = PseudoBlockVector{T}(bs)
+    for I in 1:nblocks(Z,1)
+        xI = view(x, cs[1][I] : cs[1][I+1]-1, :)
+        for J in 1:nblocks(Z,2)
+            xJ = view(x, cs[2][J] : cs[2][J+1]-1, :)
+            ZIJ = Z[Block(I,J)].banded
+            @show size(xI) size(xJ) size(ZIJ)
+            @show size(y[Block(I)])
+            y[Block(I)] .+= convolve(ZIJ, xJ, i, j_start)
+        end
     end
     return x
 end

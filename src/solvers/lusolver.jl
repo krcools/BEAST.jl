@@ -31,7 +31,7 @@ function td_solve(eq)
     # op = eq.equation.lhs.terms[1].kernel
     # fn = eq.equation.rhs.terms[1].functional
 
-    # V = eq.trial_space_dict[1]
+    V = eq.trial_space_dict[1]
     # W = eq.test_space_dict[1]
 
     bilform = eq.equation.lhs
@@ -57,5 +57,23 @@ function td_solve(eq)
     b = td_assemble(eq.equation.rhs, eq.test_space_dict)
 
     nt = numfunctions(temporalbasis(V))
-    marchonintime(inv(S), A, b, nt)
+    iS = inv(Array(S))
+    marchonintime(iS, A, b, nt)
+end
+
+function timeslice(A::BlockArray, k)
+
+    I = [blocksize(A, (1,i))[1] for i in 1:nblocks(A,1)]
+    J = [blocksize(A, (j,1))[2] for j in 1:nblocks(A,2)]
+
+    T = eltype(eltype(A))
+    S = PseudoBlockArray{T}(undef, I, J)
+
+    for i in 1:nblocks(A,1)
+        for j in 1:nblocks(A,2)
+            S[Block(i,j)] = A[Block(i,j)].banded[:,:,k]
+        end
+    end
+
+    return S
 end
