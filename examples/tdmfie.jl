@@ -1,8 +1,5 @@
 using CompScienceMeshes, BEAST
-o, x, y, z = euclidianbasis(3)
-
 Γ = readmesh(joinpath(@__DIR__,"sphere2.in"))
-@show numcells(Γ)
 
 X = raviartthomas(Γ)
 Y = buffachristiansen(Γ)
@@ -23,15 +20,15 @@ direction, polarisation = ẑ, x̂
 E = BEAST.planewave(polarisation, direction, gaussian, 1.0)
 H = direction × E
 
-@hilbertspace j; @hilbertspace m′
 K = TDMaxwell3D.doublelayer(speedoflight=1.0)
 I = Identity()
 N = NCross()
 
+@hilbertspace k
+@hilbertspace j
 M = 0.5*(N⊗I) + 1.0*K
-Z_mfie = assemble(M, W, V, Val{:bandedstorage})
-b_mfie = assemble(H, W)
-xmfie = marchonintime(inv(Z_mfie[:,:,1]), Z_mfie, b_mfie, Nt)
+mfie = @discretise M[k,j] == -1.0H[k] k∈W j∈V
+xmfie = solve(mfie)
 
 Xmfie, Δω, ω0 = fouriertransform(xmfie, Δt, 0.0, 2)
 ω = collect(ω0 .+ (0:Nt-1)*Δω)

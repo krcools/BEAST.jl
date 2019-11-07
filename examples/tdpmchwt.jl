@@ -32,8 +32,6 @@ pmchwt = @discretise(
     2.0K[l,j] + 2.0T[l,m] == H[k] + E[l],
     j∈V, m∈V, k∈W, l∈W)
 
-error("stop")
-
 u = solve(pmchwt)
 
 nX = numfunctions(X)

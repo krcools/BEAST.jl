@@ -77,9 +77,11 @@ using BlockArrays
 
 function convolve(Z::BlockArray, x, i, j_start)
     cs = BlockArrays.cumulsizes(Z)
-    bs = [blocksize(Z, (i,1)) for i in 1:nblocks(Z,1)]
+    bs = [blocksize(Z, (i,1))[1] for i in 1:nblocks(Z,1)]
+    @show bs
     T = eltype(eltype(Z))
-    y = PseudoBlockVector{T}(bs)
+    y = PseudoBlockVector{T}(undef,bs)
+    fill!(y,0)
     for I in 1:nblocks(Z,1)
         xI = view(x, cs[1][I] : cs[1][I+1]-1, :)
         for J in 1:nblocks(Z,2)
@@ -90,5 +92,5 @@ function convolve(Z::BlockArray, x, i, j_start)
             y[Block(I)] .+= convolve(ZIJ, xJ, i, j_start)
         end
     end
-    return x
+    return y
 end
