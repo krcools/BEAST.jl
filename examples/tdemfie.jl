@@ -32,5 +32,5 @@ N = NCross()
 @hilbertspace j m
 emfie = @discretise(
     (0.5(N⊗I) + 1.0DL)[k,j] + SL[l,m] == -1.0H[k] - E[l],
-    k∈Y⊗δ, l∈X⊗δ, j∈X⊗T2, m∈X⊗T1)
+    k∈Y⊗δ, l∈X⊗δ, j∈X⊗T1, m∈X⊗T1)
 xemfie = solve(emfie)

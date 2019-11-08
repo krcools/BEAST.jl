@@ -104,7 +104,7 @@ function assemble!(op::RetardedPotential, testST, trialST, store)
 
 	speedoflight = op.speed_of_light
 	Δt = timestep(timebasisfunction)
-	ct, hs = boundingbox(geometry(trialspace).vertices)
+	ct, hs = boundingbox(vertices(geometry(trialspace)))
 	diam = 2 * sqrt(3) * hs
 	#kmax = ceil(Int, diam/speedoflight/timestep(timebasisfunction)) + (numintervals(timebasisfunction)-1)
 	kmax = ceil(Int, (numintervals(timebasisfunction)-1) + diam/speedoflight/Δt)+1
