@@ -26,8 +26,7 @@ N = NCross()
 
 @hilbertspace k
 @hilbertspace j
-M = 0.5*(N⊗I) + 1.0*K
-mfie = @discretise M[k,j] == -1.0H[k] k∈W j∈V
+mfie = @discretise (0.5(N⊗I) + 1.0K)[k,j] == -1.0H[k] k∈W j∈V
 xmfie = solve(mfie)
 
 Xmfie, Δω, ω0 = fouriertransform(xmfie, Δt, 0.0, 2)

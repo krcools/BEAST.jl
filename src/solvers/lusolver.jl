@@ -35,29 +35,29 @@ function td_solve(eq)
     # W = eq.test_space_dict[1]
 
     bilform = eq.equation.lhs
-    I = [numfunctions(spatialbasis(eq.test_space_dict[i])) for i in 1:length(bilform.test_space)]
-    J = [numfunctions(spatialbasis(eq.trial_space_dict[i])) for i in 1:length(bilform.trial_space)]
+    # I = [numfunctions(spatialbasis(eq.test_space_dict[i])) for i in 1:length(bilform.test_space)]
+    # J = [numfunctions(spatialbasis(eq.trial_space_dict[i])) for i in 1:length(bilform.trial_space)]
 
     A = td_assemble(eq.equation.lhs, eq.test_space_dict, eq.trial_space_dict)
 
-    T = eltype(eltype(A))
-    S = PseudoBlockArray{T}(undef, I, J)
+    # T = eltype(eltype(A))
+    # S = PseudoBlockArray{T}(undef, I, J)
+    # fill!(S,0)
+    #
+    # for i in 1:nblocks(A,1)
+    #     for j in 1:nblocks(A,2)
+    #         isassigned(A.blocks, i, j) || continue
+    #         S[Block(i,j)] = A[Block(i,j)].banded[:,:,1]
+    #     end
+    # end
 
-    for i in 1:nblocks(A,1)
-        for j in 1:nblocks(A,2)
-            S[Block(i,j)] = A[Block(i,j)].banded[:,:,1]
-        end
-    end
-    # A = td_assemble(op, W, V, Val{:bandedstorage})
-
-    # S = inv(A[:,:,1])
-    # T = eltype(A)
-    # S = zeros(T, size(A))
+    S = timeslice(A,1)
+    iS = inv(Array(S))
 
     b = td_assemble(eq.equation.rhs, eq.test_space_dict)
 
     nt = numfunctions(temporalbasis(V))
-    iS = inv(Array(S))
+    # @show @which marchonintime(AiS, A, b, nt)
     marchonintime(iS, A, b, nt)
 end
 
@@ -68,9 +68,11 @@ function timeslice(A::BlockArray, k)
 
     T = eltype(eltype(A))
     S = PseudoBlockArray{T}(undef, I, J)
+    fill!(S,0)
 
     for i in 1:nblocks(A,1)
         for j in 1:nblocks(A,2)
+            isassigned(A.blocks, i, j) || continue
             S[Block(i,j)] = A[Block(i,j)].banded[:,:,k]
         end
     end
