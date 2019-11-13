@@ -228,7 +228,7 @@ function temporalassemblydata(tbf; kmax=typemax(Int))
     num_refs  = degree(tbf)+1
 
     has_zero_tail = all(tbf.polys[end].data .== 0)
-    @show has_zero_tail
+    # @show has_zero_tail
 
     if has_zero_tail
         max_num_funcs = numintervals(tbf) # 3
@@ -302,7 +302,7 @@ end
 
 
 function convolve(f::TimeBasisFunction, g::TimeBasisFunction)
-    @info "BEAST.convolve: computing quadratic spline out of a pulse and a hat"
+    # @info "BEAST.convolve: computing quadratic spline out of a pulse and a hat"
     dt = timestep(f)
     fg = timebasisspline2(dt, numfunctions(f), scalartype(f))
     fg.polys = dt * fg.polys
@@ -318,12 +318,12 @@ end
 # end
 
 function convolve(δ::TimeBasisDelta, g::TimeBasisFunction)
-    @info "Computing the trivial convolution between a delta and something else"
+    # @info "Computing the trivial convolution between a delta and something else"
     return g
 end
 
 function convolve(f::TimeBasisFunction{T,2,1,0}, g::TimeBasisFunction{T,2,1,0}) where {T}
-    @info "Convolving two pulses into a hat"
+    # @info "Convolving two pulses into a hat"
     dt = BEAST.timestep(f)
     fg = timebasisshiftedlagrange(dt, numfunctions(f), 1, scalartype(f))
     fg.polys = dt * fg.polys
@@ -334,7 +334,7 @@ function BEAST.convolve(
     f::TimeBasisFunction{T,2,1,0},
     g::TimeBasisFunction{T,N,D1,D}) where {T,N,D1,D}
 
-    @info "Convolving a left-of-origin pulse with a piecewise poly"
+    # @info "Convolving a left-of-origin pulse with a piecewise poly"
 
     @assert degree(f.polys[1]) == 0
     @assert timestep(f) ≈ timestep(g)

@@ -6,7 +6,7 @@ function assemble(op::Identity,
 
     tbf = convolve(testnfs, trialfns)
     has_zero_tail = all(tbf.polys[end].data .== 0)
-    @show has_zero_tail
+    # @show has_zero_tail
 
     T = scalartype(tbf)
     if has_zero_tail

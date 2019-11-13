@@ -62,8 +62,8 @@ function marchonintime(W0,Z::BlockArray,B,I)
     for i in 1:I
         R = [ B[j][i] for j in 1:N ]
         S = convolve(Z,x,i,2)
-        @show size(R)
-        @show size(S)
+        # @show size(R)
+        # @show size(S)
         # b = R - convolve(Z,x,i,2)
         b = R - S
         x[:,i] += W0 * b
@@ -78,7 +78,7 @@ using BlockArrays
 function convolve(Z::BlockArray, x, i, j_start)
     cs = BlockArrays.cumulsizes(Z)
     bs = [blocksize(Z, (i,1))[1] for i in 1:nblocks(Z,1)]
-    @show bs
+    # @show bs
     T = eltype(eltype(Z))
     y = PseudoBlockVector{T}(undef,bs)
     fill!(y,0)
@@ -88,8 +88,8 @@ function convolve(Z::BlockArray, x, i, j_start)
             xJ = view(x, cs[2][J] : cs[2][J+1]-1, :)
             isassigned(Z.blocks, I, J) || continue
             ZIJ = Z[Block(I,J)].banded
-            @show size(xJ) size(ZIJ)
-            @show size(y[Block(I)])
+            # @show size(xJ) size(ZIJ)
+            # @show size(y[Block(I)])
             y[Block(I)] .+= convolve(ZIJ, xJ, i, j_start)
         end
     end

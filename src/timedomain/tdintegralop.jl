@@ -68,10 +68,10 @@ function allocatestorage(op::RetardedPotential, testST, basisST,
     println("\nAllocated memory for convolution operator.")
     # data = zeros(eltype(op), M, N, maximum(K1.-K0.+1))
 
-	@show minimum(K0)
-	@show maximum(K0)
-	@show minimum(K1)
-	@show maximum(K1)
+	# @show minimum(K0)
+	# @show maximum(K0)
+	# @show minimum(K1)
+	# @show maximum(K1)
 
     #Z = SparseND.Banded3D(K0,K1,data)
     # kmax = maximum(K1);
@@ -92,8 +92,11 @@ function assemble!(op::LinearCombinationOfOperators, tfs::SpaceTimeBasis, bfs::S
     end
 end
 
-
 function assemble!(op::RetardedPotential, testST, trialST, store)
+	assemble_chunk!(op, testST, trialST, store)
+end
+
+function assemble_chunk!(op::RetardedPotential, testST, trialST, store)
 
     testspace  = spatialbasis(testST)
     trialspace = spatialbasis(trialST)

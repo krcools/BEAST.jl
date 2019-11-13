@@ -68,13 +68,24 @@ function quaddata(op::MWSingleLayerTDIO, testrefs, trialrefs, timerefs,
 
     V = eltype(testels[1].vertices)
     ws = WiltonInts84.workspace(V)
-    quadpoints(testrefs, testels, (3,)), bn, ws
+    quadpoints(testrefs, testels, (5,)), bn, ws
 
 end
 
 
 quadrule(op::MWSingleLayerTDIO, testrefs, trialrefs, timerefs,
         p, testel, q, trialel, r, timeel, qd) = WiltonInts84Strat(qd[1][1,p],qd[2],qd[3])
+
+function assemble!(dl::MWDoubleLayerTDIO, W::SpaceTimeBasis, V::SpaceTimeBasis, store)
+	X, T = spatialbasis(W), temporalbasis(W)
+	Y, U = spatialbasis(V), temporalbasis(V)
+	if CompScienceMeshes.refines(geometry(Y), geometry(X))
+		@assert !CompScienceMeshes.refines(geometry(X), geometry(Y))
+		store1(v,m,n,k) = store(v,n,m,k)
+		return assemble_chunk!(dl, Y⊗T, X⊗U, store1)
+	end
+	return assemble_chunk!(dl, W, V, store)
+end
 
 function quaddata(op::MWDoubleLayerTDIO, testrefs, trialrefs, timerefs,
         testels, trialels, timeels)
@@ -84,7 +95,7 @@ function quaddata(op::MWDoubleLayerTDIO, testrefs, trialrefs, timerefs,
 
     V = eltype(testels[1].vertices)
     ws = WiltonInts84.workspace(V)
-    quadpoints(testrefs, testels, (3,)), bn, ws
+    quadpoints(testrefs, testels, (5,)), bn, ws
 end
 
 quadrule(op::MWDoubleLayerTDIO, testrefs, trialrefs, timerefs,

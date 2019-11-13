@@ -1,7 +1,7 @@
 using CompScienceMeshes, BEAST
 using LinearAlgebra
 
-Γ = meshcuboid(1.0, 1.0, 1.0, 0.15)
+Γ = meshcuboid(1.0, 1.0, 1.0, 0.25)
 # Γ = meshsphere(1.0, 0.3)
 X = raviartthomas(Γ)
 Y = buffachristiansen(Γ)

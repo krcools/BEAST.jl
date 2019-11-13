@@ -97,7 +97,7 @@ function td_assemble(lform::LinForm, test_space_dict)
         T = scalartype(T,term.functional)
     end
     for kv in test_space_dict;  T = scalartype(T,kv[2]) end
-    @show T
+    # @show T
 
     I = [numfunctions(spatialbasis(test_space_dict[i])) for i in 1:length(lform.test_space)]
 
@@ -192,8 +192,8 @@ function td_assemble(bilform::BilForm, test_space_dict, trial_space_dict)
   I = [numfunctions(spatialbasis(test_space_dict[i])) for i in 1:length(bilform.test_space)]
   J = [numfunctions(spatialbasis(trial_space_dict[i])) for i in 1:length(bilform.trial_space)]
 
-  @show I
-  @show J
+  # @show I
+  # @show J
 
   BT = SparseND.MatrixOfConvolutions{T}
   Z = BlockArray(undef_blocks, BT, I, J)
@@ -202,8 +202,8 @@ function td_assemble(bilform::BilForm, test_space_dict, trial_space_dict)
   for t in lhterms
 
       # α = t.coeff
-      @show t.coeff
-      @show t.kernel
+      # @show t.coeff
+      @show (t.coeff,t.kernel)
       a = t.coeff * t.kernel
 
       m = t.test_id
