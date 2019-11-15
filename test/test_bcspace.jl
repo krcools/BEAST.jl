@@ -1,7 +1,9 @@
 using Test
+using SparseArrays
 
 using CompScienceMeshes
 using BEAST
+using StaticArrays
 
 """
     isdivconforming(space)

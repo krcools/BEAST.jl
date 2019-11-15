@@ -102,7 +102,14 @@ end
 
 
 function add!(bf::Vector{Shape{T}}, cellid, refid, coeff) where T
+    for (i,sh) in pairs(bf)
+        if sh.cellid == cellid && sh.refid == refid
+            bf[i] = Shape(cellid, refid, sh.coeff + coeff)
+            return nothing
+        end
+    end
     push!(bf, Shape(cellid, refid, coeff))
+    return nothing
 end
 
 

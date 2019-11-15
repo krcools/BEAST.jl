@@ -4,7 +4,7 @@ using LinearAlgebra
 Γ = meshcuboid(1.0, 1.0, 1.0, 0.25)
 # Γ = meshsphere(1.0, 0.3)
 X = raviartthomas(Γ)
-Y = buffachristiansen(Γ)
+Y = buffachristiansen(Γ, ibscaled=true)
 
 sol = 1.0
 T = TDMaxwell3D.singlelayer(speedoflight=sol, numdiffs=1)
