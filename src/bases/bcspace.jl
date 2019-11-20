@@ -87,14 +87,19 @@ isclosed(a, pred) = length(a)>2 && pred(a[end], a[1])
 Construct the set of Buffa-Christiansen functions subject to mesh Γ and only
 enforcing zero normal components on ∂Γ ∖ γ.
 """
-function buffachristiansen(Γ, γ=mesh(coordtype(Γ),1,3))
+function buffachristiansen(Γ, γ=mesh(coordtype(Γ),1,3); ibscaled=false)
 
     @assert CompScienceMeshes.isoriented(Γ)
 
     T = coordtype(Γ)
+    P = vertextype(Γ)
 
     edges = skeleton(Γ, 1)
-    fine = barycentric_refinement(Γ)
+    fine = if ibscaled
+        CompScienceMeshes.lineofsight_refinement(Γ)
+    else
+        barycentric_refinement(Γ)
+    end
 
     in_interior = interior_tpredicate(Γ)
     on_junction = overlap_gpredicate(γ)
@@ -110,6 +115,7 @@ function buffachristiansen(Γ, γ=mesh(coordtype(Γ),1,3))
     vtof, vton = vertextocellmap(fine)
     jct_pred = overlap_gpredicate(γ)
     bcs, k = Vector{Vector{Shape{T}}}(undef,numfuncs), 1
+    pos = Vector{P}(undef,numfuncs)
     for (i,edge) in enumerate(cells(edges))
 
         ch = chart(edges, edge)
@@ -117,35 +123,44 @@ function buffachristiansen(Γ, γ=mesh(coordtype(Γ),1,3))
 
         # index of edge center in fine's vertexbuffer
         p = numvertices(edges) + i
+        pos[k] = vertices(fine)[p]
+
+        # sanity check
+        edge_ctr = cartesian(center(ch))
+        fine_vtx = vertices(fine)[p]
+        @assert all(carttobary(ch, edge_ctr) .≥ 0)
+        @assert norm(cross(edge_ctr - ch.vertices[1], fine_vtx - ch.vertices[1])) ≤ 1e-8
 
         v = edge[1]
         n = vton[v]
         F = vec(vtof[v,1:n])
         supp = cells(fine)[F]
-        bc1 = buildhalfbc(fine, F, v, p, jct_pred)
+        bc1 = buildhalfbc(fine, F, v, p, jct_pred, ibscaled)
 
         v = edge[2]
         n = vton[v]
         F = vec(vtof[v,1:n])
         supp = cells(fine)[F]
-        bc2 = buildhalfbc(fine, F, v, p, jct_pred)
+        bc2 = buildhalfbc(fine, F, v, p, jct_pred, ibscaled)
         bc2 = Shape{T}[Shape(s.cellid, s.refid, -s.coeff) for s in bc2]
 
         bcs[k] = [bc1; bc2]
         k += 1
     end
 
-    return RTBasis(fine, bcs)
+    return RTBasis(fine, bcs, pos)
 end
 
 
 """
     buildhalfbc(fine, supp::Array{SVector{3,Int},1}, v, p)
 """
-function buildhalfbc(fine, S, v, p, onjunction)
+function buildhalfbc(fine, S, v, p, onjunction, ibscaled)
 
     T = coordtype(fine)
 
+    @assert v != 0
+    @assert p != 0
     @assert length(S) >= 2
     @assert mod(length(S), 2) == 0
     @assert all(0 .< S .<= numcells(fine))
@@ -165,10 +180,6 @@ function buildhalfbc(fine, S, v, p, onjunction)
     port_faces = findall(i -> p in cells(fine)[i], S)
     port_edges = [something(findfirst(isequal(v), cells(fine)[S[i]]),0) for i in port_faces]
 
-    num_ports = length(port_faces)
-    port_fluxes = ones(T,num_ports) / num_ports
-    @assert length(port_faces) < 3
-
     c_on_boundary = !share_edge(S[end], S[1]) || length(S) == 2
     e_on_boundary = length(port_faces) == 1
     @assert c_on_boundary || !e_on_boundary
@@ -184,6 +195,22 @@ function buildhalfbc(fine, S, v, p, onjunction)
         end
         @assert port_faces[1] == modn(port_faces[2]+1)
     end
+
+    port_lengths = [begin
+            face = cells(fine)[S[j]]
+            v1 = vertices(fine)[face[mod1(i+1,3)]]
+            v2 = vertices(fine)[face[mod1(i+2,3)]]
+            norm(v2-v1)
+        end for (j,i) in zip(port_faces, port_edges)]
+    num_ports = length(port_faces)
+    port_fluxes = if ibscaled
+        total_length = sum(port_lengths)
+        port_lengths / total_length
+    else
+        ones(T,num_ports) / num_ports
+    end
+    @assert sum(port_fluxes) ≈ 1
+    @assert length(port_faces) < 3
 
     # Detect the boundary edges
     bnd_faces = Int[]
@@ -216,7 +243,13 @@ function buildhalfbc(fine, S, v, p, onjunction)
 
     # This charge needs to be compensated by interior divergence
     total_charge = (!c_on_boundary || num_junctions == 2) ? 1 : 0
-    charges = fill(total_charge/n, n)
+    charges = if ibscaled
+        face_areas = [volume(chart(fine, cells(fine)[s])) for s in S]
+        face_areas / sum(face_areas)
+    else
+        fill(total_charge/n, n)
+    end
+    @assert sum(charges) ≈ 1 || isapprox(sum(charges), 0, atol=1e-8)
 
     # add the port contributions
     for (f, e, w) in zip(port_faces, port_edges, port_fluxes)
@@ -227,6 +260,7 @@ function buildhalfbc(fine, S, v, p, onjunction)
     bnd_fluxes = T[]
     if c_on_boundary
         if num_junctions == 0
+            ibscaled && error("IB scaled BCs for mesh with boundary not implemented!")
             bnd_fluxes = T[-(n-port_faces[2])/n, -port_faces[2]/n]
         elseif num_junctions == 1
             bnd_fluxes = -ones(T,2)
@@ -260,6 +294,75 @@ function buildhalfbc(fine, S, v, p, onjunction)
         add!(bf, S[j1], abs(e1), -charges[j0])
         # update the charge bookkeeping
         charges[j1] += charges[j0]
+    end
+
+    # Add a multiple of the zero-divergence pattern such that the result
+    # is orthogonal to the zero-divergence pattern
+    if ibscaled
+        β = zero(T)
+        for shape in bf
+            f = shape.cellid
+            @assert f in S
+            face = cells(fine)[f]
+            i = something(findfirst(==(v),face), 0)
+            @assert i != 0
+            ch = chart(fine, cells(fine)[f])
+            area = volume(ch)
+            qps = quadpoints(ch, 3)
+            @assert sum(w for (p,w) in qps) ≈ area
+            for (p,w) in qps
+                vals = RTRefSpace{T}()(p)
+                bfp = shape.coeff * vals[shape.refid].value
+                i1 = mod1(i+1,3)
+                i2 = mod1(i+2,3)
+                dfp = 0.5/area * (ch.vertices[i2] - ch.vertices[i1])
+                @assert dfp ≈ vals[i1].value - vals[i2].value
+                β += w * dot(bfp, dfp)
+            end
+        end
+
+        γ = zero(T)
+        for f in S
+            face = cells(fine)[f]
+            i = something(findfirst(==(v), face), 0)
+            @assert i != 0
+            ch = chart(fine, face)
+            area = volume(ch)
+            vct = ch.vertices[mod1(i+2,3)] - ch.vertices[mod1(i+1,3)]
+            γ += 0.25/area * dot(vct,vct)
+        end
+
+        α = -β/γ
+        for f in S
+            face = cells(fine)[f]
+            i = something(findfirst(==(v), face), 0)
+            @assert i != 0
+            add!(bf, f, mod1(i+1,3), α)
+            add!(bf, f, mod1(i+2,3), -α)
+        end
+
+        β = zero(T)
+        for shape in bf
+            f = shape.cellid
+            @assert f in S
+            face = cells(fine)[f]
+            i = something(findfirst(==(v),face), 0)
+            @assert i != 0
+            ch = chart(fine, cells(fine)[f])
+            area = volume(ch)
+            qps = quadpoints(ch, 3)
+            @assert sum(w for (p,w) in qps) ≈ area
+            for (p,w) in qps
+                vals = RTRefSpace{T}()(p)
+                bfp = shape.coeff * vals[shape.refid].value
+                i1 = mod1(i+1,3)
+                i2 = mod1(i+2,3)
+                dfp = 0.5/area * (ch.vertices[i2] - ch.vertices[i1])
+                @assert dfp ≈ vals[i1].value - vals[i2].value
+                β += w * dot(bfp, dfp)
+            end
+        end
+        @assert isapprox(β,0, atol=1e-8)
     end
 
     return bf
