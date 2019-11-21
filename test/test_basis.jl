@@ -115,8 +115,8 @@ using BEAST
 using Test
 
 m1 = meshrectangle(1.0, 0.5, 0.5)
-m2 = rotate(m1, 0.5π*[1,0,0])
-m3 = rotate(m1, 1.0π*[1,0,0])
+m2 = CompScienceMeshes.rotate(m1, 0.5π*[1,0,0])
+m3 = CompScienceMeshes.rotate(m1, 1.0π*[1,0,0])
 m = weld(m1, m2, m3)
 
 X = lagrangec0d1(m)

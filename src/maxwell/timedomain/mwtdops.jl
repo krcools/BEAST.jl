@@ -79,6 +79,7 @@ quadrule(op::MWSingleLayerTDIO, testrefs, trialrefs, timerefs,
 function assemble!(dl::MWDoubleLayerTDIO, W::SpaceTimeBasis, V::SpaceTimeBasis, store)
 	X, T = spatialbasis(W), temporalbasis(W)
 	Y, U = spatialbasis(V), temporalbasis(V)
+    # TODO: multithreading
 	if CompScienceMeshes.refines(geometry(Y), geometry(X))
 		@assert !CompScienceMeshes.refines(geometry(X), geometry(Y))
 		store1(v,m,n,k) = store(v,n,m,k)

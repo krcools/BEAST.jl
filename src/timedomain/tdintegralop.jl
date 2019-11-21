@@ -54,11 +54,11 @@ function allocatestorage(op::RetardedPotential, testST, basisST,
     M = numfunctions(tfs)
     N = numfunctions(bfs)
 
-    K0 = zeros(Int, M, N)
+    K0 = fill(typemax(Int), M, N)
     K1 = zeros(Int, M, N)
 
     function store(v,m,n,k)
-        K0[m,n] = (K0[m,n] == 0) ? k : min(K0[m,n],k)
+        K0[m,n] = min(K0[m,n],k)
         K1[m,n] = max(K1[m,n],k)
     end
 
@@ -93,10 +93,28 @@ function assemble!(op::LinearCombinationOfOperators, tfs::SpaceTimeBasis, bfs::S
 end
 
 function assemble!(op::RetardedPotential, testST, trialST, store)
-	assemble_chunk!(op, testST, trialST, store)
+
+	Y, S = spatialbasis(testST), temporalbasis(testST)
+	# X, T = spatialbasis(trialST), temporalbasis(trialST)
+
+	P = Threads.nthreads()
+	@assert P >= 1
+	splits = [round(Int,s) for s in range(0, stop=numfunctions(Y), length=P+1)]
+
+	Threads.@threads for i in 1:P
+		lo, hi = splits[i]+1, splits[i+1]
+		lo < hi || continue
+		Y_p = subset(Y, lo:hi)
+		store1 = (v,m,n,k) -> store(v,lo+m-1,n,k)
+		assemble_chunk!(op, Y_p ⊗ S, trialST, store1)
+	end
+
+	# assemble_chunk!(op, testST, trialST, store)
 end
 
 function assemble_chunk!(op::RetardedPotential, testST, trialST, store)
+
+	myid = Threads.threadid()
 
     testspace  = spatialbasis(testST)
     trialspace = spatialbasis(trialST)
@@ -169,7 +187,7 @@ function assemble_chunk!(op::RetardedPotential, testST, trialST, store)
 
         done += 1
         new_pctg = round(Int, done / todo * 100)
-        if new_pctg > pctg + 9
+        if myid == 1 && new_pctg > pctg + 9
             print(".")
             pctg = new_pctg
         end
