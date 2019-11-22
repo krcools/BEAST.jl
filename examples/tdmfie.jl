@@ -27,6 +27,10 @@ N = NCross()
 @hilbertspace k
 @hilbertspace j
 mfie = @discretise (0.5(N⊗I) + 1.0K)[k,j] == -1.0H[k] k∈W j∈V
+
+BEAST.allocatestorage(K,W,V,Val{:bandedstorage},BEAST.LongDelays{:ignore})
+error("stop")
+
 xmfie = solve(mfie)
 
 Xmfie, Δω, ω0 = fouriertransform(xmfie, Δt, 0.0, 2)

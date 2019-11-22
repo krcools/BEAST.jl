@@ -28,6 +28,13 @@ function quaddata(op::LocalOperator, g::subReferenceSpace, f::subReferenceSpace,
     return [(w[i],SVector(u[1,i],u[2,i])) for i in 1:length(w)]
 end
 
+# function quaddata(op::LocalOperator, g::Nd4DRefSpace, f::Nd4DRefSpace, tels, bels)
+#     o, x, y, z = CompScienceMeshes.euclidianbasis(3)
+#     reftet = simplex(o,x,y,z)
+#     qps = quadpoints(reftet, rul)
+#     [(w, parametric(p)) for (p,w) in qps]
+# end
+
 
 
 quaddata(op::LocalOperator, g::LagrangeRefSpace, f::LagrangeRefSpace,

@@ -155,7 +155,7 @@ function assemble!(operator::Operator, test_functions::Space, trial_functions::S
 
     Threads.@threads for i in 1:P
         lo, hi = splits[i]+1, splits[i+1]
-        lo < hi || continue
+        lo <= hi || continue
         test_functions_p = subset(test_functions, lo:hi)
         store1 = (v,m,n) -> store(v,lo+m-1,n)
         assemblechunk!(operator, test_functions_p, trial_functions, store1)

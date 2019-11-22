@@ -20,7 +20,7 @@ T2 = BEAST.assemblerow(t,X1,X)
 # @test T1 == T2
 
 # T2 = BEAST.assembleblock(t,X,X)
-@test T1 == T2
+@test T1≈T2 atol=1e-8
 
 
 I = [3,2,7]

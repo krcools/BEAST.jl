@@ -1,7 +1,9 @@
 using BEAST
 using CompScienceMeshes
+
 using Test
 using DelimitedFiles
+using LinearAlgebra
 
 m = readmesh(joinpath(dirname(@__FILE__),"assets","sphere824.in"))
 X = raviartthomas(m)

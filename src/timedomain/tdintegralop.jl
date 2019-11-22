@@ -95,15 +95,15 @@ end
 function assemble!(op::RetardedPotential, testST, trialST, store)
 
 	Y, S = spatialbasis(testST), temporalbasis(testST)
-	# X, T = spatialbasis(trialST), temporalbasis(trialST)
 
 	P = Threads.nthreads()
 	@assert P >= 1
 	splits = [round(Int,s) for s in range(0, stop=numfunctions(Y), length=P+1)]
 
+	@info "Starting assembly with $P threads:"
 	Threads.@threads for i in 1:P
 		lo, hi = splits[i]+1, splits[i+1]
-		lo < hi || continue
+		lo <= hi || continue
 		Y_p = subset(Y, lo:hi)
 		store1 = (v,m,n,k) -> store(v,lo+m-1,n,k)
 		assemble_chunk!(op, Y_p ⊗ S, trialST, store1)
@@ -149,7 +149,9 @@ function assemble_chunk!(op::RetardedPotential, testST, trialST, store)
     wdim = numfunctions(W)
     z = zeros(eltype(op), udim, vdim, wdim)
 
-    print("dots out of 10: ")
+	@show length(testels) length(trialels)
+
+    myid == 1 && print("dots out of 10: ")
     todo, done, pctg = length(testels), 0, 0
     for p in eachindex(testels)
         τ = testels[p]
