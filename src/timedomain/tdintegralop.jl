@@ -174,10 +174,13 @@ function assemble_chunk!(op::RetardedPotential, testST, trialST, store)
 		                    v = z[i,j,d]
 
                             for (m,a) in testad[p,i]
+                                av = a*v
                                 for (n,b) in trialad[q,j]
-                                    for (k,c) in timead[r,d]
+									abv = b*av
+									tad_rd = timead[r,d]
+                                    for (k,c) in tad_rd
                                         #@assert 1 <= s <= Nt
-										store(a*b*c*v, m, n, k)
+										store(c*abv, m, n, k)
 									end # next κ
 		                        end # next ν
 		                    end # next μ

@@ -27,6 +27,9 @@ SL = TDMaxwell3D.singlelayer(speedoflight=1.0, numdiffs=1)
 @hilbertspace j
 @hilbertspace j′
 tdefie = @discretise SL[j′,j] == -1.0E[j′]   j∈V  j′∈W
+
+# BEAST.allocatestorage(SL,W,V,Val{:bandedstorage},BEAST.LongDelays{:ignore})
+
 xefie = solve(tdefie)
 
 Xefie, Δω, ω0 = fouriertransform(xefie, Δt, 0.0, 2)

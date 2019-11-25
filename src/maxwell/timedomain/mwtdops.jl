@@ -76,34 +76,34 @@ end
 quadrule(op::MWSingleLayerTDIO, testrefs, trialrefs, timerefs,
         p, testel, q, trialel, r, timeel, qd) = WiltonInts84Strat(qd[1][1,p],qd[2],qd[3])
 
-function assemble!(dl::MWDoubleLayerTDIO, W::SpaceTimeBasis, V::SpaceTimeBasis, store)
-
-	X, T = spatialbasis(W), temporalbasis(W)
-	Y, U = spatialbasis(V), temporalbasis(V)
-	if CompScienceMeshes.refines(geometry(Y), geometry(X))
-		@assert !CompScienceMeshes.refines(geometry(X), geometry(Y))
-		W = Y⊗T
-		V = X⊗U
-		store1 = (v,m,n,k) -> store(v,n,m,k)
-	else
-		store1 = (v,m,n,k) -> store(v,m,n,k)
-	end
-
-	P = Threads.nthreads()
-	Y, S = spatialbasis(W), temporalbasis(W)
-	splits = [round(Int,s) for s in range(0, stop=numfunctions(Y), length=P+1)]
-
-	@info "Starting assembly with $P threads:"
-	Threads.@threads for i in 1:P
-		lo, hi = splits[i]+1, splits[i+1]
-		lo <= hi || continue
-		Y_p = subset(Y, lo:hi)
-		store2 = (v,m,n,k) -> store1(v,lo+m-1,n,k)
-		assemble_chunk!(dl, Y_p ⊗ S, V, store2)
-	end
-
-	# return assemble_chunk!(dl, W, V, store1)
-end
+# function assemble!(dl::MWDoubleLayerTDIO, W::SpaceTimeBasis, V::SpaceTimeBasis, store)
+#
+# 	X, T = spatialbasis(W), temporalbasis(W)
+# 	Y, U = spatialbasis(V), temporalbasis(V)
+# 	if CompScienceMeshes.refines(geometry(Y), geometry(X))
+# 		@assert !CompScienceMeshes.refines(geometry(X), geometry(Y))
+# 		W = Y⊗T
+# 		V = X⊗U
+# 		store1 = (v,m,n,k) -> store(v,n,m,k)
+# 	else
+# 		store1 = (v,m,n,k) -> store(v,m,n,k)
+# 	end
+#
+# 	P = Threads.nthreads()
+# 	Y, S = spatialbasis(W), temporalbasis(W)
+# 	splits = [round(Int,s) for s in range(0, stop=numfunctions(Y), length=P+1)]
+#
+# 	@info "Starting assembly with $P threads:"
+# 	Threads.@threads for i in 1:P
+# 		lo, hi = splits[i]+1, splits[i+1]
+# 		lo <= hi || continue
+# 		Y_p = subset(Y, lo:hi)
+# 		store2 = (v,m,n,k) -> store1(v,lo+m-1,n,k)
+# 		assemble_chunk!(dl, Y_p ⊗ S, V, store2)
+# 	end
+#
+# 	# return assemble_chunk!(dl, W, V, store1)
+# end
 
 function quaddata(op::MWDoubleLayerTDIO, testrefs, trialrefs, timerefs,
         testels, trialels, timeels)
