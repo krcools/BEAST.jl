@@ -43,7 +43,8 @@ RT = rt_ports(Γ,[γ₁,γ₀])
 @hilbertspace j
 @hilbertspace k
 T = MWSingleLayer3D(im*κ)
-EFIE = @varform η*T[k,j] == f[ntrace(k,γ₁)]
+trc = X->ntrace(X,γ₁)
+EFIE = @varform η*T[k,j] == f[trc(k)]
 
 # discretise & solve the equation
 efie = @discretise EFIE j∈RT k∈RT
