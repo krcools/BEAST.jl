@@ -6,6 +6,7 @@ struct MWSL3DIntegrand{C,O,L}
     trial_local_space::L
 end
 
+const i4pi = 1 / (4pi)
 function (igd::MWSL3DIntegrand)(u,v)
         α = igd.op.α
         β = igd.op.β
@@ -16,29 +17,31 @@ function (igd::MWSL3DIntegrand)(u,v)
 
         r = cartesian(x) - cartesian(y)
         R = norm(r)
-        G = exp(-γ*R)/(4π*R)
+        iR = 1 / R
+        G = exp(-γ*R)*(i4pi*iR)
 
         f = igd.test_local_space(x)
         g = igd.trial_local_space(y)
 
         j = jacobian(x) * jacobian(y)
 
-        αjG = α*j*G
-        βjG = β*j*G
+        jG = j*G
+        αjG = α*jG
+        βjG = β*jG
 
         G = @SVector [αjG*g[1].value, αjG*g[2].value, αjG*g[3].value]
         H = @SVector [βjG*g[1].divergence, βjG*g[2].divergence, βjG*g[3].divergence]
 
         SMatrix{3,3}((
-            dot(f[1].value,G[1])+f[1].divergence*H[1],
-            dot(f[2].value,G[1])+f[2].divergence*H[1],
-            dot(f[3].value,G[1])+f[3].divergence*H[1],
-            dot(f[1].value,G[2])+f[1].divergence*H[2],
-            dot(f[2].value,G[2])+f[2].divergence*H[2],
-            dot(f[3].value,G[2])+f[3].divergence*H[2],
-            dot(f[1].value,G[3])+f[2].divergence*H[3],
-            dot(f[2].value,G[3])+f[2].divergence*H[3],
-            dot(f[3].value,G[3])+f[3].divergence*H[3]))
+            dot(f[1].value,G[1]) + f[1].divergence*H[1],
+            dot(f[2].value,G[1]) + f[2].divergence*H[1],
+            dot(f[3].value,G[1]) + f[3].divergence*H[1],
+            dot(f[1].value,G[2]) + f[1].divergence*H[2],
+            dot(f[2].value,G[2]) + f[2].divergence*H[2],
+            dot(f[3].value,G[2]) + f[3].divergence*H[2],
+            dot(f[1].value,G[3]) + f[2].divergence*H[3],
+            dot(f[2].value,G[3]) + f[2].divergence*H[3],
+            dot(f[3].value,G[3]) + f[3].divergence*H[3]))
 end
 
 struct MWDL3DIntegrand{C,O,L}
@@ -58,20 +61,17 @@ function (igd::MWDL3DIntegrand)(u,v)
 
         r = cartesian(x) - cartesian(y)
         R = norm(r)
-        G = exp(-γ*R)/(4π*R)
+        iR = 1/R
+        G = exp(-γ*R)*(iR*i4pi)
 
         f = igd.test_local_space(x)
         g = igd.trial_local_space(y)
 
         j = jacobian(x) * jacobian(y)
 
-        GG = -(γ + 1/R) * G / R * r
-        T = @SMatrix [
-        0 -GG[3] GG[2]
-        GG[3] 0 -GG[1]
-        -GG[2] GG[1] 0 ]
+        GG = -(γ + iR) * G * (iR * r)
 
-        G = @SVector [j*T*g[1].value, j*T*g[2].value, j*T*g[3].value]
+        G = @SVector [cross(GG,(j*g[1].value)), cross(GG,(j*g[2].value)), cross(GG,(j*g[3].value))]
         SMatrix{3,3}((
             dot(f[1].value, G[1]),
             dot(f[2].value, G[1]),

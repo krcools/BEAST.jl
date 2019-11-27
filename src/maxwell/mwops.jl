@@ -150,17 +150,13 @@ function qrss(op, g, f, i, τ, j, σ, qd)
     # defines coincidence of points
     dtol = 1.0e3 * eps(eltype(eltype(τ.vertices)))
 
-    # decides on whether to use singularity extraction
-    xtol = 0.2
-    k = norm(op.gamma)
-
     hits = 0
-    dmin = floatmax(eltype(eltype(τ.vertices)))
+    dmin2 = floatmax(eltype(eltype(τ.vertices)))
     for t in τ.vertices
         for s in σ.vertices
-            d = norm(t-s)
-            dmin = min(dmin, d)
-            if d < dtol
+            d2 = LinearAlgebra.norm_sqr(t-s)
+            dmin2 = min(dmin2, d2)
+            if d2 < dtol
                 hits +=1
                 break
             end
@@ -172,6 +168,9 @@ function qrss(op, g, f, i, τ, j, σ, qd)
     hits == 1 && return SauterSchwabQuadrature.CommonVertex(qd.gausslegendre[1])
 
     h = sqrt(volume(σ))
+    dmin = sqrt(dmin2)
+    xtol = 0.2
+    k = norm(op.gamma)
     max(dmin*k, dmin/4h) < xtol && return WiltonSEStrategy(
         qd.tpoints[2,i],
         DoubleQuadStrategy(

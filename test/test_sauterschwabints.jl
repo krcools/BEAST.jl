@@ -84,6 +84,8 @@ BEAST.momintegrals!(op2, rt, rt, t1, t2, z_cv_ss_2, SS_strategy)
 BEAST.momintegrals!(op3, rt, rt, t1, t2, z_cv_se_3, SE_strategy)
 BEAST.momintegrals!(op3, rt, rt, t1, t2, z_cv_ss_3, SS_strategy)
 
+@show z_cv_se_3
+@show z_cv_ss_3
 @test z_cv_se_3 ≈ z_cv_ss_3 atol=1e-7
 
 ## Common Edge Case:
