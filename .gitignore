@@ -2,6 +2,7 @@
 *.jl.cov
 *.jl.*.cov
 *.jl.mem
+*.mem
 docs/build/
 docs/site/
 temp/

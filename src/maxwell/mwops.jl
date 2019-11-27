@@ -73,7 +73,7 @@ singularpart(op::MWSingleLayer3D) = MWSingleLayer3DSng(op.gamma, op.α, op.β)
 function _legendre(n,a,b)
     x, w = FastGaussQuadrature.gausslegendre(n)
     w .*= (b-a)/2
-    x = (x.+1)/2*(b-a).+a
+    x .= (x.+1)/2*(b-a).+a
     collect(zip(x,w))
 end
 
