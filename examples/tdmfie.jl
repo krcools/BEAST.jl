@@ -1,5 +1,6 @@
 using CompScienceMeshes, BEAST
 Γ = readmesh(joinpath(@__DIR__,"sphere2.in"))
+# Γ = meshsphere(1.0, 0.4)
 
 X = raviartthomas(Γ)
 Y = buffachristiansen(Γ)
