@@ -37,6 +37,20 @@ function Base.:*(a::Number, op::MWDoubleLayerTDIO)
 		op.num_diffs)
 end
 
+mutable struct MWDoubleLayerTransposedTDIO{T} <: RetardedPotential{T}
+	speed_of_light::T
+    weight::T
+    num_diffs::Int
+end
+
+function Base.:*(a::Number, op::MWDoubleLayerTransposedTDIO)
+	@info "scalar product a * op (DL)"
+	MWDoubleLayerTransposedTDIO(
+		op.speed_of_light,
+		a * op.weight,
+		op.num_diffs)
+end
+
 MWSingleLayerTDIO(;speedoflight) = MWSingleLayerTDIO(speedoflight,-1/speedoflight,-speedoflight,2,0)
 MWDoubleLayerTDIO(;speedoflight) = MWDoubleLayerTDIO(speedoflight, one(speedoflight), 0)
 
@@ -91,8 +105,11 @@ function assemble!(dl::MWDoubleLayerTDIO, W::SpaceTimeBasis, V::SpaceTimeBasis, 
 		@assert !CompScienceMeshes.refines(geometry(X), geometry(Y))
 		W = Y⊗T
 		V = X⊗U
+		op = MWDoubleLayerTransposedTDIO(dl.speed_of_light, dl.weight, dl.num_diffs)
+		assemble!(op, W, V, store)
+		return
 		# store1 = (v,m,n,k) -> store(v,n,m,k)
-		store = TransposedStorage(store)
+		# store = TransposedStorage(store)
 	end
 
 	P = Threads.nthreads()
@@ -125,15 +142,33 @@ end
 quadrule(op::MWDoubleLayerTDIO, testrefs, trialrefs, timerefs,
         p, testel, q, trialel, r, timeel, qd) = WiltonInts84Strat(qd[1][1,p],qd[2],qd[3])
 
+
+function quaddata(op::MWDoubleLayerTransposedTDIO,
+		testrefs, trialrefs, timerefs,
+        testels, trialels, timeels)
+
+    dmax = numfunctions(timerefs)-1
+    bn = binomial.((0:dmax),(0:dmax)')
+
+    V = eltype(testels[1].vertices)
+    ws = WiltonInts84.workspace(V)
+    quadpoints(testrefs, testels, (3,)), bn, ws
+end
+
+quadrule(op::MWDoubleLayerTransposedTDIO, testrefs, trialrefs, timerefs,
+        p, testel, q, trialel, r, timeel, qd) = WiltonInts84Strat(qd[1][1,p],qd[2],qd[3])
+
+function momintegrals!(z, op::MWDoubleLayerTransposedTDIO,
+	g, f, T, τ, σ, ι, qr::WiltonInts84Strat)
+
+	op1 = MWDoubleLayerTDIO(op.speed_of_light, op.weight, op.num_diffs)
+	momintegrals!(z, op1, g, f, T, τ, σ, ι, qr::WiltonInts84Strat)
+	w = similar(z)
+	permutedims!(w, z, [2,1,3])
+
+end
+
 @inline function tmRoR(d, iG, bns)
-    # r = zero(t)
-    # for q in 0:d
-    #     sgn = isodd(q) ? -1 : 1
-    #     bn = bns[d+1,q+1]
-    #     #r += binomial(d,q) * sgn * t^(d-q) * iG[q+2]
-    #     r += bn * sgn * t^(d-q) * iG[q+2]
-    # end
-    # r
     sgn = isodd(d) ? -1 : 1
     r = sgn * iG[d+2]
 end
@@ -143,16 +178,6 @@ end
 # ``(ξ-b) \int R^k dy`` and
 # ``\int R^k (y-ξ) dy``
 @inline function tmRoRf(d, iG, iGξy, bξ, bns)
-    # r = zero(bξ)
-    # for q in 0:d
-    #     sgn = isodd(q) ? -1 : 1
-    #     i = q+2
-    #     iGf = iGξy[i] + bξ * iG[i]
-    #     bn = bns[d+1,q+1]
-    #     #r += binomial(d,q) * sgn * t^(d-q) * iGf
-    #     r += bn * sgn * t^(d-q) * iGf
-    # end
-    # r
     sgn = isodd(d) ? -1 : 1
     iGf = iGξy[d+2] + bξ * iG[d+2]
     r = sgn * iGf
