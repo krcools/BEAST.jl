@@ -21,16 +21,13 @@ direction, polarisation = ẑ, x̂
 E = BEAST.planewave(polarisation, direction, gaussian, 1.0)
 H = direction × E
 
-K = TDMaxwell3D.doublelayer(speedoflight=1.0)
+DL = TDMaxwell3D.doublelayer(speedoflight=1.0)
 I = Identity()
 N = NCross()
 
 @hilbertspace k
 @hilbertspace j
-mfie = @discretise (0.5(N⊗I) + 1.0K)[k,j] == -1.0H[k] k∈W j∈V
-
-# BEAST.allocatestorage(K,W,V,Val{:bandedstorage},BEAST.LongDelays{:ignore})
-# error("stop")
+mfie = @discretise (0.5(N⊗I) + 1.0DL)[k,j] == -1.0H[k] k∈W j∈V
 
 xmfie = solve(mfie)
 
