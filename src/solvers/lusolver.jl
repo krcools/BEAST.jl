@@ -27,37 +27,17 @@ end
 
 function td_solve(eq)
 
-    # @warn "very limited support for automated solution of TD equations...."
-    # op = eq.equation.lhs.terms[1].kernel
-    # fn = eq.equation.rhs.terms[1].functional
-
     V = eq.trial_space_dict[1]
-    # W = eq.test_space_dict[1]
 
     bilform = eq.equation.lhs
-    # I = [numfunctions(spatialbasis(eq.test_space_dict[i])) for i in 1:length(bilform.test_space)]
-    # J = [numfunctions(spatialbasis(eq.trial_space_dict[i])) for i in 1:length(bilform.trial_space)]
 
     A = td_assemble(eq.equation.lhs, eq.test_space_dict, eq.trial_space_dict)
-
-    # T = eltype(eltype(A))
-    # S = PseudoBlockArray{T}(undef, I, J)
-    # fill!(S,0)
-    #
-    # for i in 1:nblocks(A,1)
-    #     for j in 1:nblocks(A,2)
-    #         isassigned(A.blocks, i, j) || continue
-    #         S[Block(i,j)] = A[Block(i,j)].banded[:,:,1]
-    #     end
-    # end
-
     S = timeslice(A,1)
     iS = inv(Array(S))
 
     b = td_assemble(eq.equation.rhs, eq.test_space_dict)
 
     nt = numfunctions(temporalbasis(V))
-    # @show @which marchonintime(AiS, A, b, nt)
     marchonintime(iS, A, b, nt)
 end
 

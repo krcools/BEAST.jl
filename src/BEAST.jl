@@ -101,6 +101,8 @@ using Combinatorics
 using FFTW
 using SparseArrays
 
+function convolve end
+
 include("utils/polynomial.jl")
 include("utils/sparsend.jl")
 include("utils/specialfns.jl")

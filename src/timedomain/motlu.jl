@@ -1,36 +1,8 @@
 
 
-function convolve(Z::Array,x,j,k0)
-    M,N,K = size(Z)
-    y = similar(Z,M)
-    fill!(y,0)
-    for k ∈ k0 : min(j,K)
-        i = j - k + 1
-        y += Z[:,:,k] * x[:,i]
-    end
-    return y
-end
 
-function convolve(Z::SparseND.Banded3D,x,j,k_start)
-    T = promote_type(eltype(Z), eltype(x))
-    M,N,L = size(Z)
-    K = size(Z.data,1)
-    @assert M == size(x,1)
-    y = zeros(T,M)
-    for n in 1:N
-        for m in 1:M
-            k0 = Z.k0[m,n] # k0 is 1-based
-            l0 = max(1, k_start - k0 + 1)
-            l1 = min(K, j - k0 + 1)
-            for l in l0 : l1
-                k = k0 + l - 1
-                # j - k + 1 < 1 && break
-                y[m] += Z.data[l,m,n] * x[n,j - k + 1]
-            end
-        end
-    end
-    return y
-end
+
+
 
 """
     marchonintime(W0,Z,B,I)
@@ -53,26 +25,6 @@ function marchonintime(W0,Z,B,I)
     return x
 end
 
-
-function marchonintime(W0,Z::BlockArray,B,I)
-    T = eltype(W0)
-    M,N = size(W0)
-    @assert M == size(B,1)
-    x = zeros(T,N,I)
-    for i in 1:I
-        R = [ B[j][i] for j in 1:N ]
-        S = convolve(Z,x,i,2)
-        # @show size(R)
-        # @show size(S)
-        # b = R - convolve(Z,x,i,2)
-        b = R - S
-        x[:,i] += W0 * b
-        (i % 10 == 0) && print(i, "[", I, "] - ")
-    end
-    return x
-end
-
-
 using BlockArrays
 
 function convolve(Z::BlockArray, x, i, j_start)
@@ -94,4 +46,22 @@ function convolve(Z::BlockArray, x, i, j_start)
         end
     end
     return y
+end
+
+function marchonintime(W0,Z::BlockArray,B,I)
+    T = eltype(W0)
+    M,N = size(W0)
+    @assert M == size(B,1)
+    x = zeros(T,N,I)
+    for i in 1:I
+        R = [ B[j][i] for j in 1:N ]
+        S = convolve(Z,x,i,2)
+        # @show size(R)
+        # @show size(S)
+        # b = R - convolve(Z,x,i,2)
+        b = R - S
+        x[:,i] += W0 * b
+        (i % 10 == 0) && print(i, "[", I, "] - ")
+    end
+    return x
 end

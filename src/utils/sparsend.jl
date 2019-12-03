@@ -1,5 +1,7 @@
 module SparseND
 
+import BEAST
+
 struct Banded3D{T} <: AbstractArray{T,3}
     k0::Array{Int,2}
     data::Array{T,3}
@@ -118,6 +120,27 @@ function Base.:+(A::Banded3D{T}, B::Banded3D{T}) where {T}
     end
 
     Banded3D(K0, data, max(A.maxk1, B.maxk1))
+end
+
+function BEAST.convolve(Z::SparseND.Banded3D,x,j,k_start)
+    T = promote_type(eltype(Z), eltype(x))
+    M,N,L = size(Z)
+    K = size(Z.data,1)
+    @assert M == size(x,1)
+    y = zeros(T,M)
+    for n in 1:N
+        for m in 1:M
+            k0 = Z.k0[m,n] # k0 is 1-based
+            l0 = max(1, k_start - k0 + 1)
+            l1 = min(K, j - k0 + 1)
+            for l in l0 : l1
+                k = k0 + l - 1
+                # j - k + 1 < 1 && break
+                y[m] += Z.data[l,m,n] * x[n,j - k + 1]
+            end
+        end
+    end
+    return y
 end
 
 
