@@ -55,6 +55,8 @@ include("test_tdop_scaling.jl")
 include("test_tdrhs_scaling.jl")
 
 include("test_farfield.jl")
+include("test_curl.jl")
+include("test_ndlcc.jl")
 
 #include("test_assemblerow.jl")
 

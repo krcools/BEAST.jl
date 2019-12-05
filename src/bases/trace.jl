@@ -143,6 +143,9 @@ function strace(X::Space, γ, dim1::Type{Val{2}})
     strace(X, Σ, fns)
 end
 
+"""
+currently not working!
+"""
 function ttrace(X::Space, γ)
 
     x = refspace(X)

@@ -36,6 +36,7 @@ function (ϕ::NDLCCRefSpace)(ndlc)
     ))
 end
 
+#check orientation
 function curl(ref::NDLCCRefSpace, sh, el)
     a = [2,1,4,4,3,2]#[4,2,3,4,1,2]
     b = [4,3,3,1,2,1]#[3,4,2,1,3,1]
