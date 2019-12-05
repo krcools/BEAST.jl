@@ -50,4 +50,4 @@ function nedelecc3d(mesh)
     nedelecc3d(mesh, edges)
 end
 
-curl(space::NDLCCBasis, geo, fns) = NDLCDBasis(geo, fns)
+curl(space::NDLCCBasis, geo, fns) = NDLCDBasis(geo, fns, space.pos)

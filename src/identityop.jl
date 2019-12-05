@@ -29,6 +29,19 @@ function quaddata(op::LocalOperator, g::subReferenceSpace, f::subReferenceSpace,
 end
 
 
+function quaddata(op::LocalOperator, g::NDLCCRefSpace, f::NDLCCRefSpace, tels, bels)
+     o, x, y, z = CompScienceMeshes.euclidianbasis(3)
+     reftet = simplex(o,x,y,z)
+     qps = quadpoints(reftet, 6)
+     [(w, parametric(p)) for (p,w) in qps]
+end
+
+function quaddata(op::LocalOperator, g::NDLCDRefSpace, f::NDLCDRefSpace, tels, bels)
+     o, x, y, z = CompScienceMeshes.euclidianbasis(3)
+     reftet = simplex(o,x,y,z)
+     qps = quadpoints(reftet, 6)
+     [(w, parametric(p)) for (p,w) in qps]
+end
 
 quaddata(op::LocalOperator, g::LagrangeRefSpace, f::LagrangeRefSpace,
         tels::Vector, bels::Vector) = quaddata(op, g, f, tels, bels, Val{dimension(tels[1])})

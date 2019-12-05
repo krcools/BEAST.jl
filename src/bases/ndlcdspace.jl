@@ -39,3 +39,6 @@ function nedelecd3d(mesh)
     faces = skeleton(mesh,2)
     nedelecd3d(mesh, faces)
 end
+
+ntrace(X::NDLCDBasis, geo, fns) = LagrangeBasis{0,-1,1}(geo, fns, deepcopy(X.pos))
+ttrace(X::NDLCDBasis, geo, fns) = NDBasis{}(geo, fns, deepcopy(X.pos))

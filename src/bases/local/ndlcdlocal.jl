@@ -15,17 +15,34 @@ function (ϕ::NDLCDRefSpace)(ndlc)
 
     B = [tu tv tw]
 
-    #Choose 1-(0,0,0), 2-(1,0,0), 3-(0,1,0), 4-(0,0,1)
-    #Now it is listed as:
-    #(1,2,3) [u,v,w-1]
-    #(1,2,4) [u,v-1,w]
-    #(1,3,4) [u-1,v,w]
-    #(2,3,4) [u,v,w]
-
     return SVector((
         (value=(B*[(u-1),v,w]/j),divergence=(3/j)),
         (value=(B*[u,(v-1),w]/j),divergence=(3/j)),
         (value=(B*[u,v,(w-1)]/j),divergence=(3/j)),
         (value=(B*[u,v,w]/j)    ,divergence=(3/j))
     ))
+end
+
+function ntrace(x::NDLCDRefSpace, el, q, fc)
+    t = zeros(scalartype(x),1,4)
+    t[q] = 1 / volume(fc)
+    return t
+end
+
+"""
+Does not give the correct result for an imput basis with non-vanishing
+input basis on the boundary
+"""
+function ttrace(x::NDLCDRefSpace, el, q, fc)
+    t = zeros(scalartype(x),3,4)
+    for fac in faces(el)
+        fac != fc || continue
+        #vind locale index (i) in fc van de edge die in zowel fc als fac ligt
+        fcv = fc.vertices
+        facv = fac.vertices
+        i = findfirst(isequal(setdiff(fcv,facv)[1]), fcv)
+        print(i)
+        t[i,q] = 1
+    end
+    return t
 end
