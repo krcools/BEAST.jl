@@ -121,6 +121,8 @@ include("bases/local/laglocal.jl")
 include("bases/local/rtlocal.jl")
 include("bases/local/ndlocal.jl")
 include("bases/local/bdmlocal.jl")
+include("bases/local/ndlcclocal.jl")
+include("bases/local/ndlcdlocal.jl")
 
 include("bases/lagrange.jl")
 include("bases/rtspace.jl")
@@ -128,6 +130,8 @@ include("bases/rtxspace.jl")
 include("bases/bcspace.jl")
 include("bases/ndspace.jl")
 include("bases/bdmdiv.jl")
+include("bases/ndlccspace.jl")
+include("bases/ndlcdspace.jl")
 
 
 include("bases/subdbasis.jl")
@@ -167,6 +171,7 @@ include("maxwell/farfield.jl")
 include("maxwell/nearfield.jl")
 include("maxwell/spotential.jl")
 include("maxwell/maxwell.jl")
+include("maxwell/sourcefield.jl")
 
 # Support for the Helmholtz equation
 include("helmholtz2d/helmholtzop.jl")

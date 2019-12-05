@@ -25,6 +25,15 @@ function faces(c)
     ]
 end
 
+function faces(c::CompScienceMeshes.Simplex{3,3,0,4,Float64})
+    [
+        simplex(c[2], c[3], c[4]),
+        simplex(c[1], c[3], c[4]),
+        simplex(c[1], c[2], c[4]),
+        simplex(c[1], c[2], c[3])
+    ]
+end
+
 function ntrace(X::Space, γ)
 
     x = refspace(X)
@@ -34,7 +43,8 @@ function ntrace(X::Space, γ)
 
     geo = geometry(X)
     Γ = geo
-    Σ = skeleton(Γ,1)
+    Dγ = dimension(γ)
+    Σ = skeleton(Γ,Dγ)
 
     D = copy(transpose(connectivity(Σ, Γ, abs)))
     rows, vals = rowvals(D), nonzeros(D)
@@ -48,17 +58,20 @@ function ntrace(X::Space, γ)
 
             on_target(fc) || continue
             Q = ntrace(x,el,q,fc)
+            @assert norm(Q,Inf) != 0
 
             # find the global index in Σ of the q-th face of the p-element
             r = 0
             for k in nzrange(D,p)
                 vals[k] == q && (r = rows[k]; break)
             end
-
+            @assert r != 0
             for i in 1:size(Q,1)
                 for j in 1:size(Q,2)
                     for (m,a) in ad[p,j]
+                        j == q && println("bingo")
                         v = a*Q[i,j]
+                        @assert a != 0
                         v == 0 && continue
                         push!(fns[m], Shape(r, i, v))
                     end
@@ -128,4 +141,58 @@ function strace(X::Space, γ, dim1::Type{Val{2}})
     end
 
     strace(X, Σ, fns)
+end
+
+"""
+currently not working!
+"""
+function ttrace(X::Space, γ)
+
+    x = refspace(X)
+    on_target = overlap_gpredicate(γ)
+    # ad = assemblydata(X)
+    E, ad = assemblydata(X)
+
+    geo = geometry(X)
+    Γ = geo
+    Dγ = dimension(γ)
+    Σ = skeleton(Γ,Dγ)
+
+    D = copy(transpose(connectivity(Σ, Γ, abs)))
+    rows, vals = rowvals(D), nonzeros(D)
+
+    T = scalartype(X)
+    fns = [Shape{T}[] for i in 1:numfunctions(X)]
+
+    for (p,el) in enumerate(E)
+
+        for (q,fc) in enumerate(faces(el))
+
+            on_target(fc) || continue
+            Q = ttrace(x,el,q,fc)
+            print(Q, "\n")
+            # find the global index in Σ of the q-th face of the p-element
+            r = 0
+            for k in nzrange(D,p)
+                vals[k] == q && (r = rows[k]; break)
+            end
+            @assert r != 0
+            for i in 1:size(Q,1)
+                for j in 1:size(Q,2)
+                    for (m,a) in ad[p,j]
+                        if j ≈ q
+                            print("bingo")
+                        end
+                        v = a*Q[i,j]
+                        v == 0 && continue
+                        push!(fns[m], Shape(r, i, v))
+                    end
+                end
+            end
+
+        end
+
+    end
+
+    ttrace(X, Σ, fns)
 end
