@@ -367,3 +367,131 @@ function buildhalfbc(fine, S, v, p, onjunction, ibscaled)
 
     return bf
 end
+
+
+using LinearAlgebra
+function buildhalfbc2(patch, port, jct_edges)
+
+    # Space we need:
+    #   RT_internal
+    #   RT_internal_and_ports
+    #   Sx
+    #   S1_internal
+    edges = skeleton(patch,1)
+    verts = skeleton(patch,0)
+    bndry = boundary(patch)
+
+    int_edges = submesh(interior_tpredicate(patch), edges)
+    bnd_verts = skeleton(bndry,0)
+    function isonboundary(node)
+        node in cells(bnd_verts)
+    end
+    int_verts = submesh(!isonboundary, verts)
+
+    RT_int = raviartthomas(patch, cellpairs(patch, int_edges))
+    RT_prt = raviartthomas(patch, cellpairs(patch, port))
+    Lx = lagrangecxd0(patch)
+    vertex_list = [c[1] for c in cells(int_verts)]
+    L0_int = lagrangec0d1(patch, vertex_list, Val{3})
+
+    prt_fluxes = [0.5, 0.5]
+
+    Id = BEAST.Identity()
+    D = real(assemble(Id, Lx, divergence(RT_int)))
+
+    div_RT_prt = divergence(RT_prt)
+    Z, store = allocatestorage(Id, Lx, div_RT_prt, Val{:bandedstorage}, BEAST.LongDelays{:ignore})
+    BEAST.assemble_local_mixed!(Id, Lx, div_RT_prt, store)
+    d0 = real(Z) * prt_fluxes
+    V = sum(volume(chart(patch,c)) for c in cells(patch))
+    d1 = real(assemble(ScalarTrace(x -> 1/V), Lx))
+    d = -d0 + d1
+
+    @assert numfunctions(L0_int) == 1
+    C = assemble(Id, curl(L0_int), RT_int)
+    curl_L0_int = curl(L0_int)
+    Z2, store2 = allocatestorage(Id, curl_L0_int, RT_prt, Val{:bandedstorage}, BEAST.LongDelays{:ignore})
+    BEAST.assemble_local_mixed!(Id, curl_L0_int, RT_prt, store2)
+    c = real(Z2) * prt_fluxes
+
+    x1 = pinv(D) * d
+    N = nullspace(D)
+    p = (C*N) \ (c - C*x1)
+    x = x1 + N*p
+
+    # return D, C, d, c, d0, d1
+    return RT_int, RT_prt, x, prt_fluxes
+
+end
+
+
+function buffachristiansen2(Faces::CompScienceMeshes.AbstractMesh)
+
+    faces = barycentric_refinement(Faces)
+    Edges = skeleton(Faces,1)
+
+    T = Float64
+    bfs = Vector{Vector{Shape{T}}}(undef, numcells(Edges))
+    pos = Vector{vertextype(Faces)}(undef, numcells(Edges))
+    for (E,Edge) in enumerate(cells(Edges))
+        bfs[E] = Vector{Shape{T}}()
+
+        port_vertex_idx = numvertices(Faces) + E
+        pos[E] = vertices(faces)[port_vertex_idx]
+
+        # Build the plus-patch
+        ptch_vert_idx = Edge[1]
+        ptch_face_idcs = [i for (i,face) in enumerate(cells(faces)) if ptch_vert_idx in face]
+        patch = Mesh(vertices(faces), cells(faces)[ptch_face_idcs])
+        patch_bnd = boundary(patch)
+        @show numcells(patch_bnd)
+        port = Mesh(vertices(faces), filter(c->port_vertex_idx in c, cells(patch_bnd)))
+
+        @show numcells(patch)
+        @show numcells(port)
+
+        @assert numcells(patch) >= 6
+        @assert numcells(port) == 2
+        RT_int, RT_prt, x_int, x_prt = buildhalfbc2(patch, port, nothing)
+
+        for (m,bf) in enumerate(RT_int.fns)
+            for sh in bf
+                cellid = ptch_face_idcs[sh.cellid]
+                BEAST.add!(bfs[E], cellid, sh.refid, sh.coeff * x_int[m])
+            end
+        end
+
+        for (m,bf) in enumerate(RT_prt.fns)
+            for sh in bf
+                cellid = ptch_face_idcs[sh.cellid]
+                BEAST.add!(bfs[E],cellid, sh.refid, sh.coeff * x_prt[m])
+            end
+        end
+
+        # Build the minus-patch
+        ptch_vert_idx = Edge[2]
+        ptch_face_idcs = [i for (i,face) in enumerate(cells(faces)) if ptch_vert_idx in face]
+        patch = Mesh(vertices(faces), cells(faces)[ptch_face_idcs])
+        port = Mesh(vertices(faces), filter(c->port_vertex_idx in c, cells(boundary(patch))))
+        @assert numcells(patch) >= 6
+        @assert numcells(port) == 2
+        RT_int, RT_prt, x_int, x_prt = buildhalfbc2(patch, port, nothing)
+
+        for (m,bf) in enumerate(RT_int.fns)
+            for sh in bf
+                cellid = ptch_face_idcs[sh.cellid]
+                BEAST.add!(bfs[E], cellid, sh.refid, -1.0 * sh.coeff * x_int[m])
+            end
+        end
+
+        for (m,bf) in enumerate(RT_prt.fns)
+            for sh in bf
+                cellid = ptch_face_idcs[sh.cellid]
+                BEAST.add!(bfs[E],cellid, sh.refid, -1.0 * sh.coeff * x_prt[m])
+            end
+        end
+
+    end
+
+    RTBasis(faces, bfs, pos)
+end
