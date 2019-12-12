@@ -28,9 +28,9 @@ end
 function faces(c::CompScienceMeshes.Simplex{3,3,0,4,Float64})
     [
         simplex(c[2], c[3], c[4]),
-        simplex(c[1], c[3], c[4]),
+        simplex(c[3], c[1], c[4]),
         simplex(c[1], c[2], c[4]),
-        simplex(c[1], c[2], c[3])
+        simplex(c[2], c[1], c[3])
     ]
 end
 
@@ -58,6 +58,7 @@ function ntrace(X::Space, γ)
 
             on_target(fc) || continue
             Q = ntrace(x,el,q,fc)
+            print(Q)
             @assert norm(Q,Inf) != 0
 
             # find the global index in Σ of the q-th face of the p-element
@@ -69,7 +70,7 @@ function ntrace(X::Space, γ)
             for i in 1:size(Q,1)
                 for j in 1:size(Q,2)
                     for (m,a) in ad[p,j]
-                        j == q && println("bingo")
+                        j == q && println("bingo",j,q)
                         v = a*Q[i,j]
                         @assert a != 0
                         v == 0 && continue
@@ -169,8 +170,9 @@ function ttrace(X::Space, γ)
         for (q,fc) in enumerate(faces(el))
 
             on_target(fc) || continue
+            print("\n")
             Q = ttrace(x,el,q,fc)
-            print(Q, "\n")
+            print(Q,q)
             # find the global index in Σ of the q-th face of the p-element
             r = 0
             for k in nzrange(D,p)
@@ -180,8 +182,8 @@ function ttrace(X::Space, γ)
             for i in 1:size(Q,1)
                 for j in 1:size(Q,2)
                     for (m,a) in ad[p,j]
-                        if j ≈ q
-                            print("bingo")
+                        if j == q
+                            print("bingo",j,q)
                         end
                         v = a*Q[i,j]
                         v == 0 && continue

@@ -31,14 +31,14 @@ end
 
 function quaddata(op::LocalOperator, g::NDLCCRefSpace, f::NDLCCRefSpace, tels, bels)
      o, x, y, z = CompScienceMeshes.euclidianbasis(3)
-     reftet = simplex(o,x,y,z)
+     reftet = simplex(x,y,z,o)
      qps = quadpoints(reftet, 6)
      [(w, parametric(p)) for (p,w) in qps]
 end
 
 function quaddata(op::LocalOperator, g::NDLCDRefSpace, f::NDLCDRefSpace, tels, bels)
      o, x, y, z = CompScienceMeshes.euclidianbasis(3)
-     reftet = simplex(o,x,y,z)
+     reftet = simplex(x,y,z,o)
      qps = quadpoints(reftet, 6)
      [(w, parametric(p)) for (p,w) in qps]
 end

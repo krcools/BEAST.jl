@@ -31,15 +31,24 @@ function (ϕ::NDLCCRefSpace)(ndlc)
         (value=(BMT*[-w,0,u])       ,curl=(B*[0,-2,0])/j),
         (value=(BMT*[(w+v-1),-u,-u]),curl=(B*[0,2,-2])/j),
         (value=(BMT*[0,-w,v])       ,curl=(B*[2,0,0])/j) ,
-        (value=(BMT*[-v,(u+w-1),-v])  ,curl=(B*[-2,0,2])/j),
-        (value=(BMT*[-w,-w,(u+v-1)])  ,curl=(B*[2,-2,0])/j)
+        (value=(BMT*[-v,(u+w-1),-v]),curl=(B*[-2,0,2])/j),
+        (value=(BMT*[-w,-w,(u+v-1)]),curl=(B*[2,-2,0])/j)
     ))
+
+##    	return SVector((
+##        (value=(BMT*[(w+v-1),-u,-u]),curl=(B*[0,2,-2])/j),
+##        (value=(BMT*[-v,(u+w-1),-v])  ,curl=(B*[-2,0,2])/j),
+##        (value=(BMT*[-w,-w,(u+v-1)])  ,curl=(B*[2,-2,0])/j),
+##        (value=(BMT*[-v,u,0])       ,curl=(B*[0,0,2])/j) ,
+##        (value=(BMT*[-w,0,u])       ,curl=(B*[0,-2,0])/j),
+##        (value=(BMT*[0,-w,v])       ,curl=(B*[2,0,0])/j)
+##        ))
 end
 
 #check orientation
 function curl(ref::NDLCCRefSpace, sh, el)
-    a = [2,1,4,4,3,2]#[4,2,3,4,1,2]
-    b = [4,3,3,1,2,1]#[3,4,2,1,3,1]
+    a = [4,2,3,4,1,2]##[2,1,1,1,2,4]#[2,1,4,4,3,2]#[4,2,3,4,1,2]
+    b = [3,4,2,1,3,1]##[3,2,4,3,4,3]#[4,3,3,1,2,1]#[3,4,2,1,3,1]
     sh1 = Shape(sh.cellid, b[sh.refid], -2*sh.coeff)
     sh2 = Shape(sh.cellid, a[sh.refid], 2*sh.coeff)
     return [sh1,sh2]
