@@ -35,14 +35,18 @@ input basis on the boundary
 """
 function ttrace(x::NDLCDRefSpace, el, q, fc)
     t = zeros(scalartype(x),3,4)
+    fa = SArray{Tuple{2},Int,1,2}
+    te = SArray{Tuple{3},Int,1,3}
+    j = 0
     for fac in faces(el)
+        j += 1
         fac != fc || continue
         #vind locale index (i) in fc van de edge die in zowel fc als fac ligt
-        fcv = fc.vertices
-        facv = fac.vertices
-        i = findfirst(isequal(setdiff(fcv,facv)[1]), fcv)
-        print(i)
-        t[i,q] = 1
+        A = setdiff(fc.vertices,setdiff(fc.vertices,fac.vertices))
+        edg = fa([findfirst(isequal(A[1]), fc.vertices),findfirst(isequal(A[2]), fc.vertices)])
+        i = abs(CompScienceMeshes.relorientation(edg,te([1,2,3])))
+        #i = findfirst(isequal(setdiff(fcv,facv)[1]), fcv)
+        t[i,j] = (norm(A[1]-A[2]))
     end
     return t
 end
