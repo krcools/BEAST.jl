@@ -400,9 +400,7 @@ function buildhalfbc2(patch, port, jct_edges)
     D = real(assemble(Id, Lx, divergence(RT_int)))
 
     div_RT_prt = divergence(RT_prt)
-    Z, store = allocatestorage(Id, Lx, div_RT_prt, Val{:bandedstorage}, BEAST.LongDelays{:ignore})
-    BEAST.assemble_local_mixed!(Id, Lx, div_RT_prt, store)
-    d0 = real(Z) * prt_fluxes
+    d0 = real(assemble(Id, Lx, div_RT_prt)) * prt_fluxes
     V = sum(volume(chart(patch,c)) for c in cells(patch))
     d1 = real(assemble(ScalarTrace(x -> 1/V), Lx))
     d = -d0 + d1
@@ -410,16 +408,13 @@ function buildhalfbc2(patch, port, jct_edges)
     @assert numfunctions(L0_int) == 1
     C = assemble(Id, curl(L0_int), RT_int)
     curl_L0_int = curl(L0_int)
-    Z2, store2 = allocatestorage(Id, curl_L0_int, RT_prt, Val{:bandedstorage}, BEAST.LongDelays{:ignore})
-    BEAST.assemble_local_mixed!(Id, curl_L0_int, RT_prt, store2)
-    c = real(Z2) * prt_fluxes
+    c = real(assemble(Id, curl_L0_int, RT_prt)) * prt_fluxes
 
     x1 = pinv(D) * d
     N = nullspace(D)
     p = (C*N) \ (c - C*x1)
     x = x1 + N*p
 
-    # return D, C, d, c, d0, d1
     return RT_int, RT_prt, x, prt_fluxes
 
 end
