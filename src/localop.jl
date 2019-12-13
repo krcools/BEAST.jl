@@ -11,11 +11,18 @@ abstract type LocalOperator <: Operator end
 
 
 function assemble!(biop::LocalOperator, tfs::Space, bfs::Space, store)
-    if geometry(tfs) == geometry(bfs)
-        return assemble_local_matched!(biop, tfs, bfs, store)
-    else
+
+    if geometry(tfs) != geometry(bfs)
         return assemble_local_mixed!(biop, tfs, bfs, store)
     end
+
+    tels, tad = assemblydata(tfs)
+    bels, bad = assemblydata(bfs)
+
+    length(tels) != numcells(geometry(tfs)) && return assemble_local_mixed!(bio, tfs, bfs, store)
+    length(bels) != numcells(geometry(bfs)) && return assemble_local_mixed!(bio, tfs, bfs, store)
+
+    return assemble_local_matched!(biop, tfs, bfs, store)
 end
 
 function assemble_local_matched!(biop::LocalOperator, tfs::Space, bfs::Space, store)
