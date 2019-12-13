@@ -372,11 +372,6 @@ end
 using LinearAlgebra
 function buildhalfbc2(patch, port, jct_edges)
 
-    # Space we need:
-    #   RT_internal
-    #   RT_internal_and_ports
-    #   Sx
-    #   S1_internal
     edges = skeleton(patch,1)
     verts = skeleton(patch,0)
     bndry = boundary(patch)
@@ -390,20 +385,18 @@ function buildhalfbc2(patch, port, jct_edges)
 
     RT_int = raviartthomas(patch, cellpairs(patch, int_edges))
     RT_prt = raviartthomas(patch, cellpairs(patch, port))
-    Lx = lagrangecxd0(patch)
+    # Lx = lagrangecxd0(patch)
     vertex_list = [c[1] for c in cells(int_verts)]
     L0_int = lagrangec0d1(patch, vertex_list, Val{3})
 
     prt_fluxes = [0.5, 0.5]
 
     Id = BEAST.Identity()
-    D = real(assemble(Id, Lx, divergence(RT_int)))
 
-    div_RT_prt = divergence(RT_prt)
-    d0 = real(assemble(Id, Lx, div_RT_prt)) * prt_fluxes
-    V = sum(volume(chart(patch,c)) for c in cells(patch))
-    d1 = real(assemble(ScalarTrace(x -> 1/V), Lx))
-    d = -d0 + d1
+    D = assemble(Id, divergence(RT_int), divergence(RT_int))
+    Q = assemble(Id, divergence(RT_int), divergence(RT_prt))
+    d = -Q * prt_fluxes
+
 
     @assert numfunctions(L0_int) == 1
     C = assemble(Id, curl(L0_int), RT_int)
