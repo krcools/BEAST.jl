@@ -2,6 +2,7 @@
 # prior to running this script.
 
 using CompScienceMeshes, BEAST
+using LinearAlgebra
 
 Γ = readmesh(joinpath(@__DIR__,"sphere2.in"))
 println("Mesh with $(numvertices(Γ)) vertices and $(numcells(Γ)) cells.")

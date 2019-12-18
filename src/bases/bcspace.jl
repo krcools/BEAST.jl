@@ -403,7 +403,7 @@ function buildhalfbc2(patch, port, jct_edges)
     vertex_list = [c[1] for c in cells(int_verts)]
     L0_int = lagrangec0d1(patch, vertex_list, Val{3})
 
-    prt_fluxes = [0.5, 0.5]
+    prt_fluxes = [0.5, -0.5]
 
     Id = BEAST.Identity()
     D = assemble(Id, divergence(RT_int), divergence(RT_int))
