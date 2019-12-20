@@ -16,10 +16,10 @@ function (ϕ::NDLCDRefSpace)(ndlc)
     B = [tu tv tw]
 
     return SVector((
-        (value=(B*[(u-1),v,w]/j),divergence=(3/j)),
-        (value=(B*[u,(v-1),w]/j),divergence=(3/j)),
-        (value=(B*[u,v,(w-1)]/j),divergence=(3/j)),
-        (value=(B*[u,v,w]/j)    ,divergence=(3/j))
+        (value=(2*B*[(u-1),v,w]/j),divergence=(6/j)),
+        (value=(2*B*[u,(v-1),w]/j),divergence=(6/j)),
+        (value=(2*B*[u,v,(w-1)]/j),divergence=(6/j)),
+        (value=(2*B*[u,v,w]/j)    ,divergence=(6/j))
     ))
 end
 
@@ -46,7 +46,7 @@ function ttrace(x::NDLCDRefSpace, el, q, fc)
         edg = fa([findfirst(isequal(A[1]), fc.vertices),findfirst(isequal(A[2]), fc.vertices)])
         i = abs(CompScienceMeshes.relorientation(edg,te([1,2,3])))
         #i = findfirst(isequal(setdiff(fcv,facv)[1]), fcv)
-        t[i,j] = (norm(A[1]-A[2]))
+        t[i,j] = volume(el)/(volume(fac)*norm(A[1]-A[2]))
     end
     return t
 end

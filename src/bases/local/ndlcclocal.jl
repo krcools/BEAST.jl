@@ -49,7 +49,7 @@ end
 function curl(ref::NDLCCRefSpace, sh, el)
     a = [4,2,3,4,1,2]##[2,1,1,1,2,4]#[2,1,4,4,3,2]#[4,2,3,4,1,2]
     b = [3,4,2,1,3,1]##[3,2,4,3,4,3]#[4,3,3,1,2,1]#[3,4,2,1,3,1]
-    sh1 = Shape(sh.cellid, b[sh.refid], -2*sh.coeff)
-    sh2 = Shape(sh.cellid, a[sh.refid], 2*sh.coeff)
+    sh1 = Shape(sh.cellid, b[sh.refid], -sh.coeff)
+    sh2 = Shape(sh.cellid, a[sh.refid], sh.coeff)
     return [sh1,sh2]
 end
