@@ -183,7 +183,7 @@ function ttrace(X::Space, γ)
                 for j in 1:size(Q,2)
                     for (m,a) in ad[p,j]
                         if j == q
-                            print("bingo",j,q)
+                            print("bingo",a,Q[i,j])
                         end
                         v = a*Q[i,j]
                         v == 0 && continue
