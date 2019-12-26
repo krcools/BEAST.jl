@@ -34,19 +34,37 @@ Does not give the correct result for an imput basis with non-vanishing
 input basis on the boundary
 """
 function ttrace(x::NDLCDRefSpace, el, q, fc)
+    # el: the supporting chart of the input
+    # q: the local index of the face of el on which we compute the trace
+    # fc: the chart on which we compute the trace
     t = zeros(scalartype(x),3,4)
     fa = SArray{Tuple{2},Int,1,2}
     te = SArray{Tuple{3},Int,1,3}
     j = 0
+    y = BEAST.NDRefSpace{scalartype(x)}()
+    n = normal(fc)
     for fac in faces(el)
         j += 1
-        fac != fc || continue
+        j == q && continue
+        # fac != fc || continue
         #vind locale index (i) in fc van de edge die in zowel fc als fac ligt
         A = setdiff(fc.vertices,setdiff(fc.vertices,fac.vertices))
+        # @show length(A)
+        @assert length(A) == 2
         edg = fa([findfirst(isequal(A[1]), fc.vertices),findfirst(isequal(A[2]), fc.vertices)])
         i = abs(CompScienceMeshes.relorientation(edg,te([1,2,3])))
         #i = findfirst(isequal(setdiff(fcv,facv)[1]), fcv)
-        t[i,j] = volume(el)/(volume(fac)*norm(A[1]-A[2]))
+        edg_chart = simplex(fc.vertices[edg[1]], fc.vertices[edg[2]])
+        edg_centr = cartesian(center(edg_chart))
+        p = neighborhood(fc, carttobary(fc, edg_centr))
+        r = neighborhood(el, carttobary(el, edg_centr))
+        yp = y(p)[i].value
+        xr = x(r)[j].value
+        tgt = edg_chart.vertices[1] - edg_chart.vertices[2]
+        ypt = dot(yp, tgt)
+        xrt = dot(n × xr, tgt)
+        # t[i,j] = volume(el)/(volume(fac)*norm(A[1]-A[2]))
+        t[i,j] = xrt / ypt
     end
     return t
 end
