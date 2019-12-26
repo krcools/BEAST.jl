@@ -370,20 +370,64 @@ end
 
 
 using LinearAlgebra
-function buildhalfbc2(patch, port, jct_edges)
+function buildhalfbc2(patch, port, dirichlet, prt_fluxes)
+
+    println()
 
     edges = skeleton(patch,1)
     verts = skeleton(patch,0)
     bndry = boundary(patch)
 
+    dirbnd = submesh(dirichlet) do edge
+        edge in cells(bndry) && return true
+        reverse(edge) in cells(bndry) && return true
+        return false
+    end
+    @show numcells(patch)
+    @show numcells(dirbnd)
+    @assert numcells(dirbnd) ≤ 4
+
+    bnd_dirbnd = boundary(dirbnd)
+    nodes_dirbnd = skeleton(dirbnd,0)
+    int_nodes_dirbnd = submesh(nodes_dirbnd) do node
+        node in cells(bnd_dirbnd) && return false
+        return true
+    end
+    @show numcells(int_nodes_dirbnd)
+    @assert numcells(int_nodes_dirbnd) ≤ 2
+
     int_pred = interior_tpredicate(patch)
     num_edges_on_port = 0
+    num_edges_on_dirc = 0
+    @show numcells(edges)
+
+    for edge in cells(edges)
+        println(edge)
+    end
+    println()
+    for edge in cells(dirbnd)
+        println(edge)
+    end
+    println()
+    for edge in cells(port)
+        println(edge)
+    end
+
     int_edges = submesh(edges) do edge
         (edge in cells(port)) && (num_edges_on_port+=1 ; return false)
         (reverse(edge) in cells(port)) && (num_edges_on_port+=1 ; return false)
+        edge in cells(dirbnd) && (num_edges_on_dirc+=1; return true)
+        reverse(edge) in cells(dirbnd) && (num_edges_on_dirc+=1; return true)
         (!int_pred(edge)) && return false
         return true
     end
+    println()
+    for edge in cells(int_edges)
+        println(edge)
+    end
+    @show numcells(int_edges)
+    @show num_edges_on_port
+    @show num_edges_on_dirc
 
     bnd_verts = skeleton(bndry,0)
     prt_verts = skeleton(port,0)
@@ -391,38 +435,44 @@ function buildhalfbc2(patch, port, jct_edges)
     #     node in cells(bnd_verts)
     # end
     # int_verts = submesh(!isonboundary, verts)
+    # dirichlet_nodes = skeleton(dirichlet,0)
     int_verts = submesh(verts) do node
+        node in cells(int_nodes_dirbnd) && return true
         node in cells(bnd_verts) && return false
         node in cells(prt_verts) && return false
         return true
     end
-    @show num_edges_on_port
+    @show numcells(int_verts)
 
     RT_int = raviartthomas(patch, cellpairs(patch, int_edges))
     RT_prt = raviartthomas(patch, cellpairs(patch, port))
     vertex_list = [c[1] for c in cells(int_verts)]
     L0_int = lagrangec0d1(patch, vertex_list, Val{3})
 
-    prt_fluxes = [0.5, -0.5]
 
     Id = BEAST.Identity()
     D = assemble(Id, divergence(RT_int), divergence(RT_int))
     Q = assemble(Id, divergence(RT_int), divergence(RT_prt))
     d = -Q * prt_fluxes
 
-    @assert numfunctions(L0_int) in [1,2]
     @show numfunctions(L0_int)
+    @assert numfunctions(L0_int) in [1,2]
     C = assemble(Id, curl(L0_int), RT_int)
     curl_L0_int = curl(L0_int)
     c = real(assemble(Id, curl_L0_int, RT_prt)) * prt_fluxes
 
     x1 = pinv(D) * d
     N = nullspace(D)
+    @show size(N)
+    @show size(C)
     p = (C*N) \ (c - C*x1)
     x = x1 + N*p
 
     @assert D*x ≈ d atol=1e-8
-    @assert C*x ≈ c atol=1e-8
+    if !isapprox(C*x, c, atol=1e-8)
+        @show norm(C*x-c)
+        error("error")
+    end
 
     return RT_int, RT_prt, x, prt_fluxes
 
@@ -433,15 +483,28 @@ function buffachristiansen2(Faces::CompScienceMeshes.AbstractMesh)
 
     faces = barycentric_refinement(Faces)
     Edges = skeleton(Faces,1)
+    Bndry = boundary(Faces)
+    Edges = submesh(Edges) do Edge
+        Edge in cells(Bndry) && return false
+        reverse(Edge) in cells(Bndry) && return false
+        return true
+    end
 
     T = Float64
     bfs = Vector{Vector{Shape{T}}}(undef, numcells(Edges))
     pos = Vector{vertextype(Faces)}(undef, numcells(Edges))
+    dirichlet = boundary(faces)
     for (E,Edge) in enumerate(cells(Edges))
+        @show Edge
         bfs[E] = Vector{Shape{T}}()
 
-        port_vertex_idx = numvertices(Faces) + E
-        pos[E] = vertices(faces)[port_vertex_idx]
+        pos[E] = cartesian(center(chart(Edges,Edge)))
+        # port_vertex_idx = numvertices(Faces) + E
+        port_vertex_idx = argmin(norm.(vertices(faces) .- Ref(pos[E])))
+        # pos[E] = vertices(faces)[port_vertex_idx]
+        @show carttobary(chart(Edges,Edge),pos[E])
+        @show pos[E]
+        @show (Faces.vertices[Edge[1]]+Faces.vertices[Edge[2]])/2
 
         # Build the plus-patch
         ptch_vert_idx = Edge[1]
@@ -454,9 +517,11 @@ function buffachristiansen2(Faces::CompScienceMeshes.AbstractMesh)
         @show numcells(patch)
         @show numcells(port)
 
-        @assert numcells(patch) >= 6
+        # @assert numcells(patch) >= 6
         @assert numcells(port) == 2
-        RT_int, RT_prt, x_int, x_prt = buildhalfbc2(patch, port, nothing)
+
+        prt_fluxes = [0.5, 0.5]
+        RT_int, RT_prt, x_int, x_prt = buildhalfbc2(patch, port, dirichlet, prt_fluxes)
 
         for (m,bf) in enumerate(RT_int.fns)
             for sh in bf
@@ -477,21 +542,23 @@ function buffachristiansen2(Faces::CompScienceMeshes.AbstractMesh)
         ptch_face_idcs = [i for (i,face) in enumerate(cells(faces)) if ptch_vert_idx in face]
         patch = Mesh(vertices(faces), cells(faces)[ptch_face_idcs])
         port = Mesh(vertices(faces), filter(c->port_vertex_idx in c, cells(boundary(patch))))
-        @assert numcells(patch) >= 6
+        # @assert numcells(patch) >= 6
         @assert numcells(port) == 2
-        RT_int, RT_prt, x_int, x_prt = buildhalfbc2(patch, port, nothing)
+
+        prt_fluxes = [-0.5, -0.5]
+        RT_int, RT_prt, x_int, x_prt = buildhalfbc2(patch, port, dirichlet, prt_fluxes)
 
         for (m,bf) in enumerate(RT_int.fns)
             for sh in bf
                 cellid = ptch_face_idcs[sh.cellid]
-                BEAST.add!(bfs[E], cellid, sh.refid, -1.0 * sh.coeff * x_int[m])
+                BEAST.add!(bfs[E], cellid, sh.refid, sh.coeff * x_int[m])
             end
         end
 
         for (m,bf) in enumerate(RT_prt.fns)
             for sh in bf
                 cellid = ptch_face_idcs[sh.cellid]
-                BEAST.add!(bfs[E],cellid, sh.refid, -1.0 * sh.coeff * x_prt[m])
+                BEAST.add!(bfs[E],cellid, sh.refid, sh.coeff * x_prt[m])
             end
         end
 
@@ -505,15 +572,25 @@ function buffachristiansen3(Faces::CompScienceMeshes.AbstractMesh)
 
     faces = barycentric_refinement(Faces)
     Edges = skeleton(Faces,1)
+    Bndry = boundary(Faces)
+    Edges = submesh(Edges) do Edge
+        Edge in cells(Bndry) && return false
+        reverse(Edge) in cells(Bndry) && return false
+        return true
+    end
 
     T = Float64
     bfs = Vector{Vector{Shape{T}}}(undef, numcells(Edges))
     pos = Vector{vertextype(Faces)}(undef, numcells(Edges))
+    dirichlet = boundary(faces)
     for (E,Edge) in enumerate(cells(Edges))
         bfs[E] = Vector{Shape{T}}()
 
-        port_vertex_idx = numvertices(Faces) + E
-        pos[E] = vertices(faces)[port_vertex_idx]
+        # port_vertex_idx = numvertices(Faces) + E
+        # pos[E] = vertices(faces)[port_vertex_idx]
+        pos[E] = cartesian(center(chart(Edges,Edge)))
+        # port_vertex_idx = numvertices(Faces) + E
+        port_vertex_idx = argmin(norm.(vertices(faces) .- Ref(pos[E])))
 
         # Build the dual support
         ptch_face_idcs1 = [i for (i,face) in enumerate(cells(faces)) if Edge[1] in face]
@@ -526,11 +603,12 @@ function buffachristiansen3(Faces::CompScienceMeshes.AbstractMesh)
         @show numcells(patch_bnd)
         @show numcells(patch)
         @show numcells(port)
-        @assert numcells(skeleton(patch,1))+2 == numcells(skeleton(patch1,1)) + numcells(skeleton(patch2,1))
+        # @assert numcells(skeleton(patch,1))+2 == numcells(skeleton(patch1,1)) + numcells(skeleton(patch2,1))
 
         @assert numcells(patch) >= 6
         @assert numcells(port) == 2
-        RT_int, RT_prt, x_int, x_prt = buildhalfbc2(patch, port, nothing)
+        prt_fluxes = [0.5, -0.5]
+        RT_int, RT_prt, x_int, x_prt = buildhalfbc2(patch, port, dirichlet, prt_fluxes)
 
         ptch_face_idcs = vcat(ptch_face_idcs1, ptch_face_idcs2)
         for (m,bf) in enumerate(RT_int.fns)

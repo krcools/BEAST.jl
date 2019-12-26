@@ -61,12 +61,16 @@ bcs2 = BEAST.buffachristiansen2(Faces)
 bcs1 = BEAST.buffachristiansen(Faces)
 rts = BEAST.raviartthomas(Faces)
 
+G1 = assemble(BEAST.NCross(), bcs1, rts)
+Q1 = assemble(BEAST.Identity(), divergence(bcs1), divergence(bcs1))
+
 G2 = assemble(BEAST.NCross(), bcs2, rts)
 Q2 = assemble(BEAST.Identity(), divergence(bcs2), divergence(bcs2))
 
 G3 = assemble(BEAST.NCross(), bcs3, rts)
 Q3 = assemble(BEAST.Identity(), divergence(bcs3), divergence(bcs3))
 
+using LinearAlgebra
 @show cond(G3)
 
 using LinearAlgebra

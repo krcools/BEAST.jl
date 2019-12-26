@@ -20,9 +20,9 @@ function (ϕ::NDRefSpace)(nbd)
     d = 2/j
 
     return SVector((
-        (n × (tu*(u-1) + tv*v    ) / j, d),
-        (n × (tu*u     + tv*(v-1)) / j, d),
-        (n × (tu*u     + tv*v    ) / j, d)
+        (value = n × (tu*(u-1) + tv*v    ) / j, curl = d),
+        (value = n × (tu*u     + tv*(v-1)) / j, curl = d),
+        (value = n × (tu*u     + tv*v    ) / j, curl = d)
     ))
 
 end

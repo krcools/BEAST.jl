@@ -4,10 +4,11 @@
 using CompScienceMeshes, BEAST
 using LinearAlgebra
 
-Γ = readmesh(joinpath(@__DIR__,"sphere2.in"))
+# Γ = readmesh(joinpath(@__DIR__,"sphere2.in"))
+Γ = meshrectangle(1.0, 1.0, 0.2, 3)
 println("Mesh with $(numvertices(Γ)) vertices and $(numcells(Γ)) cells.")
 X = raviartthomas(Γ)
-Y = BEAST.buffachristiansen2(Γ)
+Y = BEAST.buffachristiansen3(Γ)
 
 κ = ω = 1.0; γ = κ*im
 T = MWSingleLayer3D(γ)
