@@ -21,30 +21,30 @@ for (i,face) in enumerate(cells(faces))
         push!(patch_idcs, i)
     end
 end
-patch = Mesh(vertices(faces), cells(faces)[patch_idcs])
+ptch = Mesh(vertices(faces), cells(faces)[patch_idcs])
 
-port = Mesh(vertices(edges), filter(c -> port_idx in c, cells(boundary(patch))))
+port = Mesh(vertices(edges), filter(c -> port_idx in c, cells(boundary(ptch))))
 
-@show numcells(patch)
+@show numcells(ptch)
 @show numcells(port)
 
 # D, C, d, c, d0, d1,
-RT_int, RT_prt, x_int, x_prt = BEAST.buildhalfbc2(patch, port, nothing)
-
-BF = BEAST.Shape{Float64}[]
-for (m,bf) in enumerate(RT_int.fns)
-    for sh in bf
-        cellid = patch_idcs[sh.cellid]
-        BEAST.add!(BF,cellid, sh.refid, sh.coeff * x_int[m])
-    end
-end
-
-for (m,bf) in enumerate(RT_prt.fns)
-    for sh in bf
-        cellid = patch_idcs[sh.cellid]
-        BEAST.add!(BF,cellid, sh.refid, sh.coeff * x_prt[m])
-    end
-end
+# RT_int, RT_prt, x_int, x_prt = BEAST.buildhalfbc2(ptch, port, nothing)
+#
+# BF = BEAST.Shape{Float64}[]
+# for (m,bf) in enumerate(RT_int.fns)
+#     for sh in bf
+#         cellid = patch_idcs[sh.cellid]
+#         BEAST.add!(BF,cellid, sh.refid, sh.coeff * x_int[m])
+#     end
+# end
+#
+# for (m,bf) in enumerate(RT_prt.fns)
+#     for sh in bf
+#         cellid = patch_idcs[sh.cellid]
+#         BEAST.add!(BF,cellid, sh.refid, sh.coeff * x_prt[m])
+#     end
+# end
 
 
 # RT_prt = raviartthomas(patch, cellpairs(patch, port))

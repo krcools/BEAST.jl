@@ -259,7 +259,27 @@ end
 
 
 
+function lagrangec0d1(mesh::Mesh{3,4}, nodes::Mesh{3,2})
 
+    T = coordtype(mesh)
+    P = vertextype(mesh)
+    S = Shape{T}
+    fns = [Vector{S}() for i in 1:numcells(nodes) ]
+    pos = Vector{P}(undef, numcells(nodes))
+
+    D = connectivity(nodes, mesh)
+    rows = rowvals(D)
+    vals = nonzeros(D)
+    for (j,node) in enumerate(cells(nodes))
+        for k in nzrange(D,j)
+            i = rows[k]
+            locid = abs(vals[k])
+            push!(fns[j], S(i, locid, 1.0))
+        end
+        pos[j] = cartesian(center(chart(nodes, node)))
+    end
+    LagrangeBasis{1,0,4}(mesh, fns, pos)
+end
 
 
 duallagrangec0d1(mesh) = duallagrangec0d1(mesh, barycentric_refinement(mesh), x->false, Val{dimension(mesh)+1})

@@ -132,6 +132,7 @@ include("bases/ndspace.jl")
 include("bases/bdmdiv.jl")
 include("bases/ndlccspace.jl")
 include("bases/ndlcdspace.jl")
+include("bases/dual3d.jl")
 
 
 include("bases/subdbasis.jl")

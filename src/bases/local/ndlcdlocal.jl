@@ -68,3 +68,39 @@ function ttrace(x::NDLCDRefSpace, el, q, fc)
     end
     return t
 end
+
+divergence(ref::NDLCDRefSpace, sh, el) = Shape(sh.cellid, 1, sh.coeff/volume(el))
+
+
+function restrict(ϕ::NDLCDRefSpace{T}, dom1, dom2) where {T}
+    # dom2 is the smaller of the domains
+
+    K = numfunctions(ϕ)
+    D = dimension(dom1)
+
+    @assert K == 4
+    @assert D == 3
+    @assert D == dimension(dom2)
+
+    Q = zeros(T,K,K)
+    for (i,face) in enumerate(faces(dom2))
+
+        p = center(face)
+        c = cartesian(p)
+        A = volume(face)
+
+        m = normal(p)
+        u = carttobary(dom1,p)
+
+        u = carttobary(dom1, c)
+        x = neighborhood(dom1, u)
+
+        y = ϕ(x)
+
+        for j in 1:K
+            Q[j,i] = -dot(y[j].value, m) * A
+        end
+    end
+
+    return Q
+end
