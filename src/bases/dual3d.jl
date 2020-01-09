@@ -6,6 +6,8 @@ function builddual2form(support, port, dirichlet, prt_fluxes)
 
     faces = skeleton(support,2)
     edges = skeleton(support,1)
+    verts = skeleton(support,0)
+    @assert length(verts) - length(edges) + length(faces) - length(support) == 1
     bndry = boundary(support)
     @show numcells(faces)
 
@@ -18,7 +20,7 @@ function builddual2form(support, port, dirichlet, prt_fluxes)
     # @assert numcells(dirbnd) ≤ 4
 
     bnd_dirbnd = boundary(dirbnd)
-    edges_dirbnd = skeleton(dirbnd,0)
+    edges_dirbnd = skeleton(dirbnd,1)
     cells_bnd_dirbnd = [sort(c) for c in cells(bnd_dirbnd)]
     int_edges_dirbnd = submesh(edges_dirbnd) do edge
         sort(edge) in cells(bnd_dirbnd) ? false : true
@@ -29,6 +31,8 @@ function builddual2form(support, port, dirichlet, prt_fluxes)
     int_pred = interior_tpredicate(support)
     num_faces_on_port = 0
     num_faces_on_dirc = 0
+
+    @assert numcells(submesh(!int_pred, faces)) == numcells(boundary(support))
 
 
     # for edge in cells(faces)
@@ -50,13 +54,13 @@ function builddual2form(support, port, dirichlet, prt_fluxes)
         sort(face) in cells_dirbnd && return true
         int_pred(face) ? true : false
     end
-    println()
-    for edge in cells(int_faces)
-        println(edge)
-    end
+    # println()
+    # for edge in cells(int_faces)
+    #     println(edge)
+    # end
     @show numcells(int_faces)
-    @show num_faces_on_port
-    @show num_faces_on_dirc
+    # @show num_faces_on_port
+    # @show num_faces_on_dirc
 
     bnd_edges = skeleton(bndry,1)
     prt_edges = skeleton(port,1)
@@ -64,6 +68,10 @@ function builddual2form(support, port, dirichlet, prt_fluxes)
     cells_int_edges_dirbnd = [sort(c) for c in cells(int_edges_dirbnd)]
     cells_bnd_edges = [sort(c) for c in cells(bnd_edges)]
     cells_prt_edges = [sort(c) for c in cells(prt_edges)]
+
+    @show length(cells_int_edges_dirbnd)
+    @show length(cells_bnd_edges)
+    @show length(cells_prt_edges)
     int_edges = submesh(edges) do edge
         sort(edge) in cells_int_edges_dirbnd && return true
         sort(edge) in cells_bnd_edges && return false
@@ -78,7 +86,6 @@ function builddual2form(support, port, dirichlet, prt_fluxes)
     # L0_int = lagrangec0d1(suppport, vertex_list, Val{4})
     L0_int = nedelecc3d(support, int_edges)
 
-
     Id = BEAST.Identity()
     D = assemble(Id, divergence(RT_int), divergence(RT_int))
     Q = assemble(Id, divergence(RT_int), divergence(RT_prt))
@@ -86,21 +93,35 @@ function builddual2form(support, port, dirichlet, prt_fluxes)
 
     @show numfunctions(L0_int)
     # @assert numfunctions(L0_int) in [1,2]
-    C = assemble(Id, curl(L0_int), RT_int)
     curl_L0_int = curl(L0_int)
+    div_curl_L0_int = divergence(curl_L0_int)
+    ZZ = real(assemble(Id, div_curl_L0_int, div_curl_L0_int))
+    @assert isapprox(norm(ZZ), 0.0, atol=1e-8)
+    C = assemble(Id, curl_L0_int, RT_int)
     c = real(assemble(Id, curl_L0_int, RT_prt)) * prt_fluxes
 
     x1 = pinv(D) * d
     N = nullspace(D)
     @show size(N)
+    @show rank(C)
+    @assert size(N,2) == rank(C)
     @show size(C)
+    # @assert rank(C) == size(C,1)
     p = (C*N) \ (c - C*x1)
     x = x1 + N*p
 
-    @assert D*x ≈ d atol=1e-8
-    if !isapprox(C*x, c, atol=1e-8)
+    # D*x ≈ d atol=1e-8
+    if !isapprox(C*x, c, atol=1e-8) || !isapprox(D*x, d, atol=1e-6)
+        @show norm(D*x-d)
         @show norm(C*x-c)
+        @show rank(C)
+        @show size(C,1)
         error("error")
+    end
+
+    if rank(C) != size(C,1)
+        @show rank(C)
+        @show size(C)
     end
 
     return RT_int, RT_prt, x, prt_fluxes
@@ -118,6 +139,7 @@ function dual2forms(Tetrs, Edges)
     pos = Vector{vertextype(Edges)}(undef, numcells(Edges))
     dirichlet = boundary(tetrs)
     for (F,Edge) in enumerate(cells(Edges))
+        @show F
         bfs[F] = Vector{Shape{T}}()
 
         pos[F] = cartesian(center(chart(Edges,Edge)))
@@ -162,6 +184,8 @@ function dual2forms(Tetrs, Edges)
                 BEAST.add!(bfs[F],cellid, sh.refid, sh.coeff * x_prt[m])
             end
         end
+
+        # F == 25 && error("stop")
     end
 
     NDLCDBasis(tetrs, bfs, pos)
