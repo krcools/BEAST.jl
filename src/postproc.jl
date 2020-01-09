@@ -17,7 +17,8 @@ function facecurrents(coeffs, basis)
 
 	mesh = geometry(basis)
 	D = dimension(mesh)
-	U = D+1
+	# U = D+1
+	U = 3
 
 	# TODO: express relative to input types
 	PT = SVector{U, T}

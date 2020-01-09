@@ -32,6 +32,8 @@ include("test_rtports.jl")
 include("test_ndjunction.jl")
 include("test_ndspace.jl")
 include("test_restrict.jl")
+include("test_ndlcd_restrict.jl")
+include("test_rt3d.jl")
 
 include("test_gram.jl")
 include("test_vector_gram.jl")

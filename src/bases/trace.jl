@@ -26,11 +26,17 @@ function faces(c)
 end
 
 function faces(c::CompScienceMeshes.Simplex{3,3,0,4,Float64})
+    # [
+    #     simplex(c[2], c[3], c[4]),
+    #     simplex(c[3], c[1], c[4]),
+    #     simplex(c[1], c[2], c[4]),
+    #     simplex(c[2], c[1], c[3])
+    # ]
     [
-        simplex(c[2], c[3], c[4]),
-        simplex(c[3], c[1], c[4]),
-        simplex(c[1], c[2], c[4]),
-        simplex(c[2], c[1], c[3])
+        simplex(c[4],c[3],c[2]),
+        simplex(c[1],c[3],c[4]),
+        simplex(c[1],c[4],c[2]),
+        simplex(c[1],c[2],c[3])
     ]
 end
 
