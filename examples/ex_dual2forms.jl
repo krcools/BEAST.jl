@@ -144,8 +144,6 @@ add!(fn, x1, RT_int)
 Y1 = BEAST.NDLCDBasis(support, [fn], [pos])
 divY1 = divergence(Y1); compress!(divY1)
 
-Y = BEAST.dual2forms(Tetrs, Edges)
-
 
 import PlotlyJS
 function showfn(space,i)
@@ -181,3 +179,6 @@ function showfn(space,i)
     W = collect(values(W))
     PlotlyJS.cone(x=X,y=Y,z=Z,u=U,v=V,w=W)
 end
+
+error("stop")
+Y = BEAST.dual2forms(Tetrs, Edges)

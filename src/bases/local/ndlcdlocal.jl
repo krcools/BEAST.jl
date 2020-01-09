@@ -98,7 +98,7 @@ function restrict(ϕ::NDLCDRefSpace{T}, dom1, dom2) where {T}
         y = ϕ(x)
 
         for j in 1:K
-            Q[j,i] = -dot(y[j].value, m) * A
+            Q[j,i] = dot(y[j].value, m) * A
         end
     end
 

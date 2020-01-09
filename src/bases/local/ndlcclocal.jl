@@ -53,3 +53,36 @@ function curl(ref::NDLCCRefSpace, sh, el)
     sh2 = Shape(sh.cellid, a[sh.refid], sh.coeff)
     return [sh1,sh2]
 end
+
+
+function restrict(ϕ::NDLCCRefSpace{T}, dom1, dom2) where {T}
+    # dom2 is the smaller of the domains
+
+    K = numfunctions(ϕ)
+    D = dimension(dom1)
+
+    @assert K == 6
+    @assert D == 3
+    @assert D == dimension(dom2)
+
+    Q = zeros(T,K,K)
+    for (i,edge) in enumerate(CompScienceMeshes.edges(dom2))
+
+        p = center(edge)
+        c = cartesian(p)
+        A = volume(edge)
+
+        t = tangents(p,1)
+        t = normalize(t)
+        u = carttobary(dom1, c)
+        x = neighborhood(dom1, u)
+
+        y = ϕ(x)
+
+        for j in 1:K
+            Q[j,i] = -dot(y[j].value, t) * A
+        end
+    end
+
+    return Q
+end
