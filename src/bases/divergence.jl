@@ -46,3 +46,19 @@ function curl(x::Space)
     end
     curl(x, geo, crl)
 end
+
+
+function gradient(x::Space)
+    ref = refspace(x)
+    geo = geometry(x)
+    els = elements(geo)
+    crl = similar(x.fns)
+    for (i,fn) in enumerate(x.fns)
+        crl[i] = similar(x.fns[i], 0)
+        for (j,sh) in enumerate(fn)
+            el = els[sh.cellid]
+            append!(crl[i], gradient(ref, sh, el))
+        end
+    end
+    gradient(x, geo, crl)
+end

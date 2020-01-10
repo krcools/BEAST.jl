@@ -66,6 +66,29 @@ function curl(ref::LagrangeRefSpace, sh, el)
     return [sh1, sh2]
 end
 
+function gradient(ref::LagrangeRefSpace{T,1,4}, sh, tet) where {T}
+    this_vert = tet.vertices[sh.refid]
+    # other_verts = deleteat(tet.vertices, sh.refid)
+    # opp_face = simplex(other_verts...)
+    opp_face = faces(tet)[sh.refid]
+    ctr_opp_face = center(opp_face)
+    n = normal(ctr_opp_face)
+    h = -dot(this_vert - cartesian(ctr_opp_face), n)
+    @assert h > 0
+    gradval = -h*n
+    output = Vector{Shape{T}}()
+    for (i,edge) in enumerate(CompScienceMeshes.edges(tet))
+        ctr_edge = center(edge)
+        tgt = tangents(ctr_edge,1)
+        tgt = normalize(tgt)
+        lgt = volume(edge)
+        cff = -lgt * dot(tgt, gradval)
+        isapprox(cff, 0, atol=sqrt(eps(T))) && continue
+        push!(output, Shape(sh.cellid, i, cff))
+    end
+    return output
+end
+
 
 function strace(x::LagrangeRefSpace, cell, localid, face)
 

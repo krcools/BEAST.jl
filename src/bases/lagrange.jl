@@ -441,7 +441,7 @@ function duallagrangec0d1(mesh, mesh2, pred, ::Type{Val{2}})
   LagrangeBasis{1,0,NF}(geometry, fns, pos)
 end
 
-
+gradient(space::LagrangeBasis{1,0}, geo, fns) = NDLCCBasis(geo, fns)
 curl(space::LagrangeBasis{1,0}, geo, fns) = RTBasis(geo, fns)
 
 #
