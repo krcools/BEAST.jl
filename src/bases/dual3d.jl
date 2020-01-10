@@ -190,3 +190,119 @@ function dual2forms(Tetrs, Edges)
 
     NDLCDBasis(tetrs, bfs, pos)
 end
+
+
+function add!(fn::Vector{<:Shape}, x, space)
+    for (m,bf) in enumerate(space.fns)
+        for sh in bf
+            BEAST.add!(fn, sh.cellid, sh.refid, sh.coeff * x[m])
+        end
+    end
+end
+
+function builddual1form(supp, port, dir, x0)
+
+    Id = BEAST.Identity()
+
+    rim = boundary(dir)
+    bnd = boundary(supp)
+    supp_edges = skeleton(supp,1)
+    supp_nodes = skeleton(supp,0)
+    dir_edges = skeleton(dir,1)
+    bnd_edges = skeleton(bnd,1)
+    bnd_nodes = skeleton(bnd,0)
+    prt_nodes = skeleton(port,0)
+
+    srt_rim = sort.(rim)
+    srt_port = sort.(port)
+    srt_dir_edges = sort.(dir_edges)
+    srt_bnd_edges = sort.(bnd_edges)
+    srt_bnd_verts = sort.(bnd_nodes)
+    srt_prt_verts = sort.(prt_nodes)
+
+    int_edges = submesh(supp_edges) do edge
+        sort(edge) in srt_port && return false
+        sort(edge) in srt_rim && return false
+        sort(edge) in srt_dir_edges && return true
+        sort(edge) in srt_bnd_edges && return false
+        return true
+    end
+    @assert length(supp_nodes) - length(supp_edges) +
+        length(skeleton(supp,2)) - length(supp) == 1
+
+    Nd_prt = BEAST.nedelecc3d(supp, port)
+    Nd_int = BEAST.nedelecc3d(supp, int_edges)
+
+    A = assemble(Id, curl(Nd_int), curl(Nd_int))
+    N = nullspace(A)
+    a = -assemble(Id, curl(Nd_int), curl(Nd_prt)) * x0
+    x1 = pinv(A) * a
+
+    int_verts = submesh(supp_nodes) do vert
+        sort(vert) in srt_bnd_verts && return false
+        sort(vert) in srt_prt_verts && return false
+        return true
+    end
+
+    L0_int = lagrangec0d1(supp, int_verts)
+    grad_L0_int = BEAST.gradient(L0_int)
+    @assert numfunctions(grad_L0_int) == numfunctions(L0_int)
+
+    B = assemble(Id, grad_L0_int, Nd_int)
+    b = -assemble(Id, grad_L0_int, Nd_prt) * x0
+    p = (B*N) \ (b-B*x1)
+    x1 = x1 + N*p
+
+    @assert isapprox(A*x1, a, atol=1e-8)
+    @assert isapprox(B*x1, b, atol=1e-8)
+
+    return Nd_int, Nd_prt, x1, x0
+end
+
+function dual1forms(Tetrs, Faces)
+
+    T = coordtype(Tetrs)
+    P = vertextype(Tetrs)
+    S = Shape{T}
+
+    tetrs = CompScienceMeshes.barycentric_refinement(Tetrs)
+    bnd_tetrs = boundary(tetrs)
+    srt_bnd_tetrs = sort.(bnd_tetrs)
+
+    fns = Vector{Vector{S}}()
+    pos = Vector{P}()
+    for Face in Faces
+
+        po = cartesian(center(chart(Faces, Face)))
+        supp1 = submesh(tet -> Face[1] in tet, tetrs.mesh)
+        supp2 = submesh(tet -> Face[2] in tet, tetrs.mesh)
+        supp3 = submesh(tet -> Face[3] in tet, tetrs.mesh)
+
+        supp = CompScienceMeshes.union(supp1, supp2)
+        supp = CompScienceMeshes.union(supp, supp3)
+
+        dir = submesh(face -> sort(face) in srt_bnd_tetrs, boundary(supp))
+
+        port = skeleton(supp1, 1)
+        port = submesh(edge -> sort(edge) in sort.(skeleton(supp2,1)), port)
+        port = submesh(edge -> sort(edge) in sort.(skeleton(supp3,1)), port)
+        @assert 1 ≤ length(port) ≤ 2
+
+        x0 = ones(length(port)) / length(port)
+        for (i,edge) in enumerate(port)
+            tgt = tangents(center(chart(port,edge)),1)
+            dot(normal(chart(Faces,Face)), tgt) < 0 && (x0[i] *= -1)
+        end
+
+        Nd_int, Nd_prt, x_int, x_prt = builddual1form(supp, port, dir, x0)
+
+        fn = Vector{S}()
+        add!(fn, x_prt, Nd_prt)
+        add!(fn, x_int, Nd_int)
+
+        push!(fns, fn)
+        push!(pos, po)
+    end
+
+    NDLCCBasis(tetrs, fns, pos)
+end

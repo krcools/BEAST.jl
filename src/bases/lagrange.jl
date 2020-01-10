@@ -259,7 +259,7 @@ end
 
 
 
-function lagrangec0d1(mesh::Mesh{3,4}, nodes::Mesh{3,2})
+function lagrangec0d1(mesh::Mesh{3,4}, nodes::Mesh{3,1})
 
     T = coordtype(mesh)
     P = vertextype(mesh)
