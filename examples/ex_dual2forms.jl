@@ -33,8 +33,14 @@ cells_Bndry = [sort(c) for c in cells(skeleton(boundary(Tetrs),1))]
 Edges = submesh(skeleton(Tetrs,1)) do Edge
     sort(Edge) in cells_Bndry ? false : true
 end
-Edges = Mesh(vertices(Edges), cells(Edges))
+# Edges = Mesh(vertices(Edges), cells(Edges))
+srt_bnd_Faces = sort.(boundary(Tetrs))
+Faces = submesh(skeleton(Tetrs,2)) do Face
+    !(sort(Face) in srt_bnd_Faces)
+end
+
 @show numcells(Edges)
+@show length(Faces)
 
 # pred = CompScienceMeshes.interior_tpredicate(Tetrs)
 # AllFaces = skeleton(Tetrs,2)
