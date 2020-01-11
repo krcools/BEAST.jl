@@ -192,10 +192,11 @@ function dual2forms(Tetrs, Edges)
 end
 
 
-function add!(fn::Vector{<:Shape}, x, space)
+function addf!(fn::Vector{<:Shape}, x::Vector, space::Space, idcs::Vector{Int})
     for (m,bf) in enumerate(space.fns)
         for sh in bf
-            BEAST.add!(fn, sh.cellid, sh.refid, sh.coeff * x[m])
+            cellid = idcs[sh.cellid]
+            BEAST.add!(fn, cellid, sh.refid, sh.coeff * x[m])
         end
     end
 end
@@ -271,9 +272,21 @@ function dual1forms(Tetrs, Faces)
 
     fns = Vector{Vector{S}}()
     pos = Vector{P}()
-    for Face in Faces
+    for (F,Face) in enumerate(Faces)
+        @show F
 
         po = cartesian(center(chart(Faces, Face)))
+
+        idcs1 = [i for (i,tet) in enumerate(tetrs) if Face[1] in tet]
+        idcs2 = [i for (i,tet) in enumerate(tetrs) if Face[2] in tet]
+        idcs3 = [i for (i,tet) in enumerate(tetrs) if Face[3] in tet]
+        idcs = vcat(idcs1, idcs2, idcs3)
+        # @show idcs
+
+        supp1 = Mesh(vertices(tetrs), cells(tetrs)[idcs1])
+        supp2 = Mesh(vertices(tetrs), cells(tetrs)[idcs1])
+        supp3 = Mesh(vertices(tetrs), cells(tetrs)[idcs1])
+
         supp1 = submesh(tet -> Face[1] in tet, tetrs.mesh)
         supp2 = submesh(tet -> Face[2] in tet, tetrs.mesh)
         supp3 = submesh(tet -> Face[3] in tet, tetrs.mesh)
@@ -295,10 +308,12 @@ function dual1forms(Tetrs, Faces)
         end
 
         Nd_int, Nd_prt, x_int, x_prt = builddual1form(supp, port, dir, x0)
+        # @show norm(x_int)
+        # @show norm(x_prt)
 
         fn = Vector{S}()
-        add!(fn, x_prt, Nd_prt)
-        add!(fn, x_int, Nd_int)
+        addf!(fn, x_prt, Nd_prt, idcs)
+        addf!(fn, x_int, Nd_int, idcs)
 
         push!(fns, fn)
         push!(pos, po)

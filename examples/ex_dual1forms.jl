@@ -26,7 +26,7 @@ function compress!(space)
     end
 end
 
-import PlotlyJS
+import Plotly
 function showfn(space,i)
     geo = geometry(space)
     T = coordtype(geo)
@@ -58,7 +58,7 @@ function showfn(space,i)
     U = collect(values(U))
     V = collect(values(V))
     W = collect(values(W))
-    PlotlyJS.cone(x=X,y=Y,z=Z,u=U,v=V,w=W)
+    Plotly.cone(x=X,y=Y,z=Z,u=U,v=V,w=W)
 end
 
 Tetrs = CompScienceMeshes.tetmeshsphere(1.0, 0.35)
@@ -167,5 +167,7 @@ curlY1 = curl(Y1); compress!(curl(Y1));
 include(joinpath(@__DIR__, "utils/edge_values.jl"))
 EV = edge_values(Y1,1)
 check_edge_values(EV)
+
+error("stop")
 
 Y = BEAST.dual1forms(Tetrs, Faces)
