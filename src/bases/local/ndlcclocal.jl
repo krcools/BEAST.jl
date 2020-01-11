@@ -17,6 +17,10 @@ function (ϕ::NDLCCRefSpace)(ndlc)
     B = [tu tv tw]
     BMT = transpose(inv(B))
 
+    du = SVector{3}(BMT[:,1])
+    dv = SVector{3}(BMT[:,2])
+    dw = SVector{3}(BMT[:,3])
+
     #Choose 1-(0,0,0), 2-(1,0,0), 3-(0,1,0), 4-(0,0,1)
     #Now it is listed as:
     #(1,2) [1-v-w,u,u]  (direction: from 1 to 2)
@@ -26,13 +30,22 @@ function (ϕ::NDLCCRefSpace)(ndlc)
     #(2,4) [-w,0,u]
     #(3,4) [0,-w,v]
 
+    # return SVector((
+    #     (value=(BMT*[-v,u,0])       ,curl=(B*[0,0,2])/j) ,
+    #     (value=(BMT*[-w,0,u])       ,curl=(B*[0,-2,0])/j),
+    #     (value=(BMT*[(w+v-1),-u,-u]),curl=(B*[0,2,-2])/j),
+    #     (value=(BMT*[0,-w,v])       ,curl=(B*[2,0,0])/j) ,
+    #     (value=(BMT*[-v,(u+w-1),-v]),curl=(B*[-2,0,2])/j),
+    #     (value=(BMT*[-w,-w,(u+v-1)]),curl=(B*[2,-2,0])/j)
+    # ))
+
     return SVector((
-        (value=(BMT*[-v,u,0])       ,curl=(B*[0,0,2])/j) ,
-        (value=(BMT*[-w,0,u])       ,curl=(B*[0,-2,0])/j),
-        (value=(BMT*[(w+v-1),-u,-u]),curl=(B*[0,2,-2])/j),
-        (value=(BMT*[0,-w,v])       ,curl=(B*[2,0,0])/j) ,
-        (value=(BMT*[-v,(u+w-1),-v]),curl=(B*[-2,0,2])/j),
-        (value=(BMT*[-w,-w,(u+v-1)]),curl=(B*[2,-2,0])/j)
+        (value=-v*du + u*dv, curl=(2*tw)/j),
+        (value=-w*du + u*dw, curl=(-2*tv)/j),
+        (value=(w+v-1)*du - u*dv - u*dw, curl=(2*tv - 2*tw)/j),
+        (value=-w*dv + v*dw, curl=(2*tu)/j),
+        (value=-v*du + (u+w-1)*dv -v*dw, curl=(-2*tu + 2*tw)/j),
+        (value=-w*du -w*dv + (u+v-1)*dw, curl=(2*tu -2*tv)/j),
     ))
 
 ##    	return SVector((
