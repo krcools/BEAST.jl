@@ -258,7 +258,31 @@ function lagrangec0d1(mesh, vertexlist, ::Type{Val{2}})
 end
 
 
+function lagrangec0d1(mesh, nodes::Mesh{U,1} where {U})
 
+    Conn = connectivity(nodes, mesh, abs)
+    rows = rowvals(Conn)
+    vals = nonzeros(Conn)
+
+    T = coordtype(mesh)
+    P = vertextype(mesh)
+    S = Shape{T}
+
+    fns = Vector{Vector{S}}()
+    pos = Vector{P}()
+    for (i,node) in enumerate(nodes)
+        fn = Vector{S}()
+        for k in nzrange(Conn,i)
+            cellid = rows[k]
+            refid  = vals[k]
+            push!(fn, Shape(cellid, refid, 1.0))
+        end
+        push!(fns,fn)
+        push!(pos,cartesian(center(chart(nodes,node))))
+    end
+
+    LagrangeBasis{1,0,3}(mesh, fns, pos)
+end
 
 
 
