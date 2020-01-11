@@ -13,13 +13,20 @@ function (ϕ::NDLCDRefSpace)(ndlc)
     tv = tangents(ndlc,2)
     tw = tangents(ndlc,3)
 
-    B = [tu tv tw]
+    # B = [tu tv tw]
+
+    # return SVector((
+    #     (value=(2*B*[(u-1),v,w]/j),divergence=(6/j)),
+    #     (value=(2*B*[u,(v-1),w]/j),divergence=(6/j)),
+    #     (value=(2*B*[u,v,(w-1)]/j),divergence=(6/j)),
+    #     (value=(2*B*[u,v,w]/j)    ,divergence=(6/j))
+    # ))
 
     return SVector((
-        (value=(2*B*[(u-1),v,w]/j),divergence=(6/j)),
-        (value=(2*B*[u,(v-1),w]/j),divergence=(6/j)),
-        (value=(2*B*[u,v,(w-1)]/j),divergence=(6/j)),
-        (value=(2*B*[u,v,w]/j)    ,divergence=(6/j))
+        (value=(2*((u-1)*tu + v*tv + w*tw)/j), divergence=(6/j)),
+        (value=(2*(u*tu + (v-1)*tv + w*tw)/j), divergence=(6/j)),
+        (value=(2*(u*tu + v*tv + (w-1)*tw)/j),divergence=(6/j)),
+        (value=(2*(u*tu + v*tv + w*tw)/j)    ,divergence=(6/j))
     ))
 end
 
