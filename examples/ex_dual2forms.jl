@@ -50,9 +50,9 @@ support2 = submesh(tetr -> Edge[2] in tetr, tetrs.mesh)
 # port = submesh(face -> v in face, boundary(support1))
 # port2 = submesh(face -> v in face, boundary(support2))
 port = submesh(face -> sort(face) in sort.(boundary(support2)), boundary(support1))
-for p in port
-    @assert sort(p) in sort.(port2)
-end
+# for p in port
+#     @assert sort(p) in sort.(port2)
+# end
 @show length(port)
 
 support = CompScienceMeshes.union(support1, support2)

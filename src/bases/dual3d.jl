@@ -209,10 +209,10 @@ function builddual1form(supp, port, dir, x0)
     bnd = boundary(supp)
     supp_edges = CompScienceMeshes.skeleton_fast(supp,1)
     supp_nodes = CompScienceMeshes.skeleton_fast(supp,0)
-    dir_edges = skeleton(dir,1)
+    dir_edges = CompScienceMeshes.skeleton_fast(dir,1)
     bnd_edges = CompScienceMeshes.skeleton_fast(bnd,1)
-    bnd_nodes = skeleton(bnd,0)
-    prt_nodes = skeleton(port,0)
+    bnd_nodes = CompScienceMeshes.skeleton_fast(bnd,0)
+    prt_nodes = CompScienceMeshes.skeleton_fast(port,0)
 
     srt_rim = sort.(rim)
     srt_port = sort.(port)
@@ -233,10 +233,12 @@ function builddual1form(supp, port, dir, x0)
     Nd_prt = BEAST.nedelecc3d(supp, port)
     Nd_int = BEAST.nedelecc3d(supp, int_edges)
 
-    A = assemble(Id, curl(Nd_int), curl(Nd_int))
+    curl_Nd_int = curl(Nd_int)
+    A = assemble(Id, curl_Nd_int, curl_Nd_int)
     N = nullspace(A)
     a = -assemble(Id, curl(Nd_int), curl(Nd_prt)) * x0
     x1 = pinv(A) * a
+    # x1 = A \ a
 
     int_verts = submesh(supp_nodes) do vert
         sort(vert) in srt_bnd_verts && return false

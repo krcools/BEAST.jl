@@ -61,7 +61,7 @@ function showfn(space,i)
     Plotly.cone(x=X,y=Y,z=Z,u=U,v=V,w=W)
 end
 
-Tetrs = CompScienceMeshes.tetmeshsphere(1.0, 0.35)
+Tetrs = CompScienceMeshes.tetmeshsphere(1.0, 0.45)
 tetrs = barycentric_refinement(Tetrs)
 
 bnd_Tetrs = boundary(Tetrs)
@@ -72,7 +72,7 @@ srt_bnd_tetrs = sort.(bnd_tetrs)
 Faces = submesh(Face -> !(sort(Face) in srt_bnd_Tetrs), skeleton(Tetrs,2))
 @show length(Faces)
 
-F = 603
+F = 396
 Face = cells(Faces)[F]
 pos = cartesian(center(chart(Faces, Face)))
 
@@ -121,11 +121,13 @@ for (i,edge) in enumerate(port)
     end
 end
 
-A = assemble(Id, curl(Nd_int), curl(Nd_int))
+curl_Nd_int = curl(Nd_int)
+A = assemble(Id, curl_Nd_int, curl_Nd_int)
 N = nullspace(A)
 @show size(N,2)
-a = -assemble(Id, curl(Nd_int), curl(Nd_prt)) * x0
+a = -assemble(Id, curl_Nd_int, curl(Nd_prt)) * x0
 x1 = pinv(A) * a
+# x1 = A \ a
 @show norm(N'*a)
 @show norm(A*x1-a)
 
@@ -172,3 +174,6 @@ error("stop")
 
 Y = BEAST.dual1forms(Tetrs, Faces)
 curlY = curl(Y)
+CC = assemble(Id, curlY, curlY)
+
+Plotly.plot(svdvals(CC))
