@@ -207,10 +207,10 @@ function builddual1form(supp, port, dir, x0)
 
     rim = boundary(dir)
     bnd = boundary(supp)
-    supp_edges = skeleton(supp,1)
-    supp_nodes = skeleton(supp,0)
+    supp_edges = CompScienceMeshes.skeleton_fast(supp,1)
+    supp_nodes = CompScienceMeshes.skeleton_fast(supp,0)
     dir_edges = skeleton(dir,1)
-    bnd_edges = skeleton(bnd,1)
+    bnd_edges = CompScienceMeshes.skeleton_fast(bnd,1)
     bnd_nodes = skeleton(bnd,0)
     prt_nodes = skeleton(port,0)
 
@@ -228,8 +228,7 @@ function builddual1form(supp, port, dir, x0)
         sort(edge) in srt_bnd_edges && return false
         return true
     end
-    @assert length(supp_nodes) - length(supp_edges) +
-        length(skeleton(supp,2)) - length(supp) == 1
+    # @assert length(supp_nodes) - length(supp_edges) + length(skeleton(supp,2)) - length(supp) == 1
 
     Nd_prt = BEAST.nedelecc3d(supp, port)
     Nd_int = BEAST.nedelecc3d(supp, int_edges)
@@ -308,8 +307,8 @@ function dual1forms(Tetrs, Faces)
         end
 
         Nd_int, Nd_prt, x_int, x_prt = builddual1form(supp, port, dir, x0)
-        # @show norm(x_int)
-        # @show norm(x_prt)
+        @show norm(x_int)
+        @show norm(x_prt)
 
         fn = Vector{S}()
         addf!(fn, x_prt, Nd_prt, idcs)

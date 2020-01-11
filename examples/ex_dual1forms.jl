@@ -171,3 +171,4 @@ check_edge_values(EV)
 error("stop")
 
 Y = BEAST.dual1forms(Tetrs, Faces)
+curlY = curl(Y)
