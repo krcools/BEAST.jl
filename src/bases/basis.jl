@@ -224,3 +224,25 @@ function instantiate_charts(geo, num_active_cells, active)
     end
     return elements
 end
+
+
+using SparseArrays
+function Base.:*(space::Space, A::SparseMatrixCSC)
+    fns = similar(space.fns, size(A,2))
+    pos = similar(space.pos, size(A,2))
+    rows = rowvals(A)
+    vals = nonzeros(A)
+    for i in axes(A,2)
+        fns[i] = Shape{scalartype(space)}[]
+        for k in nzrange(A,i)
+            m = rows[k]
+            c = vals[k]
+            for (s,sh) in enumerate(space.fns[m])
+                add!(fns[i], sh.cellid, sh.refid, sh.coeff * c)
+            end
+            pos[i] += space.pos[m]
+        end
+        pos[i] /= length(nzrange(A,i))
+    end
+    return (typeof(space))(space.geo, fns, pos)
+end
