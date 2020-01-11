@@ -16,31 +16,37 @@ function assemble!(biop::LocalOperator, tfs::Space, bfs::Space, store)
         return assemble_local_mixed!(biop, tfs, bfs, store)
     end
 
-    tels, tad = assemblydata(tfs)
-    bels, bad = assemblydata(bfs)
-
-    length(tels) != numcells(geometry(tfs)) && return assemble_local_mixed!(biop, tfs, bfs, store)
-    length(bels) != numcells(geometry(bfs)) && return assemble_local_mixed!(biop, tfs, bfs, store)
+    # tels, tad = assemblydata(tfs)
+    # bels, bad = assemblydata(bfs)
+    #
+    # length(tels) != numcells(geometry(tfs)) && return assemble_local_mixed!(biop, tfs, bfs, store)
+    # length(bels) != numcells(geometry(bfs)) && return assemble_local_mixed!(biop, tfs, bfs, store)
 
     return assemble_local_matched!(biop, tfs, bfs, store)
 end
 
 function assemble_local_matched!(biop::LocalOperator, tfs::Space, bfs::Space, store)
 
-    tels, tad = assemblydata(tfs)
-    bels, bad = assemblydata(bfs)
+    tels, tad, ta2g = assemblydata(tfs)
+    bels, bad, ba2g = assemblydata(bfs)
+
+    bg2a = zeros(Int, length(geometry(bfs)))
+    for (i,j) in enumerate(ba2g) bg2a[j] = i end
 
     trefs = refspace(tfs)
     brefs = refspace(bfs)
 
     qd = quaddata(biop, trefs, brefs, tels, bels)
     for (p,cell) in enumerate(tels)
+        P = ta2g[p]
+        q = bg2a[P]
+        q == 0 && continue
 
         qr = quadrule(biop, trefs, brefs, cell, qd)
         locmat = cellinteractions(biop, trefs, brefs, cell, qr)
 
         for i in 1 : size(locmat, 1), j in 1 : size(locmat, 2)
-            for (m,a) in tad[p,i], (n,b) in bad[p,j]
+            for (m,a) in tad[p,i], (n,b) in bad[q,j]
                 store(a * locmat[i,j] * b, m, n)
 end end end end
 

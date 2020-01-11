@@ -34,6 +34,7 @@ include("test_ndspace.jl")
 include("test_restrict.jl")
 include("test_ndlcd_restrict.jl")
 include("test_rt3d.jl")
+include("test_gradient.jl")
 
 include("test_gram.jl")
 include("test_vector_gram.jl")
@@ -41,6 +42,7 @@ include("test_embedding.jl")
 include("test_laminated.jl")
 
 include("test_assemblerow.jl")
+include("test_local_assembly.jl")
 
 include("test_wiltonints.jl")
 include("test_sauterschwabints.jl")

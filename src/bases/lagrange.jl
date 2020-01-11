@@ -258,28 +258,33 @@ function lagrangec0d1(mesh, vertexlist, ::Type{Val{2}})
 end
 
 
+function lagrangec0d1(mesh, nodes::Mesh{U,1} where {U})
 
-function lagrangec0d1(mesh::Mesh{3,4}, nodes::Mesh{3,1})
+    Conn = connectivity(nodes, mesh, abs)
+    rows = rowvals(Conn)
+    vals = nonzeros(Conn)
 
     T = coordtype(mesh)
     P = vertextype(mesh)
     S = Shape{T}
-    fns = [Vector{S}() for i in 1:numcells(nodes) ]
-    pos = Vector{P}(undef, numcells(nodes))
 
-    D = connectivity(nodes, mesh)
-    rows = rowvals(D)
-    vals = nonzeros(D)
-    for (j,node) in enumerate(cells(nodes))
-        for k in nzrange(D,j)
-            i = rows[k]
-            locid = abs(vals[k])
-            push!(fns[j], S(i, locid, 1.0))
+    fns = Vector{Vector{S}}()
+    pos = Vector{P}()
+    for (i,node) in enumerate(nodes)
+        fn = Vector{S}()
+        for k in nzrange(Conn,i)
+            cellid = rows[k]
+            refid  = vals[k]
+            push!(fn, Shape(cellid, refid, 1.0))
         end
-        pos[j] = cartesian(center(chart(nodes, node)))
+        push!(fns,fn)
+        push!(pos,cartesian(center(chart(nodes,node))))
     end
-    LagrangeBasis{1,0,4}(mesh, fns, pos)
+
+    NF = dimension(mesh) + 1
+    LagrangeBasis{1,0,NF}(mesh, fns, pos)
 end
+
 
 
 duallagrangec0d1(mesh) = duallagrangec0d1(mesh, barycentric_refinement(mesh), x->false, Val{dimension(mesh)+1})

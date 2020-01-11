@@ -3,6 +3,7 @@ using Test
 using CompScienceMeshes
 using BEAST
 using StaticArrays
+using LinearAlgebra
 
 ω = 1.0
 
@@ -12,8 +13,13 @@ l2 = meshsegment(1.0,1/4)
 idcs = BEAST.interior_and_junction_vertices(l1, boundary(l1))
 @test length(idcs) == 3
 
-lag1 = lagrangec0d1(l1, boundary(l1))
+# lag1 = lagrangec0d1(l1, boundary(l1))
+lag1 = lagrangec0d1(l1, skeleton(l1,0))
 lag2 = lagrangecxd0(l2)
+
+# @show numfunctions(lag1)
+@test numfunctions(lag1) == 3
+@test numfunctions(lag2) == 4
 
 id = Identity()
 G = assemble(id, lag1, lag2)
