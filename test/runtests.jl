@@ -35,6 +35,7 @@ include("test_restrict.jl")
 include("test_ndlcd_restrict.jl")
 include("test_rt3d.jl")
 include("test_gradient.jl")
+include("test_mult.jl")
 
 include("test_gram.jl")
 include("test_vector_gram.jl")
