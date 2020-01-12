@@ -30,11 +30,23 @@ Tetrs = CompScienceMeshes.tetmeshsphere(1.0, 0.35)
 tetrs = barycentric_refinement(Tetrs)
 
 cells_Bndry = [sort(c) for c in cells(skeleton(boundary(Tetrs),1))]
+
+Bnd = boundary(Tetrs)
+Neu = Bnd
+Dir = Mesh(vertices(Bnd), CompScienceMeshes.celltype(Bnd)[])
+
+bnd = boundary(tetrs)
+neu = bnd
+dir = Mesh(vertices(bnd), CompScienceMeshes.celltype(bnd)[])
+
+srt_Dir = sort.(Dir)
 Edges = submesh(skeleton(Tetrs,1)) do Edge
-    sort(Edge) in cells_Bndry ? false : true
+    sort(Edge) in srt_Dir && return false
+    return true
 end
-# Edges = Mesh(vertices(Edges), cells(Edges))
-srt_bnd_Faces = sort.(boundary(Tetrs))
+# Edges = skeleton(Tetrs,1)
+# srt_bnd_Faces = sort.(boundary(Tetrs))
+# srt_neu = sort.(neu)
 Faces = submesh(skeleton(Tetrs,2)) do Face
     !(sort(Face) in srt_bnd_Faces)
 end
@@ -78,8 +90,10 @@ cells_prt_edges = [sort(c) for c in skeleton(port,1)]
 cells_dir_edges = [sort(c) for c in skeleton(boundary(tetrs),1)]
 
 bnd_support = boundary(support)
-cells_bnd_tetrs = sort.(boundary(tetrs))
-dir_cap_bnd = submesh(face -> sort(face) in cells_bnd_tetrs, bnd_support)
+# cells_bnd_tetrs = sort.(boundary(tetrs))
+
+srt_dir = sort.(dir)
+dir_cap_bnd = submesh(face -> sort(face) in sort.(dir), bnd_support)
 cells_bnd_dir_cap_bnd = sort.(boundary(dir_cap_bnd))
 
 int_edges = submesh(edges) do edge
@@ -105,8 +119,10 @@ rank(Q3)
 
 cells_bnd_faces = [sort(c) for c in boundary(support)]
 cells_prt_faces = [sort(c) for c in port]
+srt_dir_cap_bnd = sort.(dir_cap_bnd)
 int_faces = submesh(skeleton(support,2)) do face
-    sort(face) in cells_bnd_tetrs && return true
+    # sort(face) in cells_bnd_tetrs && return true
+    sort(face) in srt_dir_cap_bnd && return true
     sort(face) in cells_bnd_faces && return false
     sort(face) in cells_prt_faces && return false
     return true
@@ -119,7 +135,7 @@ RT_int = BEAST.nedelecd3d(support, int_faces)
 for (m,fn) in enumerate(RT_int.fns)
     ct = count(sh -> sh.cellid <= length(support1), fn)
     # @show m, ct
-    @assert ct == 2 || ct == 0
+    @assert 0 ≤ ct ≤ 2
 end
 Q4 = assemble(Id, divergence(RT_int), divergence(RT_int))
 numfunctions(RT_int) - rank(Q4)
