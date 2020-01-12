@@ -39,6 +39,11 @@ Faces = submesh(skeleton(Tetrs,2)) do Face
     !(sort(Face) in srt_bnd_Faces)
 end
 
+srt_bnd_Nodes = sort.(skeleton(boundary(Tetrs),0))
+Nodes = submesh(skeleton(Tetrs,0)) do node
+    !(sort(node) in srt_bnd_Nodes)
+end
+
 @show numcells(Edges)
 @show length(Faces)
 
@@ -46,7 +51,7 @@ end
 # AllFaces = skeleton(Tetrs,2)
 # sm = submesh(pred, AllFaces)
 
-E = 102
+E = 1
 
 Edge = cells(Edges)[E]
 pos = cartesian(center(chart(Edges, Edge)))

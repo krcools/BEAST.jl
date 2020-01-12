@@ -9,14 +9,14 @@ function builddual2form(support, port, dirichlet, prt_fluxes)
     verts = skeleton(support,0)
     @assert length(verts) - length(edges) + length(faces) - length(support) == 1
     bndry = boundary(support)
-    @show numcells(faces)
+    # @show numcells(faces)
 
     cells_bndry = [sort(c) for c in cells(bndry)]
     dirbnd = submesh(dirichlet) do face
         sort(face) in cells(bndry) ? true : false
     end
-    @show numcells(support)
-    @show numcells(dirbnd)
+    # @show numcells(support)
+    # @show numcells(dirbnd)
     # @assert numcells(dirbnd) ≤ 4
 
     bnd_dirbnd = boundary(dirbnd)
@@ -25,7 +25,7 @@ function builddual2form(support, port, dirichlet, prt_fluxes)
     int_edges_dirbnd = submesh(edges_dirbnd) do edge
         sort(edge) in cells(bnd_dirbnd) ? false : true
     end
-    @show numcells(int_edges_dirbnd)
+    # @show numcells(int_edges_dirbnd)
     # @assert numcells(int_edges_dirbnd) ≤ 2
 
     int_pred = interior_tpredicate(support)
@@ -58,7 +58,7 @@ function builddual2form(support, port, dirichlet, prt_fluxes)
     # for edge in cells(int_faces)
     #     println(edge)
     # end
-    @show numcells(int_faces)
+    # @show numcells(int_faces)
     # @show num_faces_on_port
     # @show num_faces_on_dirc
 
@@ -69,16 +69,16 @@ function builddual2form(support, port, dirichlet, prt_fluxes)
     cells_bnd_edges = [sort(c) for c in cells(bnd_edges)]
     cells_prt_edges = [sort(c) for c in cells(prt_edges)]
 
-    @show length(cells_int_edges_dirbnd)
-    @show length(cells_bnd_edges)
-    @show length(cells_prt_edges)
+    # @show length(cells_int_edges_dirbnd)
+    # @show length(cells_bnd_edges)
+    # @show length(cells_prt_edges)
     int_edges = submesh(edges) do edge
         sort(edge) in cells_int_edges_dirbnd && return true
         sort(edge) in cells_bnd_edges && return false
         sort(edge) in cells_prt_edges && return false
         return true
     end
-    @show numcells(int_edges)
+    # @show numcells(int_edges)
 
     RT_int = nedelecd3d(support, int_faces)
     RT_prt = nedelecd3d(support, port)
@@ -91,7 +91,7 @@ function builddual2form(support, port, dirichlet, prt_fluxes)
     Q = assemble(Id, divergence(RT_int), divergence(RT_prt))
     d = -Q * prt_fluxes
 
-    @show numfunctions(L0_int)
+    # @show numfunctions(L0_int)
     # @assert numfunctions(L0_int) in [1,2]
     curl_L0_int = curl(L0_int)
     div_curl_L0_int = divergence(curl_L0_int)
@@ -102,10 +102,10 @@ function builddual2form(support, port, dirichlet, prt_fluxes)
 
     x1 = pinv(D) * d
     N = nullspace(D)
-    @show size(N)
-    @show rank(C)
+    # @show size(N)
+    # @show rank(C)
     @assert size(N,2) == rank(C)
-    @show size(C)
+    # @show size(C)
     # @assert rank(C) == size(C,1)
     p = (C*N) \ (c - C*x1)
     x = x1 + N*p
