@@ -54,3 +54,21 @@ r = neighborhood(tri, [1/3, 1/3])
 xp = n × x(p)[j].value
 yr = y(r)[i].value
 @test xp ≈ yr * Q[i,j]
+
+
+x = BEAST.NDLCCRefSpace{Float64}()
+y = BEAST.RTRefSpace{Float64}()
+q = 3
+fc = BEAST.faces(tet)[q]
+Q = BEAST.ttrace(x, tet, q, fc)
+
+nbdi = center(fc)
+nbdj = neighborhood(tet, carttobary(tet, cartesian(nbdi)))
+
+xvals = x(nbdj)
+yvals = y(nbdi)
+
+for j in 1:6
+    trc = sum(Q[i,j]*yvals[i].value for i in 1:3)
+    @test isapprox(trc, normal(fc) × xvals[j].value, atol=1e-4)
+end

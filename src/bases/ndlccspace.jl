@@ -51,3 +51,5 @@ function nedelecc3d(mesh)
 end
 
 curl(space::NDLCCBasis, geo, fns) = NDLCDBasis(geo, fns, space.pos)
+
+ttrace(X::NDLCCBasis, geo, fns) = RTBasis(geo, fns, deepcopy(X.pos))
