@@ -106,6 +106,9 @@ function ttrace(x::NDLCCRefSpace, el, q, fc)
     # q: the local index of the face of el on which we compute the trace
     # fc: the chart on which we compute the trace
 
+    el_ctr = cartesian(center(el))
+    fc_ctr = cartesian(center(fc))
+
     T = scalartype(x)
     y = BEAST.RTRefSpace{T}()
     t = zeros(scalartype(x),3,6)
@@ -119,8 +122,9 @@ function ttrace(x::NDLCCRefSpace, el, q, fc)
             tgt = -tangents(nbdi,1)
             nrm = normal(fc)
             bnr = cross(normalize(tgt), nrm)
-            @assert dot(bnr, cartesian(nbdi)-cartesian(center(fc))) > 0
+            @assert dot(bnr, cartesian(nbdi)-fc_ctr) > 0
             @assert norm(bnr) ≈ 1
+            dot(nrm, fc_ctr - el_ctr) < 0 && (nrm = -nrm)
             t[i,j] = dot(bnr, nrm × xval) * volume(edgei)
         end
     end

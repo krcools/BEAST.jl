@@ -12,8 +12,12 @@ abstract type LocalOperator <: Operator end
 
 function assemble!(biop::LocalOperator, tfs::Space, bfs::Space, store)
 
-    if geometry(tfs) != geometry(bfs)
-        return assemble_local_mixed!(biop, tfs, bfs, store)
+    if geometry(tfs) == geometry(bfs)
+        return assemble_local_matched!(biop, tfs, bfs, store)
+    end
+
+    if CompScienceMeshes.refines(geometry(tfs), geometry(bfs))
+        return assemble_local_refines!(biop, tfs, bfs, store)
     end
 
     # tels, tad = assemblydata(tfs)
@@ -22,7 +26,7 @@ function assemble!(biop::LocalOperator, tfs::Space, bfs::Space, store)
     # length(tels) != numcells(geometry(tfs)) && return assemble_local_mixed!(biop, tfs, bfs, store)
     # length(bels) != numcells(geometry(bfs)) && return assemble_local_mixed!(biop, tfs, bfs, store)
 
-    return assemble_local_matched!(biop, tfs, bfs, store)
+    return assemble_local_mixed!(biop, tfs, bfs, store)
 end
 
 function assemble_local_matched!(biop::LocalOperator, tfs::Space, bfs::Space, store)
@@ -49,6 +53,86 @@ function assemble_local_matched!(biop::LocalOperator, tfs::Space, bfs::Space, st
             for (m,a) in tad[p,i], (n,b) in bad[q,j]
                 store(a * locmat[i,j] * b, m, n)
 end end end end
+
+
+function assemble_local_refines!(biop::LocalOperator, tfs::Space, bfs::Space, store)
+
+    println("Using 'refines' algorithm for local assembly:")
+
+    # tol = sqrt(eps(Float64))
+    tgeo = geometry(tfs)
+    bgeo = geometry(bfs)
+    @assert CompScienceMeshes.refines(tgeo, bgeo)
+
+    trefs = refspace(tfs)
+    brefs = refspace(bfs)
+
+    tels, tad, ta2g = assemblydata(tfs)
+    bels, bad, ba2g = assemblydata(bfs)
+
+    bg2a = zeros(Int, length(geometry(bfs)))
+    for (i,j) in enumerate(ba2g) bg2a[j] = i end
+
+    qd = quaddata(biop, trefs, brefs, tels, bels)
+
+    # store the bcells in an octree
+    # tree = elementstree(bels)
+
+    print("dots out of 10: ")
+    todo, done, pctg = length(tels), 0, 0
+    for (p,tcell) in enumerate(tels)
+
+        P = ta2g[p]
+        Q = CompScienceMeshes.parent(tgeo, P)
+        q = bg2a[Q]
+
+        # tc, ts = boundingbox(tcell.vertices)
+        # pred = (c,s) -> boxesoverlap(c,s,tc,ts)
+
+        # for box in boxes(tree, pred)
+        #     for q in box
+        bcell = bels[q]
+        @assert overlap(tcell, bcell)
+
+        # if overlap(tcell, bcell)
+
+        isct = intersection(tcell, bcell)
+        for cell in isct
+            # volume(cell) < tol && continue
+
+            P = restrict(brefs, bcell, cell)
+            Q = restrict(trefs, tcell, cell)
+
+            qr = quadrule(biop, trefs, brefs, cell, qd)
+            zlocal = cellinteractions(biop, trefs, brefs, cell, qr)
+            zlocal = Q * zlocal * P'
+
+            for i in 1 : numfunctions(trefs)
+                for j in 1 : numfunctions(brefs)
+                    for (m,a) in tad[p,i]
+                        for (n,b) in bad[q,j]
+                            store(a * zlocal[i,j] * b, m, n)
+                        end # next basis function this cell supports
+                    end # next test function this cell supports
+                end # next refshape on basis side
+            end # next refshape on test side
+
+        end # next cell in intersection
+        # end # if overlap
+        #     end # next cell in the basis geometry
+        # end # next box in the octree
+
+        done += 1
+        new_pctg = round(Int, done / todo * 100)
+        if new_pctg > pctg + 9
+            print(".")
+            pctg = new_pctg
+        end
+    end # next cell in the test geometry
+
+    println("")
+
+end
 
 function assemble_local_matched!(biop::LocalOperator, tfs::subdBasis, bfs::subdBasis, store)
 

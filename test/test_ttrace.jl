@@ -2,6 +2,7 @@ using CompScienceMeshes
 using BEAST
 using LinearAlgebra
 using Test
+using StaticArrays
 
 o, x, y, z = euclidianbasis(3)
 
@@ -58,17 +59,67 @@ yr = y(r)[i].value
 
 x = BEAST.NDLCCRefSpace{Float64}()
 y = BEAST.RTRefSpace{Float64}()
-q = 3
-fc = BEAST.faces(tet)[q]
-Q = BEAST.ttrace(x, tet, q, fc)
+for q in 1:4
+    q = 3
+    fc = BEAST.faces(tet)[q]
+    Q = BEAST.ttrace(x, tet, q, fc)
 
-nbdi = center(fc)
+    nbdi = CompScienceMeshes.center(fc)
+    nbdj = neighborhood(tet, carttobary(tet, cartesian(nbdi)))
+
+    xvals = x(nbdj)
+    yvals = y(nbdi)
+
+    for j in 1:6
+        trc = sum(Q[i,j]*yvals[i].value for i in 1:3)
+        @test isapprox(trc, normal(fc) × xvals[j].value, atol=1e-4)
+    end
+end
+
+# test the case where intrinsic and extrinsic orientations differ
+o, x, y, z = euclidianbasis(3)
+fc = simplex(z,o,y)
+x = BEAST.NDLCCRefSpace{Float64}()
+y = BEAST.RTRefSpace{Float64}()
+Q = BEAST.ttrace(x, tet, 3000, fc)
+
+nbdi = CompScienceMeshes.center(fc)
 nbdj = neighborhood(tet, carttobary(tet, cartesian(nbdi)))
+
+@test cartesian(nbdi) ≈ cartesian(nbdj)
 
 xvals = x(nbdj)
 yvals = y(nbdi)
 
 for j in 1:6
     trc = sum(Q[i,j]*yvals[i].value for i in 1:3)
-    @test isapprox(trc, normal(fc) × xvals[j].value, atol=1e-4)
+    @test isapprox(trc, -normal(fc) × xvals[j].value, atol=1e-4)
 end
+
+
+o, x, y, z = euclidianbasis(3)
+m = Mesh([x,y,z,o], [@SVector[1,2,3,4]])
+
+m1 = skeleton(m,1)
+X = BEAST.nedelecc3d(m, m1)
+@test numfunctions(X) == 6
+
+m2 = skeleton(m,2)
+Y = BEAST.ttrace(X,m2)
+@test numfunctions(Y) == 6
+
+pa = Y.fns[1][1].cellid
+pb = Y.fns[1][2].cellid
+
+tria = chart(m2, cells(m2)[pa])
+trib = chart(m2, cells(m2)[pb])
+
+ra = Y.fns[1][1].refid
+rb = Y.fns[1][2].refid
+
+ctra = cartesian(CompScienceMeshes.center(CompScienceMeshes.edges(tria)[ra]))
+ctrb = cartesian(CompScienceMeshes.center(CompScienceMeshes.edges(trib)[rb]))
+@test ctra ≈ ctrb
+# tri1 = chart(m, cells(m)[Y.fns[1][1].cellid])
+
+# ctr1 = cartesian(center(CompScienceMeshes.edges(tri)[]))
