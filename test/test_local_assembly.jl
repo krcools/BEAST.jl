@@ -28,3 +28,14 @@ Q2, st2 = BEAST.allocatestorage(Id, L0, Lx, Val{:bandedstorage}, BEAST.LongDelay
 BEAST.assemble_local_mixed!(Id, L0, Lx, st2)
 
 @test isapprox(Q1, Q2, atol=1e-8)
+
+
+RT = raviartthomas(m)
+BC = buffachristiansen(m)
+
+Q1, st1 = BEAST.allocatestorage(Id, BC, RT, Val{:bandedstorage}, BEAST.LongDelays{:ignore})
+BEAST.assemble_local_refines!(Id, BC, RT, st1)
+
+Q2, st2 = BEAST.allocatestorage(Id, BC, RT, Val{:bandedstorage}, BEAST.LongDelays{:ignore})
+BEAST.assemble_local_mixed!(Id, BC, RT, st2)
+@test isapprox(Q1, Q2, atol=1e-8)
