@@ -1,7 +1,47 @@
 using CompScienceMeshes
 using BEAST
 
-tetrs = CompScienceMeshes.tetmeshsphere(1.0, 0.10)
+using SparseArrays
+function isdivconforming(space)
+
+    geo = geometry(space)
+    mesh = geo
+
+    edges = skeleton(mesh,1)
+    D = connectivity(edges, mesh, abs)
+    rows = rowvals(D)
+    vals = nonzeros(D)
+
+    Flux = zeros(Float64, numcells(mesh),3)
+    TotalFlux = zeros(Float64, numcells(edges), numfunctions(space))
+
+    for i in 1 : numfunctions(space)
+
+        fill!(Flux, 0)
+        bfs = BEAST.basisfunction(space,i)
+        for bf in bfs
+            c = bf.cellid
+            e = bf.refid
+            x = bf.coeff
+            Flux[c,e] += x
+        end
+
+        for E in 1 : numcells(edges)
+            for j in nzrange(D,E)
+                F = rows[j]
+                e = vals[j]
+                @assert 1 <= e <= 3
+                TotalFlux[E,i] += Flux[F,e]
+            end
+        end
+    end
+
+    I = findall(abs.(TotalFlux) .> 1e-6)
+    @show length(I)
+    return TotalFlux, I
+end
+
+tetrs = CompScienceMeshes.tetmeshsphere(1.0, 0.15)
 @show numcells(tetrs)
 
 bndry = boundary(tetrs)
@@ -25,7 +65,8 @@ A2 = assemble(Id, X, X)
 A = A1 - A2
 
 using LinearAlgebra
-f = BEAST.ScalarTrace(x -> point(1,0,0) * exp(-norm(x)^2/4))
+# f = BEAST.ScalarTrace(x -> point(1,0,0) * exp(-norm(x)^2/4))
+f = BEAST.ScalarTrace(x -> point(1,0,0))
 b = assemble(f, X)
 
 u = A \ b
@@ -68,6 +109,37 @@ o, x, y, z = euclidianbasis(3)
 G = boundary(tetrs)
 Z = BEAST.ttrace(curl(X), G)
 
-fcr, geo = facecurrents(u, Z)
-import PlotlyJS
-PlotlyJS.plot(patch(geo, norm.(fcr)))
+# fcr, geo = facecurrents(u, Z)
+import Plotly
+# Plotly.plot(patch(geo, norm.(fcr)))
+
+Dir = Mesh(vertices(tetrs), CompScienceMeshes.celltype(G)[])
+# error("stop")
+Xplus = BEAST.nedelecc3d(tetrs, skeleton(tetrs,1))
+
+bnd_tetrs = boundary(tetrs)
+ttXplus = BEAST.ttrace(Xplus, bnd_tetrs)
+TF, Idcs = isdivconforming(ttXplus)
+@show length(Idcs)
+
+# error("stop")
+Q = BEAST.dual2forms(tetrs, skeleton(tetrs,1), Dir)
+
+
+
+QXplus = assemble(Id, Q, Xplus)
+curlX = curl(X)
+QcurlX = assemble(Id, Q, curlX)
+
+v = QXplus \ (QcurlX * u)
+fcr1, geo1 = facecurrents(v, BEAST.ttrace(Xplus, bnd_tetrs));
+fcr2, geo2 = facecurrents(u, BEAST.ttrace(curl(X), bnd_tetrs));
+
+# tetrs1 = skeleton(tetrs,1)
+# tetrs2 = skeleton(tetrs,2)
+# ttXplus = BEAST.ttrace(Xplus, bnd_tetrs)
+#
+# @assert dimension(geometry(ttXplus)) == 2
+# length(geometry(ttXplus)) == length(tetrs2)
+#
+# Conn = connectivity(tetrs1, tetrs2)

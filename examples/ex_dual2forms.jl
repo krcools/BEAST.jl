@@ -47,9 +47,9 @@ end
 # Edges = skeleton(Tetrs,1)
 # srt_bnd_Faces = sort.(boundary(Tetrs))
 # srt_neu = sort.(neu)
-Faces = submesh(skeleton(Tetrs,2)) do Face
-    !(sort(Face) in srt_bnd_Faces)
-end
+# Faces = submesh(skeleton(Tetrs,2)) do Face
+#     !(sort(Face) in srt_bnd_Faces)
+# end
 
 srt_bnd_Nodes = sort.(skeleton(boundary(Tetrs),0))
 Nodes = submesh(skeleton(Tetrs,0)) do node
@@ -57,7 +57,7 @@ Nodes = submesh(skeleton(Tetrs,0)) do node
 end
 
 @show numcells(Edges)
-@show length(Faces)
+# @show length(Faces)
 
 # pred = CompScienceMeshes.interior_tpredicate(Tetrs)
 # AllFaces = skeleton(Tetrs,2)
@@ -66,7 +66,7 @@ end
 E = 1
 
 Edge = cells(Edges)[E]
-pos = cartesian(center(chart(Edges, Edge)))
+pos = cartesian(CompScienceMeshes.center(chart(Edges, Edge)))
 # v = argmin(norm.(vertices(tetrs) .- Ref(pos)))
 support1 = submesh(tetr -> Edge[1] in tetr, tetrs.mesh)
 support2 = submesh(tetr -> Edge[2] in tetr, tetrs.mesh)
@@ -173,7 +173,7 @@ Y1 = BEAST.NDLCDBasis(support, [fn], [pos])
 divY1 = divergence(Y1); compress!(divY1)
 
 
-import PlotlyJS
+import Plotly
 function showfn(space,i)
     geo = geometry(space)
     T = coordtype(geo)
@@ -185,7 +185,7 @@ function showfn(space,i)
     W = Dict{Int,T}()
     for sh in space.fns[i]
         chrt = chart(geo, cells(geo)[sh.cellid])
-        nbd = center(chrt)
+        nbd = CompScienceMeshes.center(chrt)
         vals = refspace(space)(nbd)
         x,y,z = cartesian(nbd)
         # @show vals[sh.refid].value
@@ -205,8 +205,14 @@ function showfn(space,i)
     U = collect(values(U))
     V = collect(values(V))
     W = collect(values(W))
-    PlotlyJS.cone(x=X,y=Y,z=Z,u=U,v=V,w=W)
+    Plotly.cone(x=X,y=Y,z=Z,u=U,v=V,w=W)
 end
 
 error("stop")
-Y = BEAST.dual2forms(Tetrs, Edges)
+Dir =  Mesh(vertices(Tetrs), CompScienceMeshes.celltype(int_faces)[])
+error()
+
+tetrs, bnd, v2t, v2n = BEAST.dual2forms_init(Tetrs)
+Y = BEAST.dual2forms_body(Tetrs, Edges[collect(1:10)], Dir, tetrs, bnd, v2t, v2n)
+
+Y = BEAST.dual2forms(Tetrs, Edges, Dir)
