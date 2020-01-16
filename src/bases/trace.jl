@@ -209,12 +209,14 @@ currently not working!
 function ttrace(X::Space, γ)
 
     x = refspace(X)
-    on_target = overlap_gpredicate(γ)
-
     E, ad = assemblydata(X)
-
     igeo = geometry(X)
+
     ogeo = skeleton(igeo, dimension(γ))
+    on_target = overlap_gpredicate(γ)
+    ogeo = submesh(ogeo) do face
+        on_target(chart(ogeo, face))
+    end
 
     D = copy(transpose(connectivity(ogeo, igeo, abs)))
     rows, vals = rowvals(D), nonzeros(D)
