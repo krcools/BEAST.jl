@@ -1,5 +1,6 @@
 using CompScienceMeshes
 using BEAST
+using Makeitso
 
 using SparseArrays
 function isdivconforming(space)
@@ -123,8 +124,8 @@ TF, Idcs = isdivconforming(ttXplus)
 @show length(Idcs)
 
 # error("stop")
-Q = BEAST.dual2forms(tetrs, skeleton(tetrs,1), Dir)
-
+@target Q ()->BEAST.dual2forms(tetrs, skeleton(tetrs,1), Dir)
+Q = @make Q
 
 
 QXplus = assemble(Id, Q, Xplus)
