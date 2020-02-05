@@ -104,7 +104,8 @@ m1 = skeleton(m,1)
 X = BEAST.nedelecc3d(m, m1)
 @test numfunctions(X) == 6
 
-m2 = skeleton(m,2)
+# m2 = skeleton(m,2)
+m2 = boundary(m)
 Y = BEAST.ttrace(X,m2)
 @test numfunctions(Y) == 6
 

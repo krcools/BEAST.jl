@@ -211,8 +211,10 @@ function ttrace(X::Space, γ)
     x = refspace(X)
     E, ad = assemblydata(X)
     igeo = geometry(X)
+    @assert dimension(γ) == dimension(igeo)-1
 
-    ogeo = skeleton(igeo, dimension(γ))
+    # ogeo = skeleton(igeo, dimension(γ))
+    ogeo = boundary(igeo)
     on_target = overlap_gpredicate(γ)
     ogeo = submesh(ogeo) do face
         on_target(chart(ogeo, face))
