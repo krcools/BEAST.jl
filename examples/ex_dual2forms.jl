@@ -26,7 +26,7 @@ function compress!(space)
     end
 end
 
-Tetrs = CompScienceMeshes.tetmeshsphere(1.0, 0.35)
+Tetrs = CompScienceMeshes.tetmeshsphere(1.0, 0.15)
 tetrs = barycentric_refinement(Tetrs)
 
 cells_Bndry = [sort(c) for c in cells(skeleton(boundary(Tetrs),1))]
@@ -208,11 +208,12 @@ function showfn(space,i)
     Plotly.cone(x=X,y=Y,z=Z,u=U,v=V,w=W)
 end
 
-error("stop")
+# error("stop")
 Dir =  Mesh(vertices(Tetrs), CompScienceMeshes.celltype(int_faces)[])
-error()
+# error()
 
 tetrs, bnd, v2t, v2n = BEAST.dual2forms_init(Tetrs)
 Y = BEAST.dual2forms_body(Tetrs, Edges[collect(1:10)], Dir, tetrs, bnd, v2t, v2n)
 
-Y = BEAST.dual2forms(Tetrs, Edges, Dir)
+# Y = BEAST.dual2forms(Tetrs, Edges, Dir)
+nothing
