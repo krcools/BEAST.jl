@@ -1,5 +1,16 @@
 using LinearAlgebra
 
+
+function addf!(fn::Vector{<:Shape}, x::Vector, space::Space, idcs::Vector{Int})
+    for (m,bf) in enumerate(space.fns)
+        for sh in bf
+            cellid = idcs[sh.cellid]
+            BEAST.add!(fn, cellid, sh.refid, sh.coeff * x[m])
+        end
+    end
+end
+
+
 function builddual2form(support, port, dirichlet, prt_fluxes)
 
     # println()
@@ -66,11 +77,17 @@ function builddual2form(support, port, dirichlet, prt_fluxes)
     C = assemble(Id, curl_L0_int, RT_int)
     c = real(assemble(Id, curl_L0_int, RT_prt)) * prt_fluxes
 
-    x1 = pinv(D) * d
-    N = nullspace(D)
-    @assert size(N,2) == rank(C)
-    p = (C*N) \ (c - C*x1)
-    x = x1 + N*p
+    # x1 = pinv(D) * d
+    # N = nullspace(D)
+    # @assert size(N,2) == rank(C)
+    # p = (C*N) \ (c - C*x1)
+    # x = x1 + N*p
+
+    T = eltype(D)
+    nz = length(c)
+    QQ = [D C'; C zeros(T,nz,nz)]
+    qq = [d;c]
+    x = (QQ \ qq)[1:end-nz]
 
     if !isapprox(C*x, c, atol=1e-8) || !isapprox(D*x, d, atol=1e-6)
         @show norm(D*x-d)
@@ -140,9 +157,6 @@ function dual2forms_body(Tetrs, Edges, Dir, tetrs, bnd, v2t, v2n)
         port = submesh(face -> sort(face) in set_bnd_patch2, bnd_patch1)
 
         patch = CompScienceMeshes.union(patch1, patch2)
-        # @show numcells(patch_bnd)
-        # @show numcells(patch)
-        # @show numcells(port)
 
         prt_fluxes = ones(T, numcells(port)) / numcells(port)
         tgt = vertices(Edges)[Edge[1]] - vertices(Edges)[Edge[2]]
@@ -152,23 +166,9 @@ function dual2forms_body(Tetrs, Edges, Dir, tetrs, bnd, v2t, v2n)
         end
         RT_int, RT_prt, x_int, x_prt = builddual2form(patch, port, dirichlet, prt_fluxes)
 
-        # @show norm(x_int)
-        # @show norm(x_prt)
-
-        ptch_idcs = vcat(ptch_idcs1, ptch_idcs2)
-        for (m,bf) in enumerate(RT_int.fns)
-            for sh in bf
-                cellid = ptch_idcs[sh.cellid]
-                BEAST.add!(bfs[F], cellid, sh.refid, sh.coeff * x_int[m])
-            end
-        end
-
-        for (m,bf) in enumerate(RT_prt.fns)
-            for sh in bf
-                cellid = ptch_idcs[sh.cellid]
-                BEAST.add!(bfs[F],cellid, sh.refid, sh.coeff * x_prt[m])
-            end
-        end
+        ptch_idcs = [ptch_idcs1; ptch_idcs2]
+        addf!(bfs[F], x_int, RT_int, ptch_idcs)
+        addf!(bfs[F], x_prt, RT_prt, ptch_idcs)
 
     end
 
@@ -176,14 +176,7 @@ function dual2forms_body(Tetrs, Edges, Dir, tetrs, bnd, v2t, v2n)
 end
 
 
-function addf!(fn::Vector{<:Shape}, x::Vector, space::Space, idcs::Vector{Int})
-    for (m,bf) in enumerate(space.fns)
-        for sh in bf
-            cellid = idcs[sh.cellid]
-            BEAST.add!(fn, cellid, sh.refid, sh.coeff * x[m])
-        end
-    end
-end
+
 
 function builddual1form(supp, port, dir, x0)
 
