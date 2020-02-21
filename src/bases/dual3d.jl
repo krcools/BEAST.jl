@@ -10,10 +10,15 @@ function addf!(fn::Vector{<:Shape}, x::Vector, space::Space, idcs::Vector{Int})
     end
 end
 
+function Base.in(mesh::CompScienceMeshes.AbstractMesh)
+    cells_mesh = sort.(mesh)
+    function f(cell)
+        sort(cell) in cells_mesh
+    end
+end
+
 
 function builddual2form(support, port, dirichlet, prt_fluxes)
-
-    # println()
 
     faces = CompScienceMeshes.skeleton_fast(support,2)
     edges = CompScienceMeshes.skeleton_fast(support,1)
@@ -77,12 +82,6 @@ function builddual2form(support, port, dirichlet, prt_fluxes)
     C = assemble(Id, curl_L0_int, RT_int)
     c = real(assemble(Id, curl_L0_int, RT_prt)) * prt_fluxes
 
-    # x1 = pinv(D) * d
-    # N = nullspace(D)
-    # @assert size(N,2) == rank(C)
-    # p = (C*N) \ (c - C*x1)
-    # x = x1 + N*p
-
     T = eltype(D)
     nz = length(c)
     QQ = [D C'; C zeros(T,nz,nz)]
@@ -96,11 +95,6 @@ function builddual2form(support, port, dirichlet, prt_fluxes)
         @show size(C,1)
         error("error")
     end
-
-    # if rank(C) != size(C,1)
-    #     @show rank(C)
-    #     @show size(C)
-    # end
 
     return RT_int, RT_prt, x, prt_fluxes
 
@@ -124,18 +118,17 @@ end
 
 function dual2forms_body(Tetrs, Edges, Dir, tetrs, bnd, v2t, v2n)
 
-
     T = coordtype(Tetrs)
     bfs = Vector{Vector{Shape{T}}}(undef, numcells(Edges))
     pos = Vector{vertextype(Edges)}(undef, numcells(Edges))
-    # dirichlet = boundary(tetrs)
+
     gpred = CompScienceMeshes.overlap_gpredicate(Dir)
     dirichlet = submesh(bnd) do face
         gpred(chart(bnd,face))
     end
-    # @show numcells(dirichlet)
+
     for (F,Edge) in enumerate(cells(Edges))
-        # @show F
+
         println("Constructing dual 2-forms: $F out of $(length(Edges)).")
         bfs[F] = Vector{Shape{T}}()
 
@@ -147,16 +140,13 @@ function dual2forms_body(Tetrs, Edges, Dir, tetrs, bnd, v2t, v2n)
 
         patch1 = Mesh(vertices(tetrs), cells(tetrs)[ptch_idcs1])
         patch2 = Mesh(vertices(tetrs), cells(tetrs)[ptch_idcs2])
+        patch = CompScienceMeshes.union(patch1, patch2)
+
         patch_bnd = boundary(patch1)
 
         bnd_patch1 = boundary(patch1)
         bnd_patch2 = boundary(patch2)
-
-        set_bnd_patch2 = Set(sort.(bnd_patch2))
-
-        port = submesh(face -> sort(face) in set_bnd_patch2, bnd_patch1)
-
-        patch = CompScienceMeshes.union(patch1, patch2)
+        port = submesh(in(bnd_patch2), bnd_patch1)
 
         prt_fluxes = ones(T, numcells(port)) / numcells(port)
         tgt = vertices(Edges)[Edge[1]] - vertices(Edges)[Edge[2]]
@@ -164,11 +154,22 @@ function dual2forms_body(Tetrs, Edges, Dir, tetrs, bnd, v2t, v2n)
             chrt = chart(port, face)
             prt_fluxes[i] *= sign(dot(normal(chrt), tgt))
         end
-        RT_int, RT_prt, x_int, x_prt = builddual2form(patch, port, dirichlet, prt_fluxes)
 
-        ptch_idcs = [ptch_idcs1; ptch_idcs2]
-        addf!(bfs[F], x_int, RT_int, ptch_idcs)
-        addf!(bfs[F], x_prt, RT_prt, ptch_idcs)
+        # RT_int, RT_prt, x_int, x_prt = builddual2form(patch, port, dirichlet, prt_fluxes)
+        # ptch_idcs = [ptch_idcs1; ptch_idcs2]
+        # addf!(bfs[F], x_int, RT_int, ptch_idcs)
+        # addf!(bfs[F], x_prt, RT_prt, ptch_idcs)
+
+        RT1_int, RT1_prt, x1_int, x_prt = builddual2form(
+            patch1, port, dirichlet, +prt_fluxes)
+        RT2_int, RT2_prt, x2_int, x_prt = builddual2form(
+            patch2, port, dirichlet, prt_fluxes)
+
+        addf!(bfs[F], x1_int, RT1_int, ptch_idcs1)
+        addf!(bfs[F], +x_prt, RT1_prt, ptch_idcs1)
+
+        addf!(bfs[F], x2_int, RT2_int, ptch_idcs2)
+        addf!(bfs[F], x_prt, RT2_prt, ptch_idcs2)
 
     end
 
