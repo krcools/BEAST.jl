@@ -66,6 +66,73 @@ function showfn(space,i)
     Plotly.cone(x=X,y=Y,z=Z,u=U,v=V,w=W)
 end
 
+function extend_edge_to_face(supp, dirichlet, x_prt, port_edges)
+    bnd_supp = boundary(supp)
+    supp_edges = CompScienceMeshes.skeleton_fast(supp, 1)
+    supp_nodes = CompScienceMeshes.skeleton_fast(supp, 0)
+
+    dir_compl_edges = submesh(!in(dirichlet), bnd_supp)
+    dir_compl_nodes = CompScienceMeshes.skeleton_fast(dir_compl_edges, 0)
+
+    int_edges = submesh(!in(dir_compl_edges), supp_edges)
+    int_nodes = submesh(!in(dir_compl_nodes), supp_nodes)
+
+    Nd_prt = BEAST.nedelec(supp, port_edges)
+    Nd_int = BEAST.nedelec(supp, int_edges)
+    Lg_int = BEAST.lagrangec0d1(supp, int_nodes)
+
+    curl_Nd_prt = divergence(n × Nd_prt)
+    curl_Nd_int = divergence(n × Nd_int)
+    grad_Lg_int = n × curl(Lg_int)
+
+    A = assemble(Id, curl_Nd_int, curl_Nd_int)
+    B = assemble(Id, grad_Lg_int, Nd_int)
+
+    a = -assemble(Id, curl_Nd_int, curl_Nd_prt) * x_prt
+    b = -assemble(Id, grad_Lg_int, Nd_prt) * x_prt
+
+    Z = zeros(eltype(b), length(b), length(b))
+    u = [A B'; B Z] \ [a;b]
+    x_int = u[1:end-length(b)]
+
+    return x_int, int_edges, Nd_int
+end
+
+
+
+function extend_face_to_tetr(supp, dirichlet, x_prt, port_edges)
+    bnd_supp = boundary(supp)
+    supp_edges = CompScienceMeshes.skeleton_fast(supp, 1)
+    supp_nodes = CompScienceMeshes.skeleton_fast(supp, 0)
+
+    dir_compl_faces = submesh(!in(dirichlet), bnd_supp)
+    dir_compl_edges = CompScienceMeshes.skeleton_fast(dir_compl_faces, 1)
+    dir_compl_nodes = CompScienceMeshes.skeleton_fast(dir_compl_faces, 0)
+
+    int_edges = submesh(!in(dir_compl_edges), supp_edges)
+    int_nodes = submesh(!in(dir_compl_nodes), supp_nodes)
+
+    Nd_prt = BEAST.nedelecc3d(supp, port_edges)
+    Nd_int = BEAST.nedelecc3d(supp, int_edges)
+    Lg_int = BEAST.lagrangec0d1(supp, int_nodes)
+
+    curl_Nd_prt = curl(Nd_prt)
+    curl_Nd_int = curl(Nd_int)
+    grad_Lg_int = BEAST.gradient(Lg_int)
+
+    A = assemble(Id, curl_Nd_int, curl_Nd_int)
+    B = assemble(Id, grad_Lg_int, Nd_int)
+
+    a = -assemble(Id, curl_Nd_int, curl_Nd_prt) * x_prt
+    b = -assemble(Id, grad_Lg_int, Nd_prt) * x_prt
+
+    Z = zeros(eltype(b), length(b), length(b))
+    u = [A B'; B Z] \ [a;b]
+    x_int = u[1:end-length(b)]
+
+    return x_int, int_edges, Nd_int
+end
+
 Tetrs = CompScienceMeshes.tetmeshsphere(1.0, 0.45)
 tetrs = barycentric_refinement(Tetrs)
 
@@ -92,93 +159,21 @@ supp1 = tetrs.mesh[idcs1]
 supp2 = tetrs.mesh[idcs2]
 supp3 = tetrs.mesh[idcs3]
 
-supp1_edges = CompScienceMeshes.skeleton_fast(supp1, 1)
-supp2_edges = CompScienceMeshes.skeleton_fast(supp2, 1)
-supp3_edges = CompScienceMeshes.skeleton_fast(supp3, 1)
-
-supp1_nodes = CompScienceMeshes.skeleton_fast(supp1, 0)
-supp2_nodes = CompScienceMeshes.skeleton_fast(supp2, 0)
-supp3_nodes = CompScienceMeshes.skeleton_fast(supp3, 0)
-
-port_edges = supp1_edges
-port_edges = submesh(in(supp2_edges), port_edges)
-port_edges = submesh(in(supp3_edges), port_edges)
-@show length(port_edges)
-@assert 1 ≤ length(port_edges) ≤ 2
-
-
-
 dir1_faces = submesh(in(dir), boundary(supp1))
 dir2_faces = submesh(in(dir), boundary(supp2))
 dir3_faces = submesh(in(dir), boundary(supp3))
-
-dir1_compl = submesh(!in(dir), boundary(supp1))
-dir2_compl = submesh(!in(dir), boundary(supp2))
-dir3_compl = submesh(!in(dir), boundary(supp3))
-
-dir1_compl_edges = CompScienceMeshes.skeleton_fast(dir1_compl, 1)
-dir2_compl_edges = CompScienceMeshes.skeleton_fast(dir2_compl, 1)
-dir3_compl_edges = CompScienceMeshes.skeleton_fast(dir3_compl, 1)
-
-dir1_compl_nodes = CompScienceMeshes.skeleton_fast(dir1_compl, 0)
-dir2_compl_nodes = CompScienceMeshes.skeleton_fast(dir2_compl, 1)
-dir3_compl_nodes = CompScienceMeshes.skeleton_fast(dir3_compl, 2)
 
 supp23 = submesh(in(boundary(supp2)), boundary(supp3))
 supp31 = submesh(in(boundary(supp3)), boundary(supp1))
 supp12 = submesh(in(boundary(supp1)), boundary(supp2))
 
-supp23_edges = CompScienceMeshes.skeleton_fast(supp23, 1)
-supp31_edges = CompScienceMeshes.skeleton_fast(supp31, 1)
-supp12_edges = CompScienceMeshes.skeleton_fast(supp12, 1)
-
-supp23_nodes = CompScienceMeshes.skeleton_fast(supp23, 0)
-supp31_nodes = CompScienceMeshes.skeleton_fast(supp31, 0)
-supp12_nodes = CompScienceMeshes.skeleton_fast(supp12, 0)
-
 dir23_edges = submesh(in(boundary(dir2_faces)), boundary(dir3_faces))
 dir31_edges = submesh(in(boundary(dir3_faces)), boundary(dir1_faces))
 dir12_edges = submesh(in(boundary(dir1_faces)), boundary(dir2_faces))
-
-dir23_compl_edges = submesh(!in(dir23_edges), boundary(supp23))
-dir31_compl_edges = submesh(!in(dir31_edges), boundary(supp31))
-dir12_compl_edges = submesh(!in(dir12_edges), boundary(supp12))
-
-dir23_compl_nodes = CompScienceMeshes.skeleton_fast(dir23_compl_edges, 0)
-dir31_compl_nodes = CompScienceMeshes.skeleton_fast(dir31_compl_edges, 0)
-dir12_compl_nodes = CompScienceMeshes.skeleton_fast(dir12_compl_edges, 0)
-
-supp23_int_edges = submesh(!in(dir23_compl_edges), supp23_edges)
-supp31_int_edges = submesh(!in(dir31_compl_edges), supp31_edges)
-supp12_int_edges = submesh(!in(dir12_compl_edges), supp12_edges)
-
-supp23_int_nodes = submesh(!in(dir23_compl_nodes), supp23_nodes)
-supp31_int_nodes = submesh(!in(dir31_compl_nodes), supp31_nodes)
-supp12_int_nodes = submesh(!in(dir12_compl_nodes), supp12_nodes)
-
-X23_prt = BEAST.nedelec(supp23, port_edges)
-X31_prt = BEAST.nedelec(supp31, port_edges)
-X12_prt = BEAST.nedelec(supp12, port_edges)
-
-X23_int = BEAST.nedelec(supp23, supp23_int_edges)
-X31_int = BEAST.nedelec(supp31, supp31_int_edges)
-X12_int = BEAST.nedelec(supp12, supp12_int_edges)
-
-curl_X23_prt = divergence(n × X23_prt)
-curl_X31_prt = divergence(n × X31_prt)
-curl_X12_prt = divergence(n × X12_prt)
-
-curl_X23_int = divergence(n × X23_int)
-curl_X31_int = divergence(n × X31_int)
-curl_X12_int = divergence(n × X12_int)
-
-Y23 = lagrangec0d1(supp23, supp23_int_nodes)
-Y31 = lagrangec0d1(supp31, supp31_int_nodes)
-Y12 = lagrangec0d1(supp12, supp12_int_nodes)
-
-grad_Y23 = n × curl(Y23)
-grad_Y31 = n × curl(Y31)
-grad_Y12 = n × curl(Y12)
+port_edges = boundary(supp23)
+port_edges = submesh(in(boundary(supp31)), port_edges)
+port_edges = submesh(in(boundary(supp12)), port_edges)
+@assert 1 ≤ length(port_edges) ≤ 2
 
 # Step 1: set port flux and extend to dual faces
 x0 = ones(length(port_edges)) / length(port_edges)
@@ -189,112 +184,41 @@ for (i,edge) in enumerate(port_edges)
     end
 end
 
-A = assemble(Id, curl_X23_int, curl_X23_int)
-a = -assemble(Id, curl_X23_int, curl_X23_prt) * x0
-B = assemble(Id, grad_Y23, X23_int)
-b = -assemble(Id, grad_Y23, X23_prt) * x0
-nb = length(b)
-Z = zeros(eltype(B), nb, nb)
-u = [A B'; B Z] \ [a; b]
-x23 = u[1:end-nb]
+x23, supp23_int_edges = extend_edge_to_face(supp23, dir23_edges, x0, port_edges)
+x31, supp31_int_edges = extend_edge_to_face(supp31, dir31_edges, x0, port_edges)
+x12, supp12_int_edges = extend_edge_to_face(supp12, dir12_edges, x0, port_edges)
 
-A = assemble(Id, curl_X31_int, curl_X31_int)
-a = -assemble(Id, curl_X31_int, curl_X31_prt) * x0
-B = assemble(Id, grad_Y31, X31_int)
-b = -assemble(Id, grad_Y31, X31_prt) * x0
-nb = length(b)
-Z = zeros(eltype(B), nb, nb)
-u = [A B'; B Z] \ [a; b]
-x31 = u[1:end-nb]
+port1_edges = CompScienceMeshes.union(port_edges, supp31_int_edges)
+port1_edges = CompScienceMeshes.union(port1_edges, supp12_int_edges)
 
-A = assemble(Id, curl_X12_int, curl_X12_int)
-a = -assemble(Id, curl_X12_int, curl_X12_prt) * x0
-B = assemble(Id, grad_Y12, X12_int)
-b = -assemble(Id, grad_Y12, X12_prt) * x0
-nb = length(b)
-Z = zeros(eltype(B), nb, nb)
-u = [A B'; B Z] \ [a; b]
-x12 = u[1:end-nb]
+port2_edges = CompScienceMeshes.union(port_edges, supp12_int_edges)
+port2_edges = CompScienceMeshes.union(port2_edges, supp23_int_edges)
 
+port3_edges = CompScienceMeshes.union(port_edges, supp23_int_edges)
+port3_edges = CompScienceMeshes.union(port3_edges, supp31_int_edges)
 
-# Step 2: extend to the volume
-supp1_int_edges = submesh(!in(dir1_compl_edges), supp1_edges)
-supp2_int_edges = submesh(!in(dir2_compl_edges), supp2_edges)
-supp3_int_edges = submesh(!in(dir3_compl_edges), supp3_edges)
+x1_prt = [x0; x31; x12]
+x2_prt = [x0; x12; x23]
+x3_prt = [x0; x23; x31]
 
-supp1_int_nodes = submesh(!in(dir1_compl_nodes), supp1_nodes)
-supp2_int_nodes = submesh(!in(dir2_compl_nodes), supp2_nodes)
-supp3_int_nodes = submesh(!in(dir3_compl_nodes), supp3_nodes)
+Nd1_prt = BEAST.nedelecc3d(supp1, port1_edges)
+Nd2_prt = BEAST.nedelecc3d(supp2, port2_edges)
+Nd3_prt = BEAST.nedelecc3d(supp3, port3_edges)
 
-supp1_drv_edges = CompScienceMeshes.union(port_edges, supp31_int_edges)
-supp1_drv_edges = CompScienceMeshes.union(supp1_drv_edges, supp12_int_edges)
-supp2_drv_edges = CompScienceMeshes.union(port_edges, supp12_int_edges)
-supp2_drv_edges = CompScienceMeshes.union(supp2_drv_edges, supp23_int_edges)
-supp3_drv_edges = CompScienceMeshes.union(port_edges, supp23_int_edges)
-supp3_drv_edges = CompScienceMeshes.union(supp3_drv_edges, supp31_int_edges)
-
-X1_drv = BEAST.nedelecc3d(supp1, supp1_drv_edges)
-X2_drv = BEAST.nedelecc3d(supp2, supp2_drv_edges)
-X3_drv = BEAST.nedelecc3d(supp3, supp3_drv_edges)
-
-X1_int = BEAST.nedelecc3d(supp1, supp1_int_edges)
-X2_int = BEAST.nedelecc3d(supp2, supp2_int_edges)
-X3_int = BEAST.nedelecc3d(supp3, supp3_int_edges)
-
-curl_X1_drv = curl(X1_drv)
-curl_X2_drv = curl(X2_drv)
-curl_X3_drv = curl(X3_drv)
-
-curl_X1_int = curl(X1_int)
-curl_X2_int = curl(X2_int)
-curl_X3_int = curl(X3_int)
-
-Y1 = BEAST.lagrangec0d1(supp1, supp1_int_nodes)
-Y2 = BEAST.lagrangec0d1(supp2, supp2_int_nodes)
-Y3 = BEAST.lagrangec0d1(supp3, supp3_int_nodes)
-
-grad_Y1 = BEAST.gradient(Y1)
-grad_Y2 = BEAST.gradient(Y2)
-grad_Y3 = BEAST.gradient(Y3)
-
-A = assemble(Id, curl_X1_int, curl_X1_int)
-a = -assemble(Id, curl_X1_int, curl_X1_drv) * [x0; x31; x12]
-B = assemble(Id, grad_Y1, X1_int)
-b = -assemble(Id, grad_Y1, X1_drv) * [x0; x31; x12]
-nb = length(b)
-Z = zeros(eltype(B), nb, nb)
-u = [A B'; B Z] \ [a; b]
-x1 = u[1:end-nb]
-
-A = assemble(Id, curl_X2_int, curl_X2_int)
-a = -assemble(Id, curl_X2_int, curl_X2_drv) * [x0; x12; x23]
-B = assemble(Id, grad_Y2, X2_int)
-b = -assemble(Id, grad_Y2, X2_drv) * [x0; x12; x23]
-nb = length(b)
-Z = zeros(eltype(B), nb, nb)
-u = [A B'; B Z] \ [a; b]
-x2 = u[1:end-nb]
-
-A = assemble(Id, curl_X3_int, curl_X3_int)
-a = -assemble(Id, curl_X3_int, curl_X3_drv) * [x0; x23; x31]
-B = assemble(Id, grad_Y3, X3_int)
-b = -assemble(Id, grad_Y3, X3_drv) * [x0; x23; x31]
-nb = length(b)
-Z = zeros(eltype(B), nb, nb)
-u = [A B'; B Z] \ [a; b]
-x3 = u[1:end-nb]
-
+x1_int, _, Nd1_int = extend_face_to_tetr(supp1, dir1_faces, x1_prt, port1_edges)
+x2_int, _, Nd2_int = extend_face_to_tetr(supp2, dir2_faces, x2_prt, port2_edges)
+x3_int, _, Nd3_int = extend_face_to_tetr(supp3, dir3_faces, x3_prt, port3_edges)
 
 # inject in the global space
 fn = BEAST.Shape{Float64}[]
-add!(fn, [x0; x31; x12], X1_drv, idcs1)
-add!(fn, x1, X1_int, idcs1)
+add!(fn, x1_prt, Nd1_prt, idcs1)
+add!(fn, x1_int, Nd1_int, idcs1)
 
-add!(fn, [x0; x12; x23], X2_drv, idcs2)
-add!(fn, x2, X2_int, idcs2)
+add!(fn, x2_prt, Nd2_prt, idcs2)
+add!(fn, x2_int, Nd2_int, idcs2)
 
-add!(fn, [x0; x23; x31], X3_drv, idcs3)
-add!(fn, x3, X3_int, idcs3)
+add!(fn, x3_prt, Nd3_prt, idcs3)
+add!(fn, x3_int, Nd3_int, idcs3)
 
 pos = cartesian(CompScienceMeshes.center(chart(Faces, Face)))
 space = BEAST.NDLCCBasis(tetrs, [fn], [pos])
