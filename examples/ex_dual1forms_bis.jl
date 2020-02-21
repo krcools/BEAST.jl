@@ -133,6 +133,7 @@ function extend_face_to_tetr(supp, dirichlet, x_prt, port_edges)
     return x_int, int_edges, Nd_int
 end
 
+
 Tetrs = CompScienceMeshes.tetmeshsphere(1.0, 0.45)
 tetrs = barycentric_refinement(Tetrs)
 
@@ -222,3 +223,27 @@ add!(fn, x3_int, Nd3_int, idcs3)
 
 pos = cartesian(CompScienceMeshes.center(chart(Faces, Face)))
 space = BEAST.NDLCCBasis(tetrs, [fn], [pos])
+
+
+tetrs, bnd, dir, v2t, v2n = BEAST.dual1forms_init(Tetrs, Dir)
+D1 = BEAST.dual1forms_body(Faces, tetrs, bnd, dir, v2t, v2n)
+P2 = BEAST.nedelecd3d(Tetrs, Faces)
+# S = BEAST.dual1forms(Tetrs, Faces[collect(396:405)], Dir)
+
+int_Edges = submesh(!in(skeleton(boundary(Tetrs),1)), Edges)
+P1 = BEAST.nedelecc3d(Tetrs, int_Edges)
+
+curl_D1 = curl(D1)
+curl_P1 = curl(P1)
+div_P2 = divergence(P2)
+
+G = assemble(Id, curl_D1, curl_D1)
+GP = assemble(Id, div_P2, div_P2)
+M = assemble(Id, D1, P2)
+
+CDP = assemble(Id, D1, curl_P1)
+CPD = CDP'
+GDD = assemble(Id, D1, D1)
+
+A1 = CPD * inv(GDD) * CDP;
+A2 = assemble(Id, curl_P1, curl_P1)

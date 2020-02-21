@@ -18,6 +18,7 @@ function Base.in(mesh::CompScienceMeshes.AbstractMesh)
 end
 
 
+
 function builddual2form(support, port, dirichlet, prt_fluxes)
 
     faces = CompScienceMeshes.skeleton_fast(support,2)
@@ -177,126 +178,183 @@ function dual2forms_body(Tetrs, Edges, Dir, tetrs, bnd, v2t, v2n)
 end
 
 
-
-
-function builddual1form(supp, port, dir, x0)
+function extend_edge_to_face(supp, dirichlet, x_prt, port_edges)
 
     Id = BEAST.Identity()
 
-    rim = boundary(dir)
-    bnd = boundary(supp)
-    supp_edges = CompScienceMeshes.skeleton_fast(supp,1)
-    supp_nodes = CompScienceMeshes.skeleton_fast(supp,0)
-    dir_edges = CompScienceMeshes.skeleton_fast(dir,1)
-    bnd_edges = CompScienceMeshes.skeleton_fast(bnd,1)
-    bnd_nodes = CompScienceMeshes.skeleton_fast(bnd,0)
-    prt_nodes = CompScienceMeshes.skeleton_fast(port,0)
+    bnd_supp = boundary(supp)
+    supp_edges = CompScienceMeshes.skeleton_fast(supp, 1)
+    supp_nodes = CompScienceMeshes.skeleton_fast(supp, 0)
 
-    srt_rim = sort.(rim)
-    srt_port = sort.(port)
-    srt_dir_edges = sort.(dir_edges)
-    srt_bnd_edges = sort.(bnd_edges)
-    srt_bnd_verts = sort.(bnd_nodes)
-    srt_prt_verts = sort.(prt_nodes)
+    dir_compl_edges = submesh(!in(dirichlet), bnd_supp)
+    dir_compl_nodes = CompScienceMeshes.skeleton_fast(dir_compl_edges, 0)
 
-    int_edges = submesh(supp_edges) do edge
-        sort(edge) in srt_port && return false
-        sort(edge) in srt_rim && return false
-        sort(edge) in srt_dir_edges && return true
-        sort(edge) in srt_bnd_edges && return false
-        return true
-    end
-    # @assert length(supp_nodes) - length(supp_edges) + length(skeleton(supp,2)) - length(supp) == 1
+    int_edges = submesh(!in(dir_compl_edges), supp_edges)
+    int_nodes = submesh(!in(dir_compl_nodes), supp_nodes)
 
-    Nd_prt = BEAST.nedelecc3d(supp, port)
-    Nd_int = BEAST.nedelecc3d(supp, int_edges)
+    Nd_prt = BEAST.nedelec(supp, port_edges)
+    Nd_int = BEAST.nedelec(supp, int_edges)
+    Lg_int = BEAST.lagrangec0d1(supp, int_nodes)
 
-    curl_Nd_int = curl(Nd_int)
+    curl_Nd_prt = divergence(n × Nd_prt)
+    curl_Nd_int = divergence(n × Nd_int)
+    grad_Lg_int = n × curl(Lg_int)
+
     A = assemble(Id, curl_Nd_int, curl_Nd_int)
-    N = nullspace(A)
-    a = -assemble(Id, curl(Nd_int), curl(Nd_prt)) * x0
-    x1 = pinv(A) * a
-    # x1 = A \ a
+    B = assemble(Id, grad_Lg_int, Nd_int)
 
-    int_verts = submesh(supp_nodes) do vert
-        sort(vert) in srt_bnd_verts && return false
-        sort(vert) in srt_prt_verts && return false
-        return true
-    end
+    a = -assemble(Id, curl_Nd_int, curl_Nd_prt) * x_prt
+    b = -assemble(Id, grad_Lg_int, Nd_prt) * x_prt
 
-    L0_int = lagrangec0d1(supp, int_verts)
-    grad_L0_int = BEAST.gradient(L0_int)
-    @assert numfunctions(grad_L0_int) == numfunctions(L0_int)
+    Z = zeros(eltype(b), length(b), length(b))
+    u = [A B'; B Z] \ [a;b]
+    x_int = u[1:end-length(b)]
 
-    B = assemble(Id, grad_L0_int, Nd_int)
-    b = -assemble(Id, grad_L0_int, Nd_prt) * x0
-    p = (B*N) \ (b-B*x1)
-    x1 = x1 + N*p
-
-    @assert isapprox(A*x1, a, atol=1e-8)
-    @assert isapprox(B*x1, b, atol=1e-8)
-
-    return Nd_int, Nd_prt, x1, x0
+    return x_int, int_edges, Nd_int
 end
 
-function dual1forms(Tetrs, Faces)
 
-    T = coordtype(Tetrs)
-    P = vertextype(Tetrs)
-    S = Shape{T}
 
-    tetrs = CompScienceMeshes.barycentric_refinement(Tetrs)
-    bnd_tetrs = boundary(tetrs)
-    srt_bnd_tetrs = sort.(bnd_tetrs)
+function extend_face_to_tetr(supp, dirichlet, x_prt, port_edges)
 
-    fns = Vector{Vector{S}}()
-    pos = Vector{P}()
+    Id = BEAST.Identity()
+
+    bnd_supp = boundary(supp)
+    supp_edges = CompScienceMeshes.skeleton_fast(supp, 1)
+    supp_nodes = CompScienceMeshes.skeleton_fast(supp, 0)
+
+    dir_compl_faces = submesh(!in(dirichlet), bnd_supp)
+    dir_compl_edges = CompScienceMeshes.skeleton_fast(dir_compl_faces, 1)
+    dir_compl_nodes = CompScienceMeshes.skeleton_fast(dir_compl_faces, 0)
+
+    int_edges = submesh(!in(dir_compl_edges), supp_edges)
+    int_nodes = submesh(!in(dir_compl_nodes), supp_nodes)
+
+    Nd_prt = BEAST.nedelecc3d(supp, port_edges)
+    Nd_int = BEAST.nedelecc3d(supp, int_edges)
+    Lg_int = BEAST.lagrangec0d1(supp, int_nodes)
+
+    curl_Nd_prt = curl(Nd_prt)
+    curl_Nd_int = curl(Nd_int)
+    grad_Lg_int = BEAST.gradient(Lg_int)
+
+    A = assemble(Id, curl_Nd_int, curl_Nd_int)
+    B = assemble(Id, grad_Lg_int, Nd_int)
+
+    a = -assemble(Id, curl_Nd_int, curl_Nd_prt) * x_prt
+    b = -assemble(Id, grad_Lg_int, Nd_prt) * x_prt
+
+    Z = zeros(eltype(b), length(b), length(b))
+    u = [A B'; B Z] \ [a;b]
+    x_int = u[1:end-length(b)]
+
+    return x_int, int_edges, Nd_int
+end
+
+function dual1forms(Tetrs, Faces, Dir)
+    tetrs, bnd, dir, v2t, v2n = dual1forms_init(Tetrs, Dir)
+    dual1forms_body(Faces, tetrs, bnd, dir, v2t, v2n)
+end
+
+function dual1forms_init(Tetrs, Dir)
+    tetrs = barycentric_refinement(Tetrs)
+    v2t, v2n = CompScienceMeshes.vertextocellmap(tetrs)
+    bnd = boundary(tetrs)
+    gpred = CompScienceMeshes.overlap_gpredicate(Dir)
+    dir = submesh(face -> gpred(chart(bnd,face)), bnd)
+    return tetrs, bnd, dir, v2t, v2n
+end
+
+function dual1forms_body(Faces, tetrs, bnd, dir, v2t, v2n)
+
+    T = coordtype(tetrs)
+    bfs = Vector{Vector{Shape{T}}}(undef, length(Faces))
+    pos = Vector{vertextype(Faces)}(undef, length(Faces))
+
     for (F,Face) in enumerate(Faces)
-        @show F
 
-        po = cartesian(center(chart(Faces, Face)))
+        println("Constructing dual 2-forms: $F out of $(length(Faces)).")
 
-        idcs1 = [i for (i,tet) in enumerate(tetrs) if Face[1] in tet]
-        idcs2 = [i for (i,tet) in enumerate(tetrs) if Face[2] in tet]
-        idcs3 = [i for (i,tet) in enumerate(tetrs) if Face[3] in tet]
-        idcs = vcat(idcs1, idcs2, idcs3)
-        # @show idcs
+        idcs1 = v2t[Face[1],1:v2n[Face[1]]]
+        idcs2 = v2t[Face[2],1:v2n[Face[2]]]
+        idcs3 = v2t[Face[3],1:v2n[Face[3]]]
 
-        supp1 = Mesh(vertices(tetrs), cells(tetrs)[idcs1])
-        supp2 = Mesh(vertices(tetrs), cells(tetrs)[idcs1])
-        supp3 = Mesh(vertices(tetrs), cells(tetrs)[idcs1])
+        supp1 = tetrs.mesh[idcs1]
+        supp2 = tetrs.mesh[idcs2]
+        supp3 = tetrs.mesh[idcs3]
 
-        supp1 = submesh(tet -> Face[1] in tet, tetrs.mesh)
-        supp2 = submesh(tet -> Face[2] in tet, tetrs.mesh)
-        supp3 = submesh(tet -> Face[3] in tet, tetrs.mesh)
+        bnd_supp1 = boundary(supp1)
+        bnd_supp2 = boundary(supp2)
+        bnd_supp3 = boundary(supp3)
 
-        supp = CompScienceMeshes.union(supp1, supp2)
-        supp = CompScienceMeshes.union(supp, supp3)
+        dir1_faces = submesh(in(dir), bnd_supp1)
+        dir2_faces = submesh(in(dir), bnd_supp2)
+        dir3_faces = submesh(in(dir), bnd_supp3)
 
-        dir = submesh(face -> sort(face) in srt_bnd_tetrs, boundary(supp))
+        bnd_dir1 = boundary(dir1_faces)
+        bnd_dir2 = boundary(dir2_faces)
+        bnd_dir3 = boundary(dir3_faces)
 
-        port = skeleton(supp1, 1)
-        port = submesh(edge -> sort(edge) in sort.(skeleton(supp2,1)), port)
-        port = submesh(edge -> sort(edge) in sort.(skeleton(supp3,1)), port)
-        @assert 1 ≤ length(port) ≤ 2
+        supp23 = submesh(in(bnd_supp2), bnd_supp3)
+        supp31 = submesh(in(bnd_supp3), bnd_supp1)
+        supp12 = submesh(in(bnd_supp1), bnd_supp2)
 
-        x0 = ones(length(port)) / length(port)
-        for (i,edge) in enumerate(port)
-            tgt = tangents(center(chart(port,edge)),1)
-            dot(normal(chart(Faces,Face)), tgt) < 0 && (x0[i] *= -1)
+        dir23_edges = submesh(in(bnd_dir2), bnd_dir3)
+        dir31_edges = submesh(in(bnd_dir3), bnd_dir1)
+        dir12_edges = submesh(in(bnd_dir1), bnd_dir2)
+
+        port_edges = boundary(supp23)
+        port_edges = submesh(in(boundary(supp31)), port_edges)
+        port_edges = submesh(in(boundary(supp12)), port_edges)
+        @assert 1 ≤ length(port_edges) ≤ 2
+
+        # Step 1: set port flux and extend to dual faces
+        x0 = ones(length(port_edges)) / length(port_edges)
+        for (i,edge) in enumerate(port_edges)
+            tgt = tangents(center(chart(port_edges, edge)),1)
+            if dot(normal(chart(Faces, Face)), tgt) < 0
+                x0[i] *= -1
+            end
         end
 
-        Nd_int, Nd_prt, x_int, x_prt = builddual1form(supp, port, dir, x0)
-        @show norm(x_int)
-        @show norm(x_prt)
+        x23, supp23_int_edges = extend_edge_to_face(supp23, dir23_edges, x0, port_edges)
+        x31, supp31_int_edges = extend_edge_to_face(supp31, dir31_edges, x0, port_edges)
+        x12, supp12_int_edges = extend_edge_to_face(supp12, dir12_edges, x0, port_edges)
 
-        fn = Vector{S}()
-        addf!(fn, x_prt, Nd_prt, idcs)
-        addf!(fn, x_int, Nd_int, idcs)
+        port1_edges = CompScienceMeshes.union(port_edges, supp31_int_edges)
+        port1_edges = CompScienceMeshes.union(port1_edges, supp12_int_edges)
+        port2_edges = CompScienceMeshes.union(port_edges, supp12_int_edges)
+        port2_edges = CompScienceMeshes.union(port2_edges, supp23_int_edges)
+        port3_edges = CompScienceMeshes.union(port_edges, supp23_int_edges)
+        port3_edges = CompScienceMeshes.union(port3_edges, supp31_int_edges)
 
-        push!(fns, fn)
-        push!(pos, po)
+        x1_prt = [x0; x31; x12]
+        x2_prt = [x0; x12; x23]
+        x3_prt = [x0; x23; x31]
+
+        Nd1_prt = BEAST.nedelecc3d(supp1, port1_edges)
+        Nd2_prt = BEAST.nedelecc3d(supp2, port2_edges)
+        Nd3_prt = BEAST.nedelecc3d(supp3, port3_edges)
+
+        x1_int, _, Nd1_int = extend_face_to_tetr(supp1, dir1_faces, x1_prt, port1_edges)
+        x2_int, _, Nd2_int = extend_face_to_tetr(supp2, dir2_faces, x2_prt, port2_edges)
+        x3_int, _, Nd3_int = extend_face_to_tetr(supp3, dir3_faces, x3_prt, port3_edges)
+
+        # inject in the global space
+        fn = BEAST.Shape{Float64}[]
+        addf!(fn, x1_prt, Nd1_prt, idcs1)
+        addf!(fn, x1_int, Nd1_int, idcs1)
+
+        addf!(fn, x2_prt, Nd2_prt, idcs2)
+        addf!(fn, x2_int, Nd2_int, idcs2)
+
+        addf!(fn, x3_prt, Nd3_prt, idcs3)
+        addf!(fn, x3_int, Nd3_int, idcs3)
+
+        pos[F] = cartesian(CompScienceMeshes.center(chart(Faces, Face)))
+        bfs[F] = fn
+        # space = BEAST.NDLCCBasis(tetrs, [fn], [pos])
     end
 
-    NDLCCBasis(tetrs, fns, pos)
+    NDLCCBasis(tetrs, bfs, pos)
 end

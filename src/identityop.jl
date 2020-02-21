@@ -57,6 +57,13 @@ function quaddata(op::LocalOperator, g::NDLCDRefSpace, f::NDLCCRefSpace, tels, b
      [(w, parametric(p)) for (p,w) in qps]
 end
 
+function quaddata(op::LocalOperator, g::NDLCCRefSpace, f::NDLCDRefSpace, tels, bels)
+     o, x, y, z = CompScienceMeshes.euclidianbasis(3)
+     reftet = simplex(x,y,z,o)
+     qps = quadpoints(reftet, 6)
+     [(w, parametric(p)) for (p,w) in qps]
+end
+
 
 
 quaddata(op::LocalOperator, g::LagrangeRefSpace, f::LagrangeRefSpace,
