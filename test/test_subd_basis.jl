@@ -32,6 +32,6 @@ identityop  = Identity()
 singlelayer = Helmholtz3D.singlelayer(gamma=1.0)
 I = assemble(identityop, X, X)
 #S = assemble(singlelayer, X, X)
-ncd = cond(I)
+ncd = cond(Array(I))
 
 @test ncd ≈ 64.50401358713235 rtol=1e-8
