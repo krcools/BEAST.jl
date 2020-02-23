@@ -18,11 +18,11 @@ identityop    = Identity()
 doublelayer   = DoubleLayer(κ)
 
 @time N = assemble(hypersingular, X, X)
-@time I = assemble(identityop, X, X)
+@time Id = assemble(identityop, X, X)
 
 @test size(N) == (numfunctions(X), numfunctions(X))
-@test size(I) == (numfunctions(X), numfunctions(X))
-@test rank(I) == numfunctions(X)
+@test size(Id) == (numfunctions(X), numfunctions(X))
+@test rank(Id) == numfunctions(X)
 
 @time e = assemble(PlaneWaveNeumann(κ, point(0.0, 1.0)), X)
 @test length(e) == numfunctions(X)
