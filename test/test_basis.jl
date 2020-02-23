@@ -3,6 +3,7 @@ using Test
 
 using CompScienceMeshes
 using BEAST
+using LinearAlgebra
 
 ## The actual tests
 
