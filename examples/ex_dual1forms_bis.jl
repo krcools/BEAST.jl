@@ -230,6 +230,7 @@ D1 = BEAST.dual1forms_body(Faces, tetrs, bnd, dir, v2t, v2n)
 P2 = BEAST.nedelecd3d(Tetrs, Faces)
 # S = BEAST.dual1forms(Tetrs, Faces[collect(396:405)], Dir)
 
+Edges = CompScienceMeshes.skeleton_fast(Tetrs, 1)
 int_Edges = submesh(!in(skeleton(boundary(Tetrs),1)), Edges)
 P1 = BEAST.nedelecc3d(Tetrs, int_Edges)
 

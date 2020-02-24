@@ -310,11 +310,15 @@ function dual1forms_body(Faces, tetrs, bnd, dir, v2t, v2n)
 
         # Step 1: set port flux and extend to dual faces
         x0 = ones(length(port_edges)) / length(port_edges)
+        total_lgt = sum(volume(chart(port_edges, edge)) for edge in port_edges)
         for (i,edge) in enumerate(port_edges)
             tgt = tangents(center(chart(port_edges, edge)),1)
-            if dot(normal(chart(Faces, Face)), tgt) < 0
-                x0[i] *= -1
-            end
+            lgt = volume(chart(port_edges, edge))
+            sgn = sign(dot(normal(chart(Faces, Face)), tgt))
+            x0[i] = sgn * lgt / total_lgt
+            # if dot(normal(chart(Faces, Face)), tgt) < 0
+            #     x0[i] *= -1
+            # end
         end
 
         x23, supp23_int_edges = extend_edge_to_face(supp23, dir23_edges, x0, port_edges)
