@@ -246,5 +246,7 @@ CDP = assemble(Id, D1, curl_P1)
 CPD = CDP'
 GDD = assemble(Id, D1, D1)
 
+iM = inv(M)
 A1 = CPD * inv(GDD) * CDP;
 A2 = assemble(Id, curl_P1, curl_P1)
+A3 = CPD * iM' * inv(GDD) * iM * CDP;
