@@ -279,7 +279,7 @@ function dual1forms_body(Faces, tetrs, bnd, dir, v2t, v2n)
 
     for (F,Face) in enumerate(Faces)
 
-        println("Constructing dual 2-forms: $F out of $(length(Faces)).")
+        println("Constructing dual 1-forms: $F out of $(length(Faces)).")
 
         idcs1 = v2t[Face[1],1:v2n[Face[1]]]
         idcs2 = v2t[Face[2],1:v2n[Face[2]]]
