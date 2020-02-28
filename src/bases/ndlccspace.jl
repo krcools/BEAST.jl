@@ -7,6 +7,7 @@ end
 NDLCCBasis(geo, fns) = NDLCCBasis(geo, fns, Vector{vertextype(geo)}(undef,length(fns)))
 
 refspace(space::NDLCCBasis{T}) where {T} = NDLCCRefSpace{T}()
+Base.similar(space::NDLCCBasis{T,M,P} where {T,M,P}, geo, fns, pos) = NDLCCBasis(geo, fns, pos)
 
 """
 nedelecc3d(mesh, edges::Array{SArray{Tuple{2},Int64,1,2},1})

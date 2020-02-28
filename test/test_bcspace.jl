@@ -126,7 +126,7 @@ leaky_edges = findall(sum(abs.(isdivconforming(rt)),dims=1) .!= 0)
 bnd = boundary(mesh)
 bndtch_pred = touches_predicate(bnd)
 edges = interior(mesh)
-bndtch_edges = findall(bndtch_pred, edges.faces)
+bndtch_edges = findall(bndtch_pred, cells(edges))
 leaky_edges = findall(vec(sum(abs.(isdivconforming(bc)),dims=1)) .!= 0)
 @test bndtch_edges == leaky_edges
 
