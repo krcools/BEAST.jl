@@ -39,5 +39,6 @@ function integrand(op::MWSingleLayerField3D, krn, y, fp, p)
     G = krn.green
     ∇G = krn.gradgreen
 
-    -γ*G*j + ∇G*ρ/γ
+    #-γ*G*j + ∇G.*ρ/γ
+    -γ*G*j + ∇G.*ρ/γ
 end
