@@ -22,7 +22,7 @@ WiltonInts84 = "a3e2863e-c0ee-5ff6-a523-307a4cdc8724"
 [compat]
 CollisionDetection = "^0.1"
 Combinatorics = "^0.7"
-CompScienceMeshes = "^0.2.4"
+CompScienceMeshes = "^0.2.5"
 Compat = "^2"
 FFTW = "^0.2.3, ^1"
 FastGaussQuadrature = "^0.3, ^0.4"
