@@ -1,7 +1,7 @@
 using CompScienceMeshes
 using BEAST
 
-tetrs = CompScienceMeshes.tetmeshsphere(1.0, 0.10)
+tetrs = CompScienceMeshes.tetmeshsphere(1.0, 0.20)
 # tetrs = CompScienceMeshes.tetmeshsphere(1.0, 0.35)
 @show numcells(tetrs)
 
@@ -71,7 +71,7 @@ Z = BEAST.ttrace(curl(X), G)
 
 fcr, geo = facecurrents(u, Z)
 import PlotlyJS
-PlotlyJS.plot(patch(geo, norm.(fcr)))
+display(PlotlyJS.plot(patch(geo, norm.(fcr))))
 
 const CSM = CompScienceMeshes
 hemi = submesh(tet -> cartesian(CSM.center(chart(tetrs,tet)))[3] < 0, tetrs)
@@ -82,5 +82,5 @@ Xhemi = BEAST.restrict(X, hemi)
 tXhemi = BEAST.ttrace(Xhemi, bnd_hemi)
 
 fcr, geo = facecurrents(u, tXhemi)
-import Plotly
-Plotly.plot(patch(geo, norm.(fcr)))
+import PlotlyJS
+PlotlyJS.plot(patch(geo, norm.(fcr)))
