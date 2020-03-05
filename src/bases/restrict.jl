@@ -12,7 +12,7 @@ can be written as:
 """
 function restrict end
 
-function restrict(sp::Space, submesh::CompScienceMeshes.SubMesh)
+function restrict(sp::Space, submesh::CompScienceMeshes.AbstractMesh)
 
     fns = similar(sp.fns)
     S = eltype(eltype(fns))
