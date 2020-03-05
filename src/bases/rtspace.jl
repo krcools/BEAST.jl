@@ -35,10 +35,11 @@ function raviartthomas(mesh, cellpairs::Array{Int,2})
     numpairs = size(cellpairs,2)
     functions = Vector{Vector{Shape{Float64}}}(undef,numpairs)
     positions = Vector{vertextype(mesh)}(undef,numpairs)
+    Cells = cells(mesh)
     for i in 1:numpairs
         if cellpairs[2,i] > 0
-            c1 = cellpairs[1,i]; cell1 = mesh.faces[c1]
-            c2 = cellpairs[2,i]; cell2 = mesh.faces[c2]
+            c1 = cellpairs[1,i]; cell1 = Cells[c1] #mesh.faces[c1]
+            c2 = cellpairs[2,i]; cell2 = Cells[c2] #mesh.faces[c2]
             e1, e2 = getcommonedge(cell1, cell2)
             functions[i] = [
               Shape(c1, abs(e1), +1.0),
