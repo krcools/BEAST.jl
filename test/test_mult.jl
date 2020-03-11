@@ -25,7 +25,7 @@ X = raviartthomas(faces, cellpairs(faces,edges))
 divX = divergence(X)
 Id = BEAST.Identity()
 DD = assemble(Id, divX, divX)
-@test rank(DD) == 7
+@test rank(Array(DD)) == 7
 L = divX * Conn
 for sh in L.fns[1]
     @test isapprox(sh.coeff, 0, atol=1e-8)
