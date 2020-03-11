@@ -262,7 +262,7 @@ function lagrangec0d1(mesh, vertexlist, ::Type{Val{2}})
 end
 
 
-function lagrangec0d1(mesh, nodes::Mesh{U,1} where {U})
+function lagrangec0d1(mesh, nodes::CompScienceMeshes.AbstractMesh{U,1} where {U})
 
     Conn = connectivity(nodes, mesh, abs)
     rows = rowvals(Conn)
