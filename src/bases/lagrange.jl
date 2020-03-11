@@ -182,6 +182,9 @@ function lagrangec0d1(mesh, vertexlist::Vector, ::Type{Val{3}})
 
     cellids, ncells = vertextocellmap(mesh)
 
+    Cells = cells(mesh)
+    Verts = vertices(mesh)
+
     # create the local shapes
     fns = Vector{Shape{Float64}}[]
     pos = Vector{vertextype(mesh)}()
@@ -196,7 +199,8 @@ function lagrangec0d1(mesh, vertexlist::Vector, ::Type{Val{3}})
         shapes = Vector{Shape{Float64}}(undef,numshapes)
         for s in 1: numshapes
             c = cellids[v,s]
-            cell = mesh.faces[c]
+            # cell = mesh.faces[c]
+            cell = Cells[c]
 
             localid = something(findfirst(isequal(v), cell),0)
             @assert localid != 0
@@ -205,7 +209,7 @@ function lagrangec0d1(mesh, vertexlist::Vector, ::Type{Val{3}})
         end
 
         push!(fns, shapes)
-        push!(pos, mesh.vertices[v])
+        push!(pos, Verts[v])
     end
 
     NF = 3
