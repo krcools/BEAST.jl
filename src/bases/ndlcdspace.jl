@@ -7,6 +7,7 @@ end
 NDLCDBasis(geo, fns) = NDLCDBasis(geo, fns, Vector{vertextype(geo)}(undef,length(fns)))
 
 refspace(space::NDLCDBasis{T}) where {T} = NDLCDRefSpace{T}()
+Base.similar(space::NDLCDBasis{T,M,P} where {T,M,P}, geo, fns, pos) = NDLCDBasis(geo, fns, pos)
 
 function nedelecd3d(mesh, faces)
     T = coordtype(mesh)
