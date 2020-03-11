@@ -22,7 +22,7 @@ doublelayer   = DoubleLayer(κ)
 
 @test size(N) == (numfunctions(X), numfunctions(X))
 @test size(Id) == (numfunctions(X), numfunctions(X))
-@test rank(Id) == numfunctions(X)
+@test rank(Array(Id)) == numfunctions(X)
 
 @time e = assemble(PlaneWaveNeumann(κ, point(0.0, 1.0)), X)
 @test length(e) == numfunctions(X)
