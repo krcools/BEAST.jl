@@ -10,12 +10,12 @@ function addf!(fn::Vector{<:Shape}, x::Vector, space::Space, idcs::Vector{Int})
     end
 end
 
-function Base.in(mesh::CompScienceMeshes.AbstractMesh)
-    cells_mesh = sort.(mesh)
-    function f(cell)
-        sort(cell) in cells_mesh
-    end
-end
+# function Base.in(mesh::CompScienceMeshes.AbstractMesh)
+#     cells_mesh = sort.(mesh)
+#     function f(cell)
+#         sort(cell) in cells_mesh
+#     end
+# end
 
 
 
@@ -310,8 +310,11 @@ function dual1forms_body(Faces, tetrs, bnd, dir, v2t, v2n)
         dir12_edges = submesh(in(bnd_dir1), bnd_dir2)
 
         port_edges = boundary(supp23)
+        @show length(port_edges)
         port_edges = submesh(in(boundary(supp31)), port_edges)
+        @show length(port_edges)
         port_edges = submesh(in(boundary(supp12)), port_edges)
+        @show length(port_edges)
         @assert 1 ≤ length(port_edges) ≤ 2
 
         # Step 1: set port flux and extend to dual faces
