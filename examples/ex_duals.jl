@@ -5,7 +5,7 @@ using BEAST
 
 include("utils/showfn.jl")
 
-Tetrs = CompScienceMeshes.tetmeshsphere(1.0, 0.35)
+Tetrs = CompScienceMeshes.tetmeshsphere(1.0, 0.40)
 Faces = CompScienceMeshes.skeleton_fast(Tetrs, 2)
 Edges = CompScienceMeshes.skeleton_fast(Tetrs, 1)
 
@@ -14,6 +14,9 @@ bnd_Edges = CompScienceMeshes.skeleton_fast(bnd_Faces, 1)
 
 int_Faces = submesh(!in(bnd_Faces), Faces)
 int_Edges = submesh(!in(bnd_Edges), Edges)
+
+@show length(int_Edges)
+@show length(int_Faces)
 
 primal1 = BEAST.nedelecc3d(Tetrs, int_Edges)
 primal2 = BEAST.nedelecd3d(Tetrs, int_Faces)
@@ -38,8 +41,13 @@ B2 = FE'*A*FE;
 
 EV = eigen(B)
 idx = findfirst(abs.(EV.values) .> 1e-6)
-u = real(EV.vectors[:,idx])
+u = real(EV.vectors[:,idx+1])
 
 hemi = submesh(Tetrs) do Tetr
     cartesian(center(chart(Tetrs, Tetr)))[3] < 0
 end
+
+primal1_hemi = restrict(primal1, hemi)
+trace_primal1_hemi = BEAST.ttrace(primal1_hemi, boundary(hemi))
+fcr, geo = facecurrents(u, trace_primal1_hemi)
+Plotly.plot(patch(geo, norm.(fcr)))

@@ -150,20 +150,13 @@ function dual2forms_body(Tetrs, Edges, Dir, tetrs, bnd, v2t, v2n)
         port = submesh(in(bnd_patch2), bnd_patch1)
 
         total_area = sum(volume(chart(port, fc)) for fc in port)
-        # prt_fluxes = ones(T, numcells(port)) / numcells(port)
         prt_fluxes = zeros(length(port))
         tgt = vertices(Edges)[Edge[1]] - vertices(Edges)[Edge[2]]
         for (i,face) in enumerate(cells(port))
             chrt = chart(port, face)
             sgn = sign(dot(normal(chrt), tgt))
-            # prt_fluxes[i] *= sgn
             prt_fluxes[i] = sgn * volume(chrt) / total_area
         end
-
-        # RT_int, RT_prt, x_int, x_prt = builddual2form(patch, port, dirichlet, prt_fluxes)
-        # ptch_idcs = [ptch_idcs1; ptch_idcs2]
-        # addf!(bfs[F], x_int, RT_int, ptch_idcs)
-        # addf!(bfs[F], x_prt, RT_prt, ptch_idcs)
 
         RT1_int, RT1_prt, x1_int, x_prt = builddual2form(
             patch1, port, dirichlet, +prt_fluxes)
@@ -191,7 +184,6 @@ function extend_edge_to_face(supp, dirichlet, x_prt, port_edges)
     supp_nodes = CompScienceMeshes.skeleton_fast(supp, 0)
 
     dir_compl = submesh(!in(dirichlet), bnd_supp)
-    # dir_compl_edges = submesh(!in(dirichlet), bnd_supp)
     dir_compl_edges = CompScienceMeshes.skeleton_fast(dir_compl, 1)
     dir_compl_nodes = CompScienceMeshes.skeleton_fast(dir_compl, 0)
 
@@ -310,11 +302,8 @@ function dual1forms_body(Faces, tetrs, bnd, dir, v2t, v2n)
         dir12_edges = submesh(in(bnd_dir1), bnd_dir2)
 
         port_edges = boundary(supp23)
-        @show length(port_edges)
         port_edges = submesh(in(boundary(supp31)), port_edges)
-        @show length(port_edges)
         port_edges = submesh(in(boundary(supp12)), port_edges)
-        @show length(port_edges)
         @assert 1 ≤ length(port_edges) ≤ 2
 
         # Step 1: set port flux and extend to dual faces
