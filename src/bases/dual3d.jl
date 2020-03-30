@@ -194,47 +194,9 @@ function extend_edge_to_face(supp, dirichlet, x_prt, port_edges)
     Nd_int = BEAST.nedelec(supp, int_edges)
     Lg_int = BEAST.lagrangec0d1(supp, int_nodes)
 
-    curl_Nd_prt = divergence(n × Nd_prt)
-    curl_Nd_int = divergence(n × Nd_int)
-    grad_Lg_int = n × curl(Lg_int)
-
-    A = assemble(Id, curl_Nd_int, curl_Nd_int)
-    B = assemble(Id, grad_Lg_int, Nd_int)
-
-    a = -assemble(Id, curl_Nd_int, curl_Nd_prt) * x_prt
-    b = -assemble(Id, grad_Lg_int, Nd_prt) * x_prt
-
-    Z = zeros(eltype(b), length(b), length(b))
-    u = [A B'; B Z] \ [a;b]
-    x_int = u[1:end-length(b)]
-
-    return x_int, int_edges, Nd_int
-end
-
-
-
-function extend_face_to_tetr(supp, dirichlet, x_prt, port_edges)
-
-    Id = BEAST.Identity()
-
-    bnd_supp = boundary(supp)
-    supp_edges = CompScienceMeshes.skeleton_fast(supp, 1)
-    supp_nodes = CompScienceMeshes.skeleton_fast(supp, 0)
-
-    dir_compl = submesh(!in(dirichlet), bnd_supp)
-    dir_compl_edges = CompScienceMeshes.skeleton_fast(dir_compl, 1)
-    dir_compl_nodes = CompScienceMeshes.skeleton_fast(dir_compl, 0)
-
-    int_edges = submesh(!in(dir_compl_edges), supp_edges)
-    int_nodes = submesh(!in(dir_compl_nodes), supp_nodes)
-
-    Nd_prt = BEAST.nedelecc3d(supp, port_edges)
-    Nd_int = BEAST.nedelecc3d(supp, int_edges)
-    Lg_int = BEAST.lagrangec0d1(supp, int_nodes)
-
     curl_Nd_prt = curl(Nd_prt)
     curl_Nd_int = curl(Nd_int)
-    grad_Lg_int = BEAST.gradient(Lg_int)
+    grad_Lg_int = gradient(Lg_int)
 
     A = assemble(Id, curl_Nd_int, curl_Nd_int)
     B = assemble(Id, grad_Lg_int, Nd_int)
@@ -248,6 +210,46 @@ function extend_face_to_tetr(supp, dirichlet, x_prt, port_edges)
 
     return x_int, int_edges, Nd_int
 end
+
+
+
+# function extend_face_to_tetr(supp, dirichlet, x_prt, port_edges)
+#
+#     Id = BEAST.Identity()
+#
+#     bnd_supp = boundary(supp)
+#     supp_edges = CompScienceMeshes.skeleton_fast(supp, 1)
+#     supp_nodes = CompScienceMeshes.skeleton_fast(supp, 0)
+#
+#     dir_compl = submesh(!in(dirichlet), bnd_supp)
+#     dir_compl_edges = CompScienceMeshes.skeleton_fast(dir_compl, 1)
+#     dir_compl_nodes = CompScienceMeshes.skeleton_fast(dir_compl, 0)
+#
+#     int_edges = submesh(!in(dir_compl_edges), supp_edges)
+#     int_nodes = submesh(!in(dir_compl_nodes), supp_nodes)
+#
+#     # Nd_prt = BEAST.nedelecc3d(supp, port_edges)
+#     # Nd_int = BEAST.nedelecc3d(supp, int_edges)
+#     Nd_prt = BEAST.nedelec(supp, port_edges)
+#     Nd_int = BEAST.nedelec(supp, int_edges)
+#     Lg_int = BEAST.lagrangec0d1(supp, int_nodes)
+#
+#     curl_Nd_prt = curl(Nd_prt)
+#     curl_Nd_int = curl(Nd_int)
+#     grad_Lg_int = BEAST.gradient(Lg_int)
+#
+#     A = assemble(Id, curl_Nd_int, curl_Nd_int)
+#     B = assemble(Id, grad_Lg_int, Nd_int)
+#
+#     a = -assemble(Id, curl_Nd_int, curl_Nd_prt) * x_prt
+#     b = -assemble(Id, grad_Lg_int, Nd_prt) * x_prt
+#
+#     Z = zeros(eltype(b), length(b), length(b))
+#     u = [A B'; B Z] \ [a;b]
+#     x_int = u[1:end-length(b)]
+#
+#     return x_int, int_edges, Nd_int
+# end
 
 function dual1forms(Tetrs, Faces, Dir)
     tetrs, bnd, dir, v2t, v2n = dual1forms_init(Tetrs, Dir)
@@ -316,9 +318,9 @@ function dual1forms_body(Faces, tetrs, bnd, dir, v2t, v2n)
             x0[i] = sgn * lgt / total_lgt
         end
 
-        x23, supp23_int_edges = extend_edge_to_face(supp23, dir23_edges, x0, port_edges)
-        x31, supp31_int_edges = extend_edge_to_face(supp31, dir31_edges, x0, port_edges)
-        x12, supp12_int_edges = extend_edge_to_face(supp12, dir12_edges, x0, port_edges)
+        x23, supp23_int_edges, _ = extend_edge_to_face(supp23, dir23_edges, x0, port_edges)
+        x31, supp31_int_edges, _ = extend_edge_to_face(supp31, dir31_edges, x0, port_edges)
+        x12, supp12_int_edges, _ = extend_edge_to_face(supp12, dir12_edges, x0, port_edges)
 
         port1_edges = CompScienceMeshes.union(port_edges, supp31_int_edges)
         port1_edges = CompScienceMeshes.union(port1_edges, supp12_int_edges)
@@ -335,9 +337,13 @@ function dual1forms_body(Faces, tetrs, bnd, dir, v2t, v2n)
         Nd2_prt = BEAST.nedelecc3d(supp2, port2_edges)
         Nd3_prt = BEAST.nedelecc3d(supp3, port3_edges)
 
-        x1_int, _, Nd1_int = extend_face_to_tetr(supp1, dir1_faces, x1_prt, port1_edges)
-        x2_int, _, Nd2_int = extend_face_to_tetr(supp2, dir2_faces, x2_prt, port2_edges)
-        x3_int, _, Nd3_int = extend_face_to_tetr(supp3, dir3_faces, x3_prt, port3_edges)
+        # x1_int, _, Nd1_int = extend_face_to_tetr(supp1, dir1_faces, x1_prt, port1_edges)
+        # x2_int, _, Nd2_int = extend_face_to_tetr(supp2, dir2_faces, x2_prt, port2_edges)
+        # x3_int, _, Nd3_int = extend_face_to_tetr(supp3, dir3_faces, x3_prt, port3_edges)
+
+        x1_int, _, Nd1_int = extend_edge_to_face(supp1, dir1_faces, x1_prt, port1_edges)
+        x2_int, _, Nd2_int = extend_edge_to_face(supp2, dir2_faces, x2_prt, port2_edges)
+        x3_int, _, Nd3_int = extend_edge_to_face(supp3, dir3_faces, x3_prt, port3_edges)
 
         # inject in the global space
         fn = BEAST.Shape{Float64}[]

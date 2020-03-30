@@ -471,7 +471,19 @@ function duallagrangec0d1(mesh, mesh2, pred, ::Type{Val{2}})
 end
 
 gradient(space::LagrangeBasis{1,0}, geo, fns) = NDLCCBasis(geo, fns)
+gradient(space::LagrangeBasis{1,0}, geo::CompScienceMeshes.AbstractMesh{U,3} where {U}, fns) = NDBasis(geo, fns)
+
 curl(space::LagrangeBasis{1,0}, geo, fns) = RTBasis(geo, fns)
+
+# function gradient(space::LagrangeBasis{1,0})
+#     crl = curl(space)
+#     for fn in crl.fns
+#         for (i,sh) in enumerate(fn)
+#             fn[i] = Shape(sh.cellid, sh.refid, -sh.coeff)
+#         end
+#     end
+#     return n × crl
+# end
 
 #
 # Sclar trace for Laggrange element based spaces

@@ -1,5 +1,6 @@
 ## Preamble
 using Test
+using LinearAlgebra
 
 using CompScienceMeshes
 using BEAST
@@ -51,9 +52,9 @@ t = neighborhood(s, [1,1]/3)
 v = f(t, Val{:withcurl})
 
 A = volume(s)
-@test v[1][2] == (s[3]-s[2])/2A
-@test v[2][2] == (s[1]-s[3])/2A
-@test v[3][2] == (s[2]-s[1])/2A
+@test v[1][2] ≈ (s[3]-s[2])/2A
+@test v[2][2] ≈ (s[1]-s[3])/2A
+@test v[3][2] ≈ (s[2]-s[1])/2A
 
 @test v[1][1] ≈ 1/3
 @test v[2][1] ≈ 1/3
@@ -188,6 +189,46 @@ for _p in 1:numcells(m)
     end
 end
 
+## Test gradient and curl of continuous lagrange elements
+m = meshrectangle(1.0, 1.0, 0.5, 3)
+int_nodes = submesh(!in(skeleton(boundary(m),0)), skeleton(m,0))
+@test length(int_nodes) == 1
 
+lag = lagrangec0d1(m, int_nodes)
+@test numfunctions(lag) == 1
+
+rs = refspace(lag)
+cl = cells(m)[2]
+ch = chart(m, cl)
+nbd = neighborhood(ch, carttobary(ch, [0.5, 0.5, 0]))
+vals = getfield.(rs(nbd), :value)
+@test vals ≈ [0, 1, 0]
+
+crl = BEAST.curl(lag)
+# BEAST.gradient(lag)
+nxgrad = BEAST.n × BEAST.gradient(lag)
+
+for i in eachindex(crl.fns)
+    for j in eachindex(crl.fns[i])
+        @test crl.fns[i][j] == nxgrad.fns[i][j]
+    end
+end
+
+
+m = Mesh([
+    point(1,0,0),
+    point(0,1,0),
+    point(0,0,1),
+    point(0,0,0)],
+    [index(1,2,3,4)])
+
+lag = lagrangec0d1(m, skeleton(m,0))
+@test numfunctions(lag) == 4
+
+gradlag = gradient(lag)
+
+edg = skeleton(m,1)
+nd3d1 = BEAST.nedelec(m,edg)
+nd3d2 = BEAST.nedelecc3d(m,edg)
 
 ## end of file
