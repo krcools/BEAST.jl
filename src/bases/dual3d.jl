@@ -174,8 +174,63 @@ function dual2forms_body(Tetrs, Edges, Dir, tetrs, bnd, v2t, v2n)
     NDLCDBasis(tetrs, bfs, pos)
 end
 
+function dual2forms_body_new(Edges, tetrs, bnd, dir, v2t, v2n)
 
-function extend_edge_to_face(supp, dirichlet, x_prt, port_edges)
+    T = coordtype(tetrs)
+    bfs = Vector{Vector{Shape{T}}}(undef, numcells(Edges))
+    pos = Vector{vertextype(Edges)}(undef, numcells(Edges))
+
+    for (F,Edge) in enumerate(cells(Edges))
+
+        println("Constructing dual 2-forms: $F out of $(length(Edges)).")
+
+        idcs1 = v2t[Edge[1],1:v2n[Edge[1]]]
+        idcs2 = v2t[Edge[2],1:v2n[Edge[2]]]
+
+        supp1 = tetrs.mesh[idcs1]
+        supp2 = tetrs.mesh[idcs2]
+
+        bnd_supp1 = boundary(supp1)
+        bnd_supp2 = boundary(supp2)
+
+        dir1_faces = submesh(in(dir), bnd_supp1)
+        dir2_faces = submesh(in(dir), bnd_supp2)
+
+        port_faces = bnd_supp1
+        port_faces = submesh(in(bnd_supp2), port_faces)
+
+        x0 = zeros(length(port_faces))
+        total_vol = sum(volume(chart(port_faces, fc)) for fc in port_faces)
+        tgt = tangents(center(chart(Edges, Edge)),1)
+        for (i,face) in enumerate(port_faces)
+            chrt = chart(port_faces, face)
+            nrm = normal(chrt)
+            vol = volume(chrt)
+            sgn = sign(dot(nrm, tgt))
+            x0[i] = sgn * vol / total_vol
+        end
+
+        RT1_prt = BEAST.raviartthomas(supp1, port_faces)
+        RT2_prt = BEAST.raviartthomas(supp2, port_faces)
+
+        x1_int, _, RT1_int = extend_2_form(supp1, dir1_faces, x0, port_faces)
+        x2_int, _, RT2_int = extend_2_form(supp2, dir2_faces, x0, port_faces)
+
+        bfs[F] = Vector{Shape{T}}()
+        pos[F] = cartesian(center(chart(Edges,Edge)))
+        addf!(bfs[F], x1_int, RT1_int, idcs1)
+        addf!(bfs[F], x0, RT1_prt, idcs1)
+
+        addf!(bfs[F], x2_int, RT2_int, idcs2)
+        addf!(bfs[F], x0, RT2_prt, idcs2)
+
+    end
+
+    NDLCDBasis(tetrs, bfs, pos)
+end
+
+
+function extend_1_form(supp, dirichlet, x_prt, port_edges)
 
     Id = BEAST.Identity()
 
@@ -209,6 +264,43 @@ function extend_edge_to_face(supp, dirichlet, x_prt, port_edges)
     x_int = u[1:end-length(b)]
 
     return x_int, int_edges, Nd_int
+end
+
+
+function extend_2_form(supp, dirichlet, x_prt, port_faces)
+
+    Id = BEAST.Identity()
+
+    bnd_supp = boundary(supp)
+    supp_faces = CompScienceMeshes.skeleton_fast(supp, 2)
+    supp_edges = CompScienceMeshes.skeleton_fast(supp, 1)
+
+    dir_compl = submesh(!in(dirichlet), bnd_supp)
+    dir_compl_faces = CompScienceMeshes.skeleton_fast(dir_compl, 2)
+    dir_compl_edges = CompScienceMeshes.skeleton_fast(dir_compl, 1)
+
+    int_faces = submesh(!in(dir_compl_faces), supp_faces)
+    int_edges = submesh(!in(dir_compl_edges), supp_edges)
+
+    RT_prt = BEAST.raviartthomas(supp, port_faces)
+    RT_int = BEAST.raviartthomas(supp, int_faces)
+    Nd_int = BEAST.nedelec(supp, int_edges)
+
+    div_RT_prt = divergence(RT_prt)
+    div_RT_int = divergence(RT_int)
+    curl_Nd_int = curl(Nd_int)
+
+    A = assemble(Id, div_RT_int, div_RT_int)
+    B = assemble(Id, curl_Nd_int, RT_int)
+
+    a = -assemble(Id, div_RT_int, div_RT_prt) * x_prt
+    b = -assemble(Id, curl_Nd_int, RT_prt) * x_prt
+
+    Z = zeros(eltype(b), length(b), length(b))
+    u = [A B'; B Z] \ [a;b]
+    x_int = u[1:end-length(b)]
+
+    return x_int, int_faces, RT_int
 end
 
 
@@ -254,6 +346,11 @@ end
 function dual1forms(Tetrs, Faces, Dir)
     tetrs, bnd, dir, v2t, v2n = dual1forms_init(Tetrs, Dir)
     dual1forms_body(Faces, tetrs, bnd, dir, v2t, v2n)
+end
+
+function dual2forms_new(Tetrs, Faces, Dir)
+    tetrs, bnd, dir, v2t, v2n = dual1forms_init(Tetrs, Dir)
+    dual2forms_body_new(Faces, tetrs, bnd, dir, v2t, v2n)
 end
 
 function dual1forms_init(Tetrs, Dir)
@@ -310,17 +407,19 @@ function dual1forms_body(Faces, tetrs, bnd, dir, v2t, v2n)
 
         # Step 1: set port flux and extend to dual faces
         x0 = zeros(length(port_edges))
-        total_lgt = sum(volume(chart(port_edges, edge)) for edge in port_edges)
+        total_vol = sum(volume(chart(port_edges, edge)) for edge in port_edges)
+        nrm = normal(chart(Faces, Face))
         for (i,edge) in enumerate(port_edges)
-            tgt = tangents(center(chart(port_edges, edge)),1)
-            lgt = volume(chart(port_edges, edge))
-            sgn = sign(dot(normal(chart(Faces, Face)), tgt))
-            x0[i] = sgn * lgt / total_lgt
+            cht = chart(port_edges, edge)
+            tgt = tangents(center(cht),1)
+            vol = volume(cht)
+            sgn = sign(dot(nrm, tgt))
+            x0[i] = sgn * vol / total_vol
         end
 
-        x23, supp23_int_edges, _ = extend_edge_to_face(supp23, dir23_edges, x0, port_edges)
-        x31, supp31_int_edges, _ = extend_edge_to_face(supp31, dir31_edges, x0, port_edges)
-        x12, supp12_int_edges, _ = extend_edge_to_face(supp12, dir12_edges, x0, port_edges)
+        x23, supp23_int_edges, _ = extend_1_form(supp23, dir23_edges, x0, port_edges)
+        x31, supp31_int_edges, _ = extend_1_form(supp31, dir31_edges, x0, port_edges)
+        x12, supp12_int_edges, _ = extend_1_form(supp12, dir12_edges, x0, port_edges)
 
         port1_edges = CompScienceMeshes.union(port_edges, supp31_int_edges)
         port1_edges = CompScienceMeshes.union(port1_edges, supp12_int_edges)
@@ -333,17 +432,13 @@ function dual1forms_body(Faces, tetrs, bnd, dir, v2t, v2n)
         x2_prt = [x0; x12; x23]
         x3_prt = [x0; x23; x31]
 
-        Nd1_prt = BEAST.nedelecc3d(supp1, port1_edges)
-        Nd2_prt = BEAST.nedelecc3d(supp2, port2_edges)
-        Nd3_prt = BEAST.nedelecc3d(supp3, port3_edges)
+        Nd1_prt = BEAST.nedelec(supp1, port1_edges)
+        Nd2_prt = BEAST.nedelec(supp2, port2_edges)
+        Nd3_prt = BEAST.nedelec(supp3, port3_edges)
 
-        # x1_int, _, Nd1_int = extend_face_to_tetr(supp1, dir1_faces, x1_prt, port1_edges)
-        # x2_int, _, Nd2_int = extend_face_to_tetr(supp2, dir2_faces, x2_prt, port2_edges)
-        # x3_int, _, Nd3_int = extend_face_to_tetr(supp3, dir3_faces, x3_prt, port3_edges)
-
-        x1_int, _, Nd1_int = extend_edge_to_face(supp1, dir1_faces, x1_prt, port1_edges)
-        x2_int, _, Nd2_int = extend_edge_to_face(supp2, dir2_faces, x2_prt, port2_edges)
-        x3_int, _, Nd3_int = extend_edge_to_face(supp3, dir3_faces, x3_prt, port3_edges)
+        x1_int, _, Nd1_int = extend_1_form(supp1, dir1_faces, x1_prt, port1_edges)
+        x2_int, _, Nd2_int = extend_1_form(supp2, dir2_faces, x2_prt, port2_edges)
+        x3_int, _, Nd3_int = extend_1_form(supp3, dir3_faces, x3_prt, port3_edges)
 
         # inject in the global space
         fn = BEAST.Shape{Float64}[]
@@ -358,7 +453,6 @@ function dual1forms_body(Faces, tetrs, bnd, dir, v2t, v2n)
 
         pos[F] = cartesian(CompScienceMeshes.center(chart(Faces, Face)))
         bfs[F] = fn
-        # space = BEAST.NDLCCBasis(tetrs, [fn], [pos])
     end
 
     NDLCCBasis(tetrs, bfs, pos)

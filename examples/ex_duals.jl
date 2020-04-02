@@ -8,12 +8,15 @@ include("utils/showfn.jl")
 Tetrs = CompScienceMeshes.tetmeshsphere(1.0, 0.40)
 Faces = CompScienceMeshes.skeleton_fast(Tetrs, 2)
 Edges = CompScienceMeshes.skeleton_fast(Tetrs, 1)
+Nodes = CompScienceMeshes.skeleton_fast(Tetrs, 0)
 
 bnd_Faces = boundary(Tetrs)
 bnd_Edges = CompScienceMeshes.skeleton_fast(bnd_Faces, 1)
+bnd_Nodes = CompScienceMeshes.skeleton_fast(bnd_Faces, 0)
 
 int_Faces = submesh(!in(bnd_Faces), Faces)
 int_Edges = submesh(!in(bnd_Edges), Edges)
+int_Nodes = submesh(!in(bnd_Nodes), Nodes)
 
 @show length(int_Edges)
 @show length(int_Faces)
@@ -24,17 +27,21 @@ primal2 = BEAST.nedelecd3d(Tetrs, int_Faces)
 Dir = bnd_Faces
 Neu = submesh(!in(Dir), bnd_Faces)
 dual1 = BEAST.dual1forms(Tetrs, int_Faces, Dir)
-dual2 = BEAST.dual2forms(Tetrs, int_Edges, Neu)
+dual2_old = BEAST.dual2forms(Tetrs, int_Edges, Neu)
+dual2 = BEAST.dual2forms_new(Tetrs, int_Edges, Dir)
 
 TF = connectivity(int_Faces, Tetrs)
 FE = connectivity(int_Edges, int_Faces)
+EN = connectivity(int_Nodes, int_Edges)
 
 Id = BEAST.Identity()
 G = assemble(Id, dual1, primal2)
+H = assemble(Id, dual2, primal1)
 A = assemble(Id, primal2, primal2)
 B = assemble(Id, curl(primal1), curl(primal1))
 @show norm(G)
 @show norm(TF*G*FE)
+@show norm(FE*H*EN)
 
 B2 = FE'*A*FE;
 @show norm(B - B2)

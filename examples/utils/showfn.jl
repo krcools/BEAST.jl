@@ -32,3 +32,16 @@ function showfn(space,i)
     W = collect(values(W))
     Plotly.cone(x=X,y=Y,z=Z,u=U,v=V,w=W)
 end
+
+function compress!(space)
+    T = scalartype(space)
+    for (i,fn) in pairs(space.fns)
+        shapes = Dict{Tuple{Int,Int},T}()
+        for shape in fn
+            v = get(shapes, (shape.cellid, shape.refid), zero(T))
+            shapes[(shape.cellid, shape.refid)] = v + shape.coeff
+            # set!(shapes, (shape.cellid, shape.refid), v + shape.coeff)
+        end
+        space.fns[i] = [BEAST.Shape(k[1], k[2], v) for (k,v) in shapes]
+    end
+end
