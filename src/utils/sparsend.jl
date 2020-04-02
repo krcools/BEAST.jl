@@ -162,7 +162,7 @@ struct SpaceTimeData{T} <: AbstractArray{Vector{T},1}
 end
 
 Base.eltype(x::SpaceTimeData{T}) where {T} = Vector{T}
-Base.size(x::SpaceTimeData) = size(x.data)[1]
+Base.size(x::SpaceTimeData) = (size(x.data)[1],)
 Base.getindex(x::SpaceTimeData, i::Int) = x.data[i,:]
 
 end # module

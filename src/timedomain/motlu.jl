@@ -28,21 +28,21 @@ end
 using BlockArrays
 
 function convolve(Z::BlockArray, x, i, j_start)
-    cs = BlockArrays.cumulsizes(Z)
-    bs = [blocksize(Z, (i,1))[1] for i in 1:nblocks(Z,1)]
-    # @show bs
+    # ax1 = axes(Z,1)
+    ax2 = axes(Z,2)
     T = eltype(eltype(Z))
-    y = PseudoBlockVector{T}(undef,bs)
+    y = PseudoBlockVector{T}(undef,blocklengths(axes(Z,1)))
     fill!(y,0)
-    for I in 1:nblocks(Z,1)
-        # xI = view(x, cs[1][I] : cs[1][I+1]-1, :)
-        for J in 1:nblocks(Z,2)
-            xJ = view(x, cs[2][J] : cs[2][J+1]-1, :)
-            isassigned(Z.blocks, I, J) || continue
-            ZIJ = Z[Block(I,J)].banded
-            # @show size(xJ) size(ZIJ)
-            # @show size(y[Block(I)])
-            y[Block(I)] .+= convolve(ZIJ, xJ, i, j_start)
+    for I in blockaxes(Z,1)
+        for J in blockaxes(Z,2)
+            xJ = view(x, ax2[J], :)
+            try
+                ZIJ = Z[I,J].banded
+                y[I] .+= convolve(ZIJ, xJ, i, j_start)
+            catch
+                @info "Skipping unassigned block."
+                continue
+            end
         end
     end
     return y
