@@ -179,7 +179,6 @@ function assemble_chunk!(op::RetardedPotential, testST, trialST, store)
 									abv = b*av
 									tad_rd = timead[r,d]
                                     for (k,c) in tad_rd
-                                        #@assert 1 <= s <= Nt
 										store(c*abv, m, n, k)
 									end # next κ
 		                        end # next ν
