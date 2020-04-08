@@ -38,7 +38,8 @@ function allocatestorage(op::RetardedPotential, testST, basisST,
 
     #Z = SparseND.Banded3D(K0,K1,data)
     kmax = maximum(K1);
-    Z = zeros(eltype(op), M, N, kmax+1)
+    # Z = zeros(eltype(op), M, N, kmax+1)
+	Z = zeros(eltype(op), M, N, kmax)
     store1(v,m,n,k) = (Z[m,n,k] += v)
     return MatrixConvolution(Z), store1
 end
@@ -79,7 +80,7 @@ function allocatestorage(op::RetardedPotential, testST, basisST,
 	maxk1 = maximum(K1)
 	bandwidth = maximum(K1 .- K0 .+ 1)
 	data = zeros(eltype(op), bandwidth, M, N)
-	Z = SparseND.Banded3D(K0, data, maxk1+1)
+	Z = SparseND.Banded3D(K0, data, maxk1)
     store1(v,m,n,k) = (Z[m,n,k] += v)
     return Z, store1
 end
