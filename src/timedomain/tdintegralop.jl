@@ -34,11 +34,8 @@ function allocatestorage(op::RetardedPotential, testST, basisST,
     print("Allocating memory for convolution operator: ")
     assemble!(aux, testST, basisST, store)
     println("\nAllocated memory for convolution operator.")
-    # data = zeros(eltype(op), M, N, maximum(K1.-K0.+1))
 
-    #Z = SparseND.Banded3D(K0,K1,data)
     kmax = maximum(K1);
-    # Z = zeros(eltype(op), M, N, kmax+1)
 	Z = zeros(eltype(op), M, N, kmax)
     store1(v,m,n,k) = (Z[m,n,k] += v)
     return MatrixConvolution(Z), store1
@@ -67,16 +64,7 @@ function allocatestorage(op::RetardedPotential, testST, basisST,
     print("Allocating memory for convolution operator: ")
     assemble!(aux, testST, basisST, store)
     println("\nAllocated memory for convolution operator.")
-    # data = zeros(eltype(op), M, N, maximum(K1.-K0.+1))
 
-	# @show minimum(K0)
-	# @show maximum(K0)
-	# @show minimum(K1)
-	# @show maximum(K1)
-
-    #Z = SparseND.Banded3D(K0,K1,data)
-    # kmax = maximum(K1);
-    # Z = zeros(eltype(op), M, N, kmax+1)
 	maxk1 = maximum(K1)
 	bandwidth = maximum(K1 .- K0 .+ 1)
 	data = zeros(eltype(op), bandwidth, M, N)
@@ -85,6 +73,56 @@ function allocatestorage(op::RetardedPotential, testST, basisST,
     return Z, store1
 end
 
+struct Storage{T} end
+
+function allocatestorage(op::RetardedPotential, testST, basisST,
+	::Type{Storage{:banded}},
+	::Type{LongDelays{:compress}})
+
+	T = eltype(op)
+
+    tfs = spatialbasis(testST)
+    bfs = spatialbasis(basisST)
+
+	Δt = timestep(temporalbasis(basisST))
+	Nt = numfunctions(temporalbasis(basisST))
+
+	tbf = convolve(temporalbasis(testST), temporalbasis(basisST))
+	has_tail = all(tbf.polys[end].data .== 0)
+
+    M = numfunctions(tfs)
+    N = numfunctions(bfs)
+
+    K0 = fill(typemax(Int), M, N)
+    K1 = zeros(Int, M, N)
+
+    function store_alloc(v,m,n,k)
+        K0[m,n] = min(K0[m,n],k)
+        K1[m,n] = max(K1[m,n],k)
+    end
+
+    op_alloc = EmptyRP(op.speed_of_light)
+	tbf_trunc = truncatetail(tbf)
+	δ = timebasisdelta(Δt, Nt)
+    print("Allocating memory for convolution operator: ")
+    assemble!(op_alloc, tfs⊗δ, bfs⊗tbf_trunc, store_alloc)
+    println("\nAllocated memory for convolution operator.")
+
+	bandwidth = maximum(K1 .- K0 .+ 1)
+	data = zeros(T, bandwidth, M, N)
+	tail = zeros(T, M, N)
+	Z = ConvOp(data, K0, K1, tail, Nt)
+
+    function store1(v,m,n,k)
+		if Z.k0[m,n] ≤ k ≤ Z.k1[m,n]
+			Z.data[k - Z.k0[m,n] + 1,m,n] += v
+		elseif k == Z.k1[m,n]+1
+			Z.tail[m,n] += v
+		end
+	end
+
+    return Z, store1
+end
 
 function assemble!(op::LinearCombinationOfOperators, tfs::SpaceTimeBasis, bfs::SpaceTimeBasis, store)
     for (a,A) in zip(op.coeffs, op.ops)
@@ -101,16 +139,16 @@ function assemble!(op::RetardedPotential, testST, trialST, store)
 	@assert P >= 1
 	splits = [round(Int,s) for s in range(0, stop=numfunctions(Y), length=P+1)]
 
-	@info "Starting assembly with $P threads:"
-	Threads.@threads for i in 1:P
-		lo, hi = splits[i]+1, splits[i+1]
-		lo <= hi || continue
-		Y_p = subset(Y, lo:hi)
-		store1 = (v,m,n,k) -> store(v,lo+m-1,n,k)
-		assemble_chunk!(op, Y_p ⊗ S, trialST, store1)
-	end
+	# @info "Starting assembly with $P threads:"
+	# Threads.@threads for i in 1:P
+	# 	lo, hi = splits[i]+1, splits[i+1]
+	# 	lo <= hi || continue
+	# 	Y_p = subset(Y, lo:hi)
+	# 	store1 = (v,m,n,k) -> store(v,lo+m-1,n,k)
+	# 	assemble_chunk!(op, Y_p ⊗ S, trialST, store1)
+	# end
 
-	# assemble_chunk!(op, testST, trialST, store)
+	assemble_chunk!(op, testST, trialST, store)
 end
 
 function assemble_chunk!(op::RetardedPotential, testST, trialST, store)

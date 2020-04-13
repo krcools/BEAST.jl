@@ -207,8 +207,9 @@ scalartype(op::TemporalIntegration) = scalartype(op.operator)
 Base.:*(a::Number, op::TemporalIntegration) = TemporalIntegration(a * op.operator)
 
 function allocatestorage(op::TemporalIntegration, testfns, trialfns,
-	::Type{Val{:bandedstorage}},
-	::Type{LongDelays{:ignore}})
+	storage_trait, longdelays_trait)
+	# ::Type{Val{:bandedstorage}},
+	# ::Type{LongDelays{:ignore}})
 
 	trial_time_fns  = temporalbasis(trialfns)
 	trial_space_fns = spatialbasis(trialfns)
@@ -218,7 +219,7 @@ function allocatestorage(op::TemporalIntegration, testfns, trialfns,
 		integrate(trial_time_fns)
 	)
 
-	Z, store = allocatestorage(op.operator, testfns, trialfns, Val{:bandedstorage}, LongDelays{:ignore})
+	Z, store = allocatestorage(op.operator, testfns, trialfns, storage_trait, longdelays_trait)
 	@show size(Z)
 	return Z, store
 end

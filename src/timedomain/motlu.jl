@@ -25,6 +25,35 @@ function marchonintime(W0,Z,B,I)
     return x
 end
 
+function marchonintime(iZ0, Z::ConvOp, B, Nt)
+    T = eltype(iZ0)
+    Ns = size(Z,1)
+    x = zeros(T,Ns,Nt)
+    csx = zeros(T,Ns,Nt)
+    y = zeros(T,Ns)
+
+    todo, done, pct = Nt, 0, 0
+    for i in 1:Nt
+        fill!(y,0)
+        convolve!(y, Z, x, csx, i, 2, Nt)
+        y .*= -1
+        y .+= B[:,i]
+
+        x[:,i] += iZ0 * y
+        if i > 1
+            csx[:,i] .= csx[:,i-1] .+ x[:,i]
+        else
+            println("intinfenifheuifhi")
+            csx[:,i] .= x[:,i]
+        end
+
+        done += 1
+        new_pct = round(Int, done / todo * 100)
+        new_pct > pct+9 && (println("[$new_pct]"); pct=new_pct)
+    end
+    x
+end
+
 using BlockArrays
 
 function convolve(Z::BlockArray, x, i, j_start)

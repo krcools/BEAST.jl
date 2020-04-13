@@ -86,7 +86,17 @@ scalartype(tbf::TimeBasisFunction{T,N,D1,D}) where {T,N,D1,D} = T
 numfunctions(t::TimeBasisFunction) = t.numfunctions
 refspace(t::TimeBasisFunction{T,N,D1,D}) where {T,N,D1,D} = MonomialBasis{T,D,D1}()
 
+function truncatetail(t::TimeBasisFunction{T,N,D1,D})  where {T,N,D1,D}
+    P = Polynomial{D1,T}
+    S = SVector{N,P}
+    R = SVector{D1,T}
 
+    out = deepcopy(t)
+    polys = [p for p in t.polys]
+    polys[end] = P(zero(R))
+    out.polys = S(polys)
+    return out
+end
 
 
 geometry(t::AbstractTimeBasisFunction) = [SegmentedAxis(timestep(t), numfunctions(t)+numintervals(t)-3)]

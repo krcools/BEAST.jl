@@ -56,6 +56,7 @@ include("test_hh3dexc.jl")
 include("test_tdassembly.jl")
 include("test_tdhhdbl.jl")
 include("test_tdmwdbl.jl")
+include("test_compressed_storage.jl")
 
 include("test_tdop_scaling.jl")
 include("test_tdrhs_scaling.jl")
