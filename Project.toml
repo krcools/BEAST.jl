@@ -21,6 +21,7 @@ StaticArrays = "90137ffa-7385-5640-81b9-e52037218182"
 WiltonInts84 = "a3e2863e-c0ee-5ff6-a523-307a4cdc8724"
 
 [compat]
+BlockArrays = "^0.12.7"
 CollisionDetection = "^0.1"
 Combinatorics = "^0.7"
 CompScienceMeshes = "^0.2.5"
