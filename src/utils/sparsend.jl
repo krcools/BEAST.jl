@@ -120,7 +120,7 @@ end
 
 
 struct MatrixOfConvolutions{T} <: AbstractArray{Vector{T},2}
-    banded::Banded3D{T}
+    banded::AbstractArray{T,3}
 end
 
 function Base.eltype(x::MatrixOfConvolutions{T}) where {T}

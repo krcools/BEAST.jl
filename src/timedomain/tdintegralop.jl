@@ -76,8 +76,10 @@ end
 struct Storage{T} end
 
 function allocatestorage(op::RetardedPotential, testST, basisST,
-	::Type{Storage{:banded}},
-	::Type{LongDelays{:compress}})
+	::Type{Val{:bandedstorage}},
+    ::Type{LongDelays{:compress}})
+    
+    @info "Allocating mem for RP op compressing the static tail..."
 
 	T = eltype(op)
 

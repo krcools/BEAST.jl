@@ -26,6 +26,7 @@ function marchonintime(W0,Z,B,I)
 end
 
 function marchonintime(iZ0, Z::ConvOp, B, Nt)
+
     T = eltype(iZ0)
     Ns = size(Z,1)
     x = zeros(T,Ns,Nt)
@@ -38,12 +39,12 @@ function marchonintime(iZ0, Z::ConvOp, B, Nt)
         convolve!(y, Z, x, csx, i, 2, Nt)
         y .*= -1
         y .+= B[:,i]
+        # @show norm(B[:,i])
 
-        x[:,i] += iZ0 * y
+        x[:,i] .+= iZ0 * y
         if i > 1
             csx[:,i] .= csx[:,i-1] .+ x[:,i]
         else
-            println("intinfenifheuifhi")
             csx[:,i] .= x[:,i]
         end
 
@@ -77,19 +78,56 @@ function convolve(Z::BlockArray, x, i, j_start)
     return y
 end
 
+function convolve!(y,Z::BlockArray, x, csx, i, j_start, j_stop)
+    ax1 = axes(Z,1)
+    ax2 = axes(Z,2)
+    T = eltype(eltype(Z))
+    # y = PseudoBlockVector{T}(undef,blocklengths(axes(Z,1)))
+    fill!(y,0)
+    for I in blockaxes(Z,1)
+        for J in blockaxes(Z,2)
+            xJ = view(x, ax2[J], :)
+            csxJ = view(csx, ax2[J], :)
+            try
+                ZIJ = Z[I,J].banded
+                # y[I] .+= convolve(ZIJ, xJ, i, j_start)
+                yI = view(y, ax1[I])
+                convolve!(yI, ZIJ, xJ, csxJ, i, j_start, j_stop)
+            catch
+                @info "Skipping unassigned block."
+                continue
+            end
+        end
+    end
+    return y
+end
+
 function marchonintime(W0,Z::BlockArray,B,I)
+
     T = eltype(W0)
     M,N = size(W0)
     @assert M == size(B,1)
+
     x = zeros(T,N,I)
+    y = zeros(T,N)
+    csx = zeros(T,N,I)
+
     for i in 1:I
         R = [ B[j][i] for j in 1:N ]
-        S = convolve(Z,x,i,2)
-        # @show size(R)
-        # @show size(S)
-        # b = R - convolve(Z,x,i,2)
-        b = R - S
-        x[:,i] += W0 * b
+        # @show norm(R)
+        k_start = 2
+        k_stop = I
+
+        fill!(y,0)
+        convolve!(y,Z,x,csx,i,k_start,k_stop)
+        b = R - y
+        x[:,i] .+= W0 * b
+        if i > 1
+            csx[:,i] .= csx[:,i-1] .+ x[:,i]
+        else
+            csx[:,i] .= x[:,i]
+        end
+
         (i % 10 == 0) && print(i, "[", I, "] - ")
     end
     return x

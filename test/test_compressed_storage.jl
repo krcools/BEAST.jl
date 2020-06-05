@@ -6,6 +6,8 @@ using Test
 # Γ = meshcuboid(1.0, 1.0, 1.0, 0.25)
 # Γ = meshsphere(1.0, 0.3)
 Γ = meshrectangle(1.0, 1.0, 1/3, 3)
+Γ1 = CompScienceMeshes.rotate(Γ, pi/2*point(1,0,0))
+Γ2 = CompScienceMeshes.weld(Γ,Γ1)
 
 sol = 1.0
 SL0 = TDMaxwell3D.singlelayer(speedoflight=sol, numdiffs=0)
@@ -29,6 +31,7 @@ T2 = timebasisshiftedlagrange(Δt, Nt, 2)
 T3 = timebasisshiftedlagrange(Δt, Nt, 3)
 
 iT1 = integrate(T1)
+iT2 = integrate(T2)
 
 X = raviartthomas(Γ)
 Y = buffachristiansen(Γ, ibscaled=false)
@@ -89,3 +92,18 @@ x4 = marchonintime(W4, Z4, b1, Nt)
 
 @test norm(vec(x1)-vec(x3)) / norm(vec(x3)) < 0.1
 @test norm(vec(x1)-vec(x4)) / norm(vec(x4)) < 0.1
+
+X2 = raviartthomas(Γ2)
+DLh = (DL0, X2⊗δ, X2⊗iT2)
+
+Z9, store9 = BEAST.allocatestorage(DLh...,
+    BEAST.Storage{:banded},
+    BEAST.LongDelays{:compress})
+Z10, store10 = BEAST.allocatestorage(DLh...,
+    BEAST.Val{:bandedstorage},
+    BEAST.LongDelays{:ignore})
+
+@time BEAST.assemble!(DLh..., store9)
+@time BEAST.assemble!(DLh..., store10)
+
+@test norm(Z9-Z10,Inf) < 1e-12
