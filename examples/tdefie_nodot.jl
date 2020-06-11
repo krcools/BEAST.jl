@@ -1,6 +1,7 @@
 using CompScienceMeshes, BEAST
 
-Γ = readmesh(joinpath(@__DIR__,"sphere2.in"))
+# Γ = readmesh(joinpath(@__DIR__,"sphere2.in"))
+Γ = readmesh(joinpath(dirname(pathof(BEAST)),"../examples/sphere2.in"))
 @show numcells(Γ)
 X = raviartthomas(Γ)
 
@@ -25,9 +26,9 @@ SL = TDMaxwell3D.singlelayer(speedoflight=1.0)
 @hilbertspace j′
 efie_nodot = @discretise SL[j′,j] == E[j′] j∈V j′∈W
 xefie_nodot = solve(efie_nodot)
-xefie_nodot = solve(@discretise(
-    SL[j′,j] == E[j′],
-    j∈V, j′∈W))
+# xefie_nodot = solve(@discretise(
+#     SL[j′,j] == E[j′],
+#     j∈V, j′∈W))
 
 
 Xefie, Δω, ω0 = fouriertransform(xefie_nodot, Δt, 0.0, 2)

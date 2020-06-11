@@ -42,8 +42,9 @@ end
 
 
 function convolve!(y, Z::ConvOp, x, X, j, k_start, k_stop=size(Z,3))
-    for m in axes(y,1)
-        for n in axes(x,1)
+    # @info "The corrrect convolve!"
+    for n in axes(x,1)
+        for m in axes(y,1)
             k0 = Z.k0[m,n]
             k1 = Z.k1[m,n]
             for k in max(k0,k_start):min(k1,k_stop)
@@ -59,8 +60,8 @@ function convolve!(y, Z::ConvOp, x, X, j, k_start, k_stop=size(Z,3))
 end
 
 
-function convolve(Z::ConvOp, x, j, k_start)
-    y = zeros(eltype(Z), size(Z)[1])
-    convolve!(y, Z, x, j, k_start, size(Z)[3])
-    return y
-end
+# function convolve(Z::ConvOp, x, j, k_start)
+#     y = zeros(eltype(Z), size(Z)[1])
+#     convolve!(y, Z, x, j, k_start, size(Z)[3])
+#     return y
+# end
