@@ -37,7 +37,7 @@ X = raviartthomas(Γ)
 Y = buffachristiansen(Γ, ibscaled=false)
 
 Z1, store1 = BEAST.allocatestorage(SL0, X⊗δ, X⊗T1,
-    BEAST.Storage{:banded},
+    BEAST.Val{:bandedstorage},
     BEAST.LongDelays{:compress})
 Z2, store2 = BEAST.allocatestorage(SL0, X⊗δ, X⊗T1,
     BEAST.Val{:bandedstorage},
@@ -49,7 +49,7 @@ BEAST.assemble!(SL0, X⊗δ, X⊗T1, store2)
 @test norm(Z1-Z2,Inf) < 1e-12
 
 Z3, store7 = BEAST.allocatestorage(SL1, X⊗δ, X⊗T2,
-    BEAST.Storage{:banded},
+    BEAST.Val{:bandedstorage},
     BEAST.LongDelays{:compress})
 Z4, store8 = BEAST.allocatestorage(SL1, X⊗δ, X⊗T2,
     BEAST.Val{:bandedstorage},
@@ -97,7 +97,7 @@ X2 = raviartthomas(Γ2)
 DLh = (DL0, X2⊗δ, X2⊗iT2)
 
 Z9, store9 = BEAST.allocatestorage(DLh...,
-    BEAST.Storage{:banded},
+    BEAST.Val{:bandedstorage},
     BEAST.LongDelays{:compress})
 Z10, store10 = BEAST.allocatestorage(DLh...,
     BEAST.Val{:bandedstorage},
