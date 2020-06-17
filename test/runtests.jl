@@ -51,6 +51,7 @@ include("test_ss_nested_meshes.jl")
 include("test_nitsche.jl")
 include("test_nitschehh3d.jl")
 
+include("test_curlcurlgreen.jl")
 include("test_hh3dtd_exc.jl")
 include("test_hh3dexc.jl")
 include("test_tdassembly.jl")

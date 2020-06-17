@@ -104,6 +104,7 @@ mutable struct CurlCurlGreen{T,U,V}
   position::V
 end
 
+cross(::NormalVector, p::CurlGreen) = CrossTraceMW(p)
 cross(::NormalVector, p::CurlCurlGreen) = CrossTraceMW(p)
 
 function (f::CurlCurlGreen)(x)
@@ -116,3 +117,12 @@ function (f::CurlCurlGreen)(x)
 end
 
 curl(f::CurlGreen) = CurlCurlGreen(f.wavenumber, f.source, f.position)
+function curl(f::CurlCurlGreen)
+  κ = f.wavenumber
+  j = κ^2 * f.source
+  x = f.position
+  return CurlGreen(κ, j, x)
+end
+
+Base.:*(a::Number, f::CurlGreen) = CurlGreen(f.wavenumber, a*f.source, f.position)
+Base.:*(a::Number, f::CurlCurlGreen) = CurlCurlGreen(f.wavenumber, a*f.source, f.position)

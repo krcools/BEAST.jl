@@ -20,18 +20,25 @@ function curlh(f,x,h)
     d2f = (f(x+h*e2) - f(x-h*e2))/(2*h)
     d3f = (f(x+h*e3) - f(x-h*e3))/(2*h)
 
-    return SVector(
+    return @SVector[
         d2f[3] - d3f[2],
         d3f[1] - d1f[3],
-        d1f[2] - d2f[1],
-    )
+        d1f[2] - d2f[1]]
 end
 
 cgh(x) = curlh(gj,x,h)
 ccgh(x) = curlh(cgh,x,h)
 
 h = 0.01
+x = point(1,1,1)
 a = ccg(x)
 b = ccgh(x)
 @show norm(x-y)
+@test norm(a-b) < 1e-5
+
+cccg = curl(ccg)
+cccgh(x) = curlh(ccg,x,h)
+
+# @show a = cccg(x)
+# @show b = cccgh(x)
 @test norm(a-b) < 1e-5
