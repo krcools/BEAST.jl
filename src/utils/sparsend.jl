@@ -33,7 +33,7 @@ end
 
 function setindex!(A::Banded3D, v, m, n, k)
     k0 = A.k0[m,n]
-    @assert k0 != 0
+    @assert k0 != 0 "Failed: $v, $m, $n, $k"
     @assert A.k0[m,n] <= k <= A.k0[m,n] + bandwidth(A) - 1
     A.data[k-A.k0[m,n]+1,m,n] = v
 end
