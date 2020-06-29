@@ -2,16 +2,21 @@ using CompScienceMeshes, BEAST
 # Γ = readmesh(joinpath(@__DIR__,"sphere2.in"))
 Γ = readmesh(joinpath(dirname(pathof(BEAST)),"../examples/sphere2.in"))
 # Γ = meshsphere(1.0, 0.4)
+@show length(Γ)
 
 X = raviartthomas(Γ)
 Y = buffachristiansen(Γ)
 
 Δt, Nt = 0.6, 200
-T = timebasisshiftedlagrange(Δt, Nt, 2)
+T0 = timebasisshiftedlagrange(Δt, Nt, 0)
+T1 = timebasisshiftedlagrange(Δt, Nt, 1)
+iT0 = integrate(T0)
+iT1 = integrate(T1)
 δ = timebasisdelta(Δt, Nt)
 
-V = X ⊗ T
-W = Y ⊗ δ
+# V = X ⊗ T
+# iV = X ⊗ iT
+# W = Y ⊗ δ
 
 duration = 20 * Δt
 delay = 1.5 * duration
@@ -33,16 +38,16 @@ iM = integrate(M)
 NI = N ⊗ I
 iNI = integrate(NI)
 
-error()
+# error()
 
 @hilbertspace k
 @hilbertspace j
 # mfie = @discretise (0.5(N⊗I) + 1.0DL)[k,j] == -1.0H[k] k∈W j∈V
-mfie = @discretise iM[k,j] == -1.0iH[k] k∈W j∈V
+mfie = @discretise iM[k,j] == -1.0iH[k] k∈(Y⊗δ) j∈(X⊗T0)
 
 xmfie_int = solve(mfie)
 
-Xmfie, Δω, ω0 = fouriertransform(xmfie, Δt, 0.0, 2)
+Xmfie, Δω, ω0 = fouriertransform(xmfie_int, Δt, 0.0, 2)
 ω = collect(ω0 .+ (0:Nt-1)*Δω)
 _, i1 = findmin(abs.(ω .- 1.0))
 

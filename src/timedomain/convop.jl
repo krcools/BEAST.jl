@@ -73,10 +73,10 @@ function polyeig(Z::ConvOp)
         Q[1:M,1:M,k] .= Z[:,:,k]
     end
     Id = Matrix{eltype(Z)}(LinearAlgebra.I,M,M)
-    Q[M+1:2M,1:M,1] .= Id
-    Q[M+1:2M,M+1:2M,1] .= -Id
+    Q[M+1:2M,1:M,1] .= -Id
     Q[M+1:2M,M+1:2M,1] .= Id
+    Q[M+1:2M,M+1:2M,2] .= -Id
     Q[1:M,M+1:2M,kmax+1] .= Z[:,:,kmax+1]
-    return eigvals(companion(Q))
+    return eigvals(companion(Q)), Q
     # return Q
 end
