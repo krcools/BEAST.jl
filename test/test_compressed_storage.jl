@@ -94,6 +94,7 @@ x4 = marchonintime(W4, Z4, b1, Nt)
 @test norm(vec(x1)-vec(x4)) / norm(vec(x4)) < 0.1
 
 X2 = raviartthomas(Γ2)
+Y2 = raviartthomas(Γ2)
 DLh = (DL0, X2⊗δ, X2⊗iT2)
 
 Z9, store9 = BEAST.allocatestorage(DLh...,
@@ -107,3 +108,16 @@ Z10, store10 = BEAST.allocatestorage(DLh...,
 @time BEAST.assemble!(DLh..., store10)
 
 @test norm(Z9-Z10,Inf) < 1e-12
+
+iDLh = (integrate(DL0), Y2⊗δ, X2⊗T1)
+Z11, store11 = BEAST.allocatestorage(iDLh..., BEAST.Val{:densestorage}, BEAST.LongDelays{:ignore})
+Z12, store12 = BEAST.allocatestorage(iDLh..., BEAST.Val{:bandedstorage}, BEAST.LongDelays{:compress})
+Z13, store13 = BEAST.allocatestorage(iDLh..., BEAST.Val{:bandedstorage}, BEAST.LongDelays{:ignore})
+
+
+BEAST.assemble!(iDLh..., store11)
+BEAST.assemble!(iDLh..., store12)
+BEAST.assemble!(iDLh..., store13)
+
+@test norm(Z11-Z12,Inf) < 1e-8
+@test norm(Z11-Z13,Inf) < 1e-8

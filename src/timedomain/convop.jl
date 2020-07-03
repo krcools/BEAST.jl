@@ -65,3 +65,18 @@ end
 #     convolve!(y, Z, x, j, k_start, size(Z)[3])
 #     return y
 # end
+function polyeig(Z::ConvOp)
+    kmax = maximum(Z.k1)
+    M = size(Z,1)
+    Q = zeros(eltype(Z), 2M, 2M, kmax+1)
+    for k in 1:kmax
+        Q[1:M,1:M,k] .= Z[:,:,k]
+    end
+    Id = Matrix{eltype(Z)}(LinearAlgebra.I,M,M)
+    Q[M+1:2M,1:M,1] .= -Id
+    Q[M+1:2M,M+1:2M,1] .= Id
+    Q[M+1:2M,M+1:2M,2] .= -Id
+    Q[1:M,M+1:2M,kmax+1] .= Z[:,:,kmax+1]
+    return eigvals(companion(Q)), Q
+    # return Q
+end
