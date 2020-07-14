@@ -213,7 +213,7 @@ mutable struct TemporalDifferentiation <: Operator
     operator
 end
 
-derive(op::Operator) = TemporalDifferentiation(op)
+derive(op::AbstractOperator) = TemporalDifferentiation(op)
 scalartype(op::TemporalDifferentiation) = scalartype(op.operator)
 Base.:*(a::Number, op::TemporalDifferentiation) = TemporalDifferentiation(a * op.operator)
 
@@ -236,6 +236,7 @@ struct TemporalIntegration <: AbstractOperator
 end
 
 integrate(op::AbstractOperator) = TemporalIntegration(op)
+derive(op::TemporalIntegration) = op.operator
 scalartype(op::TemporalIntegration) = scalartype(op.operator)
 Base.:*(a::Number, op::TemporalIntegration) = TemporalIntegration(a * op.operator)
 
