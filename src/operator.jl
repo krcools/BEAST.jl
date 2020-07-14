@@ -32,6 +32,12 @@ function scalartype(op::LinearCombinationOfOperators{T}) where T
     W
 end
 
+function derive(a::LinearCombinationOfOperators)
+    coeffs = copy(a.coeffs)
+    ops = [derive(op) for op in a.ops]
+    return LinearCombinationOfOperators(coeffs, ops)
+end
+
 
 function +(a::LinearCombinationOfOperators, b::Operator)
     LinearCombinationOfOperators(
