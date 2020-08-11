@@ -79,3 +79,50 @@ end
 (ϕ::NDotTrace)(p) = dot(normal(p), ϕ.field(cartesian(p)))
 integrand(::NDotTrace, g, ϕ) = dot(g.value, ϕ)
 LinearAlgebra.dot(::NormalVector, f) = NDotTrace(f)
+
+
+
+mutable struct CurlGreen{T,U,V}
+  wavenumber::T
+  source::U
+  position::V
+end
+
+function (f::CurlGreen)(x)
+  γ = im * f.wavenumber
+  r = x-f.position
+  R = norm(r)
+  g = exp(-γ*R)/(4π*R)
+  j = f.source
+  return -γ/R * (1 + 1/(γ*R)) * g * (r × j)
+end
+
+
+mutable struct CurlCurlGreen{T,U,V}
+  wavenumber::T
+  source::U
+  position::V
+end
+
+cross(::NormalVector, p::CurlGreen) = CrossTraceMW(p)
+cross(::NormalVector, p::CurlCurlGreen) = CrossTraceMW(p)
+
+function (f::CurlCurlGreen)(x)
+  γ = im * f.wavenumber
+  r = x - f.position
+  R = norm(r)
+  g = exp(-γ*R)/(4π*R)
+  j = f.source
+  return (-γ^2/R^2 * (r × j) × r + (1/R^2 + γ/R)/R^2 * (3r * dot(r,j) - R^2 * j)) * g
+end
+
+curl(f::CurlGreen) = CurlCurlGreen(f.wavenumber, f.source, f.position)
+function curl(f::CurlCurlGreen)
+  κ = f.wavenumber
+  j = κ^2 * f.source
+  x = f.position
+  return CurlGreen(κ, j, x)
+end
+
+Base.:*(a::Number, f::CurlGreen) = CurlGreen(f.wavenumber, a*f.source, f.position)
+Base.:*(a::Number, f::CurlCurlGreen) = CurlCurlGreen(f.wavenumber, a*f.source, f.position)

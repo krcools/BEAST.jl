@@ -154,12 +154,14 @@ include("postproc/segcurrents.jl")
 include("quadrature/double_quadrature.jl")
 include("quadrature/singularity_extraction.jl")
 
+include("timedomain/convop.jl")
 include("timedomain/tdintegralop.jl")
 include("timedomain/tdexcitation.jl")
 include("timedomain/motlu.jl")
 include("timedomain/tdtimeops.jl")
 include("timedomain/rkcq.jl")
 include("timedomain/zdomain.jl")
+
 
 # Support for Maxwell equations
 include("maxwell/mwexc.jl")

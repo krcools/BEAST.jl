@@ -97,6 +97,45 @@ end
 
 @inline (f::TransposedStorage)(v,m,n,k) = f.store(v,n,m,k)
 
+
+function allocatestorage(op::MWDoubleLayerTDIO, testST, basisST,
+	::Type{Val{:bandedstorage}},
+	::Type{LongDelays{:ignore}})
+
+    # tfs = spatialbasis(testST)
+    # bfs = spatialbasis(basisST)
+	X, T = spatialbasis(testST), temporalbasis(testST)
+	Y, U = spatialbasis(basisST), temporalbasis(basisST)
+
+	if CompScienceMeshes.refines(geometry(Y), geometry(X))
+		testST = Y⊗T
+		basisST = X⊗U
+	end
+
+    M = numfunctions(X)
+    N = numfunctions(Y)
+
+    K0 = fill(typemax(Int), M, N)
+    K1 = zeros(Int, M, N)
+
+    function store(v,m,n,k)
+        K0[m,n] = min(K0[m,n],k)
+        K1[m,n] = max(K1[m,n],k)
+    end
+
+    aux = EmptyRP(op.speed_of_light)
+    print("Allocating memory for convolution operator: ")
+    assemble!(aux, testST, basisST, store)
+    println("\nAllocated memory for convolution operator.")
+
+	maxk1 = maximum(K1)
+	bandwidth = maximum(K1 .- K0 .+ 1)
+	data = zeros(eltype(op), bandwidth, M, N)
+	Z = SparseND.Banded3D(K0, data, maxk1)
+    store1(v,m,n,k) = (Z[m,n,k] += v)
+    return Z, store1
+end
+
 function assemble!(dl::MWDoubleLayerTDIO, W::SpaceTimeBasis, V::SpaceTimeBasis, store)
 
 	X, T = spatialbasis(W), temporalbasis(W)
@@ -108,8 +147,6 @@ function assemble!(dl::MWDoubleLayerTDIO, W::SpaceTimeBasis, V::SpaceTimeBasis, 
 		op = MWDoubleLayerTransposedTDIO(dl.speed_of_light, dl.weight, dl.num_diffs)
 		assemble!(op, W, V, store)
 		return
-		# store1 = (v,m,n,k) -> store(v,n,m,k)
-		# store = TransposedStorage(store)
 	end
 
 	P = Threads.nthreads()

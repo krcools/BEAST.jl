@@ -69,7 +69,7 @@ transpose(op::Operator) = TransposedOperator(op)
 
 function assemble(operator::AbstractOperator, test_functions, trial_functions,
     storage_policy = Val{:bandedstorage},
-    long_delays_policy = LongDelays{:ignore})
+    long_delays_policy = LongDelays{:compress})
     # This is a convenience function whose only job is to allocate
     # the storage for the interaction matrix. Further dispatch on
     # operator and space types is handled by the 4-argument version
@@ -100,8 +100,10 @@ function assemblecol(operator::AbstractOperator, test_functions, trial_functions
 end
 
 function allocatestorage(operator::AbstractOperator, test_functions, trial_functions,
-    ::Type{Val{:bandedstorage}},
-    ::Type{LongDelays{:ignore}})
+    storage_trait,
+    longdelays_trait)
+    # ::Type{Val{:bandedstorage}},
+    # ::Type{LongDelays{:ignore}})
 
     T = promote_type(
         scalartype(operator)       ,

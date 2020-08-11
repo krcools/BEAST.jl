@@ -6,7 +6,7 @@ os:
   - windows
 julia:
   - 1.0
-  - 1.2
+  - 1.4
 notifications:
   email: false
 after_success:

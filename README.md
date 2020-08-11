@@ -5,6 +5,7 @@ Boundary Element Analysis and Simulation Toolkit
 [![Build Status](https://travis-ci.org/krcools/BEAST.jl.svg?branch=master)](https://travis-ci.org/krcools/BEAST.jl)
 [![codecov.io](http://codecov.io/github/krcools/BEAST.jl/coverage.svg?branch=master)](http://codecov.io/github/krcools/BEAST.jl?branch=master)
 [![Documentation](https://img.shields.io/badge/docs-latest-blue.svg)](https://krcools.github.io/BEAST.jl/latest/)
+[![DOI](https://zenodo.org/badge/87720391.svg)](https://zenodo.org/badge/latestdoi/87720391)
 
 ## Introduction
 

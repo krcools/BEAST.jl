@@ -33,36 +33,11 @@ end
 
 function setindex!(A::Banded3D, v, m, n, k)
     k0 = A.k0[m,n]
-    @assert k0 != 0
+    @assert k0 != 0 "Failed: $v, $m, $n, $k"
     @assert A.k0[m,n] <= k <= A.k0[m,n] + bandwidth(A) - 1
     A.data[k-A.k0[m,n]+1,m,n] = v
 end
 
-# """
-#     convolve{T}(A::Banded3D, x::Array{T,2})
-#
-# Compute the *space-time* convolution of A and x.
-#
-# Returns an array `y` of size `(size(A,1),size(x,2))` such that
-# `y[m,i] = sum([A[]])``
-# """
-# function convolve(A::Banded3D, x::Array{T,2}) where T
-#     V = promote_type(eltype(A),eltype(x))
-#     y = zeros(V,size(A,1),size(x,2))
-#     bw = bandwidth(A)
-#     for i in 1:size(A,1)
-#         for l in 1 : size(y,2)
-#             for j in 1:size(A,2)
-#                 k0 = A.k0[i,j]
-#                 for k in k0 : k0 + bw - 1
-#                     l-k+1 < 1 && continue
-#                     y[i,l] += A.data[k,i,j] * x[j,l-k+1]
-#                 end
-#             end
-#         end
-#     end
-#     return y
-# end
 
 function Base.:+(A::Banded3D{T}, B::Banded3D{T}) where {T}
 
@@ -145,7 +120,7 @@ end
 
 
 struct MatrixOfConvolutions{T} <: AbstractArray{Vector{T},2}
-    banded::Banded3D{T}
+    banded::AbstractArray{T,3}
 end
 
 function Base.eltype(x::MatrixOfConvolutions{T}) where {T}
@@ -162,7 +137,7 @@ struct SpaceTimeData{T} <: AbstractArray{Vector{T},1}
 end
 
 Base.eltype(x::SpaceTimeData{T}) where {T} = Vector{T}
-Base.size(x::SpaceTimeData) = size(x.data)[1]
+Base.size(x::SpaceTimeData) = (size(x.data)[1],)
 Base.getindex(x::SpaceTimeData, i::Int) = x.data[i,:]
 
 end # module

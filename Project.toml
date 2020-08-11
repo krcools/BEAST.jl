@@ -1,5 +1,6 @@
 name = "BEAST"
 uuid = "bb4162c7-ba94-5a20-af32-d8ec4428bdd1"
+version = "1.2.0"
 
 [deps]
 BlockArrays = "8e7c35d0-a365-5155-bbbb-fb81a777f24e"
@@ -20,6 +21,7 @@ StaticArrays = "90137ffa-7385-5640-81b9-e52037218182"
 WiltonInts84 = "a3e2863e-c0ee-5ff6-a523-307a4cdc8724"
 
 [compat]
+BlockArrays = "^0.10, ^0.11, ^0.12"
 CollisionDetection = "^0.1"
 Combinatorics = "^0.7"
 CompScienceMeshes = "^0.2.5"
