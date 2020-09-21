@@ -45,3 +45,11 @@ function integrate(f::BEAST.PlaneWaveMWTD)
         polarization = f.polarization,
         speedoflight = f.speedoflight)
 end
+
+function differentiate(f::BEAST.PlaneWaveMWTD)
+    planewave(
+        signature = derive(f.amplitude),
+        direction = f.direction,
+        polarization = f.polarisation,
+        speedoflight = f.speedoflight)
+end

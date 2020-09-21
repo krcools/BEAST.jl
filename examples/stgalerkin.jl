@@ -5,6 +5,7 @@ o, x, y, z = euclidianbasis(3)
 # Γ = meshsphere(D, Δx)
 
 Γ = readmesh(joinpath(@__DIR__,"sphere2.in"))
+Γ = meshsphere(1.0, 0.45)
 X = raviartthomas(Γ)
 #Δt, Nt = 0.08, 400
 Δt, Nt = 0.6, 200
