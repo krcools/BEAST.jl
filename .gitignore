@@ -7,5 +7,6 @@
 docs/build/
 docs/site/
 temp/
+dev/
 profile/
 Manifest.toml
