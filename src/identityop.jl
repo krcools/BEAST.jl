@@ -23,6 +23,11 @@ function quaddata(op::LocalOperator, g::NDRefSpace, f::NDRefSpace, tels, bels)
     return [(w[i],SVector(u[1,i],u[2,i])) for i in 1:length(w)]
 end
 
+function quaddata(op::LocalOperator, g::BDMRefSpace, f::BDMRefSpace, tels, bels)
+    u, w = trgauss(6)
+    return [(w[i],SVector(u[1,i],u[2,i])) for i in 1:length(w)]
+end
+
 function quaddata(op::LocalOperator, g::subReferenceSpace, f::subReferenceSpace, tels, bels)
     u, w = trgauss(6)
     return [(w[i],SVector(u[1,i],u[2,i])) for i in 1:length(w)]
@@ -57,6 +62,12 @@ function quaddata(op::LocalOperator, g::NDLCDRefSpace, f::NDLCCRefSpace, tels, b
      [(w, parametric(p)) for (p,w) in qps]
 end
 
+function quaddata(op::LocalOperator, g::BDM3DRefSpace, f::BDM3DRefSpace, tels, bels)
+    o, x, y, z, = CompScienceMeshes.euclidianbasis(3)
+    reftet = simplex(x,y,z,o)
+    qps = quadpoints(reftet, 6)
+    [(w, parametric(p)) for (p,w) in qps]
+end
 
 
 quaddata(op::LocalOperator, g::LagrangeRefSpace, f::LagrangeRefSpace,
