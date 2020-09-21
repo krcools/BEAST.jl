@@ -90,7 +90,7 @@ function allocatestorage(op::RetardedPotential, testST, basisST,
 	Nt = numfunctions(temporalbasis(basisST))
 
 	tbf = convolve(temporalbasis(testST), temporalbasis(basisST))
-	has_tail = all(tbf.polys[end].data .== 0)
+	has_tail = !all(tbf.polys[end].data .== 0)
 
     M = numfunctions(tfs)
     N = numfunctions(bfs)
@@ -112,8 +112,10 @@ function allocatestorage(op::RetardedPotential, testST, basisST,
 
 	bandwidth = maximum(K1 .- K0 .+ 1)
 	data = zeros(T, bandwidth, M, N)
-	tail = zeros(T, M, N)
-	Z = ConvOp(data, K0, K1, tail, Nt)
+    tail = zeros(T, M, N)
+    # kmax = maximum(K1)
+    len = has_tail ? Nt : maximum(K1)
+	Z = ConvOp(data, K0, K1, tail, len)
 
     function store1(v,m,n,k)
 		if Z.k0[m,n] ≤ k ≤ Z.k1[m,n]

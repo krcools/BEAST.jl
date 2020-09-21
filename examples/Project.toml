@@ -1,0 +1,5 @@
+[deps]
+BEAST = "bb4162c7-ba94-5a20-af32-d8ec4428bdd1"
+CompScienceMeshes = "3e66a162-7b8c-5da0-b8f8-124ecd2c3ae1"
+Plotly = "58dd65bb-95f3-509e-9936-c39a10fdeae7"
+Plots = "91a5bcdd-55d7-5caf-9e0b-520d859cae80"

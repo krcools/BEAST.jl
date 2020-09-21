@@ -77,3 +77,52 @@ function convolve(Z::Array,x,j,k0)
 end
 
 convolve(x::MatrixConvolution, y::Matrix, i, j) = convolve(x.arr, y, i, j)
+
+
+function Base.hvcat((M,N)::Tuple{Int,Int}, as::MatrixConvolution...)
+    kmax = maximum(size(a,3) for a in as)
+
+    @assert length(as) == M*N
+
+    li = LinearIndices((1:M,1:N))
+    for m in 1:M
+        a = as[li[m,1]]
+        M1 = size(a,1)
+        for n in 2:N
+            a = as[li[m,n]]
+            @assert size(a,1) == M1
+        end
+    end
+
+    for n in 1:N
+        a = as[li[1,n]]
+        N1 = size(a,2)
+        for m in 2:M
+            a = as[li[m,n]]
+            @assert size(a,2) == N1
+        end
+    end
+
+    Ms = [size(as[li[i,1]],1) for i in 1:M]
+    Ns = [size(as[li[1,j]],2) for j in 1:N]
+
+    cMs = pushfirst!(cumsum(Ms),0)
+    cNs = pushfirst!(cumsum(Ns),0)
+    T = promote_type(eltype.(as)...)
+    data = zeros(T, last(cMs), last(cNs), kmax)
+
+    @show size(data)
+    @show eltype(data)
+
+    for m in 1:M
+        I = cMs[m]+1 : cMs[m+1]
+        for n in 1:N
+            J = cNs[n]+1 : cNs[n+1]
+            a = as[li[m,n]]
+            K = 1:size(a,3)
+            data[I,J,K] .= a
+        end
+    end
+
+    return MatrixConvolution(data)
+end
