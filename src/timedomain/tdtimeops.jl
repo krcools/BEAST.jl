@@ -217,6 +217,22 @@ derive(op::AbstractOperator) = TemporalDifferentiation(op)
 scalartype(op::TemporalDifferentiation) = scalartype(op.operator)
 Base.:*(a::Number, op::TemporalDifferentiation) = TemporalDifferentiation(a * op.operator)
 
+function allocatestorage(op::TemporalDifferentiation, testfns, trialfns,
+	storage_trait, longdelays_trait)
+
+	trial_time_fns  = temporalbasis(trialfns)
+	trial_space_fns = spatialbasis(trialfns)
+
+	trialfns = SpaceTimeBasis(
+		trial_space_fns,
+		derive(trial_time_fns)
+	)
+
+    Z, store = allocatestorage(op.operator, testfns, trialfns,
+        storage_trait, longdelays_trait)
+	return Z, store
+end
+
 function assemble!(operator::TemporalDifferentiation, testfns, trialfns, store)
 
     trial_time_fns  = temporalbasis(trialfns)

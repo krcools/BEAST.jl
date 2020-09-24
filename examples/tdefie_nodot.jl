@@ -2,7 +2,6 @@ using CompScienceMeshes, BEAST
 
 # Γ = readmesh(joinpath(@__DIR__,"sphere2.in"))
 Γ = readmesh(joinpath(dirname(pathof(BEAST)),"../examples/sphere2.in"))
-@show numcells(Γ)
 X = raviartthomas(Γ)
 
 Δt, Nt = 0.6, 200

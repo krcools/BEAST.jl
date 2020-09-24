@@ -42,7 +42,7 @@ function integrate(f::BEAST.PlaneWaveMWTD)
     planewave(
         signature = integrate(f.amplitude),
         direction = f.direction,
-        polarization = f.polarization,
+        polarization = f.polarisation,
         speedoflight = f.speedoflight)
 end
 
