@@ -64,6 +64,7 @@ end
 Base.:*(a::Number, x::MatrixConvolution) = MatrixConvolution(a * x.arr)
 Base.:*(x::MatrixConvolution, a::Number) = MatrixConvolution(x.arr * a)
 Base.:/(x::MatrixConvolution, a::Number) = MatrixConvolution(x.arr / a)
+Base.:-(x::MatrixConvolution) = (-1) * x
 
 function convolve(Z::Array,x,j,k0)
     M,N,K = size(Z)
