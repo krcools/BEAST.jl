@@ -85,27 +85,27 @@ function Base.hvcat((M,N)::Tuple{Int,Int}, as::MatrixConvolution...)
 
     @assert length(as) == M*N
 
-    li = LinearIndices((1:M,1:N))
+    li = LinearIndices((1:N,1:M))
     for m in 1:M
-        a = as[li[m,1]]
+        a = as[li[1,m]]
         M1 = size(a,1)
         for n in 2:N
-            a = as[li[m,n]]
+            a = as[li[n,m]]
             @assert size(a,1) == M1
         end
     end
 
     for n in 1:N
-        a = as[li[1,n]]
+        a = as[li[n,1]]
         N1 = size(a,2)
         for m in 2:M
-            a = as[li[m,n]]
+            a = as[li[n,m]]
             @assert size(a,2) == N1
         end
     end
 
-    Ms = [size(as[li[i,1]],1) for i in 1:M]
-    Ns = [size(as[li[1,j]],2) for j in 1:N]
+    Ms = [size(as[li[1,i]],1) for i in 1:M]
+    Ns = [size(as[li[j,1]],2) for j in 1:N]
 
     cMs = pushfirst!(cumsum(Ms),0)
     cNs = pushfirst!(cumsum(Ns),0)
@@ -119,7 +119,7 @@ function Base.hvcat((M,N)::Tuple{Int,Int}, as::MatrixConvolution...)
         I = cMs[m]+1 : cMs[m+1]
         for n in 1:N
             J = cNs[n]+1 : cNs[n+1]
-            a = as[li[m,n]]
+            a = as[li[n,m]]
             K = 1:size(a,3)
             data[I,J,K] .= a
         end

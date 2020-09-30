@@ -5,14 +5,14 @@ using CompScienceMeshes, BEAST
 X = raviartthomas(Γ)
 
 
-Δt, Nt = 0.6, 200
+Δt, Nt = 0.3, 200
 T = timebasisshiftedlagrange(Δt, Nt, 3)
 U = timebasisdelta(Δt, Nt)
 
 V = X ⊗ T
 W = X ⊗ U
 
-duration = 20 * Δt
+duration = 20 * Δt * 2
 delay = 1.5 * duration
 amplitude = 1.0
 gaussian = creategaussian(duration, delay, amplitude)

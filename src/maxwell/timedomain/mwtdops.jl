@@ -82,8 +82,8 @@ function quaddata(op::MWSingleLayerTDIO, testrefs, trialrefs, timerefs,
 
     V = eltype(testels[1].vertices)
     ws = WiltonInts84.workspace(V)
+    # quadpoints(testrefs, testels, (3,)), bn, ws
     quadpoints(testrefs, testels, (3,)), bn, ws
-
 end
 
 
@@ -173,6 +173,7 @@ function quaddata(op::MWDoubleLayerTDIO, testrefs, trialrefs, timerefs,
 
     V = eltype(testels[1].vertices)
     ws = WiltonInts84.workspace(V)
+    # quadpoints(testrefs, testels, (3,)), bn, ws
     quadpoints(testrefs, testels, (3,)), bn, ws
 end
 
@@ -354,21 +355,27 @@ function innerintegrals!(z, op::MWDoubleLayerTDIO,
     αg = 1 / volume(τ) / 2
 	αf = 1 / volume(σ) / 2
 	αG = 1 / 4 / π
-	α = αg * αf * αG * op.weight * dx
+	α = αG * op.weight * dx # * αg * αf
 
 	ds = op.num_diffs
 
-    @inline function tmRoR(d, iGG)
+    @inline function tmGRoR(d, iGG)
         sgn = isodd(d) ? -1 : 1
         r = sgn * iGG[d+1]
     end
 
+    Ux = U(p)
+    Vx = αf * @SVector[(x-σ[1]), (x-σ[2]), (x-σ[3])]
+
     for i in 1 : numfunctions(U)
-        a = τ[i]
-        g = (x-a)
+        # a = τ[i]
+        # g = αg * (x-τ[i])
+        g = Ux[i].value
         for j in 1 : numfunctions(V)
-            b = σ[j]
-            f = (x-b)
+            # b = σ[j]
+            # f = αf * (x-σ[j])
+            # f = Vx[j].value
+            f = Vx[j]
             fxg = f × g
             for k in 1 : numfunctions(W)
 				d = k-1
@@ -379,7 +386,7 @@ function innerintegrals!(z, op::MWDoubleLayerTDIO,
 						q *= (d-p)
 					end
                     # @assert q == 1
-                    z[i,j,k] += -α * q * ( fxg ⋅ tmRoR(d-ds, ∫∇G) ) / sol^(d-ds)
+                    z[i,j,k] += -α * q * ( fxg ⋅ tmGRoR(d-ds, ∫∇G) ) / sol^(d-ds)
 				end
             end
         end
