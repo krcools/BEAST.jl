@@ -23,7 +23,7 @@ function quaddata(op::LocalOperator, g::NDRefSpace, f::NDRefSpace, tels, bels)
     return [(w[i],SVector(u[1,i],u[2,i])) for i in 1:length(w)]
 end
 
-function quaddata(op::LocalOperator, g::BDMRefSpace, f::BDMRefSpace, tels, bels)
+function quaddata(op::LocalOperator, g::NDRefSpace, f::RTRefSpace, tels, bels)
     u, w = trgauss(6)
     return [(w[i],SVector(u[1,i],u[2,i])) for i in 1:length(w)]
 end
