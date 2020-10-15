@@ -240,3 +240,13 @@ end
 
 divergence(X::RTBasis, geo, fns) = LagrangeBasis{0,-1,1}(geo, fns, deepcopy(positions(X)))
 ntrace(X::RTBasis, geo, fns) = LagrangeBasis{0,-1,1}(geo, fns, deepcopy(positions(X)))
+
+
+function LinearAlgebra.cross(::NormalVector, s::RTBasis)
+    @assert CompScienceMeshes.isoriented(s.geo)
+    fns = similar(s.fns)
+    for (i,fn) in pairs(s.fns)
+        fns[i] = [Shape(sh.cellid, sh.refid, -sh.coeff) for sh in fn]
+    end
+    NDBasis(s.geo, fns, s.pos)
+end

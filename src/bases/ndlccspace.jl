@@ -51,6 +51,13 @@ function nedelecc3d(mesh)
     nedelecc3d(mesh, edges)
 end
 
+
+function nedelec(mesh::CompScienceMeshes.AbstractMesh{U,4} where {U},
+    edges=skeleton(mesh,1))
+
+    nedelecc3d(mesh, edges)
+end
+
 curl(space::NDLCCBasis, geo, fns) = NDLCDBasis(geo, fns, space.pos)
 
 ttrace(X::NDLCCBasis, geo, fns) = RTBasis(geo, fns, deepcopy(X.pos))

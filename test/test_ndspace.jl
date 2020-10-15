@@ -1,6 +1,8 @@
 using CompScienceMeshes
 using BEAST
+
 using Test
+using LinearAlgebra
 
 fn = joinpath(dirname(@__FILE__),"assets","rect1.in")
 
@@ -32,3 +34,7 @@ fn = ND.fns[3]
 v1 = dot(fn[1].coeff*ndlocal(nbd1)[1][1],ut)
 v2 = dot(fn[2].coeff*ndlocal(nbd2)[2][1],ut)
 @test v1 ≈ v2 ≈ -1/√2 ≈ -1/volume(charts[3])
+
+curlND = curl(ND)
+@test curlND.fns[3][1].coeff ≈ +2
+@test curlND.fns[3][2].coeff ≈ -2

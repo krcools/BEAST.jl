@@ -89,6 +89,26 @@ function gradient(ref::LagrangeRefSpace{T,1,4}, sh, tet) where {T}
     return output
 end
 
+function gradient(ref::LagrangeRefSpace{T,1,3} where {T}, sh, el)
+    sh1 = Shape(sh.cellid, mod1(sh.refid+1,3), -sh.coeff)
+    sh2 = Shape(sh.cellid, mod1(sh.refid+2,3), +sh.coeff)
+    return [sh1, sh2]
+end
+
+# function gradient(phi::LagrangeRefSpace{T,1,3}, shape, chart)
+#
+#     r = shape.refid
+#     vert = chart.vertices[r]
+#     face = faces(chart)[r]
+#     n = normal(face)
+#     h = dot(vert - cartesian(center(face)),n)
+#     gradphi = h*n
+#
+#     output = Shape{T}[]
+#     for s in faces(chart)
+#
+# end
+
 
 function strace(x::LagrangeRefSpace, cell, localid, face)
 
