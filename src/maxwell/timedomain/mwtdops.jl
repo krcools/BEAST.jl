@@ -136,7 +136,8 @@ function allocatestorage(op::MWDoubleLayerTDIO, testST, basisST,
     return Z, store1
 end
 
-function assemble!(dl::MWDoubleLayerTDIO, W::SpaceTimeBasis, V::SpaceTimeBasis, store)
+function assemble!(dl::MWDoubleLayerTDIO, W::SpaceTimeBasis, V::SpaceTimeBasis, store,
+    threading=Threading{:multi})
 
 	X, T = spatialbasis(W), temporalbasis(W)
 	Y, U = spatialbasis(V), temporalbasis(V)

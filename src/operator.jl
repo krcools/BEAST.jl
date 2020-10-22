@@ -1,6 +1,7 @@
 using .LinearSpace
 
 struct LongDelays{T} end
+struct Threading{T} end
 
 import Base: transpose, +, -, *
 
@@ -73,15 +74,16 @@ transpose(op::TransposedOperator) = op.op
 transpose(op::Operator) = TransposedOperator(op)
 
 
-function assemble(operator::AbstractOperator, test_functions, trial_functions,
+function assemble(operator::AbstractOperator, test_functions, trial_functions;
     storage_policy = Val{:bandedstorage},
-    long_delays_policy = LongDelays{:compress})
+    long_delays_policy = LongDelays{:compress},
+    threading = Threading{:multi})
     # This is a convenience function whose only job is to allocate
     # the storage for the interaction matrix. Further dispatch on
     # operator and space types is handled by the 4-argument version
     Z, store = allocatestorage(operator, test_functions, trial_functions,
         storage_policy, long_delays_policy)
-    assemble!(operator, test_functions, trial_functions, store)
+    assemble!(operator, test_functions, trial_functions, store, threading)
     sdata(Z)
 end
 
@@ -108,8 +110,6 @@ end
 function allocatestorage(operator::AbstractOperator, test_functions, trial_functions,
     storage_trait,
     longdelays_trait)
-    # ::Type{Val{:bandedstorage}},
-    # ::Type{LongDelays{:ignore}})
 
     T = promote_type(
         scalartype(operator)       ,
@@ -148,7 +148,10 @@ function allocatestorage(operator::LinearCombinationOfOperators,
 end
 
 
-function assemble!(operator::Operator, test_functions::Space, trial_functions::Space, store)
+function assemble!(operator::Operator, test_functions::Space, trial_functions::Space, store,
+    threading::Type{Threading{:multi}} = Threading{:multi})
+
+    @info "Multi-threaded assembly:"
 
     P = Threads.nthreads()
     numchunks = P
@@ -165,31 +168,14 @@ function assemble!(operator::Operator, test_functions::Space, trial_functions::S
 
 end
 
+function assemble!(operator::Operator, test_functions::Space, trial_functions::Space, store,
+    threading::Type{Threading{:single}})
 
-# function assemble_st!(operator::Operator, test_functions::Space, trial_functions::Space, store)
-#
-#     # This method should only be called for `atomic` discrete operators, this means
-#     # in particular that the spaces of test and trial functions are fully conforming
-#     # to the Space concept and that the operator/space combinations conform the
-#     # concept implicitly defined by the assemble! function in itegralop.jl
-#     # (no more transposes or repositioning in a larger system for example)
-#
-#     @warn "Parallel assembly support disabled."
-#
-#     P = procs()
-#
-#     @assert length(P) == 1
-#
-#     if length(P) > 1; P = P[2:end]; end
-#     numchunks = length(P)
-#     @assert numchunks >= 1
-#     splits = [round(Int,s) for s in linspace(0, numfunctions(test_functions), numchunks+1)]
-#
-#     T = typeof(test_functions)
-#     S = eltype(test_functions.fns)
-#
-#     assemblechunk!(operator, test_functions, trial_functions, store)
-# end
+    @info "Single-threaded assembly"
+
+    assemblechunk!(operator, test_functions, trial_functions, store)
+end
+
 
 
 function assemble!(op::TransposedOperator, tfs::Space, bfs::Space, store)
@@ -208,7 +194,7 @@ end
 
 
 # Support for direct product spaces
-function assemble!(op::Operator, tfs::DirectProductSpace, bfs::Space, store)
+function assemble!(op::Operator, tfs::DirectProductSpace, bfs::Space, store, threading = Threading{:multi})
     I = Int[0]
     for s in tfs.factors push!(I, last(I) + numfunctions(s)) end
     for (i,s) in enumerate(tfs.factors)
@@ -218,7 +204,7 @@ function assemble!(op::Operator, tfs::DirectProductSpace, bfs::Space, store)
 end
 
 
-function assemble!(op::Operator, tfs::Space, bfs::DirectProductSpace, store)
+function assemble!(op::Operator, tfs::Space, bfs::DirectProductSpace, store, threading=Threading{:multi})
     J = Int[0]
     for s in bfs.factors push!(J, last(J) + numfunctions(s)) end
     for (j,s) in enumerate(bfs.factors)
@@ -227,7 +213,7 @@ function assemble!(op::Operator, tfs::Space, bfs::DirectProductSpace, store)
     end
 end
 
-function assemble!(op::Operator, tfs::DirectProductSpace, bfs::DirectProductSpace, store)
+function assemble!(op::Operator, tfs::DirectProductSpace, bfs::DirectProductSpace, store, threading=Threading{:multi})
     I = Int[0]
     for s in tfs.factors push!(I, last(I) + numfunctions(s)) end
     for (i,s) in enumerate(tfs.factors)
