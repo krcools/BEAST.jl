@@ -128,14 +128,17 @@ function allocatestorage(op::RetardedPotential, testST, basisST,
     return Z, store1
 end
 
-function assemble!(op::LinearCombinationOfOperators, tfs::SpaceTimeBasis, bfs::SpaceTimeBasis, store)
+function assemble!(op::LinearCombinationOfOperators, tfs::SpaceTimeBasis, bfs::SpaceTimeBasis, store,
+    threading=Threading{:multi})
+
     for (a,A) in zip(op.coeffs, op.ops)
         store1(v,m,n,k) = store(a*v,m,n,k)
         assemble!(A, tfs, bfs, store1)
     end
 end
 
-function assemble!(op::RetardedPotential, testST, trialST, store)
+function assemble!(op::RetardedPotential, testST, trialST, store,
+    threading=Threading{:multi})
 
 	Y, S = spatialbasis(testST), temporalbasis(testST)
 
