@@ -45,31 +45,6 @@ function scalartype(A::TensorOperator)
 end
 
 
-# function assemble(operator::TensorOperator, testfns, trialfns)
-#
-#     test_spatial_basis  = spatialbasis(testfns)
-#     trial_spatial_basis = spatialbasis(trialfns)
-#
-#     M = numfunctions(test_spatial_basis)
-#     N = numfunctions(trial_spatial_basis)
-#
-#     tbf = convolve(
-#         temporalbasis(testfns),
-#         temporalbasis(trialfns))
-#
-#     kmax = numintervals(tbf) - 1
-#     k0 = fill(1,    (M,N))
-#     k1 = fill(kmax, (M,N))
-#
-#     T = promote_type(scalartype(operator), scalartype(testfns), scalartype(trialfns))
-#     data = zeros(T, M, N, kmax)
-#     Z = SparseND.Banded3D(k0, k1, data)
-#
-#     store(v, m, n, k) = (Z[m,n,k] += v)
-#     assemble!(operator, testfns, trialfns, store)
-#     return Z
-#
-# end
 
 function allocatestorage(op::TensorOperator, test_functions, trial_functions,
     ::Type{Val{:bandedstorage}}, ::Type{LongDelays{:ignore}},)
@@ -81,28 +56,10 @@ function allocatestorage(op::TensorOperator, test_functions, trial_functions,
         temporalbasis(test_functions),
         temporalbasis(trial_functions))
 
-    # has_zero_tail = all(time_basis_function.polys[end].data .== 0)
-    # @show has_zero_tail
-
-    # if has_zero_tail
-        # Numintervals includes the semi-infinite interval stretching to +Inf
-        # K = numintervals(time_basis_function)-1
-    # else
-    #     speedoflight = 1.0
-    #     @warn "Assuming speed of light to be equal to 1!"
-    #     Δt = timestep(time_basis_function)
-    #     ct, hs = boundingbox(geometry(spatialbasis(trial_functions)).vertices)
-    #     diam = 2 * sqrt(3) * hs
-    #     K = ceil(Int, (numintervals(time_basis_function)-1) + diam/speedoflight/Δt)+1
-    # end
-    # @assert K > 0
-
     space_operator = op.spatial_factor
     A = assemble(space_operator, spatialbasis(test_functions), spatialbasis(trial_functions))
 
-    # K0 = Int.(A .!= 0)
     K0 = ones(M,N)
-    # K0 = ones(Int,M,N)
     bandwidth = numintervals(time_basis_function) - 1
     data = zeros(scalartype(op), bandwidth, M, N)
     maxk1 = bandwidth
@@ -172,7 +129,8 @@ end
 #     return MatrixConvolution(Z), (v,m,n,k)->(Z[m,n,k] += v)
 # end
 
-function assemble!(operator::TensorOperator, testfns, trialfns, store)
+function assemble!(operator::TensorOperator, testfns, trialfns, store,
+    threading = Threading{:multi})
 
     space_operator = operator.spatial_factor
     time_operator  = operator.temporal_factor
@@ -233,7 +191,7 @@ function allocatestorage(op::TemporalDifferentiation, testfns, trialfns,
 	return Z, store
 end
 
-function assemble!(operator::TemporalDifferentiation, testfns, trialfns, store)
+function assemble!(operator::TemporalDifferentiation, testfns, trialfns, store, threading = Threading{:multi})
 
     trial_time_fns  = temporalbasis(trialfns)
     trial_space_fns = spatialbasis(trialfns)
@@ -243,7 +201,7 @@ function assemble!(operator::TemporalDifferentiation, testfns, trialfns, store)
         derive(trial_time_fns)
     )
 
-    assemble!(operator.operator, testfns, trialfns, store)
+    assemble!(operator.operator, testfns, trialfns, store, threading)
 
 end
 
@@ -258,8 +216,6 @@ Base.:*(a::Number, op::TemporalIntegration) = TemporalIntegration(a * op.operato
 
 function allocatestorage(op::TemporalIntegration, testfns, trialfns,
 	storage_trait, longdelays_trait)
-	# ::Type{Val{:bandedstorage}},
-	# ::Type{LongDelays{:ignore}})
 
 	trial_time_fns  = temporalbasis(trialfns)
 	trial_space_fns = spatialbasis(trialfns)
@@ -270,11 +226,11 @@ function allocatestorage(op::TemporalIntegration, testfns, trialfns,
 	)
 
 	Z, store = allocatestorage(op.operator, testfns, trialfns, storage_trait, longdelays_trait)
-	@show size(Z)
 	return Z, store
 end
 
-function assemble!(operator::TemporalIntegration, testfns, trialfns, store)
+function assemble!(operator::TemporalIntegration, testfns, trialfns, store,
+    threading = Threading{:multi})
 
     trial_time_fns  = temporalbasis(trialfns)
     trial_space_fns = spatialbasis(trialfns)

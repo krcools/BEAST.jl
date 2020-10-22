@@ -10,7 +10,8 @@ end
 abstract type LocalOperator <: Operator end
 
 
-function assemble!(biop::LocalOperator, tfs::Space, bfs::Space, store)
+function assemble!(biop::LocalOperator, tfs::Space, bfs::Space, store,
+    threading::Type{Threading{:multi}})
 
     if geometry(tfs) == geometry(bfs)
         return assemble_local_matched!(biop, tfs, bfs, store)
