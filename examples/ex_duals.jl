@@ -5,7 +5,7 @@ using BEAST
 
 include("utils/showfn.jl")
 
-Tetrs = CompScienceMeshes.tetmeshsphere(1.0, 0.20)
+Tetrs = CompScienceMeshes.tetmeshsphere(1.0, 0.40)
 Faces = CompScienceMeshes.skeleton_fast(Tetrs, 2)
 Edges = CompScienceMeshes.skeleton_fast(Tetrs, 1)
 Nodes = CompScienceMeshes.skeleton_fast(Tetrs, 0)
@@ -31,8 +31,9 @@ primal2 = BEAST.nedelecd3d(Tetrs, Faces)
 Dir = bnd_Faces
 Neu = submesh(!in(Dir), bnd_Faces)
 
-dual1 = BEAST.dual1forms(Tetrs, Faces, Dir)
-dual2 = BEAST.dual2forms_new(Tetrs, int_Edges, Dir)
+@time dual1 = BEAST.dual1forms(Tetrs, Faces, Dir)
+error("stop here")
+dual2 = BEAST.dual2forms(Tetrs, int_Edges, Dir)
 
 @assert numfunctions(primal1) == numfunctions(dual2)
 @assert numfunctions(primal2) == numfunctions(dual1)
@@ -106,3 +107,6 @@ primal1_hemi = restrict(primal1, hemi)
 trace_primal1_hemi = BEAST.ttrace(primal1_hemi, boundary(hemi))
 fcr, geo = facecurrents(eg, trace_primal1_hemi)
 Plotly.plot(patch(geo, norm.(fcr)))
+
+# tetrs, bnd, dir, v2t, v2n = BEAST.dualforms_init(Tetrs, Dir)
+# @profview BEAST.dual1forms_body(Faces[collect(1:10)], tetrs, bnd, dir, v2t, v2n)

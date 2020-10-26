@@ -116,10 +116,11 @@ function allocatestorage(operator::AbstractOperator, test_functions, trial_funct
         scalartype(test_functions) ,
         scalartype(trial_functions),
     )
-    Z = SharedArray{T}(
-        numfunctions(test_functions)  ,
-        numfunctions(trial_functions),
-    )
+    # Z = SharedArray{T}(
+    #     numfunctions(test_functions)  ,
+    #     numfunctions(trial_functions),
+    # )
+    Z = Matrix{T}(undef, numfunctions(test_functions), numfunctions(trial_functions))
     fill!(Z, 0)
     store(v,m,n) = (Z[m,n] += v)
     return Z, store

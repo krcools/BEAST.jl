@@ -11,7 +11,7 @@ abstract type LocalOperator <: Operator end
 
 
 function assemble!(biop::LocalOperator, tfs::Space, bfs::Space, store,
-    threading::Type{Threading{:multi}})
+    threading::Type{Threading{:single}})
 
     if geometry(tfs) == geometry(bfs)
         return assemble_local_matched!(biop, tfs, bfs, store)
@@ -21,13 +21,14 @@ function assemble!(biop::LocalOperator, tfs::Space, bfs::Space, store,
         return assemble_local_refines!(biop, tfs, bfs, store)
     end
 
-    # tels, tad = assemblydata(tfs)
-    # bels, bad = assemblydata(bfs)
-    #
-    # length(tels) != numcells(geometry(tfs)) && return assemble_local_mixed!(biop, tfs, bfs, store)
-    # length(bels) != numcells(geometry(bfs)) && return assemble_local_mixed!(biop, tfs, bfs, store)
-
     return assemble_local_mixed!(biop, tfs, bfs, store)
+end
+
+function assemble!(biop::LocalOperator, tfs::Space, bfs::Space, store,
+    threading::Type{Threading{:multi}})
+
+    assemble!(biop, tfs, bfs, store, Threading{:single})
+
 end
 
 function assemble_local_matched!(biop::LocalOperator, tfs::Space, bfs::Space, store)
