@@ -185,7 +185,8 @@ function assemble!(op::TransposedOperator, tfs::Space, bfs::Space, store)
 end
 
 
-function assemble!(op::LinearCombinationOfOperators, tfs::AbstractSpace, bfs::AbstractSpace, store)
+function assemble!(op::LinearCombinationOfOperators, tfs::AbstractSpace, bfs::AbstractSpace,
+    store, threading = Threading{:multi})
     for (a,A) in zip(op.coeffs, op.ops)
         store1(v,m,n) = store(a*v,m,n)
         assemble!(A, tfs, bfs, store1)
