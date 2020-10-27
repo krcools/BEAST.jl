@@ -2,11 +2,12 @@ using CompScienceMeshes, BEAST
 using LinearAlgebra
 
 # Γ = meshcuboid(1.0, 1.0, 1.0, 0.15)
-Γ = meshsphere(1.0, 0.10)
+Γ = meshsphere(1.0, 0.075)
 X = raviartthomas(Γ)
+@show numfunctions(X)
 
-κ,  η  = 1.0, 1.0
-κ′, η′ = 1.4κ, η/1.4
+κ,  η  = 6.0, 1.0
+κ′, η′ = 2.4κ, η/2.4
 
 T  = Maxwell3D.singlelayer(wavenumber=κ)
 T′ = Maxwell3D.singlelayer(wavenumber=κ′)
@@ -55,8 +56,9 @@ fcrj, _ = facecurrents(uj,X)
 fcrm, _ = facecurrents(um,X)
 Plotly.plot(patch(Γ, norm.(fcrm)))
 
-Z = range(-2,2,length=200)
-nfpoints = [point(0,0,z) for z in Z]
+Z = range(-2,2,length=100)
+Y = range(-2,2,length=100)
+nfpoints = [point(0,y,z) for z in Z, y in Y]
 nfm_in = potential(BEAST.MWDoubleLayerField3D(wavenumber=κ′), nfpoints, um, X)
 nfj_in = potential(BEAST.MWSingleLayerField3D(wavenumber=κ′), nfpoints, uj, X)
 nf_in = -nfm_in + η′ * nfj_in
@@ -65,6 +67,11 @@ nfm_ex = potential(BEAST.MWDoubleLayerField3D(wavenumber=κ), nfpoints, um, X)
 nfj_ex = potential(BEAST.MWSingleLayerField3D(wavenumber=κ), nfpoints, uj, X)
 nf_ex = nfm_ex - η * nfj_ex
 
+nf_in = reshape(nf_in, size(nfpoints))
+nf_ex = reshape(nf_ex, size(nfpoints))
+nf = nf_in + nf_ex + E.(nfpoints)
+
+contour(real.(getindex.(nf,1)))
+
 plot()
-plot!(Z,real.(getindex.(nf_in,1)))
-plot!(Z,real.(getindex.(nf_ex + E.(nfpoints),1)))
+plot(real.(getindex.(nf[:,51],1)))
