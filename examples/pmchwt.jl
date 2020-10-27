@@ -1,7 +1,8 @@
 using CompScienceMeshes, BEAST
 using LinearAlgebra
 
-Γ = meshcuboid(1.0, 1.0, 1.0, 0.15)
+# Γ = meshcuboid(1.0, 1.0, 1.0, 0.15)
+Γ = meshsphere(1.0, 0.10)
 X = raviartthomas(Γ)
 
 κ,  η  = 1.0, 1.0
@@ -26,8 +27,8 @@ e, h = (n × E) × n, (n × H) × n
 
 α, α′ = 1/η, 1/η′
 pmchwt = @discretise(
-    (η*T+η′*T′)[k,j] +      (K+K′)[k,m] -
-         (K+K′)[l,j] + (α*T+α′*T′)[l,m] == h[k] + e[l],
+    (η*T+η′*T′)[k,j] -      (K+K′)[k,m] +
+         (K+K′)[l,j] + (α*T+α′*T′)[l,m] == e[k] - h[l],
     j∈X, m∈X, k∈X, l∈X)
 
 u = solve(pmchwt)
@@ -48,7 +49,22 @@ using Plots
 plot(xlabel="theta")
 plot!(Θ,norm.(ff),label="far field")
 
-import PlotlyJS
+import Plotly
 using LinearAlgebra
 fcrj, _ = facecurrents(uj,X)
-PlotlyJS.plot(patch(Γ, norm.(fcrj)))
+fcrm, _ = facecurrents(um,X)
+Plotly.plot(patch(Γ, norm.(fcrm)))
+
+Z = range(-2,2,length=200)
+nfpoints = [point(0,0,z) for z in Z]
+nfm_in = potential(BEAST.MWDoubleLayerField3D(wavenumber=κ′), nfpoints, um, X)
+nfj_in = potential(BEAST.MWSingleLayerField3D(wavenumber=κ′), nfpoints, uj, X)
+nf_in = -nfm_in + η′ * nfj_in
+
+nfm_ex = potential(BEAST.MWDoubleLayerField3D(wavenumber=κ), nfpoints, um, X)
+nfj_ex = potential(BEAST.MWSingleLayerField3D(wavenumber=κ), nfpoints, uj, X)
+nf_ex = nfm_ex - η * nfj_ex
+
+plot()
+plot!(Z,real.(getindex.(nf_in,1)))
+plot!(Z,real.(getindex.(nf_ex + E.(nfpoints),1)))
