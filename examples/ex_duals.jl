@@ -32,8 +32,8 @@ Dir = bnd_Faces
 Neu = submesh(!in(Dir), bnd_Faces)
 
 @time dual1 = BEAST.dual1forms(Tetrs, Faces, Dir)
-error("stop here")
-dual2 = BEAST.dual2forms(Tetrs, int_Edges, Dir)
+# error()
+@time dual2 = BEAST.dual2forms(Tetrs, int_Edges, Dir)
 
 @assert numfunctions(primal1) == numfunctions(dual2)
 @assert numfunctions(primal2) == numfunctions(dual1)

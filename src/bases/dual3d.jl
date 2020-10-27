@@ -10,155 +10,6 @@ function addf!(fn::Vector{<:Shape}, x::Vector, space::Space, idcs::Vector{Int})
     end
 end
 
-
-# function builddual2form(support, port, dirichlet, prt_fluxes)
-
-#     faces = CompScienceMeshes.skeleton_fast(support,2)
-#     edges = CompScienceMeshes.skeleton_fast(support,1)
-#     verts = CompScienceMeshes.skeleton_fast(support,0)
-#     @assert length(verts) - length(edges) + length(faces) - length(support) == 1
-#     bndry = boundary(support)
-
-#     cells_bndry = sort.(bndry)
-#     dirbnd = submesh(dirichlet) do face
-#         sort(face) in cells_bndry ? true : false
-#     end
-
-#     bnd_dirbnd = boundary(dirbnd)
-#     edges_dirbnd = CompScienceMeshes.skeleton_fast(dirbnd,1)
-#     cells_bnd_dirbnd = sort.(bnd_dirbnd)
-#     int_edges_dirbnd = submesh(edges_dirbnd) do edge
-#         sort(edge) in cells(bnd_dirbnd) ? false : true
-#     end
-
-#     num_faces_on_port = 0
-#     num_faces_on_dirc = 0
-
-#     cells_port = sort.(port)
-#     cells_dirbnd = sort.(dirbnd)
-#     int_faces = submesh(faces) do face
-#         sort(face) in cells_port && return false
-#         sort(face) in cells_dirbnd && return true
-#         sort(face) in cells_bndry && return false
-#         return true
-#     end
-
-#     bnd_edges = CompScienceMeshes.skeleton_fast(bndry,1)
-#     prt_edges = CompScienceMeshes.skeleton_fast(port,1)
-
-#     cells_int_edges_dirbnd = sort.(int_edges_dirbnd)
-#     cells_bnd_edges = sort.(bnd_edges)
-#     cells_prt_edges = sort.(prt_edges)
-
-#     int_edges = submesh(edges) do edge
-#         sort(edge) in cells_int_edges_dirbnd && return true
-#         sort(edge) in cells_bnd_edges && return false
-#         sort(edge) in cells_prt_edges && return false
-#         return true
-#     end
-
-#     RT_int = nedelecd3d(support, int_faces)
-#     RT_prt = nedelecd3d(support, port)
-#     L0_int = nedelecc3d(support, int_edges)
-
-#     Id = BEAST.Identity()
-#     div_RT_int = divergence(RT_int)
-#     div_RT_prt = divergence(RT_prt)
-#     D = assemble(Id, div_RT_int, div_RT_int)
-#     Q = assemble(Id, div_RT_int, div_RT_prt)
-#     d = -Q * prt_fluxes
-
-#     curl_L0_int = curl(L0_int)
-#     div_curl_L0_int = divergence(curl_L0_int)
-#     ZZ = real(assemble(Id, div_curl_L0_int, div_curl_L0_int))
-#     @assert isapprox(norm(ZZ), 0.0, atol=1e-8)
-#     C = assemble(Id, curl_L0_int, RT_int)
-#     c = real(assemble(Id, curl_L0_int, RT_prt)) * prt_fluxes
-
-#     T = eltype(D)
-#     nz = length(c)
-#     QQ = [D C'; C zeros(T,nz,nz)]
-#     qq = [d;c]
-#     x = (QQ \ qq)[1:end-nz]
-
-#     if !isapprox(C*x, c, atol=1e-8) || !isapprox(D*x, d, atol=1e-6)
-#         @show norm(D*x-d)
-#         @show norm(C*x-c)
-#         @show rank(C)
-#         @show size(C,1)
-#         error("error")
-#     end
-
-#     return RT_int, RT_prt, x, prt_fluxes
-
-# end
-
-
-
-
-
-# function dual2forms(Tetrs, Edges, Dir)
-#     tetrs, bnd, v2t, v2n = dual2forms_init(Tetrs)
-#     dual2forms_body(Tetrs, Edges, Dir, tetrs, bnd, v2t, v2n)
-# end
-
-# function dual2forms_body(Tetrs, Edges, Dir, tetrs, bnd, v2t, v2n)
-
-#     T = coordtype(Tetrs)
-#     bfs = Vector{Vector{Shape{T}}}(undef, numcells(Edges))
-#     pos = Vector{vertextype(Edges)}(undef, numcells(Edges))
-
-#     gpred = CompScienceMeshes.overlap_gpredicate(Dir)
-#     dirichlet = submesh(bnd) do face
-#         gpred(chart(bnd,face))
-#     end
-
-#     for (F,Edge) in enumerate(cells(Edges))
-
-#         println("Constructing dual 2-forms: $F out of $(length(Edges)).")
-#         bfs[F] = Vector{Shape{T}}()
-
-#         pos[F] = cartesian(center(chart(Edges,Edge)))
-#         port_vertex_idx = argmin(norm.(vertices(tetrs) .- Ref(pos[F])))
-
-#         ptch_idcs1 = v2t[Edge[1],1:v2n[Edge[1]]]
-#         ptch_idcs2 = v2t[Edge[2],1:v2n[Edge[2]]]
-
-#         patch1 = Mesh(vertices(tetrs), cells(tetrs)[ptch_idcs1])
-#         patch2 = Mesh(vertices(tetrs), cells(tetrs)[ptch_idcs2])
-#         patch = CompScienceMeshes.union(patch1, patch2)
-
-#         patch_bnd = boundary(patch1)
-
-#         bnd_patch1 = boundary(patch1)
-#         bnd_patch2 = boundary(patch2)
-#         port = submesh(in(bnd_patch2), bnd_patch1)
-
-#         total_area = sum(volume(chart(port, fc)) for fc in port)
-#         prt_fluxes = zeros(length(port))
-#         tgt = vertices(Edges)[Edge[1]] - vertices(Edges)[Edge[2]]
-#         for (i,face) in enumerate(cells(port))
-#             chrt = chart(port, face)
-#             sgn = sign(dot(normal(chrt), tgt))
-#             prt_fluxes[i] = sgn * volume(chrt) / total_area
-#         end
-
-#         RT1_int, RT1_prt, x1_int, x_prt = builddual2form(
-#             patch1, port, dirichlet, +prt_fluxes)
-#         RT2_int, RT2_prt, x2_int, x_prt = builddual2form(
-#             patch2, port, dirichlet, prt_fluxes)
-
-#         addf!(bfs[F], x1_int, RT1_int, ptch_idcs1)
-#         addf!(bfs[F], +x_prt, RT1_prt, ptch_idcs1)
-
-#         addf!(bfs[F], x2_int, RT2_int, ptch_idcs2)
-#         addf!(bfs[F], x_prt, RT2_prt, ptch_idcs2)
-
-#     end
-
-#     NDLCDBasis(tetrs, bfs, pos)
-# end
-
 function dual2forms_body(Edges, tetrs, bnd, dir, v2t, v2n)
 
     T = coordtype(tetrs)
@@ -245,7 +96,8 @@ function extend_1_form(supp, dirichlet, x_prt, port_edges)
     b = -assemble(Id, grad_Lg_int, Nd_prt, threading=Threading{:single}) * x_prt
 
     Z = zeros(eltype(b), length(b), length(b))
-    u = [A B'; B Z] \ [a;b]
+    S = [A B'; B Z]
+    u = S \ [a;b]
     x_int = u[1:end-length(b)]
 
     return x_int, int_edges, Nd_int
@@ -307,14 +159,6 @@ function dualforms_init(Tetrs, Dir)
     return tetrs, bnd, dir, v2t, v2n
 end
 
-# function dual2forms_init(Tetrs)
-
-#     tetrs = barycentric_refinement(Tetrs)
-#     v2t, v2n = CompScienceMeshes.vertextocellmap(tetrs)
-#     bnd = boundary(tetrs)
-
-#     return tetrs, bnd, v2t, v2n
-# end
 
 function dual1forms_body(Faces, tetrs, bnd, dir, v2t, v2n)
 
@@ -327,7 +171,9 @@ function dual1forms_body(Faces, tetrs, bnd, dir, v2t, v2n)
         Face = Cells[F]
 
         myid = Threads.threadid()
-        myid == 1 && println("Constructing dual 1-forms: $F out of $(length(Faces)).")
+        myid == 1 &&
+            F % 20 == 0 &&
+            println("Constructing dual 1-forms: $F out of $(length(Faces)).")
 
         idcs1 = v2t[Face[1],1:v2n[Face[1]]]
         idcs2 = v2t[Face[2],1:v2n[Face[2]]]
