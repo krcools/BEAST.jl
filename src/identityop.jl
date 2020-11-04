@@ -1,37 +1,34 @@
 struct Identity <: LocalOperator
 end
 
-kernelvals(biop::Identity, x) = Nothing
+kernelvals(biop::Identity, x) = nothing
 integrand(op::Identity, kernel, x, g, f) = dot(f[1], g[1])
-# scalartype(op::Identity) = Union{}
-scalartype(op::Identity) = Float64
+scalartype(op::Identity) = Union{}
+# scalartype(op::Identity) = Float64
 
 struct NCross <: LocalOperator
 end
 
-kernelvals(op::NCross, mp) = Nothing()
+kernelvals(op::NCross, mp) = nothing
 integrand(op::NCross, kernel, x, g, f) = dot(g[1], normal(x) × f[1])
 scalartype(op::NCross) = Union{}
 
-function quaddata(op::LocalOperator, g::RTRefSpace, f::RTRefSpace, tels, bels)
-    u, w = trgauss(6)
-    return [(w[i],SVector(u[1,i],u[2,i])) for i in 1:length(w)]
-end
 
-function quaddata(op::LocalOperator, g::NDRefSpace, f::NDRefSpace, tels, bels)
-    u, w = trgauss(6)
-    return [(w[i],SVector(u[1,i],u[2,i])) for i in 1:length(w)]
-end
+# function quaddata(op::LocalOperator, g::RTRefSpace, f::RTRefSpace, tels, bels)
+#     u, w = trgauss(6)
+#     return [(w[i],SVector(u[1,i],u[2,i])) for i in 1:length(w)]
+# end
 
-function quaddata(op::LocalOperator, g::NDRefSpace, f::RTRefSpace, tels, bels)
-    u, w = trgauss(6)
-    return [(w[i],SVector(u[1,i],u[2,i])) for i in 1:length(w)]
-end
+# function quaddata(op::LocalOperator, g::NDRefSpace, f::NDRefSpace, tels, bels)
+#     u, w = trgauss(6)
+#     return [(w[i],SVector(u[1,i],u[2,i])) for i in 1:length(w)]
+# end
 
-function quaddata(op::LocalOperator, g::subReferenceSpace, f::subReferenceSpace, tels, bels)
-    u, w = trgauss(6)
-    return [(w[i],SVector(u[1,i],u[2,i])) for i in 1:length(w)]
-end
+# function quaddata(op::LocalOperator, g::NDRefSpace, f::RTRefSpace, tels, bels)
+#     u, w = trgauss(6)
+#     return [(w[i],SVector(u[1,i],u[2,i])) for i in 1:length(w)]
+# end
+
 
 # function quaddata(op::LocalOperator, g::Nd4DRefSpace, f::Nd4DRefSpace, tels, bels)
 #     o, x, y, z = CompScienceMeshes.euclidianbasis(3)
@@ -39,57 +36,106 @@ end
 #     qps = quadpoints(reftet, rul)
 #     [(w, parametric(p)) for (p,w) in qps]
 # end
+# function quaddata(op::LocalOperator, g::NDLCCRefSpace, f::NDLCCRefSpace, tels, bels)
+#      o, x, y, z = CompScienceMeshes.euclidianbasis(3)
+#      reftet = simplex(x,y,z,o)
+#      qps = quadpoints(reftet, 6)
+#      [(w, parametric(p)) for (p,w) in qps]
+# end
+
+# function quaddata(op::LocalOperator, g::NDLCDRefSpace, f::NDLCDRefSpace, tels, bels)
+#      o, x, y, z = CompScienceMeshes.euclidianbasis(3)
+#      reftet = simplex(x,y,z,o)
+#      qps = quadpoints(reftet, 6)
+#      [(w, parametric(p)) for (p,w) in qps]
+# end
+
+# function quaddata(op::LocalOperator, g::NDLCDRefSpace, f::NDLCCRefSpace, tels, bels)
+#      o, x, y, z = CompScienceMeshes.euclidianbasis(3)
+#      reftet = simplex(x,y,z,o)
+#      qps = quadpoints(reftet, 6)
+#      [(w, parametric(p)) for (p,w) in qps]
+# end
 
 
-function quaddata(op::LocalOperator, g::NDLCCRefSpace, f::NDLCCRefSpace, tels, bels)
-     o, x, y, z = CompScienceMeshes.euclidianbasis(3)
-     reftet = simplex(x,y,z,o)
-     qps = quadpoints(reftet, 6)
-     [(w, parametric(p)) for (p,w) in qps]
+# quaddata(op::LocalOperator, g::LagrangeRefSpace, f::LagrangeRefSpace,
+#         tels::Vector, bels::Vector) = quaddata(op, g, f, tels, bels, Val{dimension(tels[1])})
+
+# function quaddata(op::LocalOperator, g::LagrangeRefSpace, f::LagrangeRefSpace,
+#         tels::Vector, bels::Vector, dim::Type{Val{1}})
+
+#     u, w = legendre(6, 0.0, 1.0)
+#     [(w[i],u[i]) for i in eachindex(w)]
+# end
+
+# function quaddata(op::LocalOperator, g::LagrangeRefSpace, f::LagrangeRefSpace,
+#         tels::Vector, bels::Vector, dim::Type{Val{2}})
+
+#     u, w = trgauss(6)
+#     [(w[i], SVector(u[1,i], u[2,i])) for i in 1:length(w)]
+# end
+
+
+function _alloc_workspace(qd, g, f, tels, bels)
+    q = qd[1]
+    τ = tels[1]
+    w, p = q[1], neighborhood(τ,q[2])
+    a = (w, p, g(p), f(p))
+    A = Vector{typeof(a)}(undef,length(qd))
 end
 
-function quaddata(op::LocalOperator, g::NDLCDRefSpace, f::NDLCDRefSpace, tels, bels)
-     o, x, y, z = CompScienceMeshes.euclidianbasis(3)
-     reftet = simplex(x,y,z,o)
-     qps = quadpoints(reftet, 6)
-     [(w, parametric(p)) for (p,w) in qps]
+const LinearRefSpaceTriangle = Union{RTRefSpace, NDRefSpace}
+function quaddata(op::LocalOperator, g::LinearRefSpaceTriangle, f::LinearRefSpaceTriangle, tels, bels)
+    u, w = trgauss(6)
+    qd = [(w[i],SVector(u[1,i],u[2,i])) for i in 1:length(w)]
+    A = _alloc_workspace(qd, g, f, tels, bels)
+
+    return qd, A
 end
 
-function quaddata(op::LocalOperator, g::NDLCDRefSpace, f::NDLCCRefSpace, tels, bels)
-     o, x, y, z = CompScienceMeshes.euclidianbasis(3)
-     reftet = simplex(x,y,z,o)
-     qps = quadpoints(reftet, 6)
-     [(w, parametric(p)) for (p,w) in qps]
+function quaddata(op::LocalOperator, g::subReferenceSpace, f::subReferenceSpace, tels, bels)
+    u, w = trgauss(6)
+    qd = [(w[i],SVector(u[1,i],u[2,i])) for i in 1:length(w)]
+    A = _alloc_workspace(qd, g, f, tels, bels)
+    return qd, A
 end
 
+const LinearRefSpaceTetr = Union{NDLCCRefSpace, NDLCDRefSpace}
+function quaddata(op::LocalOperator, g::LinearRefSpaceTetr, f::LinearRefSpaceTetr, tels, bels)
+    o, x, y, z = CompScienceMeshes.euclidianbasis(3)
+    reftet = simplex(x,y,z,o)
+    qps = quadpoints(reftet, 3)
+    qd = [(w, parametric(p)) for (p,w) in qps]
+    A = _alloc_workspace(qd, g, f, tels, bels)
+    return qd, A
+end
 
-
-quaddata(op::LocalOperator, g::LagrangeRefSpace, f::LagrangeRefSpace,
-        tels::Vector, bels::Vector) = quaddata(op, g, f, tels, bels, Val{dimension(tels[1])})
-
-function quaddata(op::LocalOperator, g::LagrangeRefSpace, f::LagrangeRefSpace,
-        tels::Vector, bels::Vector, dim::Type{Val{1}})
-
+function quaddata(op::LocalOperator, g::LagrangeRefSpace{T,Deg,2} where {T,Deg},
+    f::LagrangeRefSpace, tels::Vector, bels::Vector)
+    
     u, w = legendre(6, 0.0, 1.0)
-    [(w[i],u[i]) for i in eachindex(w)]
+    qd = [(w[i],u[i]) for i in eachindex(w)]
+    A = _alloc_workspace(qd, g, f, tels, bels)
+    return qd, A
 end
 
-
-function quaddata(op::LocalOperator, g::LagrangeRefSpace, f::LagrangeRefSpace,
-        tels::Vector, bels::Vector, dim::Type{Val{2}})
+function quaddata(op::LocalOperator, g::LagrangeRefSpace{T,Deg,3} where {T,Deg},
+    f::LagrangeRefSpace, tels::Vector, bels::Vector)
 
     u, w = trgauss(6)
-    [(w[i], SVector(u[1,i], u[2,i])) for i in 1:length(w)]
+    qd = [(w[i], SVector(u[1,i], u[2,i])) for i in 1:length(w)]
+    A = _alloc_workspace(qd, g, f, tels, bels)
+    return qd, A
 end
 
 
-function quadrule(op::LocalOperator, ψ::RefSpace, ϕ::RefSpace, τ, qd)
-    q = qd[1]
-    w, p = q[1], neighborhood(τ,q[2])
-    a = (w, p, ψ(p), ϕ(p))
-    A = Vector{typeof(a)}(undef,length(qd))
-    A[1] = a
-    for i in 2:length(qd)
+function quadrule(op::LocalOperator, ψ::RefSpace, ϕ::RefSpace, τ, (qd,A))
+    # q = qd[1]
+    # w, p = q[1], neighborhood(τ,q[2])
+    # a = (w, p, ψ(p), ϕ(p))
+    # A = Vector{typeof(a)}(undef,length(qd))
+    # A[1] = a
+    for i in eachindex(A)
         q = qd[i]
         w, p = q[1], neighborhood(τ,q[2])
         A[i] = (w, p, ψ(p), ϕ(p))
