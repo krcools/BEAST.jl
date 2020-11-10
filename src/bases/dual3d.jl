@@ -16,9 +16,14 @@ function dual2forms_body(Edges, tetrs, bnd, dir, v2t, v2n)
     bfs = Vector{Vector{Shape{T}}}(undef, numcells(Edges))
     pos = Vector{vertextype(Edges)}(undef, numcells(Edges))
 
-    for (F,Edge) in enumerate(cells(Edges))
+    Cells = cells(Edges)
+    num_threads = Threads.nthreads()
+    Threads.@threads for F in eachindex(Cells)
+        Edge = Cells[F]
 
-        println("Constructing dual 2-forms: $F out of $(length(Edges)).")
+        myid = Threads.threadid()
+        myid == 1 && (F % 20 == 0) &&
+            println("Constructing dual 2-forms: $(F*num_threads) out of $(length(Edges)).")
 
         idcs1 = v2t[Edge[1],1:v2n[Edge[1]]]
         idcs2 = v2t[Edge[2],1:v2n[Edge[2]]]
@@ -167,13 +172,13 @@ function dual1forms_body(Faces, tetrs, bnd, dir, v2t, v2n)
     pos = Vector{vertextype(Faces)}(undef, length(Faces))
 
     Cells = cells(Faces)
+    num_threads = Threads.nthreads()
     Threads.@threads for F in 1:length(Faces)
         Face = Cells[F]
 
         myid = Threads.threadid()
-        myid == 1 &&
-            F % 20 == 0 &&
-            println("Constructing dual 1-forms: $F out of $(length(Faces)).")
+        myid == 1 && F % 20 == 0 &&
+            println("Constructing dual 1-forms: $(F*num_threads) out of $(length(Faces)).")
 
         idcs1 = v2t[Face[1],1:v2n[Face[1]]]
         idcs2 = v2t[Face[2],1:v2n[Face[2]]]
