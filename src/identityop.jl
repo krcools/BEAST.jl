@@ -128,13 +128,15 @@ function quaddata(op::LocalOperator, g::LagrangeRefSpace{T,Deg,3} where {T,Deg},
     return qd, A
 end
 
-function quaddata(op::LocalOperator, g::LagrangeRefSpace, f::LagrangeRefSpace,
-        tels, bels, dim::Type{Val{3}})
+function quaddata(op::LocalOperator, g::LagrangeRefSpace{T,Deg,4} where {T,Deg},
+    f::LagrangeRefSpace, tels::Vector, bels::Vector)
 
      o, x, y, z = CompScienceMeshes.euclidianbasis(3)
      reftet = simplex(x,y,z,o)
      qps = quadpoints(reftet, 6)
-     [(w, parametric(p)) for (p,w) in qps]
+     qd = [(w, parametric(p)) for (p,w) in qps]
+     A = _alloc_workspace(qd, g, f, tels, bels)
+     return qd, A
 end
 
 
