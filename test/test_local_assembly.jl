@@ -21,11 +21,13 @@ Lx = BEAST.lagrangecxd0(m)
 @test numfunctions(Lx) == 8
 
 Id = BEAST.Identity()
-Q1, st1 = BEAST.allocatestorage(Id, L0, Lx, Val{:bandedstorage}, BEAST.LongDelays{:ignore})
+fr1, st1 = BEAST.allocatestorage(Id, L0, Lx, Val{:bandedstorage}, BEAST.LongDelays{:ignore})
 BEAST.assemble_local_matched!(Id, L0, Lx, st1)
+Q1 = fr1()
 
-Q2, st2 = BEAST.allocatestorage(Id, L0, Lx, Val{:bandedstorage}, BEAST.LongDelays{:ignore})
+fr2, st2 = BEAST.allocatestorage(Id, L0, Lx, Val{:bandedstorage}, BEAST.LongDelays{:ignore})
 BEAST.assemble_local_mixed!(Id, L0, Lx, st2)
+Q2 = fr2()
 
 @test isapprox(Q1, Q2, atol=1e-8)
 
@@ -33,9 +35,11 @@ BEAST.assemble_local_mixed!(Id, L0, Lx, st2)
 RT = raviartthomas(m)
 BC = buffachristiansen(m)
 
-Q1, st1 = BEAST.allocatestorage(Id, BC, RT, Val{:bandedstorage}, BEAST.LongDelays{:ignore})
+fr1, st1 = BEAST.allocatestorage(Id, BC, RT, Val{:bandedstorage}, BEAST.LongDelays{:ignore})
 BEAST.assemble_local_refines!(Id, BC, RT, st1)
+Q1 = fr1()
 
-Q2, st2 = BEAST.allocatestorage(Id, BC, RT, Val{:bandedstorage}, BEAST.LongDelays{:ignore})
+fr2, st2 = BEAST.allocatestorage(Id, BC, RT, Val{:bandedstorage}, BEAST.LongDelays{:ignore})
 BEAST.assemble_local_mixed!(Id, BC, RT, st2)
+Q2 = fr2()
 @test isapprox(Q1, Q2, atol=1e-8)

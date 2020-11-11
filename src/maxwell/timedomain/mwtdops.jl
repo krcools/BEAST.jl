@@ -133,7 +133,7 @@ function allocatestorage(op::MWDoubleLayerTDIO, testST, basisST,
 	data = zeros(eltype(op), bandwidth, M, N)
 	Z = SparseND.Banded3D(K0, data, maxk1)
     store1(v,m,n,k) = (Z[m,n,k] += v)
-    return Z, store1
+    return ()->Z, store1
 end
 
 function assemble!(dl::MWDoubleLayerTDIO, W::SpaceTimeBasis, V::SpaceTimeBasis, store,
