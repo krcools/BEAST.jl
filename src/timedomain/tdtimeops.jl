@@ -64,7 +64,7 @@ function allocatestorage(op::TensorOperator, test_functions, trial_functions,
     data = zeros(scalartype(op), bandwidth, M, N)
     maxk1 = bandwidth
     Z = SparseND.Banded3D(K0, data, maxk1)
-    return Z, (v,m,n,k)->(Z[m,n,k] += v)
+    return ()->Z, (v,m,n,k)->(Z[m,n,k] += v)
 end
 
 
@@ -186,9 +186,7 @@ function allocatestorage(op::TemporalDifferentiation, testfns, trialfns,
 		derive(trial_time_fns)
 	)
 
-    Z, store = allocatestorage(op.operator, testfns, trialfns,
-        storage_trait, longdelays_trait)
-	return Z, store
+    return allocatestorage(op.operator, testfns, trialfns, storage_trait, longdelays_trait)
 end
 
 function assemble!(operator::TemporalDifferentiation, testfns, trialfns, store, threading = Threading{:multi})
@@ -225,8 +223,7 @@ function allocatestorage(op::TemporalIntegration, testfns, trialfns,
 		integrate(trial_time_fns)
 	)
 
-	Z, store = allocatestorage(op.operator, testfns, trialfns, storage_trait, longdelays_trait)
-	return Z, store
+	return allocatestorage(op.operator, testfns, trialfns, storage_trait, longdelays_trait)
 end
 
 function assemble!(operator::TemporalIntegration, testfns, trialfns, store,

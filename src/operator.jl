@@ -84,7 +84,7 @@ function assemble(operator::AbstractOperator, test_functions, trial_functions;
     Z, store = allocatestorage(operator, test_functions, trial_functions,
         storage_policy, long_delays_policy)
     assemble!(operator, test_functions, trial_functions, store, threading)
-    sdata(Z)
+    return Z()
 end
 
 function assemblerow(operator::AbstractOperator, test_functions, trial_functions,
@@ -94,7 +94,7 @@ function assemblerow(operator::AbstractOperator, test_functions, trial_functions
     Z, store = allocatestorage(operator, test_functions, trial_functions,
         storage_policy, long_delays_policy)
     assemblerow!(operator, test_functions, trial_functions, store)
-    sdata(Z)
+    Z()
 end
 
 function assemblecol(operator::AbstractOperator, test_functions, trial_functions,
@@ -104,7 +104,7 @@ function assemblecol(operator::AbstractOperator, test_functions, trial_functions
     Z, store = allocatestorage(operator, test_functions, trial_functions,
         storage_policy, long_delays_policy)
     assemblecol!(operator, test_functions, trial_functions, store)
-    sdata(Z)
+    Z()
 end
 
 function allocatestorage(operator::AbstractOperator, test_functions, trial_functions,
@@ -116,14 +116,13 @@ function allocatestorage(operator::AbstractOperator, test_functions, trial_funct
         scalartype(test_functions) ,
         scalartype(trial_functions),
     )
-    # Z = SharedArray{T}(
-    #     numfunctions(test_functions)  ,
-    #     numfunctions(trial_functions),
-    # )
-    Z = Matrix{T}(undef, numfunctions(test_functions), numfunctions(trial_functions))
+    Z = Matrix{T}(undef,
+        numfunctions(test_functions),
+        numfunctions(trial_functions),
+    )
     fill!(Z, 0)
     store(v,m,n) = (Z[m,n] += v)
-    return Z, store
+    return ()->Z, store
 end
 
 
@@ -133,7 +132,7 @@ function allocatestorage(operator::LinearCombinationOfOperators,
         long_delays_policy::Type{LongDelays{:ignore}})
 
     # TODO: remove this ugly, ugly patch
-    Z, store = allocatestorage(operator.ops[end], test_functions, trial_functions,
+    return allocatestorage(operator.ops[end], test_functions, trial_functions,
         storage_policy, long_delays_policy)
 end
 
@@ -144,7 +143,7 @@ function allocatestorage(operator::LinearCombinationOfOperators,
         long_delays_policy::Type{LongDelays{L}}) where {L,S}
 
     # TODO: remove this ugly, ugly patch
-    Z, store = allocatestorage(operator.ops[end], test_functions, trial_functions,
+    return allocatestorage(operator.ops[end], test_functions, trial_functions,
         storage_policy, long_delays_policy)
 end
 

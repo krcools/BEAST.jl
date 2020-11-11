@@ -2,13 +2,37 @@
 
 using CollisionDetection
 
-mutable struct SingleQuadStrategy{T}
-    coords::Vector{T}
-    weights::Vector{T}
-end
+# mutable struct SingleQuadStrategy{T}
+#     coords::Vector{T}
+#     weights::Vector{T}
+# end
 
 abstract type LocalOperator <: Operator end
 
+
+function allocatestorage(op::LocalOperator, test_functions, trial_functions,
+    storage_trait, longdelays_trait)
+
+    T = scalartype(op, test_functions, trial_functions)
+
+    M = Int[]
+    N = Int[]
+    V = T[]
+
+    function store(v,m,n)
+        push!(M,m)
+        push!(N,n)
+        push!(V,v)
+    end
+
+    function freeze()
+        nrows = numfunctions(test_functions)
+        ncols = numfunctions(trial_functions)
+        return sparse(M,N,V, nrows, ncols)
+    end
+
+    return freeze, store
+end
 
 function assemble!(biop::LocalOperator, tfs::Space, bfs::Space, store,
     threading::Type{Threading{:single}})
@@ -61,7 +85,6 @@ function assemble_local_refines!(biop::LocalOperator, tfs::Space, bfs::Space, st
 
     println("Using 'refines' algorithm for local assembly:")
 
-    # tol = sqrt(eps(Float64))
     tgeo = geometry(tfs)
     bgeo = geometry(bfs)
     @assert CompScienceMeshes.refines(tgeo, bgeo)
@@ -77,9 +100,6 @@ function assemble_local_refines!(biop::LocalOperator, tfs::Space, bfs::Space, st
 
     qd = quaddata(biop, trefs, brefs, tels, bels)
 
-    # store the bcells in an octree
-    # tree = elementstree(bels)
-
     print("dots out of 10: ")
     todo, done, pctg = length(tels), 0, 0
     for (p,tcell) in enumerate(tels)
@@ -88,19 +108,11 @@ function assemble_local_refines!(biop::LocalOperator, tfs::Space, bfs::Space, st
         Q = CompScienceMeshes.parent(tgeo, P)
         q = bg2a[Q]
 
-        # tc, ts = boundingbox(tcell.vertices)
-        # pred = (c,s) -> boxesoverlap(c,s,tc,ts)
-
-        # for box in boxes(tree, pred)
-        #     for q in box
         bcell = bels[q]
         @assert overlap(tcell, bcell)
 
-        # if overlap(tcell, bcell)
-
         isct = intersection(tcell, bcell)
         for cell in isct
-            # volume(cell) < tol && continue
 
             P = restrict(brefs, bcell, cell)
             Q = restrict(trefs, tcell, cell)
@@ -120,9 +132,6 @@ function assemble_local_refines!(biop::LocalOperator, tfs::Space, bfs::Space, st
             end # next refshape on test side
 
         end # next cell in intersection
-        # end # if overlap
-        #     end # next cell in the basis geometry
-        # end # next box in the octree
 
         done += 1
         new_pctg = round(Int, done / todo * 100)
@@ -259,9 +268,7 @@ end
 
 function cellinteractions(biop, trefs, brefs, cell, qr)
 
-    # num_tshs = numfunctions(trefs)
     num_tshs = length(qr[1][3])
-    # num_bshs = numfunctions(brefs)
     num_bshs = length(qr[1][4])
 
     zlocal = zeros(Float64, num_tshs, num_bshs)
@@ -269,14 +276,11 @@ function cellinteractions(biop, trefs, brefs, cell, qr)
 
         w, mp, tvals, bvals = q[1], q[2], q[3], q[4]
         j = w * jacobian(mp)
-
         kernel = kernelvals(biop, mp)
 
-        # for m in 1 : num_tshs
         for m in 1 : length(tvals)
-
             tval = tvals[m]
-            # for n in 1 : num_bshs
+
             for n in 1 : length(bvals)
                 bval = bvals[n]
 
