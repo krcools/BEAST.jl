@@ -108,6 +108,11 @@ trace_primal1_hemi = BEAST.ttrace(primal1_hemi, boundary(hemi))
 fcr, geo = facecurrents(eg, trace_primal1_hemi)
 Plotly.plot(patch(geo, norm.(fcr)))
 
+curl_primal1_hemi = BEAST.curl(primal1_hemi)
+ncurl_primal1_hemi = BEAST.ntrace(curl_primal1_hemi, boundary(hemi))
+fcr, geo = facecurrents(eg, ncurl_primal1_hemi)
+Plotly.plot(patch(geo, norm.(fcr)))
+
 tetrs = geometry(dual1)
 bary_hemi = submesh(tetrs) do tetr
     cartesian(CompScienceMeshes.center(chart(tetrs, tetr)))[3] < 0
@@ -116,7 +121,10 @@ end
 dual1_hemi = restrict(dual1, bary_hemi)
 bnd_bary_hemi = boundary(bary_hemi)
 trace_dual1_hemi = BEAST.ttrace(dual1_hemi, bnd_bary_hemi)
-
 fcr, geo = facecurrents(hG, trace_dual1_hemi)
+Plotly.plot(patch(geo, norm.(fcr)))
+
+
+
 # tetrs, bnd, dir, v2t, v2n = BEAST.dualforms_init(Tetrs, Dir)
 # @profview BEAST.dual1forms_body(Faces[collect(1:10)], tetrs, bnd, dir, v2t, v2n)
