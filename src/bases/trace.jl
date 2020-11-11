@@ -42,44 +42,52 @@ end
 
 function ntrace(X::Space, γ)
 
-    x = refspace(X)
-    on_target = overlap_gpredicate(γ)
+    # on_target = overlap_gpredicate(γ)
     # ad = assemblydata(X)
+    x = refspace(X)
     E, ad = assemblydata(X)
+    igeo = geometry(X)
+    @assert dimension(γ) == dimension(igeo)-1
+    # Γ = geo
+    # Dγ = dimension(γ)
+    # Σ = skeleton(Γ,Dγ)
 
-    geo = geometry(X)
-    Γ = geo
-    Dγ = dimension(γ)
-    Σ = skeleton(Γ,Dγ)
+    ogeo = boundary(igeo)
+    on_target = overlap_gpredicate(γ)
+    ogeo = submesh(ogeo) do face
+        on_target(chart(ogeo,face))
+    end
 
-    D = copy(transpose(connectivity(Σ, Γ, abs)))
+    D = copy(transpose(connectivity(ogeo, igeo, abs)))
     rows, vals = rowvals(D), nonzeros(D)
 
     T = scalartype(X)
-    fns = [Shape{T}[] for i in 1:numfunctions(X)]
+    S = Shape{T}
+    fns = [Vector{S}() for i in 1:numfunctions(X)]
 
     for (p,el) in enumerate(E)
 
         for (q,fc) in enumerate(faces(el))
-
             on_target(fc) || continue
-            Q = ntrace(x,el,q,fc)
-            # print(Q)
-            @assert norm(Q,Inf) != 0
 
-            # find the global index in Σ of the q-th face of the p-element
+            # print(Q)
+            # @assert norm(Q,Inf) != 0
+            
             r = 0
             for k in nzrange(D,p)
                 vals[k] == q && (r = rows[k]; break)
             end
             @assert r != 0
+            
+            fc1 = chart(ogeo, cells(ogeo)[r])
+            Q = ntrace(x, el, q, fc1)
+
             for i in 1:size(Q,1)
                 for j in 1:size(Q,2)
                     for (m,a) in ad[p,j]
                         # j == q && println("bingo",j,q)
                         v = a*Q[i,j]
-                        @assert a != 0
-                        v == 0 && continue
+                        isapprox(v,0,atol=sqrt(eps(T))) && continue
                         push!(fns[m], Shape(r, i, v))
                     end
                 end
@@ -89,7 +97,7 @@ function ntrace(X::Space, γ)
 
     end
 
-    ntrace(X, Σ, fns)
+    ntrace(X, ogeo, fns)
 end
 
 

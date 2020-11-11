@@ -91,7 +91,7 @@ end
 for _f in Y.fns
     @test length(_f) == 1
     @test 0 < _f[1].cellid < 4
-    seg = chart(Σ, Σ.faces[_f[1].cellid])
+    seg = chart(Σ, cells(Σ)[_f[1].cellid])
     @test _f[1].refid == 1
     @test _f[1].coeff ≈ (1 / volume(seg))
 end
