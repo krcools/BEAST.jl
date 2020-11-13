@@ -5,7 +5,7 @@ using BEAST
 
 include("utils/showfn.jl")
 
-Tetrs = CompScienceMeshes.tetmeshsphere(1.0, 0.40)
+Tetrs = CompScienceMeshes.tetmeshsphere(1.0, 0.26)
 Faces = CompScienceMeshes.skeleton_fast(Tetrs, 2)
 Edges = CompScienceMeshes.skeleton_fast(Tetrs, 1)
 Nodes = CompScienceMeshes.skeleton_fast(Tetrs, 0)

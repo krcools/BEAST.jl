@@ -116,13 +116,21 @@ function extend_2_form(supp, dirichlet, x_prt, port_faces)
     bnd_supp = boundary(supp)
     supp_faces = CompScienceMeshes.skeleton_fast(supp, 2)
     supp_edges = CompScienceMeshes.skeleton_fast(supp, 1)
+    supp_nodes = CompScienceMeshes.skeleton_fast(supp, 0)
 
     dir_compl = submesh(!in(dirichlet), bnd_supp)
     dir_compl_faces = CompScienceMeshes.skeleton_fast(dir_compl, 2)
     dir_compl_edges = CompScienceMeshes.skeleton_fast(dir_compl, 1)
+    dir_compl_nodes = CompScienceMeshes.skeleton_fast(dir_compl, 0)
 
     int_faces = submesh(!in(dir_compl_faces), supp_faces)
     int_edges = submesh(!in(dir_compl_edges), supp_edges)
+    int_nodes = submesh(!in(dir_compl_nodes), supp_nodes)
+
+    if length(int_nodes) > 0
+        @assert length(int_nodes) == 1
+        int_edges = int_edges[collect(1:length(int_edges)-length(int_nodes))]
+    end
 
     RT_prt = BEAST.raviartthomas(supp, port_faces)
     RT_int = BEAST.raviartthomas(supp, int_faces)
