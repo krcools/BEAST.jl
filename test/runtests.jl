@@ -39,6 +39,7 @@ include("test_mult.jl")
 
 include("test_gram.jl")
 include("test_vector_gram.jl")
+include("test_local_storage.jl")
 include("test_embedding.jl")
 include("test_laminated.jl")
 

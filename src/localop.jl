@@ -11,7 +11,7 @@ abstract type LocalOperator <: Operator end
 
 
 function allocatestorage(op::LocalOperator, test_functions, trial_functions,
-    storage_trait, longdelays_trait)
+    storage_trait::Type{Val{:bandedstorage}}, longdelays_trait)
 
     T = scalartype(op, test_functions, trial_functions)
 
@@ -30,6 +30,18 @@ function allocatestorage(op::LocalOperator, test_functions, trial_functions,
         ncols = numfunctions(trial_functions)
         return sparse(M,N,V, nrows, ncols)
     end
+
+    return freeze, store
+end
+
+function allocatestorage(op::LocalOperator, test_functions, trial_functions,
+    storage_trait::Type{Val{:densestorage}}, longdelays_trait)
+
+    T = scalartype(op, test_functions, trial_functions)
+
+    Z = zeros(T, numfunctions(test_functions), numfunctions(trial_functions))
+    store(v,m,n) = (Z[m,n] += v)
+    freeze() = Z
 
     return freeze, store
 end
