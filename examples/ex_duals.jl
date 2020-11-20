@@ -83,7 +83,7 @@ Zdd = zeros(numfunctions(dual1), numfunctions(dual1))
 μ = BEAST.Multiplicative(p -> 1.0)
 
 Ipp = assemble(ϵ, primal1, primal1)
-Idd = assemble(μ, dual1, dual1)
+Idd = assemble(μ, dual1, dual1, storage_policy=Val{:densestorage})
 
 Zpd = zeros(numfunctions(primal1), numfunctions(dual1))
 
