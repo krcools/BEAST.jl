@@ -5,7 +5,7 @@ using BEAST
 
 include("utils/showfn.jl")
 
-Tetrs = CompScienceMeshes.tetmeshsphere(1.0, 0.26)
+Tetrs = CompScienceMeshes.meshball(radius=1.0, h=0.26)
 Faces = CompScienceMeshes.skeleton_fast(Tetrs, 2)
 Edges = CompScienceMeshes.skeleton_fast(Tetrs, 1)
 Nodes = CompScienceMeshes.skeleton_fast(Tetrs, 0)
@@ -115,7 +115,7 @@ Plotly.plot(patch(geo, norm.(fcr)))
 
 tetrs = geometry(dual1)
 bary_hemi = submesh(tetrs) do tetr
-    cartesian(CompScienceMeshes.center(chart(tetrs, tetr)))[3] < 0
+    cartesian(CompScienceMeshes.center(chart(tetrs, tetr)))[1] < 0
 end
 
 dual1_hemi = restrict(dual1, bary_hemi)

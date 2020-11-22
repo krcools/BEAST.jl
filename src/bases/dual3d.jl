@@ -88,23 +88,25 @@ function extend_1_form(supp, dirichlet, x_prt, port_edges)
 
     Nd_prt = BEAST.nedelec(supp, port_edges)
     Nd_int = BEAST.nedelec(supp, int_edges)
-    Lg_int = BEAST.lagrangec0d1(supp, int_nodes)
-
+    
     curl_Nd_prt = curl(Nd_prt)
     curl_Nd_int = curl(Nd_int)
-    grad_Lg_int = gradient(Lg_int)
-
     A = assemble(Id, curl_Nd_int, curl_Nd_int, threading=Threading{:single})
-    B = assemble(Id, grad_Lg_int, Nd_int, threading=Threading{:single})
-
     a = -assemble(Id, curl_Nd_int, curl_Nd_prt, threading=Threading{:single}) * x_prt
-    b = -assemble(Id, grad_Lg_int, Nd_prt, threading=Threading{:single}) * x_prt
+    
+    if length(int_nodes) > 0
+        Lg_int = BEAST.lagrangec0d1(supp, int_nodes)
+        grad_Lg_int = gradient(Lg_int)
+        B = assemble(Id, grad_Lg_int, Nd_int, threading=Threading{:single})
+        b = -assemble(Id, grad_Lg_int, Nd_prt, threading=Threading{:single}) * x_prt
+        Z = zeros(eltype(b), length(b), length(b))
+        S = [A B'; B Z]
+        u = S \ [a;b]
+    else
+        u = A \ a
+    end
 
-    Z = zeros(eltype(b), length(b), length(b))
-    S = [A B'; B Z]
-    u = S \ [a;b]
     x_int = u[1:end-length(b)]
-
     return x_int, int_edges, Nd_int
 end
 
