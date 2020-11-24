@@ -106,7 +106,7 @@ function extend_1_form(supp, dirichlet, x_prt, port_edges)
         u = A \ a
     end
 
-    x_int = u[1:end-length(b)]
+    x_int = u[1:numfunctions(Nd_int)]
     return x_int, int_edges, Nd_int
 end
 
@@ -176,6 +176,8 @@ end
 
 
 function dual1forms_body(Faces, tetrs, bnd, dir, v2t, v2n)
+
+    @assert dimension(Faces) == 2
 
     T = coordtype(tetrs)
     bfs = Vector{Vector{Shape{T}}}(undef, length(Faces))
