@@ -6,6 +6,7 @@ using LinearAlgebra
 using SharedArrays
 using SparseArrays
 using BlockArrays
+using SparseMatrixDicts
 
 using SauterSchwabQuadrature
 using FastGaussQuadrature
