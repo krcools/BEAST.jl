@@ -34,6 +34,21 @@ function allocatestorage(op::LocalOperator, test_functions, trial_functions,
     return freeze, store
 end
 
+function allocatestorage(op::LocalOperator, testfunctions, trialfunctions,
+    storage_trait::Type{Val{:sparsedicts}}, longdelays_trait)
+
+    T = scalartype(op, testfunctions, trialfunctions)
+
+    m = numfunctions(testfunctions)
+    n = numfunctions(trialfunctions)
+    Z = SparseMatrixDict{T,Int}(m,n)
+
+    store(v,m,n) = (Z[m,n] += v)
+    freeze() = SparseArrays.SparseMatrixCSC(Z)
+
+    return freeze, store
+end
+
 function allocatestorage(op::LocalOperator, test_functions, trial_functions,
     storage_trait::Type{Val{:densestorage}}, longdelays_trait)
 
