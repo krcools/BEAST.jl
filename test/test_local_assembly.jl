@@ -1,3 +1,4 @@
+@info "Executing test_local_assembly.jl"
 using CompScienceMeshes
 using BEAST
 

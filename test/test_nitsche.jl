@@ -1,4 +1,7 @@
+@info "Executing test_nitsche.jl"
+
 using Test
+using LinearAlgebra
 #using LinearForms
 using CompScienceMeshes
 using BEAST
@@ -18,7 +21,7 @@ X = raviartthomas(Γ, γ)
 
 x = divergence(X)
 y = ntrace(X,γ)
-Z = assemble(S,y,x)
+Z = assemble(S,y,x,threading=BEAST.Threading{:single})
 
 # test for the correct sparsity pattern
 # I, J, V = findall(!iszero, Z)

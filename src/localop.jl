@@ -94,6 +94,10 @@ function assemble_local_matched!(biop::LocalOperator, tfs::Space, bfs::Space, st
     brefs = refspace(bfs)
 
     qd = quaddata(biop, trefs, brefs, tels, bels)
+
+    verbose = length(tels) > 10_000
+    verbose && print("dots out of 20: ")
+    todo, done, pctg = length(tels), 0, 0
     for (p,cell) in enumerate(tels)
         P = ta2g[p]
         q = bg2a[P]
@@ -105,7 +109,13 @@ function assemble_local_matched!(biop::LocalOperator, tfs::Space, bfs::Space, st
         for i in 1 : size(locmat, 1), j in 1 : size(locmat, 2)
             for (m,a) in tad[p,i], (n,b) in bad[q,j]
                 store(a * locmat[i,j] * b, m, n)
-end end end end
+        
+        end end
+
+        new_pctg = round(Int, (done += 1) / todo * 100)
+        verbose && new_pctg > pctg + 4 && (print("."); pctg = new_pctg)
+    end
+end
 
 
 function assemble_local_refines!(biop::LocalOperator, tfs::Space, bfs::Space, store)

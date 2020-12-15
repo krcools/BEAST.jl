@@ -41,7 +41,7 @@ function nedelec(surface, edges=skeleton(surface,1))
 end
 
 function LinearAlgebra.cross(::NormalVector, s::NDBasis)
-    @assert CompScienceMeshes.isoriented(s.geo)
+    # @assert CompScienceMeshes.isoriented(s.geo)
     RTBasis(s.geo, s.fns, s.pos)
 end
 

@@ -1,3 +1,5 @@
+@info "Executing test_assemblerow.jl"
+
 using CompScienceMeshes, BEAST
 using Test
 
