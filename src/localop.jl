@@ -98,13 +98,15 @@ function assemble_local_matched!(biop::LocalOperator, tfs::Space, bfs::Space, st
     verbose = length(tels) > 10_000
     verbose && print("dots out of 20: ")
     todo, done, pctg = length(tels), 0, 0
+    locmat = zeros(scalartype(biop, trefs, brefs), numfunctions(trefs), numfunctions(brefs))
     for (p,cell) in enumerate(tels)
         P = ta2g[p]
         q = bg2a[P]
         q == 0 && continue
 
         qr = quadrule(biop, trefs, brefs, cell, qd)
-        locmat = cellinteractions(biop, trefs, brefs, cell, qr)
+        fill!(locmat, 0)
+        cellinteractions_matched!(locmat, biop, trefs, brefs, cell, qr)
 
         for i in 1 : size(locmat, 1), j in 1 : size(locmat, 2)
             for (m,a) in tad[p,i], (n,b) in bad[q,j]
@@ -303,6 +305,33 @@ function assemble_local_mixed!(biop::LocalOperator, tfs::Space, bfs::Space, stor
     println("")
 end
 
+
+function cellinteractions_matched!(zlocal, biop, trefs, brefs, cell, qr)
+
+    num_tshs = length(qr[1][3])
+    num_bshs = length(qr[1][4])
+
+    # zlocal = zeros(Float64, num_tshs, num_bshs)
+    for q in qr
+
+        w, mp, tvals, bvals = q[1], q[2], q[3], q[4]
+        j = w * jacobian(mp)
+        kernel = kernelvals(biop, mp)
+        
+        for n in 1 : num_bshs
+            bval = bvals[n]
+            for m in 1 : num_tshs
+                tval = tvals[m]
+
+                igd = integrand(biop, kernel, mp, tval, bval)
+                zlocal[m,n] += j * igd
+            end
+        end
+    end
+
+    return zlocal
+end
+
 function cellinteractions(biop, trefs, brefs, cell, qr)
 
     num_tshs = length(qr[1][3])
@@ -315,10 +344,10 @@ function cellinteractions(biop, trefs, brefs, cell, qr)
         j = w * jacobian(mp)
         kernel = kernelvals(biop, mp)
 
-        for m in 1 : length(tvals)
+        for m in 1 : num_tshs
             tval = tvals[m]
 
-            for n in 1 : length(bvals)
+            for n in 1 : num_bshs
                 bval = bvals[n]
 
                 igd = integrand(biop, kernel, mp, tval, bval)
