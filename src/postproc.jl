@@ -127,7 +127,7 @@ end
 
 function potential(op, points, coeffs, basis)
 	T = SVector{3,ComplexF64}
-	ff = zeros(T, length(points))
+	ff = zeros(T, size(points))
 	store(v,m,n) = (ff[m] += v*coeffs[n])
 	potential!(store, op, points, basis)
 	return ff

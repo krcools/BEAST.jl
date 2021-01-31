@@ -81,7 +81,7 @@ function assemble(lform::LinForm, test_space_dict)
         end
 
         b = assemble(a, X)
-        B[I[m] : I[m+1]-1] = b
+        B[I[m] : I[m+1]-1] = α * b
     end
 
     return B
