@@ -39,7 +39,7 @@ function (igd::MWSL3DIntegrand)(u,v)
             dot(f[1].value,G[2]) + f[1].divergence*H[2],
             dot(f[2].value,G[2]) + f[2].divergence*H[2],
             dot(f[3].value,G[2]) + f[3].divergence*H[2],
-            dot(f[1].value,G[3]) + f[2].divergence*H[3],
+            dot(f[1].value,G[3]) + f[1].divergence*H[3],
             dot(f[2].value,G[3]) + f[2].divergence*H[3],
             dot(f[3].value,G[3]) + f[3].divergence*H[3]))
 end
