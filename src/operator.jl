@@ -61,6 +61,7 @@ end
 *(a::Number, b::Operator) = LinearCombinationOfOperators([a], [b])
 *(a::Number, b::LinearCombinationOfOperators) = LinearCombinationOfOperators(a * b.coeffs, b.ops)
 -(a::AbstractOperator, b::AbstractOperator) = a + (-1.0) * b
+-(a::AbstractOperator) = (-1.0) * a
 
 function +(a::Operator, b::Operator)
     LinearCombinationOfOperators(

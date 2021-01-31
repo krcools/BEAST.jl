@@ -130,7 +130,8 @@ function assemblechunk_body_nested_meshes!(biop,
         trial_shapes, trial_elements, trial_assembly_data,
         qd, zlocal, store)
 
-    print("dots out of 10: ")
+    myid = Threads.threadid()
+    myid == 1 && print("dots out of 10: ")
     todo, done, pctg = length(test_elements), 0, 0
     for (p,tcell) in enumerate(test_elements)
         for (q,bcell) in enumerate(trial_elements)
@@ -148,10 +149,10 @@ function assemblechunk_body_nested_meshes!(biop,
         done += 1
         new_pctg = round(Int, done / todo * 100)
         if new_pctg > pctg + 9
-            print(".")
+            myid == 1 && print(".")
             pctg = new_pctg
     end end
-    println("")
+    myid == 1 && println("")
 end
 
 

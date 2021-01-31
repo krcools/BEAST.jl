@@ -57,7 +57,7 @@ function raviartthomas(mesh, cellpairs::Array{Int,2})
             e1 = cellpairs[2,i]
             functions[i] = [
             Shape(c1, abs(e1), +1.0)]
-            positions[i] = cartesian(center(chart(mesh, mesh.faces[c1])))
+            positions[i] = cartesian(center(chart(mesh, Cells[c1])))
         end
     end
 
