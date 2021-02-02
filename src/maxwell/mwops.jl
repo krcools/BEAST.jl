@@ -17,9 +17,11 @@ function kernelvals(biop::MaxwellOperator3D, p, q)
     R = norm(r)
     γR = γ*R
 
+    inv_R = 1/R
+
     expn = exp(-γR)
-    green = expn / (4pi*R)
-    gradgreen = -(γ + 1/R) * green / R * r
+    green = expn * inv_R / (4pi)
+    gradgreen = -(γ + inv_R) * green * inv_R * r
 
     KernelValsMaxwell3D(γ, r, R, green, gradgreen)
 end
