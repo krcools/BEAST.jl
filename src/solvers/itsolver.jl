@@ -29,7 +29,7 @@ operator(solver::GMRESSolver) = solver.linear_operator
 function solve(solver::GMRESSolver, b)
     op = operator(solver)
     x, ch = IterativeSolvers.gmres(op, b, log=true,  maxiter=solver.maxiter,
-        restart=solver.restart, tol=solver.tol)
+        restart=solver.restart, reltol=solver.tol)
     return x, ch
 end
 
