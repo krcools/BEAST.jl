@@ -158,10 +158,7 @@ function qrss(op, g, f, i, τ, j, σ, qd)
         for s in σ.vertices
             d2 = LinearAlgebra.norm_sqr(t-s)
             dmin2 = min(dmin2, d2)
-            if d2 < dtol
-                hits +=1
-                break
-            end
+            hits += (d2 < dtol)
         end
     end
 
