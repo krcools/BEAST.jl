@@ -20,8 +20,8 @@ function (ϕ::RTRefSpace)(mp)
     v_tv = v*tv
 
     return SVector((
-        (value=(tu*(u-1) + v_tv    )*inv_j, divergence=d),
-        (value=(u_tu     + tv*(v-1))*inv_j, divergence=d),
+        (value=(u_tu-tu + v_tv    )*inv_j, divergence=d),
+        (value=(u_tu     + v_tv-tv)*inv_j, divergence=d),
         (value=(u_tu     + v_tv    )*inv_j, divergence=d)
     ))
 end
