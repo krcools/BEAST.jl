@@ -10,6 +10,7 @@ struct KernelValsMaxwell3D{T,U,P,Q}
     gradgreen::Q
 end
 
+const inv_4pi = 1/(4pi)
 function kernelvals(biop::MaxwellOperator3D, p, q)
 
     γ = biop.gamma
@@ -20,7 +21,7 @@ function kernelvals(biop::MaxwellOperator3D, p, q)
     inv_R = 1/R
 
     expn = exp(-γR)
-    green = expn * inv_R / (4pi)
+    green = expn * inv_R * inv_4pi
     gradgreen = -(γ + inv_R) * green * inv_R * r
 
     KernelValsMaxwell3D(γ, r, R, green, gradgreen)
@@ -142,7 +143,7 @@ function integrand(biop::MWDL3DGen, kerneldata, tvals, tgeo, bvals, bgeo)
     g = tvals[1]
     f = bvals[1]
     ∇G = kerneldata.gradgreen
-    g ⋅ (∇G × f)
+    (f × g) ⋅ ∇G
 end
 
 

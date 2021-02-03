@@ -17,28 +17,26 @@ function momintegrals!(biop, tshs, bshs, tcell, bcell, z, strat::DoubleQuadStrat
     womps = strat.outer_quad_points
     wimps = strat.inner_quad_points
 
-    M, N = size(z)
-
+    
     for womp in womps
         tgeo = womp.point
         tvals = womp.value
+        M = length(tvals)
         jx = womp.weight
-
+        
         for wimp in wimps
             bgeo = wimp.point
             bvals = wimp.value
+            N = length(bvals)
             jy = wimp.weight
 
             j = jx * jy
             kernel = kernelvals(biop, tgeo, bgeo)
 
-            #for m in 1 : M
-            for m in 1 : length(tvals)
-                tval = tvals[m]
-                #for n in 1 : N
-                for n in 1 : length(bvals)
-                    bval = bvals[n]
-
+            for n in 1 : N
+                bval = bvals[n]
+                for m in 1 : M
+                    tval = tvals[m]
                     igd = integrand(biop, kernel, tval, tgeo, bval, bgeo)
                     z[m,n] += j * igd
                 end
