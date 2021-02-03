@@ -169,11 +169,10 @@ function qrss(op, g, f, i, τ, j, σ, qd)
     hits == 2 && return SauterSchwabQuadrature.CommonEdge(qd.gausslegendre[2])
     hits == 1 && return SauterSchwabQuadrature.CommonVertex(qd.gausslegendre[1])
 
-    h = sqrt(volume(σ))
-    dmin = sqrt(dmin2)
-    xtol = 0.2
-    k = norm(op.gamma)
-    max(dmin*k, dmin/4h) < xtol && return WiltonSEStrategy(
+    h2 = volume(σ)
+    xtol2 = 0.2 * 0.2
+    k2 = abs2(op.gamma)
+    max(dmin2*k2, dmin2/16h2) < xtol2 && return WiltonSEStrategy(
         qd.tpoints[2,i],
         DoubleQuadStrategy(
             qd.tpoints[2,i],
