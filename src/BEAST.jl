@@ -56,7 +56,7 @@ export MWDoubleLayer3D
 export PlaneWaveMW
 export TangTraceMW, CrossTraceMW
 export curl
-export MWSingleLayerField3D
+export MWSingleLayerField3D, MWDoubleLayerField3D
 export SingleLayerTrace
 export DoubleLayerRotatedMW3D
 export MWSingleLayerPotential3D
