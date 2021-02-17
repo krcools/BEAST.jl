@@ -59,6 +59,11 @@ function polyeig(Z::ConvOp)
 end
 
 
+function polyeig(Z)
+    return eigvals(companion(Z))
+end
+
+
 function Base.:+(a::ConvOp, b::ConvOp)
 
     @assert size(a.data) == size(b.data)

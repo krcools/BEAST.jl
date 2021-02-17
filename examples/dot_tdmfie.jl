@@ -33,7 +33,7 @@ K = MWDoubleLayerTDIO(1.0, 1.0, 1)
 N = BEAST.TemporalDifferentiation(NCross()⊗Identity())
 
 M = 0.5*N + 1.0*K
-Z_mfie = assemble(M, W, V, Val{:bandedstorage})
+Z_mfie = assemble(M, W, V, storage_policy = Val{:bandedstorage})
 b_mfie = assemble(H, W)
 dot_xmfie = marchonintime(inv(Z_mfie[:,:,1]), Z_mfie, b_mfie, Nt)
 

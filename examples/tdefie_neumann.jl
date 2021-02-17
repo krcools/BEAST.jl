@@ -11,7 +11,7 @@ D, Δx = 1.0, 0.1
 Γ = meshrectangle(D,D,Δx,3)
 #γ = boundary(Γ)
 γ1 = meshsegment(D,D,3)
-γ2 = translate(γ1, point(0,D,0))
+γ2 = CompScienceMeshes.translate(γ1, point(0,D,0))
 
 #X = raviartthomas(Γ,weld(γ1,γ2))
 X = rt_ports(Γ,(γ1,γ2))
@@ -38,24 +38,26 @@ T = MWSingleLayerTDIO(sol,-1/sol,-sol,2,0)
 tdefie = @discretise T[j′,j] == -1E[j′]   j∈V  j′∈W
 xefie = solve(tdefie)
 
-using PlotlyJS
-include(Pkg.dir("CompScienceMeshes","examples","matlab_patches.jl"))
+using Plotly
+# include(Pkg.dir("CompScienceMeshes","examples","matlab_patches.jl"))
 
 
 Xefie, Δω, ω0 = fouriertransform(xefie, Δt, 0.0, 2)
 ω = collect(ω0 + (0:Nt-1)*Δω)
-_, i1 = findmin(abs.(ω-1.0*sol))
+_, i1 = findmin(abs.(ω.-sol))
 
 ω1 = ω[i1]
 ue = Xefie[:,i1] / fouriertransform(gaussian)(ω1)
 
+using LinearAlgebra
 fcre, geo = facecurrents(ue, X)
 t2 = patch(geo, real.(norm.(fcre)))
-#PlotlyJS.plot(t2)
+Plotly.plot(t2)
 
 
 fcr_td, geo = facecurrents(xefie[:,end], X)
-fcr_ch, geo = facecurrents(xefie[:,end], divergence(X))
+# fcr_ch, geo = facecurrents(xefie[:,end], divergence(X))
 
-patch(Γ,real.(norm.(fcr_td)))
-jmatlab_quiver(Γ, fcr_td)
+t3 = patch(Γ,real.(norm.(fcr_td)))
+Plotly.plot(t3)
+# jmatlab_quiver(Γ, fcr_td)
