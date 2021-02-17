@@ -40,7 +40,7 @@ function derive(a::LinearCombinationOfOperators)
 end
 
 
-function +(a::LinearCombinationOfOperators, b::Operator)
+function +(a::LinearCombinationOfOperators, b::AbstractOperator)
     LinearCombinationOfOperators(
         [a.coeffs;[1.0]],
         [a.ops;[b]]
@@ -54,16 +54,16 @@ function +(a::LinearCombinationOfOperators, b::LinearCombinationOfOperators)
     )
 end
 
-+(a::Operator, b::LinearCombinationOfOperators) = b + a
-+(a::Operator, b::Number) = a + (b * Identity())
-+(a::Number, b::Operator) = b + a
++(a::AbstractOperator, b::LinearCombinationOfOperators) = b + a
++(a::AbstractOperator, b::Number) = a + (b * Identity())
++(a::Number, b::AbstractOperator) = b + a
 
-*(a::Number, b::Operator) = LinearCombinationOfOperators([a], [b])
+*(a::Number, b::AbstractOperator) = LinearCombinationOfOperators([a], [b])
 *(a::Number, b::LinearCombinationOfOperators) = LinearCombinationOfOperators(a * b.coeffs, b.ops)
 -(a::AbstractOperator, b::AbstractOperator) = a + (-1.0) * b
 -(a::AbstractOperator) = (-1.0) * a
 
-function +(a::Operator, b::Operator)
+function +(a::AbstractOperator, b::AbstractOperator)
     LinearCombinationOfOperators(
         [1.0, 1.0],
         [a, b]
@@ -108,8 +108,8 @@ function assemblecol(operator::AbstractOperator, test_functions, trial_functions
     Z()
 end
 
-function allocatestorage(operator::AbstractOperator, test_functions, trial_functions,
-    storage_trait,
+function allocatestorage(operator::Operator, test_functions, trial_functions,
+    storage_trait::Type{Val{:bandedstorage}},
     longdelays_trait)
 
     T = promote_type(
