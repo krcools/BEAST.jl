@@ -1,5 +1,7 @@
 module Variational
 
+using BlockArrays
+
 # import Base: start, done, next
 
 export transposecalls!
@@ -103,6 +105,14 @@ mutable struct HilbertVector
     space
     opstack
 end
+
+Base.Int(hv::HilbertVector) = hv.idx
+
+Base.getindex(A::AbstractBlockArray, p::HilbertVector, q::HilbertVector) = A[Block(Int(p),Int(q))]
+Base.getindex(u::AbstractBlockArray, p::HilbertVector) = u[Block(Int(p))]
+
+Base.setindex!(A::AbstractBlockArray, v, p::HilbertVector, q::HilbertVector) = setindex!(A, v, Block(Int(p),Int(q)))
+Base.setindex!(A::AbstractBlockArray, v, p::HilbertVector) = setindex!(A, v, Block(Int(p)))
 
 mutable struct LinForm
   test_space

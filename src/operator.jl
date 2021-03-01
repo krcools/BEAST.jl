@@ -108,9 +108,8 @@ function assemblecol(operator::AbstractOperator, test_functions, trial_functions
     Z()
 end
 
-function allocatestorage(operator::Operator, test_functions, trial_functions,
-    storage_trait::Type{Val{:bandedstorage}},
-    longdelays_trait)
+function allocatestorage(operator::AbstractOperator, test_functions, trial_functions,
+    storage_trait, longdelays_trait)
 
     T = promote_type(
         scalartype(operator)       ,

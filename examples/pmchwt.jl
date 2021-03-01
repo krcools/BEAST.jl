@@ -10,21 +10,12 @@ X = raviartthomas(Γ)
 κ,  η  = 6.0, 1.0
 κ′, η′ = 2.4κ, η/2.4
 
-# κ = 1.0
-# η = 1.0
-# κ′ = 1.5*κ
-# η′ = η/1.5
-
 T  = Maxwell3D.singlelayer(wavenumber=κ)
 T′ = Maxwell3D.singlelayer(wavenumber=κ′)
 K  = Maxwell3D.doublelayer(wavenumber=κ)
 K′ = Maxwell3D.doublelayer(wavenumber=κ′)
 
-# d = normalize(x̂+ŷ+ẑ)
-d = ẑ
-# p = normalize(d × ẑ)
-p = x̂
-E = Maxwell3D.planewave(direction=d, polarization=p, wavenumber=κ)
+E = Maxwell3D.planewave(direction=ẑ, polarization=x̂, wavenumber=κ)
 H = -1/(im*κ*η)*curl(E)
 
 e, h = (n × E) × n, (n × H) × n
@@ -40,16 +31,12 @@ pmchwt = @discretise(
 
 u = solve(pmchwt)
 
-nX = numfunctions(X)
-uj = u[1:nX]
-um = u[nX+1:end]
-
 Θ, Φ = range(0.0,stop=2π,length=100), 0.0
 ffpoints = [point(cos(ϕ)*sin(θ), sin(ϕ)*sin(θ), cos(θ)) for θ in Θ for ϕ in Φ]
 
 # Don't forget the far field comprises two contributions
-ffm = potential(MWFarField3D(κ*im), ffpoints, um, X)
-ffj = potential(MWFarField3D(κ*im), ffpoints, uj, X)
+ffm = potential(MWFarField3D(κ*im), ffpoints, u[m], X)
+ffj = potential(MWFarField3D(κ*im), ffpoints, u[j], X)
 ff = η*im*κ*ffj + im*κ*cross.(ffpoints, ffj)
 
 using Plots
@@ -58,8 +45,8 @@ plot!(Θ,norm.(ff),label="far field")
 
 import Plotly
 using LinearAlgebra
-fcrj, _ = facecurrents(uj,X)
-fcrm, _ = facecurrents(um,X)
+fcrj, _ = facecurrents(u[j],X)
+fcrm, _ = facecurrents(u[m],X)
 Plotly.plot(patch(Γ, norm.(fcrj)))
 Plotly.plot(patch(Γ, norm.(fcrm)))
 
@@ -86,16 +73,8 @@ Z = range(-1,1,length=100)
 Y = range(-1,1,length=100)
 nfpoints = [point(0,y,z) for z in Z, y in Y]
 
-# nfm_in = potential(BEAST.MWDoubleLayerField3D(wavenumber=κ′), nfpoints, um, X)
-# nfj_in = potential(BEAST.MWSingleLayerField3D(wavenumber=κ′), nfpoints, uj, X)
-# E_in = nfm_in - η′ * nfj_in
-
-# nfm_ex = potential(BEAST.MWDoubleLayerField3D(wavenumber=κ), nfpoints, um, X)
-# nfj_ex = potential(BEAST.MWSingleLayerField3D(wavenumber=κ), nfpoints, uj, X)
-# E_ex = -nfm_ex + η * nfj_ex + E.(nfpoints)
-
-E_ex, H_ex = nearfield(um,uj,X,X,κ,η,nfpoints,E,H)
-E_in, H_in = nearfield(-um,-uj,X,X,κ′,η′,nfpoints)
+E_ex, H_ex = nearfield(u[m],u[j],X,X,κ,η,nfpoints,E,H)
+E_in, H_in = nearfield(-u[m],-u[j],X,X,κ′,η′,nfpoints)
 
 E_tot = E_in + E_ex
 H_tot = H_in + H_ex
@@ -104,18 +83,6 @@ contour(real.(getindex.(E_tot,1)))
 heatmap(Z, Y, real.(getindex.(E_tot,1)))
 plot(real.(getindex.(E_tot[:,51],1)))
 
-
-
-# Compute also the near magnetic field
-# Hm_ex = 1/η*potential(BEAST.MWSingleLayerField3D(wavenumber=κ), nfpoints, um, X)
-# Hj_ex = potential(BEAST.MWDoubleLayerField3D(wavenumber=κ), nfpoints, uj, X)
-# H_ex = Hm_ex + Hj_ex + H.(nfpoints)
-
-# Hm_in = -1/η′*potential(BEAST.MWSingleLayerField3D(wavenumber=κ′), nfpoints, um, X)
-# Hj_in = -potential(BEAST.MWDoubleLayerField3D(wavenumber=κ′), nfpoints, uj, X)
-# H_in = Hm_in + Hj_in
-# Hnf = H_ex + H_in 
-
 contour(real.(getindex.(H_tot,2)))
 heatmap(Z, Y, real.(getindex.(H_tot,2)))
-plot!(real.(getindex.(H_tot[:,51],2)))
+plot(real.(getindex.(H_tot[:,51],2)))
