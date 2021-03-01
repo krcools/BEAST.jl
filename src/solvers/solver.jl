@@ -59,12 +59,16 @@ function assemble(lform::LinForm, test_space_dict)
     terms = lform.terms
     T = ComplexF64
 
-    I = Int[1]
+    # I = Int[1]
+    blocksizes1 = Int[]
     for p in 1:length(lform.test_space)
         X = test_space_dict[p]
-        push!(I, last(I) + numfunctions(X))
+        # push!(I, last(I) + numfunctions(X))
+        push!(blocksizes1, numfunctions(X))
     end
-    B = zeros(T, last(I)-1)
+
+    Z = zeros(T, sum(blocksizes1))
+    B = PseudoBlockArray{T}(Z, blocksizes1)
 
     for t in terms
 
@@ -81,7 +85,8 @@ function assemble(lform::LinForm, test_space_dict)
         end
 
         b = assemble(a, X)
-        B[I[m] : I[m+1]-1] = α * b
+        # B[I[m] : I[m+1]-1] = α * b
+        B[Block(m)] = α * b
     end
 
     return B
@@ -130,23 +135,21 @@ function assemble(bilform::BilForm, test_space_dict, trial_space_dict)
   lhterms = bilform.terms
   T = ComplexF64 # TDOD: Fix this
 
-  # determine the offsets of the different blocks in the sys matrix
-  I = Int[1]
-  J = Int[1]
-
+  blocksizes1 = Int[]
   for p in 1:length(bilform.test_space)
     X = test_space_dict[p]
-    push!(I, last(I) + numfunctions(X))
+    push!(blocksizes1, numfunctions(X))
   end
 
+  blocksizes2 = Int[]
   for q in 1:length(bilform.trial_space)
     Y = trial_space_dict[q]
-    push!(J, last(J) + numfunctions(Y))
+    push!(blocksizes2, numfunctions(Y))
   end
 
   # allocate the memory for the matrices
-  Z = zeros(T, last(I)-1, last(J)-1)
-
+  A = zeros(T, sum(blocksizes1), sum(blocksizes2))
+  Z = PseudoBlockArray{T}(A, blocksizes1, blocksizes2)
   # For each block, compute the interaction matrix
   for t in lhterms
 
@@ -165,11 +168,8 @@ function assemble(bilform::BilForm, test_space_dict, trial_space_dict)
           y = op[end](op[1:end-1]..., y)
       end
 
-      r = I[m] : (I[m+1] - 1)
-      c = J[n] : (J[n+1] - 1)
-
       z = assemble(a, x, y)
-      Z[r,c] += α * z
+      Z[Block(m,n)] += α * z
   end
 
   return Z
@@ -192,17 +192,12 @@ function td_assemble(bilform::BilForm, test_space_dict, trial_space_dict)
   I = [numfunctions(spatialbasis(test_space_dict[i])) for i in 1:length(bilform.test_space)]
   J = [numfunctions(spatialbasis(trial_space_dict[i])) for i in 1:length(bilform.trial_space)]
 
-  # @show I
-  # @show J
-
   BT = SparseND.MatrixOfConvolutions{T}
   Z = BlockArray(undef_blocks, BT, I, J)
 
   # For each block, compute the interaction matrix
   for t in lhterms
 
-      # α = t.coeff
-      # @show t.coeff
       @show (t.coeff,t.kernel)
       a = t.coeff * t.kernel
 
@@ -221,9 +216,7 @@ function td_assemble(bilform::BilForm, test_space_dict, trial_space_dict)
       z = assemble(a, x, y)
       @warn "variation formulations where combinations of test and trial space recur multiple times are not supported!"
       Z[Block(m,n)] = SparseND.MatrixOfConvolutions(z)
-      # Z[r,c] += α * z
+ 
   end
-  #
-  # return Z
   return Z
 end

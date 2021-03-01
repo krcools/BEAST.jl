@@ -55,8 +55,6 @@ function marchonintime(iZ0, Z::ConvOp, B, Nt)
     x
 end
 
-using BlockArrays
-
 function convolve(Z::BlockArray, x, i, j_start)
     # ax1 = axes(Z,1)
     ax2 = axes(Z,2)

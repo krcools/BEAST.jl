@@ -5,6 +5,7 @@ using LinearAlgebra
 # using Pkg
 using SharedArrays
 using SparseArrays
+using FillArrays
 using BlockArrays
 using SparseMatrixDicts
 
@@ -107,6 +108,7 @@ using SparseArrays
 function convolve end
 
 include("utils/polynomial.jl")
+include("utils/mixedblockarrays.jl")
 include("utils/sparsend.jl")
 include("utils/specialfns.jl")
 include("utils/combinatorics.jl")

@@ -213,7 +213,7 @@ scalartype(op::TemporalIntegration) = scalartype(op.operator)
 Base.:*(a::Number, op::TemporalIntegration) = TemporalIntegration(a * op.operator)
 
 function allocatestorage(op::TemporalIntegration, testfns, trialfns,
-	storage_trait, longdelays_trait)
+	storage_trait::Type{Val{S}}, longdelays_trait) where {S}
 
 	trial_time_fns  = temporalbasis(trialfns)
 	trial_space_fns = spatialbasis(trialfns)
