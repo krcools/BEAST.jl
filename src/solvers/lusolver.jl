@@ -43,9 +43,6 @@ end
 
 function timeslice(A::BlockArray, k)
 
-    # I = [blocksize(A, (1,i))[1] for i in 1:nblocks(A,1)]
-    # J = [blocksize(A, (j,1))[2] for j in 1:nblocks(A,2)]
-
     I = blocklengths(axes(A,1))
     J = blocklengths(axes(A,2))
 
@@ -56,7 +53,8 @@ function timeslice(A::BlockArray, k)
     for i in 1:blocksize(A,1)
         for j in 1:blocksize(A,2)
             isassigned(A.blocks, i, j) || continue
-            S[Block(i,j)] = A[Block(i,j)].banded[:,:,k]
+            # S[Block(i,j)] = A[Block(i,j)].banded[:,:,k]
+            S[Block(i,j)] = A[Block(i,j)].convop[:,:,k]
         end
     end
 

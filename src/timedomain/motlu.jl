@@ -87,7 +87,7 @@ function convolve!(y,Z::BlockArray, x, csx, i, j_start, j_stop)
             xJ = view(x, ax2[J], :)
             csxJ = view(csx, ax2[J], :)
             try
-                ZIJ = Z[I,J].banded
+                ZIJ = Z[I,J].convop
                 # y[I] .+= convolve(ZIJ, xJ, i, j_start)
                 yI = view(y, ax1[I])
                 convolve!(yI, ZIJ, xJ, csxJ, i, j_start, j_stop)
