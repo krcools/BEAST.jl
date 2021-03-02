@@ -109,6 +109,7 @@ function convolve end
 
 include("utils/polynomial.jl")
 include("utils/mixedblockarrays.jl")
+include("timedomain/convop.jl")
 include("utils/sparsend.jl")
 include("utils/specialfns.jl")
 include("utils/combinatorics.jl")
@@ -161,7 +162,6 @@ include("postproc/segcurrents.jl")
 include("quadrature/double_quadrature.jl")
 include("quadrature/singularity_extraction.jl")
 
-include("timedomain/convop.jl")
 include("timedomain/tdintegralop.jl")
 include("timedomain/tdexcitation.jl")
 include("timedomain/motlu.jl")

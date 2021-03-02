@@ -24,7 +24,6 @@ end
 
 
 function convolve!(y, Z::ConvOp, x, X, j, k_start, k_stop=size(Z,3))
-    # @info "The corrrect convolve!"
     for n in axes(x,1)
         for m in axes(y,1)
             k0 = Z.k0[m,n]
