@@ -80,21 +80,13 @@ function convolve!(y,Z::BlockArray, x, csx, i, j_start, j_stop)
     ax1 = axes(Z,1)
     ax2 = axes(Z,2)
     T = eltype(eltype(Z))
-    # y = PseudoBlockVector{T}(undef,blocklengths(axes(Z,1)))
     fill!(y,0)
     for I in blockaxes(Z,1)
         for J in blockaxes(Z,2)
             xJ = view(x, ax2[J], :)
             csxJ = view(csx, ax2[J], :)
-            try
-                ZIJ = Z[I,J].banded
-                # y[I] .+= convolve(ZIJ, xJ, i, j_start)
-                yI = view(y, ax1[I])
-                convolve!(yI, ZIJ, xJ, csxJ, i, j_start, j_stop)
-            catch
-                @info "Skipping unassigned block."
-                continue
-            end
+            yI = view(y, ax1[I])
+            convolve!(yI, Z[I,J], xJ, csxJ, i, j_start, j_stop)
         end
     end
     return y
