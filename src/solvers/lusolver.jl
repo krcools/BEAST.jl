@@ -53,7 +53,8 @@ function timeslice(A::BlockArray, k)
     for i in 1:blocksize(A,1)
         for j in 1:blocksize(A,2)
             isassigned(A.blocks, i, j) || continue
-            # S[Block(i,j)] = A[Block(i,j)].banded[:,:,k]
+            A[Block(i,j)] isa Zeros && continue
+            A[Block(i,j)] isa Fill && continue
             S[Block(i,j)] = A[Block(i,j)].convop[:,:,k]
         end
     end

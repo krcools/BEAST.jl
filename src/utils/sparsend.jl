@@ -1,6 +1,7 @@
 module SparseND
 
 import ...BEAST
+import FillArrays
 
 struct MatrixOfConvolutions{T} <: AbstractArray{Vector{T},2}
     # banded::AbstractArray{T,3}
@@ -12,9 +13,12 @@ function Base.eltype(x::MatrixOfConvolutions{T}) where {T}
 end
 Base.size(x::MatrixOfConvolutions) = size(x.convop)[1:2]
 function Base.getindex(x::MatrixOfConvolutions, m, n)
-    # return x.banded[m,n,:]
     return x.convop[m,n,:]
 end
+
+BEAST.convolve!(y, Z::MatrixOfConvolutions, x, csx, i, k_start, k_stop) = BEAST.convolve!(y, Z.convop, x, csx, i, k_start, k_stop)
+BEAST.convolve!(y, Z::FillArrays.Zeros, x, csx, i, k_start, k_stop) = nothing
+BEAST.convolve!(y, Z::FillArrays.Fill, x, csx, i, k_start, k_stop) = nothing
 
 
 struct SpaceTimeData{T} <: AbstractArray{Vector{T},1}

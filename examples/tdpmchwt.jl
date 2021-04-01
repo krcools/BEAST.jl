@@ -1,6 +1,6 @@
-using Pkg
-Pkg.activate(@__DIR__)
-Pkg.instantiate()
+# using Pkg
+# Pkg.activate(@__DIR__)
+# Pkg.instantiate()
 
 using CompScienceMeshes, BEAST
 using LinearAlgebra

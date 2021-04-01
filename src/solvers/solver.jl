@@ -192,8 +192,10 @@ function td_assemble(bilform::BilForm, test_space_dict, trial_space_dict)
   I = [numfunctions(spatialbasis(test_space_dict[i])) for i in 1:length(bilform.test_space)]
   J = [numfunctions(spatialbasis(trial_space_dict[i])) for i in 1:length(bilform.trial_space)]
 
-  BT = SparseND.MatrixOfConvolutions{T}
-  Z = BlockArray(undef_blocks, BT, I, J)
+#   BT = SparseND.MatrixOfConvolutions{T}
+#   Z = BlockArray(undef_blocks, BT, I, J)
+
+  Z = BlockArray{Vector{T}}(zero_blocks, I, J)
 
   # For each block, compute the interaction matrix
   for t in lhterms
