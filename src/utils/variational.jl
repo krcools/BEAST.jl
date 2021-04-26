@@ -179,7 +179,7 @@ macro hilbertspace(syms...)
         $vars = $rhs
     end
     for (i,s) in enumerate(syms)
-        push!(xp.args, :(global $s = $vars[$i]))
+        push!(xp.args, :($(esc(s)) = $vars[$i]))
     end
 
     xp
