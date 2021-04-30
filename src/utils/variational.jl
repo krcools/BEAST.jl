@@ -155,35 +155,88 @@ Build an equation from a left hand and right hand side
 
 
 
-"""
-    hilbert_space(type, g1, g2, ...)
+# """
+#     hilbert_space(type, g1, g2, ...)
 
-Returns generators defining a Hilbert space of field `type`
-"""
-hilbertspace(vars::Symbol...) = [HilbertVector(i, [vars...], []) for i in 1:length(vars)]
+# Returns generators defining a Hilbert space of field `type`
+# """
+# hilbertspace(vars::Symbol...) = [HilbertVector(i, [vars...], []) for i in 1:length(vars)]
 
+function genspace(syms...)
+
+    space = Vector{Symbol}()
+    lengths = Int[]
+    starts = Int[]
+    stops = Int[]
+    for sym in syms
+
+        if sym isa Symbol
+            push!(space, sym)
+            push!(lengths,1)
+            push!(starts,1)
+            push!(stops,1)
+        elseif sym isa Expr && sym.head == :ref
+            base = sym.args[1]
+            start = sym.args[2].args[2]
+            stop = sym.args[2].args[3]
+            for k in start:stop
+                sym = Symbol(base,k)
+                push!(space, sym)
+            end
+            push!(lengths,stop-start+1)
+            push!(starts,start)
+            push!(stops,stop)
+        end
+    end
+    
+    return space, starts, stops
+end
 
 macro hilbertspace(syms...)
 
-    for sym in syms
-        @assert isa(sym, Symbol) "@hilbertspace takes a list of Symbols"
-    end
+    space, starts, stops = genspace(syms...)
 
-    rhs = :(hilbertspace())
-    for sym in syms
-        push!(rhs.args, QuoteNode(sym))
-    end
+    ex = quote end
+    k = 1
+    for (s, (start,stop)) in enumerate(zip(starts,stops))
 
-    vars = gensym()
-    xp = quote
-        $vars = $rhs
-    end
-    for (i,s) in enumerate(syms)
-        push!(xp.args, :($(esc(s)) = $vars[$i]))
-    end
+        
+        len = stop-start+1
+        if len == 1
+            sym = syms[s]
+            push!(ex.args, :($(esc(sym)) = HilbertVector($k,$space,[])))
+            k += 1
+        else
+            sym = syms[s].args[1]
+            push!(ex.args, :($(esc(sym)) = [HilbertVector(i,$space,[]) for i in $k:$(k+len-1)]))
+            k += len
+        end
 
-    xp
+    end
+    return ex
 end
+
+# macro hilbertspace(syms...)
+
+#     for sym in syms
+#         @assert isa(sym, Symbol) "@hilbertspace takes a list of Symbols"
+#     end
+
+#     rhs = :(hilbertspace())
+#     for sym in syms
+#         push!(rhs.args, QuoteNode(sym))
+#     end
+
+#     vars = gensym()
+#     xp = quote
+#         $vars = $rhs
+#     end
+#     for (i,s) in enumerate(syms)
+#         push!(xp.args, :($(esc(s)) = $vars[$i]))
+#     end
+
+#     xp
+# end
 
 
 """
