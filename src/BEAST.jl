@@ -55,6 +55,7 @@ export MWFarField3D
 export MWSingleLayer3D, MWHyperSingular, MWWeaklySingular
 export MWDoubleLayer3D
 export PlaneWaveMW
+export dipolemw3d, DipoleMW
 export TangTraceMW, CrossTraceMW
 export curl
 export MWSingleLayerField3D

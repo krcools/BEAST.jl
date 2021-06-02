@@ -46,6 +46,8 @@ include("test_laminated.jl")
 include("test_assemblerow.jl")
 include("test_local_assembly.jl")
 
+include("test_dipole.jl")
+
 include("test_wiltonints.jl")
 include("test_sauterschwabints.jl")
 include("test_ss_nested_meshes.jl")
