@@ -2,7 +2,6 @@ module BEAST
 
 using Distributed
 using LinearAlgebra
-# using Pkg
 using SharedArrays
 using SparseArrays
 using FillArrays
@@ -11,6 +10,7 @@ using SparseMatrixDicts
 
 using SauterSchwabQuadrature
 using FastGaussQuadrature
+using LinearMaps
 
 import LinearAlgebra: cross, dot
 import LinearAlgebra: ×, ⋅
