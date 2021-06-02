@@ -6,7 +6,7 @@ struct ConvOp{T} <: AbstractArray{T,3}
     length::Int
 end
 
-function Base.size(obj)
+function Base.size(obj::ConvOp)
     return (size(obj.data)[2:3]...,obj.length)
 end
 

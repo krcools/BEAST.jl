@@ -3,11 +3,11 @@ import IterativeSolvers
 
 
 
-struct GMRESSolver{L,R}
+struct GMRESSolver{L,T} <: LinearMap{T}
     linear_operator::L
     maxiter::Int
     restart::Int
-    tol::R
+    tol::T
 end
 
 
@@ -34,11 +34,20 @@ function solve(solver::GMRESSolver, b)
 end
 
 
-function Base.:*(solver::GMRESSolver, b)
-    x, ch = solve(solver, b)
+# function Base.:*(solver::GMRESSolver, b)
+#     x, ch = solve(solver, b)
+#     println("Number of iterations: ", ch.iters)
+#     ch.isconverged || error("Iterative solver did not converge.")
+#     return x
+# end
+
+Base.size(solver::GMRESSolver) = reverse(size(solver.linear_operator))
+
+function LinearAlgebra.mul!(y::AbstractVecOrMat, solver::GMRESSolver, x::AbstractVector)
+    temp, ch = solve(solver, x)
     println("Number of iterations: ", ch.iters)
     ch.isconverged || error("Iterative solver did not converge.")
-    return x
+    y .= temp
 end
 
 
