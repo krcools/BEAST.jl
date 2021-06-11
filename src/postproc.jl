@@ -20,8 +20,10 @@ function facecurrents(coeffs, basis)
 	# U = D+1
 	U = 3
 
-	# TODO: express relative to input types
-	PT = SVector{U, T}
+	# TODO: remove ugliness
+	vals = refs(center(first(cells)))
+	PT = typeof(first(coeffs)*vals[1][1])
+
 	fcr = zeros(PT, numcells(mesh))
 
 	for (t,cell) in enumerate(cells)
