@@ -73,30 +73,4 @@ using Plots
 plot()
 scatter!(w1)
 scatter!(w2)
-# u = gmres(mtefie)
-#
-# offset = 1; u12 = u[offset:offset+numfunctions(X12)-1]
-# offset += numfunctions(X12); u23 = u[offset:offset+numfunctions(X23)-1]
-# offset += numfunctions(X23); u31 = u[offset:offset+numfunctions(X31)-1]
-#
-# fcr12, _ = facecurrents(u12, X12)
-# fcr23, _ = facecurrents(u23, X23)
-# fcr31, _ = facecurrents(u31, X31)
 
-# import PlotlyJS
-using LinearAlgebra
-# p1 = PlotlyJS.Plot(patch(G12, norm.(fcr12)))
-# p2 = PlotlyJS.Plot(patch(G23, norm.(fcr23)))
-# p3 = PlotlyJS.Plot(patch(G31, norm.(fcr31)))
-
-# PlotlyJS.plot([p1, p2, p3])
-
-
-
-
-Sxx = BEAST.sysmatrix(mtefie)
-
-Syy = assemble(SL, Y, Y)
-iNxy = inv(Nxy)
-
-# gmres()
