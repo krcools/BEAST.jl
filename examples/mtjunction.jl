@@ -43,7 +43,7 @@ mtefie = @discretise(
 # fcr23, _ = facecurrents(u23, X23)
 # fcr31, _ = facecurrents(u31, X31)
 
-import PlotlyJS
+import Plotly
 using LinearAlgebra
 # p1 = PlotlyJS.Plot(patch(G12, norm.(fcr12)))
 # p2 = PlotlyJS.Plot(patch(G23, norm.(fcr23)))
@@ -76,10 +76,11 @@ Nxy = blkdiagm(N1,N2,N3)
 Syy = assemble(SL, Y, Y)
 iNxy = inv(Nxy)
 
-cond(Sxx)
+# cond(Matrix(Sxx))
 ex = assemble(e,X)
-Q = transpose(iNxy) * Syy * iNxy * Sxx;
-R = transpose(iNxy) * Syy * iNxy * ex;
+P = transpose(iNxy) * Syy * iNxy
+Q = P * Sxx;
+R = P * ex;
 
 
 u1, ch1 = solve(BEAST.GMRESSolver(Sxx),ex)
@@ -88,3 +89,48 @@ u2, ch2 = solve(BEAST.GMRESSolver(Q),R)
 @show ch1.iters
 @show ch2.iters
 # gmres()
+
+ns = [
+    0,
+    numfunctions(X12),
+    numfunctions(X23),
+    numfunctions(X31)]
+
+cns = cumsum(ns)
+u12 = u1[cns[1]+1:cns[2]]
+u23 = u1[cns[2]+1:cns[3]]
+u31 = u1[cns[3]+1:cns[4]]
+
+fcr1, geo1 = facecurrents(u12, X12)
+fcr2, geo2 = facecurrents(u23, X23)
+fcr3, geo3 = facecurrents(u31, X31)
+
+p1 =  patch(geo1, norm.(fcr1))
+p2 =  patch(geo2, norm.(fcr2))
+p3 =  patch(geo3, norm.(fcr3))
+
+Plotly.plot([p1,p2,p3])
+
+G123 = weld(G1,G2,G3)
+X123 = raviartthomas(G123)
+
+stefie = @discretise(
+    SL[k,j] == e[k],
+    j ∈ X123, k ∈ X123)
+
+Sst = assemble(SL, X123, X123)
+bst = assemble(e, X123)
+ust, chst = solve(BEAST.GMRESSolver(Sst),bst)
+
+fcrst, geost = facecurrents(ust, X123)
+Plotly.plot(patch(geost, norm.(fcrst)))
+
+
+Φ, Θ = [0.0], range(0,stop=π,length=100)
+pts = [point(cos(ϕ)*sin(θ), sin(ϕ)*sin(θ), cos(θ)) for ϕ in Φ for θ in Θ]
+
+ffd_mt = potential(MWFarField3D(wavenumber=κ), pts, u1, X)
+ffd_st = potential(MWFarField3D(wavenumber=κ), pts, ust, X123)
+
+plot(norm.(ffd_mt))
+scatter!(norm.(ffd_st))
