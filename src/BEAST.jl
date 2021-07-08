@@ -117,6 +117,7 @@ include("utils/combinatorics.jl")
 include("utils/linearspace.jl")
 include("utils/matrixconv.jl")
 include("utils/polyeig.jl")
+include("utils/liftmap.jl")
 
 include("bases/basis.jl")
 include("bases/lincomb.jl")
