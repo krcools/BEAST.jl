@@ -114,6 +114,9 @@ Base.getindex(u::AbstractBlockArray, p::HilbertVector) = u[Block(Int(p))]
 Base.setindex!(A::AbstractBlockArray, v, p::HilbertVector, q::HilbertVector) = setindex!(A, v, Block(Int(p),Int(q)))
 Base.setindex!(A::AbstractBlockArray, v, p::HilbertVector) = setindex!(A, v, Block(Int(p)))
 
+Base.view(A::AbstractBlockArray, p::HilbertVector, q::HilbertVector) = view(A, Block(Int(p), Int(q)))
+Base.view(A::AbstractBlockArray, p::HilbertVector) = view(A, Block(Int(p)))
+
 mutable struct LinForm
   test_space
   terms
