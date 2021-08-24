@@ -108,9 +108,10 @@ end
 Nd_int = BEAST.nedelecc3d(support, int_edges)
 Q = assemble(Id, Nd_int, Nd_int)
 
-Q2, store = BEAST.allocatestorage(Id, Nd_int, Nd_int,
+freeze, store = BEAST.allocatestorage(Id, Nd_int, Nd_int,
     Val{:bandedstorage}, BEAST.LongDelays{:ignore})
 BEAST.assemble_local_mixed!(Id, Nd_int, Nd_int, store)
+Q2 = freeze()
 
 @assert Q ≈ Q2
 
@@ -156,7 +157,7 @@ for (i,face) in enumerate(port)
 end
 Q6 = assemble(Id, divergence(RT_int), divergence(RT_prt))
 d = -Q6 * x0
-x1 = pinv(Q5) * d
+x1 = pinv(Matrix(Q5)) * d
 
 # L0 = lagrangecxd0(support)
 # Q7 = assemble(Id, L0, divergence(RT_int))
@@ -212,8 +213,8 @@ end
 Dir =  Mesh(vertices(Tetrs), CompScienceMeshes.celltype(int_faces)[])
 # error()
 
-tetrs, bnd, v2t, v2n = BEAST.dual2forms_init(Tetrs)
-Y = BEAST.dual2forms_body(Tetrs, Edges[collect(1:10)], Dir, tetrs, bnd, v2t, v2n)
+tetrs, bnd, dir, v2t, v2n = BEAST.dualforms_init(Tetrs, Dir)
+Y = BEAST.dual2forms_body(Edges[collect(1:10)],  tetrs, bnd, dir, v2t, v2n)
 
 # Y = BEAST.dual2forms(Tetrs, Edges, Dir)
 nothing
