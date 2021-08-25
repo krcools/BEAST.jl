@@ -12,6 +12,9 @@ X = raviartthomas(Γ)
 T = timebasisc0d1(Δt, Nt)
 U = timebasiscxd0(Δt, Nt)
 
+# T = timebasisshiftedlagrange(Δt, Nt, 2)
+# U = timebasisdelta(Δt, Nt)
+
 V = X ⊗ T
 W = X ⊗ U
 

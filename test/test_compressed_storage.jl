@@ -40,7 +40,7 @@ fr1, store1 = BEAST.allocatestorage(SL0, X⊗δ, X⊗T1,
     BEAST.Val{:bandedstorage},
     BEAST.LongDelays{:compress})
 fr2, store2 = BEAST.allocatestorage(SL0, X⊗δ, X⊗T1,
-    BEAST.Val{:bandedstorage},
+    BEAST.Val{:densestorage},
     BEAST.LongDelays{:ignore})
 
 BEAST.assemble!(SL0, X⊗δ, X⊗T1, store1); Z1 = fr1()
@@ -52,7 +52,7 @@ fr3, store7 = BEAST.allocatestorage(SL1, X⊗δ, X⊗T2,
     BEAST.Val{:bandedstorage},
     BEAST.LongDelays{:compress})
 fr4, store8 = BEAST.allocatestorage(SL1, X⊗δ, X⊗T2,
-    BEAST.Val{:bandedstorage},
+    BEAST.Val{:densestorage},
     BEAST.LongDelays{:ignore})
 
 BEAST.assemble!(SL1, X⊗δ, X⊗T2, store7); Z3 = fr3()
@@ -101,7 +101,7 @@ fr9, store9 = BEAST.allocatestorage(DLh...,
     BEAST.Val{:bandedstorage},
     BEAST.LongDelays{:compress})
 fr10, store10 = BEAST.allocatestorage(DLh...,
-    BEAST.Val{:bandedstorage},
+    BEAST.Val{:densestorage},
     BEAST.LongDelays{:ignore})
 
 @time BEAST.assemble!(DLh..., store9)
@@ -115,12 +115,12 @@ Z10 = fr10()
 iDLh = (integrate(DL0), Y2⊗δ, X2⊗T1)
 fr11, store11 = BEAST.allocatestorage(iDLh..., BEAST.Val{:densestorage}, BEAST.LongDelays{:ignore})
 fr12, store12 = BEAST.allocatestorage(iDLh..., BEAST.Val{:bandedstorage}, BEAST.LongDelays{:compress})
-fr13, store13 = BEAST.allocatestorage(iDLh..., BEAST.Val{:bandedstorage}, BEAST.LongDelays{:ignore})
+# fr13, store13 = BEAST.allocatestorage(iDLh..., BEAST.Val{:bandedstorage}, BEAST.LongDelays{:ignore})
 
 
 BEAST.assemble!(iDLh..., store11); Z11 = fr11()
 BEAST.assemble!(iDLh..., store12); Z12 = fr12()
-BEAST.assemble!(iDLh..., store13); Z13 = fr13()
+# BEAST.assemble!(iDLh..., store13); Z13 = fr13()
 
 @test norm(Z11-Z12,Inf) < 1e-8
-@test norm(Z11-Z13,Inf) < 1e-8
+# @test norm(Z11-Z13,Inf) < 1e-8

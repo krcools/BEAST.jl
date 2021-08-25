@@ -46,26 +46,26 @@ end
 
 
 
-function allocatestorage(op::TensorOperator, test_functions, trial_functions,
-    ::Type{Val{:bandedstorage}}, ::Type{LongDelays{:ignore}},)
+# function allocatestorage(op::TensorOperator, test_functions, trial_functions,
+#     ::Type{Val{:bandedstorage}}, ::Type{LongDelays{:ignore}},)
 
-    M = numfunctions(spatialbasis(test_functions))
-    N = numfunctions(spatialbasis(trial_functions))
+#     M = numfunctions(spatialbasis(test_functions))
+#     N = numfunctions(spatialbasis(trial_functions))
 
-    time_basis_function = BEAST.convolve(
-        temporalbasis(test_functions),
-        temporalbasis(trial_functions))
+#     time_basis_function = BEAST.convolve(
+#         temporalbasis(test_functions),
+#         temporalbasis(trial_functions))
 
-    space_operator = op.spatial_factor
-    A = assemble(space_operator, spatialbasis(test_functions), spatialbasis(trial_functions))
+#     space_operator = op.spatial_factor
+#     A = assemble(space_operator, spatialbasis(test_functions), spatialbasis(trial_functions))
 
-    K0 = ones(M,N)
-    bandwidth = numintervals(time_basis_function) - 1
-    data = zeros(scalartype(op), bandwidth, M, N)
-    maxk1 = bandwidth
-    Z = SparseND.Banded3D(K0, data, maxk1)
-    return ()->Z, (v,m,n,k)->(Z[m,n,k] += v)
-end
+#     K0 = ones(M,N)
+#     bandwidth = numintervals(time_basis_function) - 1
+#     data = zeros(scalartype(op), bandwidth, M, N)
+#     maxk1 = bandwidth
+#     Z = SparseND.Banded3D(K0, data, maxk1)
+#     return ()->Z, (v,m,n,k)->(Z[m,n,k] += v)
+# end
 
 
 function allocatestorage(op::TensorOperator, test_functions, trial_functions,
@@ -167,7 +167,7 @@ function assemble!(operator::TensorOperator, testfns, trialfns, store,
 end
 
 
-mutable struct TemporalDifferentiation <: Operator
+mutable struct TemporalDifferentiation <: AbstractOperator
     operator
 end
 
@@ -213,7 +213,7 @@ scalartype(op::TemporalIntegration) = scalartype(op.operator)
 Base.:*(a::Number, op::TemporalIntegration) = TemporalIntegration(a * op.operator)
 
 function allocatestorage(op::TemporalIntegration, testfns, trialfns,
-	storage_trait, longdelays_trait)
+	storage_trait::Type{Val{S}}, longdelays_trait) where {S}
 
 	trial_time_fns  = temporalbasis(trialfns)
 	trial_space_fns = spatialbasis(trialfns)

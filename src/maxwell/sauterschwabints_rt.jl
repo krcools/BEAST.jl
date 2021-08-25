@@ -39,7 +39,7 @@ function (igd::MWSL3DIntegrand)(u,v)
             dot(f[1].value,G[2]) + f[1].divergence*H[2],
             dot(f[2].value,G[2]) + f[2].divergence*H[2],
             dot(f[3].value,G[2]) + f[3].divergence*H[2],
-            dot(f[1].value,G[3]) + f[2].divergence*H[3],
+            dot(f[1].value,G[3]) + f[1].divergence*H[3],
             dot(f[2].value,G[3]) + f[2].divergence*H[3],
             dot(f[3].value,G[3]) + f[3].divergence*H[3]))
 end
@@ -131,11 +131,14 @@ function momintegrals_nested!(op::MWOperator3D,
 
     # 1. Refine the trial_chart
     p1, p2, p3 = trial_chart.vertices
-    e1 = cartesian(neighborhood(trial_chart, (0,1/2)))
 
+    # TODO: generalise this to include more general refinements
+    e1 = cartesian(neighborhood(trial_chart, (0,1/2)))
     e2 = cartesian(neighborhood(trial_chart, (1/2,0)))
     e3 = cartesian(neighborhood(trial_chart, (1/2,1/2)))
+
     ct = cartesian(center(trial_chart))
+
     refined_trial_chart = [
         simplex(ct, p1, e3),
         simplex(ct, e3, p2),

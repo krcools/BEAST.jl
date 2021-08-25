@@ -43,6 +43,83 @@ end
 
 *(a::Number, e::PlaneWaveMW) = PlaneWaveMW(e.direction, e.polarisation, e.wavenumber, a*e.amplitude)
 
+abstract type Dipole end
+
+mutable struct DipoleMW{T,P} <: Dipole
+    location::P
+    orientation::P
+    wavenumber::T
+end
+
+function DipoleMW(l,o,k)
+    T = promote_type(eltype(l), eltype(o), typeof(k))
+    P = similar_type(typeof(l), T)
+    DipoleMW{T,P}(l,o,k)
+end
+
+mutable struct curlDipoleMW{T,P} <: Dipole
+    location::P
+    orientation::P
+    wavenumber::T
+end
+
+function curlDipoleMW(l,o,k)
+    T = promote_type(eltype(l), eltype(o), typeof(k))
+    P = similar_type(typeof(l), T)
+    curlDipoleMW{T,P}(l,o,k)
+end
+
+"""
+    dipolemw3d(;location, orientation, wavenumber)
+
+Create an electric dipole solution to Maxwell's equations representing the electric
+field part. Implementation is based on (9.18) of Jackson's “Classical electrodynamics”,
+with the notable difference that the ``\exp(ikr)`` is used.
+"""
+dipolemw3d(;
+    location    = error("missing arguement `location`"),
+    orientation = error("missing arguement `orientation`"),
+    wavenumber   = error("missing arguement `wavenumber`"),
+    ) = DipoleMW(location, orientation, wavenumber)
+
+function (d::DipoleMW)(x; isfarfield=false)
+    k = d.wavenumber
+    x_0 = d.location
+    p = d.orientation
+    r = norm(x-x_0)
+    n = (x - x_0)/r
+    if isfarfield
+      # postfactor (4*π*im)/k to be consistent with BEAST far field computation
+      # and, of course, omitted exp(-im*k*r)/r factor in (9.19)
+      # of Jackson's Classical Electrodynamics
+      return k^2/(4*π)*cross(cross(n,p),n)*(4*π*im)/k
+    else
+      return 1/(4*π)*exp(-im*k*r)*(k^2/r*cross(cross(n,p),n) + 
+              (1/r^3 + im*k/r^2)*(3*n*dot(n,p) - p))
+    end
+end
+
+function (d::curlDipoleMW)(x; isfarfield=false)
+    k = d.wavenumber
+    x_0 = d.location
+    p = d.orientation
+    r = norm(x-x_0)
+    n =  (x - x_0)/r
+    if isfarfield
+      # postfactor (4*π*im)/k to be consistent with BEAST far field computation
+      return (-im*k)*k^2/(4*π)*cross(n,p)*(4*π*im)/k
+    else
+      return -im*(k^3)/(4*π)*cross(n,p)*exp(-im*k*r)/r*(1 + 1/(im*k*r))
+    end
+end
+
+function curl(d::DipoleMW)
+    return curlDipoleMW(d.location, d.orientation, d.wavenumber)
+end
+
+*(a::Number, d::DipoleMW) = DipoleMW(d.location, a .* d.orientation, d.wavenumber)
+*(a::Number, d::curlDipoleMW) = curlDipoleMW(d.location, a .* d.orientation, d.wavenumber)
+
 mutable struct CrossTraceMW{F} <: Functional
   field::F
 end
@@ -53,6 +130,7 @@ end
 
 cross(::NormalVector, p::Function) = CrossTraceMW(p)
 cross(::NormalVector, p::PlaneWaveMW) = CrossTraceMW(p)
+cross(::NormalVector, p::Dipole) = CrossTraceMW(p)
 cross(t::CrossTraceMW, ::NormalVector) = TangTraceMW(t.field)
 
 function (ϕ::CrossTraceMW)(p)

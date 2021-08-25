@@ -13,12 +13,16 @@ function (ϕ::RTRefSpace)(mp)
     tu = tangents(mp,1)
     tv = tangents(mp,2)
 
-    d = 2/j
+    inv_j = 1/j
+    d = 2 * inv_j
+
+    u_tu = u*tu
+    v_tv = v*tv
 
     return SVector((
-        (value=(tu*(u-1) + tv*v    )/j, divergence=d),
-        (value=(tu*u     + tv*(v-1))/j, divergence=d),
-        (value=(tu*u     + tv*v    )/j, divergence=d)
+        (value=(u_tu-tu + v_tv    )*inv_j, divergence=d),
+        (value=(u_tu     + v_tv-tv)*inv_j, divergence=d),
+        (value=(u_tu     + v_tv    )*inv_j, divergence=d)
     ))
 end
 

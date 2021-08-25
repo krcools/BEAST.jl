@@ -9,4 +9,4 @@ docs/site/
 temp/
 dev/
 profile/
-Manifest.toml
+/Manifest.toml

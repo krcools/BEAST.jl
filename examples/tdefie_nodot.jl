@@ -25,10 +25,6 @@ SL = TDMaxwell3D.singlelayer(speedoflight=1.0)
 @hilbertspace j′
 efie_nodot = @discretise SL[j′,j] == E[j′] j∈V j′∈W
 xefie_nodot = solve(efie_nodot)
-# xefie_nodot = solve(@discretise(
-#     SL[j′,j] == E[j′],
-#     j∈V, j′∈W))
-
 
 Xefie, Δω, ω0 = fouriertransform(xefie_nodot, Δt, 0.0, 2)
 ω = collect(ω0 .+ (0:Nt-1)*Δω)

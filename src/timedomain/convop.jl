@@ -6,7 +6,7 @@ struct ConvOp{T} <: AbstractArray{T,3}
     length::Int
 end
 
-function Base.size(obj)
+function Base.size(obj::ConvOp)
     return (size(obj.data)[2:3]...,obj.length)
 end
 
@@ -24,7 +24,6 @@ end
 
 
 function convolve!(y, Z::ConvOp, x, X, j, k_start, k_stop=size(Z,3))
-    # @info "The corrrect convolve!"
     for n in axes(x,1)
         for m in axes(y,1)
             k0 = Z.k0[m,n]
@@ -56,6 +55,11 @@ function polyeig(Z::ConvOp)
     Q[1:M,M+1:2M,kmax+1] .= Z[:,:,kmax+1]
     return eigvals(companion(Q)), Q
     # return Q
+end
+
+
+function polyeig(Z)
+    return eigvals(companion(Z))
 end
 
 

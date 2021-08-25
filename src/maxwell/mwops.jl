@@ -10,6 +10,7 @@ struct KernelValsMaxwell3D{T,U,P,Q}
     gradgreen::Q
 end
 
+const inv_4pi = 1/(4pi)
 function kernelvals(biop::MaxwellOperator3D, p, q)
 
     γ = biop.gamma
@@ -17,9 +18,11 @@ function kernelvals(biop::MaxwellOperator3D, p, q)
     R = norm(r)
     γR = γ*R
 
+    inv_R = 1/R
+
     expn = exp(-γR)
-    green = expn / (4pi*R)
-    gradgreen = -(γ + 1/R) * green / R * r
+    green = expn * inv_R * inv_4pi
+    gradgreen = -(γ + inv_R) * green * inv_R * r
 
     KernelValsMaxwell3D(γ, r, R, green, gradgreen)
 end
@@ -140,7 +143,7 @@ function integrand(biop::MWDL3DGen, kerneldata, tvals, tgeo, bvals, bgeo)
     g = tvals[1]
     f = bvals[1]
     ∇G = kerneldata.gradgreen
-    g ⋅ (∇G × f)
+    (f × g) ⋅ ∇G
 end
 
 
@@ -156,10 +159,7 @@ function qrss(op, g, f, i, τ, j, σ, qd)
         for s in σ.vertices
             d2 = LinearAlgebra.norm_sqr(t-s)
             dmin2 = min(dmin2, d2)
-            if d2 < dtol
-                hits +=1
-                break
-            end
+            hits += (d2 < dtol)
         end
     end
 
@@ -167,11 +167,10 @@ function qrss(op, g, f, i, τ, j, σ, qd)
     hits == 2 && return SauterSchwabQuadrature.CommonEdge(qd.gausslegendre[2])
     hits == 1 && return SauterSchwabQuadrature.CommonVertex(qd.gausslegendre[1])
 
-    h = sqrt(volume(σ))
-    dmin = sqrt(dmin2)
-    xtol = 0.2
-    k = norm(op.gamma)
-    max(dmin*k, dmin/4h) < xtol && return WiltonSEStrategy(
+    h2 = volume(σ)
+    xtol2 = 0.2 * 0.2
+    k2 = abs2(op.gamma)
+    max(dmin2*k2, dmin2/16h2) < xtol2 && return WiltonSEStrategy(
         qd.tpoints[2,i],
         DoubleQuadStrategy(
             qd.tpoints[2,i],

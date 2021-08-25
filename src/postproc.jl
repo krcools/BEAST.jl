@@ -20,8 +20,10 @@ function facecurrents(coeffs, basis)
 	# U = D+1
 	U = 3
 
-	# TODO: express relative to input types
-	PT = SVector{U, T}
+	# TODO: remove ugliness
+	vals = refs(center(first(cells)))
+	PT = typeof(first(coeffs)*vals[1][1])
+
 	fcr = zeros(PT, numcells(mesh))
 
 	for (t,cell) in enumerate(cells)
@@ -127,7 +129,7 @@ end
 
 function potential(op, points, coeffs, basis)
 	T = SVector{3,ComplexF64}
-	ff = zeros(T, length(points))
+	ff = zeros(T, size(points))
 	store(v,m,n) = (ff[m] += v*coeffs[n])
 	potential!(store, op, points, basis)
 	return ff

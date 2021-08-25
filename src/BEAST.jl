@@ -2,14 +2,15 @@ module BEAST
 
 using Distributed
 using LinearAlgebra
-# using Pkg
 using SharedArrays
 using SparseArrays
+using FillArrays
 using BlockArrays
 using SparseMatrixDicts
 
 using SauterSchwabQuadrature
 using FastGaussQuadrature
+using LinearMaps
 
 import LinearAlgebra: cross, dot
 import LinearAlgebra: ×, ⋅
@@ -54,6 +55,7 @@ export MWFarField3D
 export MWSingleLayer3D, MWHyperSingular, MWWeaklySingular
 export MWDoubleLayer3D
 export PlaneWaveMW
+export dipolemw3d, DipoleMW
 export TangTraceMW, CrossTraceMW
 export curl
 export gradient
@@ -106,12 +108,15 @@ using SparseArrays
 function convolve end
 
 include("utils/polynomial.jl")
+include("utils/mixedblockarrays.jl")
+include("timedomain/convop.jl")
 include("utils/sparsend.jl")
 include("utils/specialfns.jl")
 include("utils/combinatorics.jl")
 include("utils/linearspace.jl")
 include("utils/matrixconv.jl")
 include("utils/polyeig.jl")
+include("utils/liftmap.jl")
 
 include("bases/basis.jl")
 include("bases/lincomb.jl")
@@ -156,7 +161,6 @@ include("postproc/segcurrents.jl")
 include("quadrature/double_quadrature.jl")
 include("quadrature/singularity_extraction.jl")
 
-include("timedomain/convop.jl")
 include("timedomain/tdintegralop.jl")
 include("timedomain/tdexcitation.jl")
 include("timedomain/motlu.jl")

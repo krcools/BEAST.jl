@@ -82,6 +82,7 @@ function assemblechunk!(biop::IntegralOperator, tfs::Space, bfs::Space, store)
             bshapes, bsis_elements, bad,
             qd, zlocal, store)
     else
+        @info "assemblechunk for nested meshes"
         assemblechunk_body_nested_meshes!(biop,
             tshapes, test_elements, tad,
             bshapes, bsis_elements, bad,
@@ -130,7 +131,8 @@ function assemblechunk_body_nested_meshes!(biop,
         trial_shapes, trial_elements, trial_assembly_data,
         qd, zlocal, store)
 
-    print("dots out of 10: ")
+    myid = Threads.threadid()
+    myid == 1 && print("dots out of 10: ")
     todo, done, pctg = length(test_elements), 0, 0
     for (p,tcell) in enumerate(test_elements)
         for (q,bcell) in enumerate(trial_elements)
@@ -148,10 +150,10 @@ function assemblechunk_body_nested_meshes!(biop,
         done += 1
         new_pctg = round(Int, done / todo * 100)
         if new_pctg > pctg + 9
-            print(".")
+            myid == 1 && print(".")
             pctg = new_pctg
     end end
-    println("")
+    myid == 1 && println("")
 end
 
 
@@ -353,63 +355,3 @@ end end end end end
 
 
 
-
-# mutable struct SauterSchwabStrategy
-#     hits::Int64
-# end
-# function momintegrals!(biop, tshs::subReferenceSpace, bshs::subReferenceSpace, tcell, bcell, z, strat::SauterSchwabStrategy)
-#
-#     A = biop.alpha
-#     k = biop.gamma
-#
-#     M, N = size(z)
-#
-#     hits = strat.hits
-#     print(hits)
-#     acc = 3
-#
-#     if hits == 0
-#         ssm = PositiveDistance(acc)
-#     elseif hits == 1
-#         ssm = CommonVertex(acc)
-#     elseif hits == 2
-#         ssm = CommonEdge(acc)
-#     elseif hits == 3
-#         ssm = CommonFace(acc)
-#     else
-#         error("hits can not exceed 3")
-#     end
-#     M= tcell.N
-#     N= bcell.N
-#     print("M = $(M) and N = $(N) \n")
-#     z = Array{Complex{Float64},2}(M,N)
-#     for i = 1:M
-#         for j = 1:N
-#             # print("i = $(i) and j = $(j) \n")
-#             function integrand(u,v)
-#                 upt = neighborhood(tcell,u)
-#                 vpt = neighborhood(bcell,v)
-#                 tshape = shapefuns(upt)
-#                 bshape = shapefuns(vpt)
-#                 y = cartesian(upt)
-#                 x = cartesian(vpt)
-#                 kernel = A * exp(-complex(0,1)*k*norm(x-y))/(4.0*π*norm(x-y))
-#                 # kernel = kernelvals(biop, upt, vpt)
-#                 ujac = jacobian(upt)
-#                 vjac = jacobian(vpt)
-#                 return tshape[i]*bshape[j]*kernel* ujac * vjac
-#                 # return kernel* ujac * vjac
-#             end
-#             z[i,j] = (sauterschwab_parameterized(tcell,bcell,integrand,ssm))
-#             end
-#     end
-#
-#     return z
-# end
-
-
-
-# mutable struct QuadData{WPV1,WPV2}
-#   tpoints::Matrix{Vector{WPV1}}
-#   bpoints::Matrix{Vector{WPV2}}
-# end
