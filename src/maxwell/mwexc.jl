@@ -86,14 +86,16 @@ function (d::DipoleMW)(x; isfarfield=false)
     k = d.wavenumber
     x_0 = d.location
     p = d.orientation
-    r = norm(x-x_0)
-    n = (x - x_0)/r
     if isfarfield
       # postfactor (4*π*im)/k to be consistent with BEAST far field computation
-      # and, of course, omitted exp(-im*k*r)/r factor in (9.19)
-      # of Jackson's Classical Electrodynamics
-      return k^2/(4*π)*cross(cross(n,p),n)*(4*π*im)/k
+      # and, of course, adapted phase factor exp(im*k*dot(n,x_0)) with
+      # respect to (9.19) of Jackson's Classical Electrodynamics
+      r = norm(x)
+      n = x/r
+      return cross(cross(n,1/(4*π)*(k^2*cross(cross(n,p),n))*exp(im*k*dot(n,x_0))*(4*π*im)/k),n)
     else
+      r = norm(x-x_0)
+      n = (x - x_0)/r
       return 1/(4*π)*exp(-im*k*r)*(k^2/r*cross(cross(n,p),n) + 
               (1/r^3 + im*k/r^2)*(3*n*dot(n,p) - p))
     end
@@ -103,12 +105,14 @@ function (d::curlDipoleMW)(x; isfarfield=false)
     k = d.wavenumber
     x_0 = d.location
     p = d.orientation
-    r = norm(x-x_0)
-    n =  (x - x_0)/r
     if isfarfield
       # postfactor (4*π*im)/k to be consistent with BEAST far field computation
-      return (-im*k)*k^2/(4*π)*cross(n,p)*(4*π*im)/k
+      r = norm(x)
+      n = x/r
+      return (-im*k)*k^2/(4*π)*cross(n,p)*(4*π*im)/k*exp(im*k*dot(n,x_0))
     else
+      r = norm(x-x_0)
+      n =  (x - x_0)/r
       return -im*(k^3)/(4*π)*cross(n,p)*exp(-im*k*r)/r*(1 + 1/(im*k*r))
     end
 end
