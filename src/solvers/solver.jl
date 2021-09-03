@@ -234,6 +234,31 @@ function assemble(bilform::BilForm, test_space_dict, trial_space_dict)
 end
 
 
+# function assemble(bilform::BilForm, test_space_dict, trial_space_dict)
+
+#     @assert !isempty(terms)
+#     Z = ZeroMap{Float32}
+#     for term in bilform.terms
+    
+#         x = test_space_dict[term.test_id]
+#         for op in reverse(term.test_ops)
+#             x = op[end](op[1:end-1]..., x)
+#         end
+
+#         y = trial_space_dict[term.trial_id]
+#         for op in reverse(t.trial_ops)
+#             y = op[end](op[1:end-1]..., y)
+#         end
+
+#     end
+
+
+
+
+
+# end
+
+
 
 function td_assemble(bilform::BilForm, test_space_dict, trial_space_dict)
 
