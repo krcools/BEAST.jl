@@ -1,13 +1,29 @@
 import LinearMaps
 
-struct ZeroMap{T} <: LinearMap{T}
-    num_rows::Int
-    num_cols::Int
+struct ZeroMap{T,U,V} <: LinearMap{T}
+    range::U
+    domain::V
 end
 
-Base.size(A::ZeroMap) = (A.num_rows, A.num_cols,)
+ZeroMap{T}(range::U, domain::V) where {T,U,V} = ZeroMap{T,U,V}(range, domain)
+LinearMaps.MulStyle(A::ZeroMap) = LinearMaps.FiveArg()
 
-function LinearAlgebra.mul!(y::AbstractVector, L::ZeroMap, x::AbstractVector, α::Number, β::Number)
-    y .= β * y
-    # LinearAlgebra.mul!(yI, AIJ, xJ, α, β)
+Base.size(A::ZeroMap) = (length(A.range), length(A.domain),)
+
+function LinearAlgebra.mul!(y::AbstractVector, L::ZeroMap, x::AbstractVector,
+    α::Number, β::Number)
+
+    y .*= β
+end
+
+function LinearAlgebra.mul!(y::AbstractVector, L::ZeroMap, x::AbstractVector)
+    y .= 0
+end
+
+function Base.:(*)(A::ZeroMap, x::AbstractVector)
+    # y = zero(A.image)
+    T = eltype(A)
+    y = similar(A.range, T)
+    fill!(y, zero(T))
+    LinearAlgebra.mul!(y,A,x)
 end

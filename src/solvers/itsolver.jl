@@ -34,6 +34,14 @@ function solve(solver::GMRESSolver, b)
 end
 
 
+function solve!(x, solver::GMRESSolver, b)
+    op = operator(solver)
+    x, ch = IterativeSolvers.gmres!(x, op, b, log=true,  maxiter=solver.maxiter,
+        restart=solver.restart, reltol=solver.tol, verbose=true)
+    return x, ch
+end
+
+
 # function Base.:*(solver::GMRESSolver, b)
 #     x, ch = solve(solver, b)
 #     println("Number of iterations: ", ch.iters)
@@ -44,10 +52,10 @@ end
 Base.size(solver::GMRESSolver) = reverse(size(solver.linear_operator))
 
 function LinearAlgebra.mul!(y::AbstractVecOrMat, solver::GMRESSolver, x::AbstractVector)
-    temp, ch = solve(solver, x)
+    y, ch = solve!(y, solver, x)
     println("Number of iterations: ", ch.iters)
     ch.isconverged || error("Iterative solver did not converge.")
-    y .= temp
+    return y
 end
 
 
@@ -62,10 +70,20 @@ function gmres(eq::DiscreteEquation; maxiter=0, restart=0, tol=0)
     b = assemble(rhs, test_space_dict)
     Z = assemble(lhs, test_space_dict, trial_space_dict)
 
+    block_sizes = zeros(Int, length(trial_space_dict))
+    for (p,x) in eq.trial_space_dict
+        block_sizes[p] = numfunctions(x)
+    end
+
+    T = promote_type(eltype(Z), eltype(b))
+    x = PseudoBlockVector{T}(undef, block_sizes)
+    fill!(x, 0)
+
     if tol == 0
         invZ = GMRESSolver(Z, maxiter=maxiter, restart=restart)
     else
         invZ = GMRESSolver(Z, maxiter=maxiter, restart=restart, tol=tol)
     end
-    x = invZ * b
+    # x = invZ * b
+    mul!(x, invZ, b)
 end

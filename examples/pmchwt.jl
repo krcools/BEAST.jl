@@ -1,7 +1,8 @@
 using CompScienceMeshes, BEAST
 using LinearAlgebra
 
-Γ = meshcuboid(0.5, 1.0, 1.0, 0.075)
+Γ = meshcuboid(0.5, 1.0, 1.0, 0.045)
+# Γ = meshcuboid(0.5, 1.0, 1.0, 0.15)
 CompScienceMeshes.translate!(Γ, point(-0.25, -0.5, -0.5))
 # Γ = meshsphere(1.0, 0.075)
 X = raviartthomas(Γ)
@@ -29,7 +30,21 @@ pmchwt = @discretise(
          (K+K′)[l,j] + (α*T+α′*T′)[l,m] == -e[k] - h[l],
     j∈X, m∈X, k∈X, l∈X)
 
-u = solve(pmchwt)
+# Z = BEAST.sysmatrix(pmchwt)
+# b = BEAST.rhs(pmchwt)
+# W = BEAST.assemble_hide(pmchwt.equation.lhs, pmchwt.test_space_dict, pmchwt.trial_space_dict)
+
+# using BEAST.BlockArrays
+# using BEAST.IterativeSolvers
+
+# u = PseudoBlockVector{ComplexF64}(undef, numfunctions.([X,X]))
+# fill!(u,0)
+
+# error()
+# u, ch = IterativeSolvers.gmres!(u, Z, b, log=true,  maxiter=1000,
+#     restart=1000, reltol=1e-5, verbose=true)
+
+u = BEAST.gmres(pmchwt, tol=1e-5)
 
 Θ, Φ = range(0.0,stop=2π,length=100), 0.0
 ffpoints = [point(cos(ϕ)*sin(θ), sin(ϕ)*sin(θ), cos(θ)) for θ in Θ for ϕ in Φ]
@@ -80,9 +95,10 @@ E_tot = E_in + E_ex
 H_tot = H_in + H_ex
 
 contour(real.(getindex.(E_tot,1)))
-heatmap(Z, Y, real.(getindex.(E_tot,1)))
-plot(real.(getindex.(E_tot[:,51],1)))
-
 contour(real.(getindex.(H_tot,2)))
+
+heatmap(Z, Y, real.(getindex.(E_tot,1)))
 heatmap(Z, Y, real.(getindex.(H_tot,2)))
-plot(real.(getindex.(H_tot[:,51],2)))
+
+plot(real.(getindex.(E_tot[:,51],1)))
+plot!(real.(getindex.(H_tot[:,51],2)))

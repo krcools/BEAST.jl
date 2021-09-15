@@ -106,7 +106,8 @@ macro discretise(eq, pairs...)
 end
 
 
-sysmatrix(eq::DiscreteEquation) = assemble(eq.equation.lhs, eq.test_space_dict, eq.trial_space_dict)
+sysmatrix(eq::DiscreteEquation, materialize=BEAST.assemble) =
+    assemble(eq.equation.lhs, eq.test_space_dict, eq.trial_space_dict, materialize=mt)
 rhs(eq::DiscreteEquation) = assemble(eq.equation.rhs, eq.test_space_dict)
 
 assemble(dbf::DiscreteBilform) = assemble(dbf.bilform, dbf.test_space_dict, dbf.trial_space_dict)
@@ -188,7 +189,7 @@ function td_assemble(lform::LinForm, test_space_dict)
     return B
 end
 
-function assemble(bilform::BilForm, test_space_dict, trial_space_dict)
+function assemble_hide(bilform::BilForm, test_space_dict, trial_space_dict)
 
   lhterms = bilform.terms
   T = ComplexF64 # TDOD: Fix this
@@ -227,6 +228,7 @@ function assemble(bilform::BilForm, test_space_dict, trial_space_dict)
       end
 
       z = assemble(a, x, y)
+    #   @show m n norm(z)
       Z[Block(m,n)] += α * z
   end
 
@@ -234,29 +236,45 @@ function assemble(bilform::BilForm, test_space_dict, trial_space_dict)
 end
 
 
-# function assemble(bilform::BilForm, test_space_dict, trial_space_dict)
+function assemble(bilform::BilForm, test_space_dict, trial_space_dict;
+    materialize=BEAST.assemble)
 
-#     @assert !isempty(terms)
-#     Z = ZeroMap{Float32}
-#     for term in bilform.terms
+    @assert !isempty(bilform.terms)
+
+    M = zeros(Int, length(test_space_dict))
+    N = zeros(Int, length(trial_space_dict))
+
+    for (p,x) in test_space_dict M[p]=numfunctions(x) end
+    for (p,x) in trial_space_dict N[p]=numfunctions(x) end
+
+    U = BlockArrays.blockedrange(M)
+    V = BlockArrays.blockedrange(N)
+
+    Z = ZeroMap{Float32}(U, V)
+
+    for term in bilform.terms
     
-#         x = test_space_dict[term.test_id]
-#         for op in reverse(term.test_ops)
-#             x = op[end](op[1:end-1]..., x)
-#         end
+        x = test_space_dict[term.test_id]
+        for op in reverse(term.test_ops)
+            x = op[end](op[1:end-1]..., x)
+        end
 
-#         y = trial_space_dict[term.trial_id]
-#         for op in reverse(t.trial_ops)
-#             y = op[end](op[1:end-1]..., y)
-#         end
+        y = trial_space_dict[term.trial_id]
+        for op in reverse(term.trial_ops)
+            y = op[end](op[1:end-1]..., y)
+        end
 
-#     end
+        z = materialize(term.kernel, x, y)
+        
+        I = Block(term.test_id)
+        J = Block(term.trial_id)
+        zlifted = LiftedMap(z,I,J,U,V)
 
+        Z = Z + term.coeff * zlifted
+    end
 
-
-
-
-# end
+    return Z
+end
 
 
 

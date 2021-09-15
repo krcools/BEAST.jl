@@ -11,6 +11,7 @@ using SparseMatrixDicts
 using SauterSchwabQuadrature
 using FastGaussQuadrature
 using LinearMaps
+using LiftedMaps
 
 import LinearAlgebra: cross, dot
 import LinearAlgebra: ×, ⋅
@@ -115,7 +116,7 @@ include("utils/combinatorics.jl")
 include("utils/linearspace.jl")
 include("utils/matrixconv.jl")
 include("utils/polyeig.jl")
-include("utils/liftmap.jl")
+include("utils/zeromap.jl")
 
 include("bases/basis.jl")
 include("bases/lincomb.jl")
