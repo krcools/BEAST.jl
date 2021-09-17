@@ -11,6 +11,9 @@ struct GMRESSolver{L,T} <: LinearMap{T}
 end
 
 
+Base.axes(A::GMRESSolver) = reverse(axes(A.linear_operator))
+
+
 function GMRESSolver(op; maxiter=0, restart=0, tol=sqrt(eps(real(eltype(op)))))
 
     m, n = size(op)
@@ -26,12 +29,12 @@ end
 operator(solver::GMRESSolver) = solver.linear_operator
 
 
-function solve(solver::GMRESSolver, b)
-    op = operator(solver)
-    x, ch = IterativeSolvers.gmres(op, b, log=true,  maxiter=solver.maxiter,
-        restart=solver.restart, reltol=solver.tol, verbose=true)
-    return x, ch
-end
+# function solve(solver::GMRESSolver, b)
+#     op = operator(solver)
+#     x, ch = IterativeSolvers.gmres(op, b, log=true,  maxiter=solver.maxiter,
+#         restart=solver.restart, reltol=solver.tol, verbose=true)
+#     return x, ch
+# end
 
 
 function solve!(x, solver::GMRESSolver, b)
@@ -42,16 +45,23 @@ function solve!(x, solver::GMRESSolver, b)
 end
 
 
-# function Base.:*(solver::GMRESSolver, b)
-#     x, ch = solve(solver, b)
-#     println("Number of iterations: ", ch.iters)
-#     ch.isconverged || error("Iterative solver did not converge.")
-#     return x
-# end
+function Base.:*(A::GMRESSolver, b::AbstractVector)
+
+    T = promote_type(eltype(A), eltype(b))
+    y = PseudoBlockVector{T}(undef, BlockArrays.blocksizes(A)[1])
+
+    mul!(y, A, b)
+
+    # x, ch = solve(solver, b)
+    # println("Number of iterations: ", ch.iters)
+    # ch.isconverged || error("Iterative solver did not converge.")
+    # return x
+end
 
 Base.size(solver::GMRESSolver) = reverse(size(solver.linear_operator))
 
 function LinearAlgebra.mul!(y::AbstractVecOrMat, solver::GMRESSolver, x::AbstractVector)
+    fill!(y,0)
     y, ch = solve!(y, solver, x)
     println("Number of iterations: ", ch.iters)
     ch.isconverged || error("Iterative solver did not converge.")

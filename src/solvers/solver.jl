@@ -106,8 +106,8 @@ macro discretise(eq, pairs...)
 end
 
 
-sysmatrix(eq::DiscreteEquation, materialize=BEAST.assemble) =
-    assemble(eq.equation.lhs, eq.test_space_dict, eq.trial_space_dict, materialize=mt)
+sysmatrix(eq::DiscreteEquation; materialize=BEAST.assemble) =
+    assemble(eq.equation.lhs, eq.test_space_dict, eq.trial_space_dict, materialize=materialize)
 rhs(eq::DiscreteEquation) = assemble(eq.equation.rhs, eq.test_space_dict)
 
 assemble(dbf::DiscreteBilform) = assemble(dbf.bilform, dbf.test_space_dict, dbf.trial_space_dict)
