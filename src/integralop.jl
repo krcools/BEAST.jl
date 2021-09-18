@@ -158,17 +158,18 @@ end
 
 
 
-function blockassembler(biop::IntegralOperator, tfs::Space, bfs::Space)
+function blockassembler(biop::IntegralOperator, tfs::Space, bfs::Space;
+                        quaddata=quaddata, quadrule=quadrule)
 
     test_elements, test_assembly_data,
         trial_elements, trial_assembly_data,
-        quadrature_data, zlocals = assembleblock_primer(biop, tfs, bfs)
+        quadrature_data, zlocals = assembleblock_primer(biop, tfs, bfs, quaddata=quaddata)
 
     return function f(test_ids, trial_ids, store)
         assembleblock_body!(biop,
             tfs, test_ids,   test_elements,  test_assembly_data,
             bfs, trial_ids, trial_elements, trial_assembly_data,
-            quadrature_data, zlocals, store)
+            quadrature_data, zlocals, store, quadrule=quadrule)
     end
 end
 
@@ -194,7 +195,7 @@ function assembleblock!(biop::IntegralOperator, tfs::Space, bfs::Space, store)
 end
 
 
-function assembleblock_primer(biop, tfs, bfs)
+function assembleblock_primer(biop, tfs, bfs; quaddata=quaddata)
 
     test_elements, tad = assemblydata(tfs)
     bsis_elements, bad = assemblydata(bfs)
@@ -216,7 +217,7 @@ end
 function assembleblock_body!(biop::IntegralOperator,
         tfs, test_ids, test_elements, test_assembly_data,
         bfs, trial_ids, bsis_elements, trial_assembly_data,
-        quadrature_data, zlocals, store)
+        quadrature_data, zlocals, store; quadrule=quadrule)
 
     test_shapes  = refspace(tfs)
     trial_shapes = refspace(bfs)
