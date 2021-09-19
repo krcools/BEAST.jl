@@ -62,7 +62,7 @@ function allocatestorage(op::LocalOperator, test_functions, trial_functions,
 end
 
 function assemble!(biop::LocalOperator, tfs::Space, bfs::Space, store,
-    threading::Type{Threading{:multi}})
+    threading::Type{Threading{:multi}}; quaddata=quaddata, quadrule=quadrule)
 
     if geometry(tfs) == geometry(bfs)
         return assemble_local_matched!(biop, tfs, bfs, store)
@@ -75,7 +75,8 @@ function assemble!(biop::LocalOperator, tfs::Space, bfs::Space, store,
     return assemble_local_mixed!(biop, tfs, bfs, store)
 end
 
-function assemble_local_matched!(biop::LocalOperator, tfs::Space, bfs::Space, store)
+function assemble_local_matched!(biop::LocalOperator, tfs::Space, bfs::Space, store;
+        quaddata=quaddata, quadrule=quadrule)
 
     tels, tad, ta2g = assemblydata(tfs)
     bels, bad, ba2g = assemblydata(bfs)
@@ -103,7 +104,8 @@ function assemble_local_matched!(biop::LocalOperator, tfs::Space, bfs::Space, st
 end end end end
 
 
-function assemble_local_refines!(biop::LocalOperator, tfs::Space, bfs::Space, store)
+function assemble_local_refines!(biop::LocalOperator, tfs::Space, bfs::Space, store;
+        quaddata=quaddata, quadrule=quadrule)
 
     println("Using 'refines' algorithm for local assembly:")
 
@@ -167,7 +169,8 @@ function assemble_local_refines!(biop::LocalOperator, tfs::Space, bfs::Space, st
 
 end
 
-function assemble_local_matched!(biop::LocalOperator, tfs::subdBasis, bfs::subdBasis, store)
+function assemble_local_matched!(biop::LocalOperator, tfs::subdBasis, bfs::subdBasis, store;
+        quaddata=quaddata, quadrule=quadrule)
 
     tels, tad = assemblydata(tfs)
     bels, bad = assemblydata(bfs)
@@ -223,7 +226,8 @@ end
 
 For use when basis and test functions are defined on different meshes
 """
-function assemble_local_mixed!(biop::LocalOperator, tfs::Space, bfs::Space, store)
+function assemble_local_mixed!(biop::LocalOperator, tfs::Space, bfs::Space, store;
+        quaddata=quaddata, quadrule=quadrule)
 
     tol = sqrt(eps(Float64))
 
