@@ -162,13 +162,13 @@ function blockassembler(biop::IntegralOperator, tfs::Space, bfs::Space)
 
     test_elements, test_assembly_data,
         trial_elements, trial_assembly_data,
-        quadrature_data, zlocal = assembleblock_primer(biop, tfs, bfs)
+        quadrature_data, zlocals = assembleblock_primer(biop, tfs, bfs)
 
     return function f(test_ids, trial_ids, store)
         assembleblock_body!(biop,
             tfs, test_ids,   test_elements,  test_assembly_data,
             bfs, trial_ids, trial_elements, trial_assembly_data,
-            quadrature_data, zlocal, store)
+            quadrature_data, zlocals, store)
     end
 end
 
@@ -181,7 +181,7 @@ end
 
 function assembleblock!(biop::IntegralOperator, tfs::Space, bfs::Space, store)
 
-    test_elements, tad, trial_elements, bad, quadrature_data, zlocal =
+    test_elements, tad, trial_elements, bad, quadrature_data, zlocals =
         assembleblock_primer(biop, tfs, bfs)
 
     active_test_dofs  = collect(1:numfunctions(tfs))
@@ -190,7 +190,7 @@ function assembleblock!(biop::IntegralOperator, tfs::Space, bfs::Space, store)
     assembleblock_body!(biop,
         tfs, active_test_dofs, test_elements, tad,
         bfs, active_trial_dofs, trial_elements, bad,
-        quadrature_data, zlocal, store)
+        quadrature_data, zlocals, store)
 end
 
 
@@ -203,16 +203,20 @@ function assembleblock_primer(biop, tfs, bfs)
     bshapes = refspace(bfs); num_bshapes = numfunctions(bshapes)
 
     qd = quaddata(biop, tshapes, bshapes, test_elements, bsis_elements)
-    zlocal = zeros(scalartype(biop, tfs, bfs), num_tshapes, num_bshapes)
 
-    return test_elements, tad, bsis_elements, bad, qd, zlocal
+    zlocals = Matrix{scalartype(biop, tfs, bfs)}[]
 
+    for i in 1:Threads.nthreads()
+        push!(zlocals, zeros(scalartype(biop, tfs, bfs), num_tshapes, num_bshapes))
+    end
+
+    return test_elements, tad, bsis_elements, bad, qd, zlocals
 end
 
 function assembleblock_body!(biop::IntegralOperator,
         tfs, test_ids, test_elements, test_assembly_data,
         bfs, trial_ids, bsis_elements, trial_assembly_data,
-        quadrature_data, zlocal, store)
+        quadrature_data, zlocals, store)
 
     test_shapes  = refspace(tfs)
     trial_shapes = refspace(bfs)
@@ -240,19 +244,19 @@ function assembleblock_body!(biop::IntegralOperator,
         for q in active_trial_el_ids
             bcell = bsis_elements[q]
 
-            fill!(zlocal, 0)
+            fill!(zlocals[Threads.threadid()], 0)
             strat = quadrule(biop, test_shapes, trial_shapes, p, tcell, q, bcell, quadrature_data)
-            momintegrals!(biop, test_shapes, trial_shapes, tcell, bcell, zlocal, strat)
+            momintegrals!(biop, test_shapes, trial_shapes, tcell, bcell, zlocals[Threads.threadid()], strat)
 
-            for j in 1 : size(zlocal,2)
-                for i in 1 : size(zlocal,1)
+            for j in 1 : size(zlocals[Threads.threadid()],2)
+                for i in 1 : size(zlocals[Threads.threadid()],1)
                     for (n,b) in trial_assembly_data[q,j]
                         n′ = get(trial_id_in_blk, n, 0)
                         n′ == 0 && continue
                         for (m,a) in test_assembly_data[p,i]
                             m′ = get(test_id_in_blk, m, 0)
                             m′ == 0 && continue
-                            store(a*zlocal[i,j]*b, m′, n′)
+                            store(a*zlocals[Threads.threadid()][i,j]*b, m′, n′)
 end end end end end end end
 
 
