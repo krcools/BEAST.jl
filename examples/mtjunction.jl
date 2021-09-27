@@ -2,20 +2,26 @@ using CompScienceMeshes, BEAST
 
 width, height, h = 1.0, 0.5, 0.05
 G1 = meshrectangle(width, height, h)
-G2 = CompScienceMeshes.rotate(G1, 0.5π * x̂)
-G3 = CompScienceMeshes.rotate(G1, 1.0π * x̂)
+G2 = CompScienceMeshes.rotate(G1, 1.0π * x̂)
+G3 = CompScienceMeshes.rotate(G1, 1.5π * x̂)
 
 G12 = weld(G1,-G2)
 G23 = weld(G2,-G3)
 G31 = weld(G3,-G1)
 
+G21 = weld(G2,-G1)
+
 X12 = raviartthomas(G12)
 X23 = raviartthomas(G23)
 X31 = raviartthomas(G31)
 
+X21 = raviartthomas(G21)
+
 Y12 = buffachristiansen(G12)
 Y23 = buffachristiansen(G23)
 Y31 = buffachristiansen(G31)
+
+Y21 = buffachristiansen(G21)
 
 κ = 1.0
 SL = Maxwell3D.singlelayer(wavenumber=κ)
@@ -23,6 +29,9 @@ N = NCross()
 
 X = X12 × X23 × X31
 Y = Y12 × Y23 × Y31
+
+X = X12 × X21
+Y = Y12 × Y21
 
 E = Maxwell3D.planewave(direction=ẑ, polarization=x̂, wavenumber=κ)
 e = (n × E) × n
@@ -74,7 +83,11 @@ N2 = assemble(N, X23, Y23)
 N3 = assemble(N, X31, Y31)
 Nxy = blkdiagm(N1,N2,N3)
 Syy = assemble(SL, Y, Y)
-iNxy = inv(Nxy)
+iNxy = blkdiagm(inv(Matrix(N1)), inv(Matrix(N2)), inv(Matrix(N3)))
+
+N21 = assemble(N, X21, Y21)
+Nxy = blkdiagm(N1, N21)
+iNxy = blkdiagm(inv(Matrix(N1)), inv(Matrix(N21)))
 
 # cond(Matrix(Sxx))
 ex = assemble(e,X)
@@ -83,33 +96,33 @@ Q = P * Sxx;
 R = P * ex;
 
 
-u1, ch1 = solve(BEAST.GMRESSolver(Sxx),ex)
-u2, ch2 = solve(BEAST.GMRESSolver(Q),R)
+u1, ch1 = solve(BEAST.GMRESSolver(Sxx), ex)
+u2, ch2 = solve(BEAST.GMRESSolver(Q), R) 
 
 @show ch1.iters
 @show ch2.iters
 # gmres()
 
-ns = [
-    0,
-    numfunctions(X12),
-    numfunctions(X23),
-    numfunctions(X31)]
+# ns = [
+#     0,
+#     numfunctions(X12),
+#     numfunctions(X23),
+#     numfunctions(X31)]
 
-cns = cumsum(ns)
-u12 = u1[cns[1]+1:cns[2]]
-u23 = u1[cns[2]+1:cns[3]]
-u31 = u1[cns[3]+1:cns[4]]
+# cns = cumsum(ns)
+# u12 = u1[cns[1]+1:cns[2]]
+# u23 = u1[cns[2]+1:cns[3]]
+# u31 = u1[cns[3]+1:cns[4]]
 
-fcr1, geo1 = facecurrents(u12, X12)
-fcr2, geo2 = facecurrents(u23, X23)
-fcr3, geo3 = facecurrents(u31, X31)
+# fcr1, geo1 = facecurrents(u12, X12)
+# fcr2, geo2 = facecurrents(u23, X23)
+# fcr3, geo3 = facecurrents(u31, X31)
 
-p1 =  patch(geo1, norm.(fcr1))
-p2 =  patch(geo2, norm.(fcr2))
-p3 =  patch(geo3, norm.(fcr3))
+# p1 =  patch(geo1, norm.(fcr1))
+# p2 =  patch(geo2, norm.(fcr2))
+# p3 =  patch(geo3, norm.(fcr3))
 
-Plotly.plot([p1,p2,p3])
+# Plotly.plot([p1,p2,p3])
 
 G123 = weld(G1,G2,G3)
 X123 = raviartthomas(G123)
@@ -129,8 +142,13 @@ Plotly.plot(patch(geost, norm.(fcrst)))
 Φ, Θ = [0.0], range(0,stop=π,length=100)
 pts = [point(cos(ϕ)*sin(θ), sin(ϕ)*sin(θ), cos(θ)) for ϕ in Φ for θ in Θ]
 
-ffd_mt = potential(MWFarField3D(wavenumber=κ), pts, u1, X)
-ffd_st = potential(MWFarField3D(wavenumber=κ), pts, ust, X123)
+ffd_mt    = potential(MWFarField3D(wavenumber=κ), pts, u1, X)
+ffd_mt_pc = potential(MWFarField3D(wavenumber=κ), pts, u2, X)
+ffd_err   = potential(MWFarField3D(wavenumber=κ), pts, u1-u2, X)
+ffd_st    = potential(MWFarField3D(wavenumber=κ), pts, ust, X123)
 
+using Plots
 plot(norm.(ffd_mt))
+scatter!(norm.(ffd_mt_pc))
 scatter!(norm.(ffd_st))
+scatter!(norm.(ffd_err))

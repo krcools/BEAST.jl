@@ -115,7 +115,7 @@ function duallagrangecxd0(mesh, jct=CompScienceMeshes.mesh(coordtype(mesh), dime
 end
 
 
-function duallagrangecxd0(mesh, vertexlist::Vector)
+function duallagrangecxd0(mesh, vertexlist::Vector{Int})
 
     T = coordtype(mesh)
 
@@ -133,6 +133,12 @@ function duallagrangecxd0(mesh, vertexlist::Vector)
 
     NF = 1
     LagrangeBasis{0,-1,NF}(fine, fns, pos)
+end
+
+
+function duallagrangecxd0(mesh, vertices::CompScienceMeshes.AbstractMesh{U,1}) where {U}
+    vertexlist = Int[v[1] for v in vertices]
+    return duallagrangecxd0(mesh, vertexlist)
 end
 
 

@@ -63,8 +63,8 @@ function quaddata(op::Helmholtz3DOp, test_refspace::LagrangeRefSpace,
     # test_qp = quadpoints(test_eval,  test_elements,  (6,))
     # bssi_qp = quadpoints(trial_eval, trial_elements, (7,))
 
-    test_qp = quadpoints(test_eval,  test_elements,  (4,))
-    bsis_qp = quadpoints(trial_eval, trial_elements, (7,))
+    test_qp = quadpoints(test_eval,  test_elements,  (2,))
+    bsis_qp = quadpoints(trial_eval, trial_elements, (3,))
 
     return test_qp, bsis_qp
 end
