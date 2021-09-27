@@ -137,7 +137,7 @@ end
 # end
 
 function assemble!(dl::MWDoubleLayerTDIO, W::SpaceTimeBasis, V::SpaceTimeBasis, store,
-    threading=Threading{:multi})
+    threading=Threading{:multi}; quaddata=quaddata, quadrule=quadrule)
 
 	X, T = spatialbasis(W), temporalbasis(W)
 	Y, U = spatialbasis(V), temporalbasis(V)

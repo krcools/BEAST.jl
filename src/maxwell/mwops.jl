@@ -100,9 +100,6 @@ function quaddata(op::MaxwellOperator3D,
     return (tpoints=tqd, bpoints=bqd, gausslegendre=leg)
 end
 
-
-
-
 # use Union type so this code can be shared between the operator
 # and its regular part.
 MWSL3DGen = Union{MWSingleLayer3D,MWSingleLayer3DReg}

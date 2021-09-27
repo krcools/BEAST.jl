@@ -129,7 +129,7 @@ function allocatestorage(op::RetardedPotential, testST, basisST,
 end
 
 function assemble!(op::LinearCombinationOfOperators, tfs::SpaceTimeBasis, bfs::SpaceTimeBasis, store,
-    threading=Threading{:multi})
+    threading=Threading{:multi}; quaddata=quaddata, quadrule=quadrule)
 
     for (a,A) in zip(op.coeffs, op.ops)
         store1(v,m,n,k) = store(a*v,m,n,k)
@@ -138,7 +138,7 @@ function assemble!(op::LinearCombinationOfOperators, tfs::SpaceTimeBasis, bfs::S
 end
 
 function assemble!(op::RetardedPotential, testST, trialST, store,
-    threading=Threading{:multi})
+    threading=Threading{:multi}; quaddata=quaddata, quadrule=quadrule)
 
 	Y, S = spatialbasis(testST), temporalbasis(testST)
 
@@ -158,7 +158,8 @@ function assemble!(op::RetardedPotential, testST, trialST, store,
 	assemble_chunk!(op, testST, trialST, store)
 end
 
-function assemble_chunk!(op::RetardedPotential, testST, trialST, store)
+function assemble_chunk!(op::RetardedPotential, testST, trialST, store; 
+    quaddata=quaddata, quadrule=quadrule)
 
 	myid = Threads.threadid()
 
