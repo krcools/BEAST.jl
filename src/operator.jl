@@ -78,23 +78,28 @@ transpose(op::Operator) = TransposedOperator(op)
 function assemble(operator::AbstractOperator, test_functions, trial_functions;
     storage_policy = Val{:bandedstorage},
     long_delays_policy = LongDelays{:compress},
-    threading = Threading{:multi})
+    threading = Threading{:multi},
+    quaddata=quaddata,
+    quadrule=quadrule)
     # This is a convenience function whose only job is to allocate
     # the storage for the interaction matrix. Further dispatch on
     # operator and space types is handled by the 4-argument version
     Z, store = allocatestorage(operator, test_functions, trial_functions,
         storage_policy, long_delays_policy)
-    assemble!(operator, test_functions, trial_functions, store, threading)
+    assemble!(operator, test_functions, trial_functions, store, threading,
+        quaddata=quaddata, quadrule=quadrule)
     return Z()
 end
 
 function assemblerow(operator::AbstractOperator, test_functions, trial_functions,
     storage_policy = Val{:bandedstorage},
-    long_delays_policy = LongDelays{:ignore})
+    long_delays_policy = LongDelays{:ignore};
+    quaddata=quaddata, quadrule=quadrule)
 
     Z, store = allocatestorage(operator, test_functions, trial_functions,
         storage_policy, long_delays_policy)
-    assemblerow!(operator, test_functions, trial_functions, store)
+    assemblerow!(operator, test_functions, trial_functions, store,
+        quaddata=quaddata, quadrule=quadrule)
     Z()
 end
 
@@ -104,7 +109,8 @@ function assemblecol(operator::AbstractOperator, test_functions, trial_functions
 
     Z, store = allocatestorage(operator, test_functions, trial_functions,
         storage_policy, long_delays_policy)
-    assemblecol!(operator, test_functions, trial_functions, store)
+    assemblecol!(operator, test_functions, trial_functions, store,
+        quaddata=quaddata, quadrule=quadrule)
     Z()
 end
 
@@ -149,7 +155,7 @@ end
 
 
 function assemble!(operator::Operator, test_functions::Space, trial_functions::Space, store,
-    threading::Type{Threading{:multi}} = Threading{:multi})
+    threading::Type{Threading{:multi}} = Threading{:multi}; quaddata=quaddata, quadrule=quadrule)
 
     @info "Multi-threaded assembly:"
 
@@ -163,62 +169,68 @@ function assemble!(operator::Operator, test_functions::Space, trial_functions::S
         lo <= hi || continue
         test_functions_p = subset(test_functions, lo:hi)
         store1 = (v,m,n) -> store(v,lo+m-1,n)
-        assemblechunk!(operator, test_functions_p, trial_functions, store1)
+        assemblechunk!(operator, test_functions_p, trial_functions, store1,
+            quaddata=quaddata, quadrule=quadrule)
     end
 
 end
 
 function assemble!(operator::Operator, test_functions::Space, trial_functions::Space, store,
-    threading::Type{Threading{:single}})
+    threading::Type{Threading{:single}}; quaddata=quaddata, quadrule=quadrule)
 
     @info "Single-threaded assembly"
 
-    assemblechunk!(operator, test_functions, trial_functions, store)
+    assemblechunk!(operator, test_functions, trial_functions, store, 
+        quaddata=quaddata, quadrule=quadrule)
 end
 
 
 
-function assemble!(op::TransposedOperator, tfs::Space, bfs::Space, store)
+function assemble!(op::TransposedOperator, tfs::Space, bfs::Space, store;
+        quaddata=quaddata, quadrule=quadrule)
 
     store1(v,m,n) = store(v,n,m)
-    assemble!(op.op, bfs, tfs, store1)
+    assemble!(op.op, bfs, tfs, store1, quaddata=quaddata, quadrule=quadrule)
 end
 
 
 function assemble!(op::LinearCombinationOfOperators, tfs::AbstractSpace, bfs::AbstractSpace,
-    store, threading = Threading{:multi})
+    store, threading = Threading{:multi}; quaddata=quaddata, quadrule=quadrule)
     for (a,A) in zip(op.coeffs, op.ops)
         store1(v,m,n) = store(a*v,m,n)
-        assemble!(A, tfs, bfs, store1)
+        assemble!(A, tfs, bfs, store1, quaddata=quaddata, quadrule=quadrule)
     end
 end
 
 
 # Support for direct product spaces
-function assemble!(op::Operator, tfs::DirectProductSpace, bfs::Space, store, threading = Threading{:multi})
+function assemble!(op::Operator, tfs::DirectProductSpace, bfs::Space, store, threading = Threading{:multi};
+        quaddata=quaddata, quadrule=quadrule)
     I = Int[0]
     for s in tfs.factors push!(I, last(I) + numfunctions(s)) end
     for (i,s) in enumerate(tfs.factors)
         store1(v,m,n) = store(v,m + I[i], n)
-        assemble!(op, s, bfs, store1)
+        assemble!(op, s, bfs, store1, quaddata=quaddata, quadrule=quadrule)
     end
 end
 
 
-function assemble!(op::Operator, tfs::Space, bfs::DirectProductSpace, store, threading=Threading{:multi})
+function assemble!(op::Operator, tfs::Space, bfs::DirectProductSpace, store, threading=Threading{:multi};
+        quaddata=quaddata, quadrule=quadrule)
     J = Int[0]
     for s in bfs.factors push!(J, last(J) + numfunctions(s)) end
     for (j,s) in enumerate(bfs.factors)
         store1(v,m,n) = store(v,m,n + J[j])
-        assemble!(op, tfs, s, store1)
+        assemble!(op, tfs, s, store1, quaddata=quaddata, quadrule=quadrule)
     end
 end
 
-function assemble!(op::Operator, tfs::DirectProductSpace, bfs::DirectProductSpace, store, threading=Threading{:multi})
+function assemble!(op::Operator, tfs::DirectProductSpace, bfs::DirectProductSpace, store, threading=Threading{:multi};
+        quaddata=quaddata, quadrule=quadrule)
     I = Int[0]
     for s in tfs.factors push!(I, last(I) + numfunctions(s)) end
     for (i,s) in enumerate(tfs.factors)
         store1(v,m,n) = store(v,m + I[i],n)
-        assemble!(op, s, bfs, store1)
+        assemble!(op, s, bfs, store1, quaddata=quaddata, quadrule=quadrule)
     end
 end
