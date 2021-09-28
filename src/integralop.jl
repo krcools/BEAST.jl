@@ -168,11 +168,27 @@ function blockassembler(biop::IntegralOperator, tfs::Space, bfs::Space;
         trial_elements, trial_assembly_data,
         quadrature_data, zlocals = assembleblock_primer(biop, tfs, bfs, quaddata=quaddata)
 
-    return function f(test_ids, trial_ids, store)
-        assembleblock_body!(biop,
-            tfs, test_ids,   test_elements,  test_assembly_data,
-            bfs, trial_ids, trial_elements, trial_assembly_data,
-            quadrature_data, zlocals, store, quadrule=quadrule)
+    # return function f(test_ids, trial_ids, store)
+    #     assembleblock_body!(biop,
+    #         tfs, test_ids,   test_elements,  test_assembly_data,
+    #         bfs, trial_ids, trial_elements, trial_assembly_data,
+    #         quadrature_data, zlocals, store, quadrule=quadrule)
+    # end
+
+    if !CompScienceMeshes.refines(tfs.geo, bfs.geo)
+        return function f(test_ids, trial_ids, store)
+            assembleblock_body!(biop,
+                tfs, test_ids,   test_elements,  test_assembly_data,
+                bfs, trial_ids, trial_elements, trial_assembly_data,
+                quadrature_data, zlocals, store, quadrule=quadrule)
+        end
+    else
+        return function f(test_ids, trial_ids, store)
+            assembleblock_body_nested!(biop,
+                tfs, test_ids,   test_elements,  test_assembly_data,
+                bfs, trial_ids, trial_elements, trial_assembly_data,
+                quadrature_data, zlocals, store, quadrule=quadrule)
+        end
     end
 end
 
@@ -232,8 +248,6 @@ function assembleblock_body!(biop::IntegralOperator,
     active_test_el_ids  = Vector{Int}()
     active_trial_el_ids = Vector{Int}()
 
-    #test_id_in_blk  = zeros(Int, numfunctions(tfs))
-    #trial_id_in_blk = zeros(Int, numfunctions(bfs))
     test_id_in_blk  = Dict{Int,Int}()
     trial_id_in_blk = Dict{Int,Int}()
 
@@ -254,6 +268,51 @@ function assembleblock_body!(biop::IntegralOperator,
             fill!(zlocals[Threads.threadid()], 0)
             strat = quadrule(biop, test_shapes, trial_shapes, p, tcell, q, bcell, quadrature_data)
             momintegrals!(biop, test_shapes, trial_shapes, tcell, bcell, zlocals[Threads.threadid()], strat)
+
+            for j in 1 : size(zlocals[Threads.threadid()],2)
+                for i in 1 : size(zlocals[Threads.threadid()],1)
+                    for (n,b) in trial_assembly_data[q,j]
+                        n′ = get(trial_id_in_blk, n, 0)
+                        n′ == 0 && continue
+                        for (m,a) in test_assembly_data[p,i]
+                            m′ = get(test_id_in_blk, m, 0)
+                            m′ == 0 && continue
+                            store(a*zlocals[Threads.threadid()][i,j]*b, m′, n′)
+end end end end end end end
+
+
+function assembleblock_body_nested!(biop::IntegralOperator,
+    tfs, test_ids, test_elements, test_assembly_data,
+    bfs, trial_ids, bsis_elements, trial_assembly_data,
+    quadrature_data, zlocals, store; quadrule=quadrule)
+
+    test_shapes  = refspace(tfs)
+    trial_shapes = refspace(bfs)
+
+    # Enumerate all the active test elements
+    active_test_el_ids  = Vector{Int}()
+    active_trial_el_ids = Vector{Int}()
+
+    test_id_in_blk  = Dict{Int,Int}()
+    trial_id_in_blk = Dict{Int,Int}()
+
+    for (i,m) in enumerate(test_ids);   test_id_in_blk[m] = i; end
+    for (i,m) in enumerate(trial_ids); trial_id_in_blk[m] = i; end
+
+    for m in test_ids,  sh in tfs.fns[m]; push!(active_test_el_ids,  sh.cellid); end
+    for m in trial_ids, sh in bfs.fns[m]; push!(active_trial_el_ids, sh.cellid); end
+
+    active_test_el_ids = unique(sort(active_test_el_ids))
+    active_trial_el_ids = unique(sort(active_trial_el_ids))
+
+    for p in active_test_el_ids
+        tcell = test_elements[p]
+        for q in active_trial_el_ids
+            bcell = bsis_elements[q]
+
+            fill!(zlocals[Threads.threadid()], 0)
+            strat = quadrule(biop, test_shapes, trial_shapes, p, tcell, q, bcell, quadrature_data)
+            momintegrals_nested!(biop, test_shapes, trial_shapes, tcell, bcell, zlocals[Threads.threadid()], strat)
 
             for j in 1 : size(zlocals[Threads.threadid()],2)
                 for i in 1 : size(zlocals[Threads.threadid()],1)
