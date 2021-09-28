@@ -176,14 +176,15 @@ function blockassembler(biop::IntegralOperator, tfs::Space, bfs::Space;
     # end
 
     if !CompScienceMeshes.refines(tfs.geo, bfs.geo)
-        return function f(test_ids, trial_ids, store)
+    # if true
+        return (test_ids, trial_ids, store) -> begin
             assembleblock_body!(biop,
                 tfs, test_ids,   test_elements,  test_assembly_data,
                 bfs, trial_ids, trial_elements, trial_assembly_data,
                 quadrature_data, zlocals, store, quadrule=quadrule)
         end
     else
-        return function f(test_ids, trial_ids, store)
+        return (test_ids, trial_ids, store) -> begin
             assembleblock_body_nested!(biop,
                 tfs, test_ids,   test_elements,  test_assembly_data,
                 bfs, trial_ids, trial_elements, trial_assembly_data,
