@@ -113,8 +113,7 @@ function assemblechunk_body!(biop,
             for (n,b) in trial_assembly_data[q][j]
                 zb = zij*b
                 for (m,a) in test_assembly_data[p][i]
-                    azb = a*zb
-                    store(azb, m, n)
+                    store(a*zb, m, n)
         end end end end
 
         done += 1
@@ -138,22 +137,25 @@ function assemblechunk_body_nested_meshes!(biop,
     for (p,tcell) in enumerate(test_elements)
         for (q,bcell) in enumerate(trial_elements)
 
-        fill!(zlocal, 0)
-        strat = quadrule(biop, test_shapes, trial_shapes, p, tcell, q, bcell, qd)
-        momintegrals_nested!(biop, test_shapes, trial_shapes, tcell, bcell, zlocal, strat)
-        I = length(test_assembly_data[p])
-        J = length(trial_assembly_data[q])
-        for j in 1 : J, i in 1 : I
-            for (n,b) in trial_assembly_data[q][j], (m,a) in test_assembly_data[p][i]
-                store(a*zlocal[i,j]*b, m, n)
-        end end end
+            fill!(zlocal, 0)
+            strat = quadrule(biop, test_shapes, trial_shapes, p, tcell, q, bcell, qd)
+            momintegrals_nested!(biop, test_shapes, trial_shapes, tcell, bcell, zlocal, strat)
+            I = length(test_assembly_data[p])
+            J = length(trial_assembly_data[q])
+            for j in 1 : J, i in 1 : I
+                zij = zlocal[i,j]
+                for (n,b) in trial_assembly_data[q][j]
+                    zb = zij*b
+                    for (m,a) in test_assembly_data[p][i]
+                    store(a*zb, m, n)
+            end end end
 
-        done += 1
-        new_pctg = round(Int, done / todo * 100)
-        if new_pctg > pctg + 9
-            myid == 1 && print(".")
-            pctg = new_pctg
-    end end
+            done += 1
+            new_pctg = round(Int, done / todo * 100)
+            if new_pctg > pctg + 9
+                myid == 1 && print(".")
+                pctg = new_pctg
+        end end end
     myid == 1 && println("")
 end
 
