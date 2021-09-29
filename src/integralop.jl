@@ -168,15 +168,7 @@ function blockassembler(biop::IntegralOperator, tfs::Space, bfs::Space;
         trial_elements, trial_assembly_data,
         quadrature_data, zlocals = assembleblock_primer(biop, tfs, bfs, quaddata=quaddata)
 
-    # return function f(test_ids, trial_ids, store)
-    #     assembleblock_body!(biop,
-    #         tfs, test_ids,   test_elements,  test_assembly_data,
-    #         bfs, trial_ids, trial_elements, trial_assembly_data,
-    #         quadrature_data, zlocals, store, quadrule=quadrule)
-    # end
-
     if !CompScienceMeshes.refines(tfs.geo, bfs.geo)
-    # if true
         return (test_ids, trial_ids, store) -> begin
             assembleblock_body!(biop,
                 tfs, test_ids,   test_elements,  test_assembly_data,
