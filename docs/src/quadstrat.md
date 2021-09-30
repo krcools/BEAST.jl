@@ -61,7 +61,21 @@ struct DoubleNumQR
     trial_quadpoints
 end
 
-function quadstrat(op, tel, bel, qd, quadstrat::DoubleNumQs)
-    return DoubleNumQR(qd.test_quadpoints[tel], qd.basis_quadpoints[bel])
+struct HighPrecisionQR end
+
+function quadrule(op, tel, bel, qd, quadstrat::DoubleNumQs)
+    if wellseparated(tel, bel)
+        return DoubleNumQR(qd.test_quadpoints[tel], qd.basis_quadpoints[bel])
+    else
+        return HighPrecisionQR(tel, bel)
+    end
+end
+
+function momintegrals(op, tel, bel, qr::DoubleNumQR)
+    ...
+end
+
+function momintegrals(op, tel, bel, qr::HighPrecisionQR)
+    ...
 end
 ```
