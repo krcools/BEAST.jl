@@ -1,3 +1,4 @@
 [deps]
 BEAST = "bb4162c7-ba94-5a20-af32-d8ec4428bdd1"
+CompScienceMeshes = "3e66a162-7b8c-5da0-b8f8-124ecd2c3ae1"
 Documenter = "e30172f5-a6a5-5a46-863b-614d45cd2de4"
