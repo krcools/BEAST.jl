@@ -87,18 +87,18 @@ isclosed(a, pred) = length(a)>2 && pred(a[end], a[1])
 Construct the set of Buffa-Christiansen functions subject to mesh Γ and only
 enforcing zero normal components on ∂Γ ∖ γ.
 """
-function buffachristiansen(Γ, γ=mesh(coordtype(Γ),1,3); ibscaled=false)
+function buffachristiansen(Γ, γ=mesh(coordtype(Γ),1,3); ibscaled=false, sort=:spacefillingcurve)
 
     @assert CompScienceMeshes.isoriented(Γ)
 
     T = coordtype(Γ)
     P = vertextype(Γ)
 
-    edges = skeleton(Γ, 1)
+    edges = skeleton(Γ, 1; sort)
     fine = if ibscaled
         CompScienceMeshes.lineofsight_refinement(Γ)
     else
-        barycentric_refinement(Γ)
+        barycentric_refinement(Γ; sort)
     end
 
     in_interior = interior_tpredicate(Γ)

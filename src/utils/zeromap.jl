@@ -21,9 +21,10 @@ function LinearAlgebra.mul!(y::AbstractVector, L::ZeroMap, x::AbstractVector)
 end
 
 function Base.:(*)(A::ZeroMap, x::AbstractVector)
-    # y = zero(A.image)
     T = eltype(A)
     y = similar(A.range, T)
     fill!(y, zero(T))
     LinearAlgebra.mul!(y,A,x)
 end
+
+Base.Matrix{T}(A::ZeroMap) where {T} = zeros(T, length(A.range), length(A.domain))

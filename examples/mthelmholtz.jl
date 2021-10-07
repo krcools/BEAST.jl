@@ -46,13 +46,13 @@ e = strace(E, G12)
 ex = assemble(e, X)
 
 Sxx = assemble(SL, X, X)
-N1 = assemble(Identity(), X12, Y12)
-N2 = assemble(Identity(), X23, Y23)
-N3 = assemble(Identity(), X31, Y31)
-Nxy = blkdiagm(N1,N2,N3)
 Syy = assemble(HS, Y, Y)
 
-Dyx = inv(Nxy)
+N1 = Matrix(assemble(Identity(), X12, Y12))
+N2 = Matrix(assemble(Identity(), X23, Y23))
+N3 = Matrix(assemble(Identity(), X31, Y31))
+Dyx = blkdiagm(inv(N1),inv(N2),inv(N3))
+
 Q = transpose(Dyx) * Syy * Dyx * Sxx
 R = transpose(Dyx) * Syy * Dyx * ex
 
@@ -61,6 +61,19 @@ u2, ch2 = solve(BEAST.GMRESSolver(Q),R)
 
 @show ch1.iters
 @show ch2.iters
+
+rad, ϕ = 10, π/2
+thetas = range(0,π,length=200)
+pts = [rad*point(cos(ϕ)*sin(θ), sin(ϕ)*sin(θ), cos(θ)) for θ in thetas]
+
+DLp = BEAST.HH3DDoubleLayerNear(wavenumber=κ)
+near1 = BEAST.potential(DLp, pts, u1, X, type=ComplexF64)
+near2 = BEAST.potential(DLp, pts, u2, X, type=ComplexF64)
+inc = E.(pts)
+
+using Plots
+plot(thetas, abs.(vec(near1)))
+scatter!(thetas, abs.(vec(near2)))
 
 using LinearAlgebra
 cond(Sxx)

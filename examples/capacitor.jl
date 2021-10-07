@@ -58,7 +58,7 @@ fcr,geo = facecurrents(u, RT); println("Face currents calculated")
 z = range(-0.5, stop=0.5, length=100)
 pts1 = point.(0.5,0.5,z)
 # pts1 = [point(0.5,0.5,a) for a in range(-0.5,stop=0.5,length=100)]
-volt = η*potential(MWSingleLayerPotential3D(κ), pts1, u, RT)
+volt = η*potential(MWSingleLayerPotential3D(κ), pts1, u, RT, type=ComplexF64)
 
 # Plot the Scalar potential
 using Plots

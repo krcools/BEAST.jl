@@ -11,15 +11,15 @@ G31 = weld(G3,-G1)
 
 G21 = weld(G2,-G1)
 
-X12 = raviartthomas(G12)
-X23 = raviartthomas(G23)
-X31 = raviartthomas(G31)
+X12 = raviartthomas(G12, sort=:none)
+X23 = raviartthomas(G23, sort=:none)
+X31 = raviartthomas(G31, sort=:none)
 
-X21 = raviartthomas(G21)
+X21 = raviartthomas(G21, sort=:none)
 
-Y12 = buffachristiansen(G12)
-Y23 = buffachristiansen(G23)
-Y31 = buffachristiansen(G31)
+Y12 = buffachristiansen(G12, sort=:none)
+Y23 = buffachristiansen(G23, sort=:none)
+Y31 = buffachristiansen(G31, sort=:none)
 
 Y21 = buffachristiansen(G21)
 
@@ -30,8 +30,8 @@ N = NCross()
 X = X12 × X23 × X31
 Y = Y12 × Y23 × Y31
 
-X = X12 × X21
-Y = Y12 × Y21
+# X = X12 × X21
+# Y = Y12 × Y21
 
 E = Maxwell3D.planewave(direction=ẑ, polarization=x̂, wavenumber=κ)
 e = (n × E) × n
@@ -54,12 +54,6 @@ mtefie = @discretise(
 
 import Plotly
 using LinearAlgebra
-# p1 = PlotlyJS.Plot(patch(G12, norm.(fcr12)))
-# p2 = PlotlyJS.Plot(patch(G23, norm.(fcr23)))
-# p3 = PlotlyJS.Plot(patch(G31, norm.(fcr31)))
-
-# PlotlyJS.plot([p1, p2, p3])
-
 
 function blkdiagm(blks...)
     m = sum(size(b,1) for b in blks)
@@ -85,11 +79,10 @@ Nxy = blkdiagm(N1,N2,N3)
 Syy = assemble(SL, Y, Y)
 iNxy = blkdiagm(inv(Matrix(N1)), inv(Matrix(N2)), inv(Matrix(N3)))
 
-N21 = assemble(N, X21, Y21)
-Nxy = blkdiagm(N1, N21)
-iNxy = blkdiagm(inv(Matrix(N1)), inv(Matrix(N21)))
+# N21 = assemble(N, X21, Y21)
+# Nxy = blkdiagm(N1, N21)
+# iNxy = blkdiagm(inv(Matrix(N1)), inv(Matrix(N21)))
 
-# cond(Matrix(Sxx))
 ex = assemble(e,X)
 P = transpose(iNxy) * Syy * iNxy
 Q = P * Sxx;
@@ -101,28 +94,6 @@ u2, ch2 = solve(BEAST.GMRESSolver(Q), R)
 
 @show ch1.iters
 @show ch2.iters
-# gmres()
-
-# ns = [
-#     0,
-#     numfunctions(X12),
-#     numfunctions(X23),
-#     numfunctions(X31)]
-
-# cns = cumsum(ns)
-# u12 = u1[cns[1]+1:cns[2]]
-# u23 = u1[cns[2]+1:cns[3]]
-# u31 = u1[cns[3]+1:cns[4]]
-
-# fcr1, geo1 = facecurrents(u12, X12)
-# fcr2, geo2 = facecurrents(u23, X23)
-# fcr3, geo3 = facecurrents(u31, X31)
-
-# p1 =  patch(geo1, norm.(fcr1))
-# p2 =  patch(geo2, norm.(fcr2))
-# p3 =  patch(geo3, norm.(fcr3))
-
-# Plotly.plot([p1,p2,p3])
 
 G123 = weld(G1,G2,G3)
 X123 = raviartthomas(G123)

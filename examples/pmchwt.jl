@@ -1,6 +1,10 @@
 using CompScienceMeshes, BEAST
 using LinearAlgebra
 
+using BEAST.LinearMaps
+Base.axes(A::LinearMaps.LinearCombination) = axes(A.maps[1])
+Base.axes(A::LinearMaps.ScaledMap) = axes(A.lmap)
+
 Γ = meshcuboid(0.5, 1.0, 1.0, 0.045)
 # Γ = meshcuboid(0.5, 1.0, 1.0, 0.15)
 CompScienceMeshes.translate!(Γ, point(-0.25, -0.5, -0.5))
@@ -32,6 +36,9 @@ pmchwt = @discretise(
 
 # Z = BEAST.sysmatrix(pmchwt)
 # b = BEAST.rhs(pmchwt)
+# M = BEAST.convert_to_dense(Z)
+# u = M \ b
+# error()
 # W = BEAST.assemble_hide(pmchwt.equation.lhs, pmchwt.test_space_dict, pmchwt.trial_space_dict)
 
 # using BEAST.BlockArrays
@@ -44,7 +51,11 @@ pmchwt = @discretise(
 # u, ch = IterativeSolvers.gmres!(u, Z, b, log=true,  maxiter=1000,
 #     restart=1000, reltol=1e-5, verbose=true)
 
-u = BEAST.gmres(pmchwt, tol=1e-5)
+
+
+# u = BEAST.gmres(pmchwt, tol=1e-5)
+# error()
+u = BEAST.solve(pmchwt)
 
 Θ, Φ = range(0.0,stop=2π,length=100), 0.0
 ffpoints = [point(cos(ϕ)*sin(θ), sin(ϕ)*sin(θ), cos(θ)) for θ in Θ for ϕ in Φ]
