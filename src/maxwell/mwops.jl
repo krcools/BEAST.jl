@@ -167,12 +167,12 @@ function qrss(op, g, f, i, τ, j, σ, qd)
     h2 = volume(σ)
     xtol2 = 0.2 * 0.2
     k2 = abs2(op.gamma)
-    max(dmin2*k2, dmin2/16h2) < xtol2 && return WiltonSEStrategy(
+    max(dmin2*k2, dmin2/16h2) < xtol2 && return WiltonSERule(
         qd.tpoints[2,i],
-        DoubleQuadStrategy(
+        DoubleQuadRule(
             qd.tpoints[2,i],
             qd.bpoints[2,j],),)
-    return DoubleQuadStrategy(
+    return DoubleQuadRule(
         qd.tpoints[1,i],
         qd.bpoints[1,j],)
 end
@@ -204,14 +204,14 @@ function qrib(op::MaxwellOperator3D, g::RTRefSpace, f::RTRefSpace, i, τ, j, σ,
     hits == 2   && return BogaertEdgePatchStrategy(8, 4)
     hits == 1   && return BogaertPointPatchStrategy(2, 3)
     rmin = xmin/k
-    xmin < xtol && return WiltonSEStrategy(
+    xmin < xtol && return WiltonSERule(
       qd.tpoints[1,i],
-      DoubleQuadStrategy(
+      DoubleQuadRule(
         qd.tpoints[2,i],
         qd.bpoints[2,j],
       ),
     )
-    return DoubleQuadStrategy(
+    return DoubleQuadRule(
       qd.tpoints[1,i],
       qd.bpoints[1,j],
     )
@@ -241,14 +241,14 @@ function qrdf(op::MaxwellOperator3D, g::RTRefSpace, f::RTRefSpace, i, τ, j, σ,
     end
   end
 
-  xmin < xtol && return WiltonSEStrategy(
+  xmin < xtol && return WiltonSERule(
     qd.tpoints[1,i],
-    DoubleQuadStrategy(
+    DoubleQuadRule(
       qd.tpoints[2,i],
       qd.bpoints[2,j],
     ),
   )
-  return DoubleQuadStrategy(
+  return DoubleQuadRule(
     qd.tpoints[1,i],
     qd.bpoints[1,j],
   )

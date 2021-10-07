@@ -28,7 +28,7 @@ end
 # Use numerical quadrature for now
 # Note: basis integral is over triangle, test over line
 function quadrule(op::SingleLayerTrace, g::LagrangeRefSpace, f::LagrangeRefSpace, i, τ, j, σ, qd)
-    DoubleQuadStrategy(
+    DoubleQuadRule(
         qd.tpoints[1,i],
         qd.bpoints[1,j]
     )

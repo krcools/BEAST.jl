@@ -29,7 +29,7 @@ function quadrule(operator::DoubleLayerRotatedMW3D,
     test_quad_rules  = quad_data[1]
     trial_quad_rules = quad_data[2]
 
-    DoubleQuadStrategy(
+    DoubleQuadRule(
         test_quad_rules[1,test_id],
         trial_quad_rules[1,trial_id]
     )

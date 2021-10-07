@@ -17,7 +17,7 @@ function quaddata(operator::NitscheHH3,
 end
 
 function quadrule(op::NitscheHH3, g::LagrangeRefSpace, f::LagrangeRefSpace, i, τ, j, σ, qd)
-    DoubleQuadStrategy(
+    DoubleQuadRule(
         qd.tpoints[1,i],
         qd.bpoints[1,j]
     )

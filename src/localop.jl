@@ -2,10 +2,6 @@
 
 using CollisionDetection
 
-# mutable struct SingleQuadStrategy{T}
-#     coords::Vector{T}
-#     weights::Vector{T}
-# end
 
 abstract type LocalOperator <: Operator end
 

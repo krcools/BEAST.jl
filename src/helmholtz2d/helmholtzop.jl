@@ -40,7 +40,7 @@ end
 
 function quadrule(op::HelmholtzOperator2D, g::LagrangeRefSpace, f::LagrangeRefSpace, i, τ, j, σ, qd)
 
-    DoubleQuadStrategy(
+    DoubleQuadRule(
         qd.tpoints[1,i],
         qd.bpoints[1,j]
     )

@@ -94,13 +94,13 @@ function quadrule(op::HH3DSingleLayerFDBIO,
     test_quadpoints  = quadrature_data[1]
     trial_quadpoints = quadrature_data[2]
 
-    hits != 0 && return WiltonSEStrategy(
+    hits != 0 && return WiltonSERule(
         test_quadpoints[1,i],
-        DoubleQuadStrategy(
+        DoubleQuadRule(
             test_quadpoints[1,i],
             trial_quadpoints[1,j]))
 
-    return DoubleQuadStrategy(
+    return DoubleQuadRule(
         quadrature_data[1][1,i],
         quadrature_data[2][1,j])
 end
@@ -118,20 +118,20 @@ function quadrule(op::HH3DSingleLayerFDBIO, test_refspace::subReferenceSpace,
     # test_quadpoints  = quadrature_data[1]
     # trial_quadpoints = quadrature_data[2]
 
-    # hits != 0 && return WiltonSEStrategy(
+    # hits != 0 && return WiltonSERule(
     #     test_quadpoints[1,i],
-    #     DoubleQuadStrategy(
+    #     DoubleQuadRule(
     #         test_quadpoints[1,i],
     #         trial_quadpoints[1,j]))
 
-    return DoubleQuadStrategy(
+    return DoubleQuadRule(
         quadrature_data[1][1,i],
         quadrature_data[2][1,j])
     # return SauterSchwabStrategy(hits)
      # test_qd = qd[1]
      # trial_qd = qd[2]
      #
-     # DoubleQuadStrategy(
+     # DoubleQuadRule(
      #    test_qd[1,i], # rule 1 on test element j
      #    trial_qd[1,j] # rule 1 on trial element i
      # )
@@ -145,7 +145,7 @@ function quadrule(op::Helmholtz3DOp,
     test_quadpoints  = quadrature_data[1]
     trial_quadpoints = quadrature_data[2]
 
-    return DoubleQuadStrategy(
+    return DoubleQuadRule(
         quadrature_data[1][1,i],
         quadrature_data[2][1,j])
 end
@@ -157,7 +157,7 @@ function quadrule(op::Helmholtz3DOp,
     test_quadpoints  = quadrature_data[1]
     trial_quadpoints = quadrature_data[2]
 
-    return DoubleQuadStrategy(
+    return DoubleQuadRule(
         quadrature_data[1][1,i],
         quadrature_data[2][1,j])
 end
@@ -207,7 +207,7 @@ end
 function innerintegrals!(op::HH3DSingleLayerSng, test_neighborhood,
         test_refspace::LagrangeRefSpace{T,0} where {T},
         trial_refspace::LagrangeRefSpace{T,0} where {T},
-        test_elements, trial_element, zlocal, quadrature_rule::WiltonSEStrategy, dx)
+        test_elements, trial_element, zlocal, quadrature_rule::WiltonSERule, dx)
 
     γ = op.gamma
     α = op.alpha
