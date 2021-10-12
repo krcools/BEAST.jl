@@ -50,8 +50,11 @@ struct HH3DDoubleLayerTransposed{T,K} <: Helmholtz3DOp
     gamma::K
 end
 
+defaultquadstrat(::Helmholtz3DOp, ::LagrangeRefSpace, ::LagrangeRefSpace) = DoubleNumWiltonSauterQStrat(2,3,2,3,4,4,4,4)
+
 function quaddata(op::Helmholtz3DOp, test_refspace::LagrangeRefSpace,
-        trial_refspace::LagrangeRefSpace, test_elements, trial_elements)
+        trial_refspace::LagrangeRefSpace, test_elements, trial_elements,
+        qs::DoubleNumWiltonSauterQStrat)
 
     test_eval(x)  = test_refspace(x,  Val{:withcurl})
     trial_eval(x) = trial_refspace(x, Val{:withcurl})
@@ -63,17 +66,20 @@ function quaddata(op::Helmholtz3DOp, test_refspace::LagrangeRefSpace,
     # test_qp = quadpoints(test_eval,  test_elements,  (6,))
     # bssi_qp = quadpoints(trial_eval, trial_elements, (7,))
 
-    test_qp = quadpoints(test_eval,  test_elements,  (2,))
-    bsis_qp = quadpoints(trial_eval, trial_elements, (3,))
+    test_qp = quadpoints(test_eval,  test_elements,  (qs.outer_rule_far,))
+    bsis_qp = quadpoints(trial_eval, trial_elements, (qs.inner_rule_far,))
 
     return test_qp, bsis_qp
 end
 
-function quaddata(op::Helmholtz3DOp, test_refspace::subReferenceSpace,
-        trial_refspace::subReferenceSpace, test_elements, trial_elements)
+defaultquadstrat(::Helmholtz3DOp, ::subReferenceSpace, ::subReferenceSpace) = DoubleNumWiltonSauterQStrat(4,7,4,7,4,4,4,4)
 
-    test_qp = quadpoints(test_refspace,  test_elements,  (4,))
-    bsis_qp = quadpoints(trial_refspace, trial_elements, (7,))
+function quaddata(op::Helmholtz3DOp, test_refspace::subReferenceSpace,
+        trial_refspace::subReferenceSpace, test_elements, trial_elements,
+        qs::DoubleNumWiltonSauterQStrat)
+
+    test_qp = quadpoints(test_refspace,  test_elements,  (qs.outer_rule_far,))
+    bsis_qp = quadpoints(trial_refspace, trial_elements, (qs.inner_rule_far,))
 
     return test_qp, bsis_qp
 end
@@ -83,7 +89,8 @@ end
 function quadrule(op::HH3DSingleLayerFDBIO,
         test_refspace::LagrangeRefSpace{T,0} where T,
         trial_refspace::LagrangeRefSpace{T,0} where T,
-        i, test_element, j, trial_element, quadrature_data)
+        i, test_element, j, trial_element, quadrature_data,
+        qs::DoubleNumWiltonSauterQStrat)
 
     tol, hits = sqrt(eps(eltype(eltype(test_element.vertices)))), 0
     for t in test_element.vertices
@@ -107,7 +114,8 @@ end
 
 
 function quadrule(op::HH3DSingleLayerFDBIO, test_refspace::subReferenceSpace,
-    trial_refspace::subReferenceSpace, i, test_element, j, trial_element, quadrature_data)
+    trial_refspace::subReferenceSpace, i, test_element, j, trial_element, quadrature_data,
+    qs::DoubleNumWiltonSauterQStrat)
 
     # tol, hits = 1e-10, 0
     # for t in getelementVertices(test_element)
@@ -140,7 +148,8 @@ end
 
 function quadrule(op::Helmholtz3DOp,
     test_refspace::RefSpace, trial_refspace::RefSpace,
-    i, test_element, j, trial_element, quadrature_data)
+    i, test_element, j, trial_element, quadrature_data,
+    qs::DoubleNumWiltonSauterQStrat)
 
     test_quadpoints  = quadrature_data[1]
     trial_quadpoints = quadrature_data[2]
@@ -152,7 +161,8 @@ end
 
 function quadrule(op::Helmholtz3DOp,
     test_refspace::RTRefSpace, trial_refspace::RTRefSpace,
-    i, test_element, j, trial_element, quadrature_data)
+    i, test_element, j, trial_element, quadrature_data,
+    qs::DoubleNumWiltonSauterQStrat)
 
     test_quadpoints  = quadrature_data[1]
     trial_quadpoints = quadrature_data[2]

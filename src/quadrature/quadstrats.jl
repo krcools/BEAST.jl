@@ -9,7 +9,16 @@ struct DoubleNumWiltonSauterQStrat{R,S}
     sauter_schwab_common_vert::S
 end
 
-struct DoubleNum{R}
+struct DoubleNumQStrat{R}
     outer_rule::R
     inner_rule::R
+end
+
+
+# defaultquadstrat(op, tfs, bfs) = DoubleNumWiltonSauterQStrat(2,3,6,7,6,5,4,3)
+defaultquadstrat(op, tfs, bfs) = defaultquadstrat(op, refspace(tfs), refspace(bfs))
+# defaultquadstrat(op, ::RefSpace, ::RefSpace) = error("No default quadstrat set.")
+
+struct SingleNumQStrat
+    quad_rule::Int
 end

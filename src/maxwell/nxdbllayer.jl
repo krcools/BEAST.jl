@@ -7,24 +7,23 @@ end
 
 LinearAlgebra.cross(::NormalVector, a::MWDoubleLayer3D) = DoubleLayerRotatedMW3D(a.gamma)
 
-function quaddata(operator::DoubleLayerRotatedMW3D,
-        local_test_basis::RTRefSpace,
-        local_trial_basis::RTRefSpace,
-        test_elements, trial_elements)
+defaultquadstrat(::DoubleLayerRotatedMW3D, tfs, bfs) = DoubleNumQStrat(2,3)
 
-    test_quad_data  = quadpoints(local_test_basis,  test_elements,  (2,))
-    trial_quad_data = quadpoints(local_trial_basis, trial_elements, (3,))
+function quaddata(operator::DoubleLayerRotatedMW3D,
+        local_test_basis::LinearRefSpaceTriangle, local_trial_basis::LinearRefSpaceTriangle,
+        test_elements, trial_elements, qs::DoubleNumQStrat)
+
+    test_quad_data  = quadpoints(local_test_basis,  test_elements,  (qs.outer_rule,))
+    trial_quad_data = quadpoints(local_trial_basis, trial_elements, (qs.inner_rule,))
 
     return test_quad_data, trial_quad_data
 end
 
 
 function quadrule(operator::DoubleLayerRotatedMW3D,
-        local_test_basis::RTRefSpace,
-        local_trial_basis::RTRefSpace,
-        test_id, test_element,
-        trial_id, trial_element,
-        quad_data)
+        local_test_basis::LinearRefSpaceTriangle, local_trial_basis::LinearRefSpaceTriangle,
+        test_id, test_element, trial_id, trial_element,
+        quad_data, qs::DoubleNumQStrat)
 
     test_quad_rules  = quad_data[1]
     trial_quad_rules = quad_data[2]

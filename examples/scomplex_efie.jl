@@ -22,8 +22,8 @@ for (e1,e2) in zip(E1.faces, E2.edges)
     q = getindex.(Ref(E2.nodes), e2)
     @assert q[1][1] == e1[1]
     @assert q[2][1] == e1[2]
-    ctr1 = cartesian(center(chart(E1, e1)))
-    ctr2 = cartesian(center(chart(E2, e2)))
+    ctr1 = cartesian(CompScienceMeshes.center(chart(E1, e1)))
+    ctr2 = cartesian(CompScienceMeshes.center(chart(E2, e2)))
     if norm(ctr1-ctr2) > 1e-8
         @show ctr1
         @show ctr2

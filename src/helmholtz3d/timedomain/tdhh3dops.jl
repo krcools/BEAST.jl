@@ -31,10 +31,12 @@ end
 HH3DDoubleLayerTDBIO(;speed_of_light) = HH3DDoubleLayerTDBIO(speed_of_light,one(speed_of_light),0)
 
 
+defaultquadstrat(::HH3DTDBIO, tfs, bfs) = nothing
+
 # See: ?BEAST.quaddata for help
 function quaddata(operator::HH3DTDBIO,
         test_local_space, trial_local_space, time_local_space,
-        test_element, trial_element, time_element)
+        test_element, trial_element, time_element, quadstrat::Nothing)
 
     dmax = numfunctions(time_local_space)-1
     bn = binomial.((0:dmax),(0:dmax)')
@@ -52,7 +54,7 @@ end
 function quadrule(operator::HH3DTDBIO,
         test_local_space, trial_local_space, time_local_space,
         p, test_element, q, trial_element, r, time_element,
-        quad_data)
+        quad_data, quadstrat::Nothing)
 
     # WiltonInts84Strat(quad_data[1,p])
     qd = quad_data

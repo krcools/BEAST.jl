@@ -23,11 +23,11 @@ println("λ = ", λₑ, "m; l = ", l ,"m")
 
 # Build and mesh the structure
 Γ₁ = meshrectangle(l,w,h);
-translate!(Γ₁, point(0.0,0.0,d))
+CompScienceMeshes.translate!(Γ₁, point(0.0,0.0,d))
 Γ₀ = meshrectangle(l,w,h)
 
 γ₁ = meshsegment(l, h, 3)
-translate!(γ₁, point(0.0,0.0,d))
+CompScienceMeshes.translate!(γ₁, point(0.0,0.0,d))
 γ₀ = meshsegment(l, h, 3)
 
 Γ = weld(Γ₁, Γ₀)

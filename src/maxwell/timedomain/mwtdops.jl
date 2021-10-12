@@ -74,8 +74,10 @@ end # module TDMaxwell3D
 
 export TDMaxwell3D
 
+defaultquadstrat(::MWSingleLayerTDIO, tfs, bfs) = nothing
+
 function quaddata(op::MWSingleLayerTDIO, testrefs, trialrefs, timerefs,
-        testels, trialels, timeels)
+        testels, trialels, timeels, ::Nothing)
 
     dmax = numfunctions(timerefs)-1
     bn = binomial.((0:dmax),(0:dmax)')
@@ -88,7 +90,7 @@ end
 
 
 quadrule(op::MWSingleLayerTDIO, testrefs, trialrefs, timerefs,
-        p, testel, q, trialel, r, timeel, qd) = WiltonInts84Strat(qd[1][1,p],qd[2],qd[3])
+        p, testel, q, trialel, r, timeel, qd, ::Nothing) = WiltonInts84Strat(qd[1][1,p],qd[2],qd[3])
 
 
 struct TransposedStorage{F}
@@ -137,7 +139,7 @@ end
 # end
 
 function assemble!(dl::MWDoubleLayerTDIO, W::SpaceTimeBasis, V::SpaceTimeBasis, store,
-    threading=Threading{:multi}; quaddata=quaddata, quadrule=quadrule)
+    threading=Threading{:multi}; quadstrat=defaultquadstrat(dl,W,V))
 
 	X, T = spatialbasis(W), temporalbasis(W)
 	Y, U = spatialbasis(V), temporalbasis(V)
@@ -160,14 +162,16 @@ function assemble!(dl::MWDoubleLayerTDIO, W::SpaceTimeBasis, V::SpaceTimeBasis, 
 		lo <= hi || continue
 		Y_p = subset(Y, lo:hi)
 		store2 = (v,m,n,k) -> store(v,lo+m-1,n,k)
-		assemble_chunk!(dl, Y_p ⊗ S, V, store2)
+		assemble_chunk!(dl, Y_p ⊗ S, V, store2; quadstrat)
 	end
 
 	# return assemble_chunk!(dl, W, V, store1)
 end
 
+defaultquadstrat(::MWDoubleLayerTDIO, tfs, bfs) = nothing
+
 function quaddata(op::MWDoubleLayerTDIO, testrefs, trialrefs, timerefs,
-        testels, trialels, timeels)
+        testels, trialels, timeels, quadstrat::Nothing)
 
     dmax = numfunctions(timerefs)-1
     bn = binomial.((0:dmax),(0:dmax)')
@@ -179,12 +183,15 @@ function quaddata(op::MWDoubleLayerTDIO, testrefs, trialrefs, timerefs,
 end
 
 quadrule(op::MWDoubleLayerTDIO, testrefs, trialrefs, timerefs,
-        p, testel, q, trialel, r, timeel, qd) = WiltonInts84Strat(qd[1][1,p],qd[2],qd[3])
+    p, testel, q, trialel, r, timeel, qd, quadstrat::Nothing) =
+        WiltonInts84Strat(qd[1][1,p],qd[2],qd[3])
 
+
+defaultquadstrat(::MWDoubleLayerTransposedTDIO, tfs, bfs) = nothing
 
 function quaddata(op::MWDoubleLayerTransposedTDIO,
 		testrefs, trialrefs, timerefs,
-        testels, trialels, timeels)
+        testels, trialels, timeels, quadstrat::Nothing)
 
     dmax = numfunctions(timerefs)-1
     bn = binomial.((0:dmax),(0:dmax)')
@@ -195,7 +202,8 @@ function quaddata(op::MWDoubleLayerTransposedTDIO,
 end
 
 quadrule(op::MWDoubleLayerTransposedTDIO, testrefs, trialrefs, timerefs,
-        p, testel, q, trialel, r, timeel, qd) = WiltonInts84Strat(qd[1][1,p],qd[2],qd[3])
+    p, testel, q, trialel, r, timeel, qd, quadstrat::Nothing) =
+        WiltonInts84Strat(qd[1][1,p],qd[2],qd[3])
 
 function momintegrals!(z, op::MWDoubleLayerTransposedTDIO,
 	g, f, T, τ, σ, ι, qr::WiltonInts84Strat)
