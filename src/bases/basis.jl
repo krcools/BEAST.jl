@@ -57,6 +57,10 @@ mutable struct DirectProductSpace{T} <: AbstractSpace
     factors::Vector{Space{T}}
 end
 
+# defaultquadstrat(op, tfs::DirectProductSpace, bfs::DirectProductSpace) = defaultquadstrat(op, tfs[1], bfs[1])
+# defaultquadstrat(op, tfs, bfs::DirectProductSpace) = defaultquadstrat(op, tfs, bfs[1])
+# defaultquadstrat(op, tfs::DirectProductSpace, bfs) = defaultquadstrat(op, tfs[1], bfs)
+
 export cross, ×
 
 cross(a::Space{T}, b::Space{T}) where {T} = DirectProductSpace(Space{T}[a,b])

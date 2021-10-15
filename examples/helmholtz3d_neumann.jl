@@ -8,7 +8,7 @@ Pkg.activate(@__DIR__)
 X = lagrangec0d1(Γ)
 @show numfunctions(X)
 
-κ = 1.0; γ = im*κ
+κ = 2π; γ = im*κ
 a = -1Helmholtz3D.hypersingular(gamma=γ)
 b = Helmholtz3D.doublelayer(gamma=γ) - 0.5Identity()
 

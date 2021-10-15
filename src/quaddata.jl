@@ -56,10 +56,10 @@ function quadrule(op::IntegralOperator, g::RefSpace, f::RefSpace, i, τ, j, σ, 
   hits == 3   && return SauterSchwabQuadrature.CommonFace(qd.gausslegendre[3])
   hits == 2   && return SauterSchwabQuadrature.CommonEdge(qd.gausslegendre[2])
   hits == 1   && return SauterSchwabQuadrature.CommonVertex(qd.gausslegendre[1])
-  xmin < xtol && return DoubleQuadStrategy(
+  xmin < xtol && return DoubleQuadRule(
       qd.tpoints[2,i],
       qd.bpoints[2,j],)
-  return DoubleQuadStrategy(
+  return DoubleQuadRule(
     qd.tpoints[1,i],
     qd.bpoints[1,j],)
 end

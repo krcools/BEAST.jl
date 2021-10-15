@@ -43,7 +43,7 @@ using Plotly
 
 
 Xefie, Δω, ω0 = fouriertransform(xefie, Δt, 0.0, 2)
-ω = collect(ω0 + (0:Nt-1)*Δω)
+ω = collect(ω0 .+ (0:Nt-1)*Δω)
 _, i1 = findmin(abs.(ω.-sol))
 
 ω1 = ω[i1]

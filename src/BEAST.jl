@@ -147,6 +147,10 @@ include("bases/stagedtimestep.jl")
 include("bases/timebasis.jl")
 include("bases/tensorbasis.jl")
 
+include("quadrature/quadstrats.jl")
+include("quadrature/double_quadrature.jl")
+include("quadrature/singularity_extraction.jl")
+
 include("excitation.jl")
 include("operator.jl")
 include("localop.jl")
@@ -156,9 +160,6 @@ include("integralop.jl")
 include("quaddata.jl")
 include("postproc.jl")
 include("postproc/segcurrents.jl")
-
-include("quadrature/double_quadrature.jl")
-include("quadrature/singularity_extraction.jl")
 
 include("timedomain/tdintegralop.jl")
 include("timedomain/tdexcitation.jl")

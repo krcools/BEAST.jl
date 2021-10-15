@@ -15,7 +15,7 @@ N = NCross()
 
 Txx = assemble(T,X,X); println("primal discretisation assembled.")
 Tyy = assemble(T,Y,Y); println("dual discretisation assembled.")
-Nxy = assemble(N,X,Y); println("duality form assembled.")
+Nxy = Matrix(assemble(N,X,Y)); println("duality form assembled.")
 
 iNxy = inv(Nxy); println("duality form inverted.")
 A = iNxy' * Tyy * iNxy * Txx
