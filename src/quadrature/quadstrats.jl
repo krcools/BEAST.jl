@@ -1,3 +1,5 @@
+using InteractiveUtils
+
 struct DoubleNumWiltonSauterQStrat{R,S}
     outer_rule_far::R
     inner_rule_far::R
@@ -21,4 +23,24 @@ defaultquadstrat(op, tfs, bfs) = defaultquadstrat(op, refspace(tfs), refspace(bf
 
 struct SingleNumQStrat
     quad_rule::Int
+end
+
+function quadinfo(op, tfs, bfs; quadstrat=defaultquadstrat(op, tfs, bfs))
+
+    tels, tad = assemblydata(tfs)
+    bels, bad = assemblydata(bfs)
+
+    tref = refspace(tfs)
+    bref = refspace(bfs)
+
+    i, τ = 1, first(tels)
+    j, σ = 1, first(bels)
+
+    @show quadstrat
+    println(@which BEAST.quaddata(op,tref,bref,tels,bels,quadstrat))
+
+    qd = quaddata(op,tref,bref,tels,bels,quadstrat)
+    println(@which quadrule(op,tref,bref,i,τ,j,σ,qd,quadstrat))
+
+    nothing
 end

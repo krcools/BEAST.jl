@@ -252,8 +252,8 @@ function assembleblock_body!(biop::IntegralOperator,
     for m in test_ids,  sh in tfs.fns[m]; push!(active_test_el_ids,  sh.cellid); end
     for m in trial_ids, sh in bfs.fns[m]; push!(active_trial_el_ids, sh.cellid); end
 
-    active_test_el_ids = unique(sort(active_test_el_ids))
-    active_trial_el_ids = unique(sort(active_trial_el_ids))
+    active_test_el_ids = unique!(sort!(active_test_el_ids))
+    active_trial_el_ids = unique!(sort!(active_trial_el_ids))
 
     for p in active_test_el_ids
         tcell = test_elements[p]
