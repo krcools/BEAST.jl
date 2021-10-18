@@ -87,42 +87,76 @@ isclosed(a, pred) = length(a)>2 && pred(a[end], a[1])
 Construct the set of Buffa-Christiansen functions subject to mesh Γ and only
 enforcing zero normal components on ∂Γ ∖ γ.
 """
-function buffachristiansen(Γ, γ=mesh(coordtype(Γ),1,3); ibscaled=false, sort=:spacefillingcurve)
+function buffachristiansen(Γ, γ=mesh(coordtype(Γ),1,3); ibscaled=false, sort=:spacefillingcurve, edges=:all)
 
     @assert CompScienceMeshes.isoriented(Γ)
 
     T = coordtype(Γ)
     P = vertextype(Γ)
 
-    edges = skeleton(Γ, 1; sort)
+    in_interior = interior_tpredicate(Γ)
+    on_junction = overlap_gpredicate(γ)
+
+    # edges = skeleton(Γ, 1; sort)
+
+    if edges == :all
+        edges = skeleton(Γ, 1; sort)
+        edges = submesh(edges) do edge
+            ch = chart(edges, edge)
+            !in_interior(edge) && !on_junction(ch) && return false
+            return true
+        end
+    end
+    @assert edges isa CompScienceMeshes.AbstractMesh
+    @assert dimension(edges) == 1
+
     fine = if ibscaled
         CompScienceMeshes.lineofsight_refinement(Γ)
     else
         barycentric_refinement(Γ; sort)
     end
 
-    in_interior = interior_tpredicate(Γ)
-    on_junction = overlap_gpredicate(γ)
 
-    # first pass to determine the number of functions
-    numfuncs = 0
-    for edge in cells(edges)
-        ch = chart(edges, edge)
-        !in_interior(edge) && !on_junction(ch) && continue
-        numfuncs += 1
-    end
+    # # first pass to determine the number of functions
+    # numfuncs = 0
+    # for edge in edges
+    #     ch = chart(edges, edge)
+    #     !in_interior(edge) && !on_junction(ch) && continue
+    #     numfuncs += 1
+    # end
 
     vtof, vton = vertextocellmap(fine)
     jct_pred = overlap_gpredicate(γ)
-    bcs, k = Vector{Vector{Shape{T}}}(undef,numfuncs), 1
-    pos = Vector{P}(undef,numfuncs)
-    for (i,edge) in enumerate(cells(edges))
+    bcs, k = Vector{Vector{Shape{T}}}(undef,length(edges)), 1
+    pos = Vector{P}(undef,length(edges))
+    for (i,edge) in enumerate(edges)
 
         ch = chart(edges, edge)
-        !in_interior(edge) && !on_junction(ch) && continue
+        ln = volume(ch)
+        # !in_interior(edge) && !on_junction(ch) && continue
 
         # index of edge center in fine's vertexbuffer
-        p = numvertices(edges) + i
+        v  = edge[1]
+        n = vton[v]
+        F = vtof[v,1:n]
+        supp = fine[F]
+        bnd = boundary(supp)
+        bnd_nodes = skeleton(bnd,0)
+        p = 0
+        for node in bnd_nodes
+            vert1 = vertices(Γ)[edge[1]]
+            vert2 = vertices(Γ)[edge[2]]
+            vert = vertices(fine)[node[1]]
+            dist = norm(vert-vert1)
+            node[1] == edge[1] && continue
+            if dot(vert-vert1,vert2-vert1) ≈ dist*ln
+                p = node[1]
+                break
+            end
+        end
+        @assert p != 0
+
+        # p = numvertices(edges) + i
         pos[k] = vertices(fine)[p]
 
         # sanity check

@@ -22,7 +22,7 @@ end
 
 # defaultquadstrat(op::LocalOperator, tfs, bfs) = defaultquadstrat(op, refspace(tfs), refspace(bfs))
 defaultquadstrat(op::LocalOperator, tfs::Space, bfs::DirectProductSpace) = defaultquadstrat(op, tfs, bfs.factors[1])
-defaultquadstrat(op::LocalOperator, tfs::DirectProductSpace, bfs::DirectProductSpace) = defaultquadstrat(op, tfs.factors[1], bfs)
+defaultquadstrat(op::LocalOperator, tfs::DirectProductSpace, bfs::Space) = defaultquadstrat(op, tfs.factors[1], bfs)
 defaultquadstrat(op::LocalOperator, tfs::DirectProductSpace, bfs::DirectProductSpace) = defaultquadstrat(op, tfs.factors[1], bfs.factors[1])
 
 const LinearRefSpaceTriangle = Union{RTRefSpace, NDRefSpace, BDMRefSpace}
