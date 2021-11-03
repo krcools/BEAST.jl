@@ -117,7 +117,7 @@ function momintegrals!(op::MWOperator3D,
     #     op, test_local_space, trial_local_space)
     igd = kernel_in_bary(op, test_local_space, trial_local_space,
         test_triangular_element, trial_triangular_element)
-    G = sauterschwab_parameterized(igd, strat)
+    G = SauterSchwabQuadrature.sauterschwab_parameterized(igd, strat)
     for j ∈ 1:3, i ∈ 1:3
         out[i,j] += G[K[i],L[j]]
     end

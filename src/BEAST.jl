@@ -11,11 +11,8 @@ using SparseMatrixDicts
 using SauterSchwabQuadrature
 using SauterSchwab3D
 using FastGaussQuadrature
-<<<<<<< HEAD
 using LinearMaps
-=======
 using ShunnHamQuadrature
->>>>>>> 90b92be (update main file)
 
 import LinearAlgebra: cross, dot
 import LinearAlgebra: ×, ⋅
@@ -33,11 +30,8 @@ export restrict
 export raviartthomas, raowiltonglisson, positions
 export brezzidouglasmarini
 export brezzidouglasmarini3d
-<<<<<<< HEAD
-=======
 export nedelecd3d
 export nedelecc3d
->>>>>>> 90b92be (update main file)
 export portcells, rt_ports, getindex_rtg, subset
 export StagedTimeStep
 export subdsurface,subdBasis,assemblydata,refspace
@@ -200,22 +194,19 @@ include("maxwell/spotential.jl")
 include("maxwell/maxwell.jl")
 include("maxwell/sourcefield.jl")
 
-<<<<<<< HEAD
-=======
+# Support for the Helmholtz equatio
+include("helmholtz2d/helmholtzop.jl")
+
+include("helmholtz3d/hh3dexc.jl")
+include("helmholtz3d/hh3dops.jl")
+include("helmholtz3d/nitsche.jl")
+
 #suport for Volume Integral equation
 include("volumeintegral/vie.jl")
 include("volumeintegral/vieexc.jl")
 include("volumeintegral/vieops.jl")
 include("volumeintegral/farfield.jl")
 include("volumeintegral/sauterschwab_ints.jl")
-
->>>>>>> 90b92be (update main file)
-# Support for the Helmholtz equation
-include("helmholtz2d/helmholtzop.jl")
-
-include("helmholtz3d/hh3dexc.jl")
-include("helmholtz3d/hh3dops.jl")
-include("helmholtz3d/nitsche.jl")
 
 include("decoupled/dpops.jl")
 include("decoupled/potentials.jl")

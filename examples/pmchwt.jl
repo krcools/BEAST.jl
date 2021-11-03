@@ -1,14 +1,18 @@
 using CompScienceMeshes, BEAST
 using LinearAlgebra
 
-Γ = meshcuboid(0.5, 1.0, 1.0, 0.075)
-CompScienceMeshes.translate!(Γ, point(-0.25, -0.5, -0.5))
+#T = tetmeshcuboid(1.0,1.0,1.0,0.1)
+T = tetmeshsphere(1.0,0.25)
+X = nedelecc3d(T)
+Γ = boundary(T)
+#Γ = meshcuboid(0.5, 1.0, 1.0, 0.075)
+#CompScienceMeshes.translate!(Γ, point(-0.25, -0.5, -0.5))
 # Γ = meshsphere(1.0, 0.075)
 X = raviartthomas(Γ)
 @show numfunctions(X)
 
-κ,  η  = 6.0, 1.0
-κ′, η′ = 2.4κ, η/2.4
+κ,  η  = 1.0, 1.0
+κ′, η′ = 2.0κ, η/2.0
 
 T  = Maxwell3D.singlelayer(wavenumber=κ)
 T′ = Maxwell3D.singlelayer(wavenumber=κ′)
@@ -37,11 +41,11 @@ ffpoints = [point(cos(ϕ)*sin(θ), sin(ϕ)*sin(θ), cos(θ)) for θ in Θ for ϕ
 # Don't forget the far field comprises two contributions
 ffm = potential(MWFarField3D(κ*im), ffpoints, u[m], X)
 ffj = potential(MWFarField3D(κ*im), ffpoints, u[j], X)
-ff = η*im*κ*ffj + im*κ*cross.(ffpoints, ffj)
+ff = η*im*κ*ffm + im*κ*cross.(ffpoints, ffj)
 
 using Plots
 plot(xlabel="theta")
-plot!(Θ,norm.(ff),label="far field")
+plot!(Θ,norm.(ff),label="far field",title="PMCHWT")
 
 import Plotly
 using LinearAlgebra
@@ -69,9 +73,13 @@ function nearfield(um,uj,Xm,Xj,κ,η,points,
     return E, H
 end
 
+#Z = range(-0.1,1.1,length=100)
+#Y = range(-0.1,1.1,length=100)
+#nfpoints = [point(0.5,y,z) for  y in Y, z in Z]
+
 Z = range(-1,1,length=100)
 Y = range(-1,1,length=100)
-nfpoints = [point(0,y,z) for z in Z, y in Y]
+nfpoints = [point(0,y,z) for  y in Y, z in Z]
 
 E_ex, H_ex = nearfield(u[m],u[j],X,X,κ,η,nfpoints,E,H)
 E_in, H_in = nearfield(-u[m],-u[j],X,X,κ′,η′,nfpoints)
@@ -80,9 +88,33 @@ E_tot = E_in + E_ex
 H_tot = H_in + H_ex
 
 contour(real.(getindex.(E_tot,1)))
-heatmap(Z, Y, real.(getindex.(E_tot,1)))
-plot(real.(getindex.(E_tot[:,51],1)))
+heatmap(Z, Y, real.(getindex.(E_tot,1)), clim=(0.0,1.0))
+#plot(real.(getindex.(E_tot[:],1)))
 
+#=
+nfpoints = [point(0.0,0.0,z) for z in Z]
+E_ex, H_ex = nearfield(u[m],u[j],X,X,κ,η,nfpoints,E,H)
+E_in, H_in = nearfield(-u[m],-u[j],X,X,κ′,η′,nfpoints)
+
+E_tot = E_in + E_ex
+H_tot = H_in + H_ex
+
+plot(real.(getindex.(E_tot[:],1)))
+
+=#
+
+#=
 contour(real.(getindex.(H_tot,2)))
 heatmap(Z, Y, real.(getindex.(H_tot,2)))
-plot(real.(getindex.(H_tot[:,51],2)))
+#plot(real.(getindex.(H_tot[:,51],2)))
+
+nfpoints = [point(0,0,z) for z in Z]
+
+E_ex, H_ex = nearfield(u[m],u[j],X,X,κ,η,nfpoints,E,H)
+E_in, H_in = nearfield(-u[m],-u[j],X,X,κ′,η′,nfpoints)
+
+E_tot = E_in + E_ex
+H_tot = H_in + H_ex
+
+plot(real.(getindex.(E_tot[:],1)))
+=#
