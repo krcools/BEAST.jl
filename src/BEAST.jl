@@ -12,11 +12,8 @@ using SauterSchwabQuadrature
 using SauterSchwab3D
 using FastGaussQuadrature
 using LinearMaps
-<<<<<<< HEAD
 using ShunnHamQuadrature
-=======
 using LiftedMaps
->>>>>>> upstream/master
 
 import LinearAlgebra: cross, dot
 import LinearAlgebra: ×, ⋅
@@ -129,11 +126,7 @@ include("utils/combinatorics.jl")
 include("utils/linearspace.jl")
 include("utils/matrixconv.jl")
 include("utils/polyeig.jl")
-<<<<<<< HEAD
-include("utils/liftmap.jl")
-=======
 include("utils/zeromap.jl")
->>>>>>> upstream/master
 
 include("bases/basis.jl")
 include("bases/lincomb.jl")
@@ -181,12 +174,6 @@ include("quaddata.jl")
 include("postproc.jl")
 include("postproc/segcurrents.jl")
 
-<<<<<<< HEAD
-include("quadrature/double_quadrature.jl")
-include("quadrature/singularity_extraction.jl")
-
-=======
->>>>>>> upstream/master
 include("timedomain/tdintegralop.jl")
 include("timedomain/tdexcitation.jl")
 include("timedomain/motlu.jl")

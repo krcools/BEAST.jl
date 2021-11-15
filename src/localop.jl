@@ -2,13 +2,6 @@
 
 using CollisionDetection
 
-<<<<<<< HEAD
-# mutable struct SingleQuadStrategy{T}
-#     coords::Vector{T}
-#     weights::Vector{T}
-# end
-=======
->>>>>>> upstream/master
 
 abstract type LocalOperator <: Operator end
 
@@ -65,12 +58,8 @@ function allocatestorage(op::LocalOperator, test_functions, trial_functions,
 end
 
 function assemble!(biop::LocalOperator, tfs::Space, bfs::Space, store,
-<<<<<<< HEAD
-    threading::Type{Threading{:multi}})
-=======
         threading::Type{Threading{:multi}};
         quadstrat=defaultquadstrat(biop, tfs, bfs))
->>>>>>> upstream/master
 
     if geometry(tfs) == geometry(bfs)
         return assemble_local_matched!(biop, tfs, bfs, store; quadstrat)
@@ -80,11 +69,7 @@ function assemble!(biop::LocalOperator, tfs::Space, bfs::Space, store,
         return assemble_local_refines!(biop, tfs, bfs, store; quadstrat)
     end
 
-<<<<<<< HEAD
-    return assemble_local_mixed!(biop, tfs, bfs, store)
-=======
     return assemble_local_mixed!(biop, tfs, bfs, store; quadstrat)
->>>>>>> upstream/master
 end
 
 function assemble_local_matched!(biop::LocalOperator, tfs::Space, bfs::Space, store;
@@ -99,22 +84,14 @@ function assemble_local_matched!(biop::LocalOperator, tfs::Space, bfs::Space, st
     trefs = refspace(tfs)
     brefs = refspace(bfs)
 
-<<<<<<< HEAD
-    qd = quaddata(biop, trefs, brefs, tels, bels)
-=======
     qd = quaddata(biop, trefs, brefs, tels, bels, quadstrat)
->>>>>>> upstream/master
     locmat = zeros(scalartype(biop, trefs, brefs), numfunctions(trefs), numfunctions(brefs))
     for (p,cell) in enumerate(tels)
         P = ta2g[p]
         q = bg2a[P]
         q == 0 && continue
 
-<<<<<<< HEAD
-        qr = quadrule(biop, trefs, brefs, cell, qd)
-=======
         qr = quadrule(biop, trefs, brefs, cell, qd, quadstrat)
->>>>>>> upstream/master
         fill!(locmat, 0)
         cellinteractions_matched!(locmat, biop, trefs, brefs, cell, qr)
 
@@ -142,11 +119,7 @@ function assemble_local_refines!(biop::LocalOperator, tfs::Space, bfs::Space, st
     bg2a = zeros(Int, length(geometry(bfs)))
     for (i,j) in enumerate(ba2g) bg2a[j] = i end
 
-<<<<<<< HEAD
-    qd = quaddata(biop, trefs, brefs, tels, bels)
-=======
     qd = quaddata(biop, trefs, brefs, tels, bels, quadstrat)
->>>>>>> upstream/master
 
     print("dots out of 10: ")
     todo, done, pctg = length(tels), 0, 0

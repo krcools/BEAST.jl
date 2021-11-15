@@ -177,11 +177,8 @@ derive(op::AbstractOperator) = TemporalDifferentiation(op)
 scalartype(op::TemporalDifferentiation) = scalartype(op.operator)
 Base.:*(a::Number, op::TemporalDifferentiation) = TemporalDifferentiation(a * op.operator)
 
-<<<<<<< HEAD
-=======
 defaultquadstrat(op::TemporalDifferentiation, tfs, bfs) = defaultquadstrat(op.operator, tfs, bfs)
 
->>>>>>> upstream/master
 function allocatestorage(op::TemporalDifferentiation, testfns, trialfns,
 	storage_trait, longdelays_trait)
 
@@ -196,12 +193,8 @@ function allocatestorage(op::TemporalDifferentiation, testfns, trialfns,
     return allocatestorage(op.operator, testfns, trialfns, storage_trait, longdelays_trait)
 end
 
-<<<<<<< HEAD
-function assemble!(operator::TemporalDifferentiation, testfns, trialfns, store, threading = Threading{:multi})
-=======
 function assemble!(operator::TemporalDifferentiation, testfns, trialfns, store, threading = Threading{:multi};
     quadstrat=defaultquadstrat(operator, testfns, trialfns))
->>>>>>> upstream/master
 
     trial_time_fns  = temporalbasis(trialfns)
     trial_space_fns = spatialbasis(trialfns)
@@ -211,11 +204,7 @@ function assemble!(operator::TemporalDifferentiation, testfns, trialfns, store, 
         derive(trial_time_fns)
     )
 
-<<<<<<< HEAD
-    assemble!(operator.operator, testfns, trialfns, store, threading)
-=======
     assemble!(operator.operator, testfns, trialfns, store, threading; quadstrat)
->>>>>>> upstream/master
 
 end
 
@@ -245,11 +234,7 @@ function allocatestorage(op::TemporalIntegration, testfns, trialfns,
 end
 
 function assemble!(operator::TemporalIntegration, testfns, trialfns, store,
-<<<<<<< HEAD
-    threading = Threading{:multi})
-=======
     threading = Threading{:multi}; quadstrat=defaultquadstrat(operator, testfns, trialfns))
->>>>>>> upstream/master
 
     trial_time_fns  = temporalbasis(trialfns)
     trial_space_fns = spatialbasis(trialfns)

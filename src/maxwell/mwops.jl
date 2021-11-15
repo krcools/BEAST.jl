@@ -171,11 +171,7 @@ function quadrule(op::MaxwellOperator3D, g::RTRefSpace, f::RTRefSpace,  i, τ, j
     h2 = volume(σ)
     xtol2 = 0.2 * 0.2
     k2 = abs2(op.gamma)
-<<<<<<< HEAD
-    max(dmin2*k2, dmin2/16h2) < xtol2 && return WiltonSEStrategy(
-=======
     max(dmin2*k2, dmin2/16h2) < xtol2 && return WiltonSERule(
->>>>>>> upstream/master
         qd.tpoints[2,i],
         DoubleQuadRule(
             qd.tpoints[2,i],

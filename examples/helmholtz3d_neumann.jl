@@ -4,10 +4,7 @@ using LinearAlgebra, Pkg
 Pkg.activate(@__DIR__)
 # Γ = readmesh(joinpath(@__DIR__,"sphere2.in"))
 Γ = readmesh(joinpath(dirname(pathof(BEAST)),"../examples/sphere2.in"))
-<<<<<<< HEAD
-=======
 # Γ = meshrectangle(1.0, 1.0, 0.05, 3)
->>>>>>> upstream/master
 X = lagrangec0d1(Γ)
 @show numfunctions(X)
 
@@ -39,9 +36,6 @@ scatter!(norm.(fcr2),c=:red,label="2nd")
 
 import Plotly
 Plotly.plot(patch(Γ, norm.(fcr1)))
-<<<<<<< HEAD
-Plotly.plot(patch(Γ, norm.(fcr2)))
-=======
 Plotly.plot(patch(Γ, norm.(fcr2)))
 
 
@@ -53,4 +47,3 @@ nf = BEAST.HH3DDoubleLayerNear(wavenumber=κ)
 near = BEAST.potential(nf, pts, x1, X, type=ComplexF64)
 inc = uⁱ.(pts)
 tot = near + inc
->>>>>>> upstream/master

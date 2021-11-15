@@ -155,11 +155,7 @@ function assemblechunk_body_nested_meshes!(biop,
         if new_pctg > pctg + 9
             myid == 1 && print(".")
             pctg = new_pctg
-<<<<<<< HEAD
-    end end
-=======
         end end
->>>>>>> upstream/master
     myid == 1 && println("")
 end
 
