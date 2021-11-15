@@ -1,18 +1,5 @@
 import LinearMaps
 
-<<<<<<< HEAD
-struct ZeroMap{T} <: LinearMap{T}
-    num_rows::Int
-    num_cols::Int
-end
-
-Base.size(A::ZeroMap) = (A.num_rows, A.num_cols,)
-
-function LinearAlgebra.mul!(y::AbstractVector, L::ZeroMap, x::AbstractVector, α::Number, β::Number)
-    y .= β * y
-    # LinearAlgebra.mul!(yI, AIJ, xJ, α, β)
-end
-=======
 struct ZeroMap{T,U,V} <: LinearMap{T}
     range::U
     domain::V
@@ -41,4 +28,3 @@ function Base.:(*)(A::ZeroMap, x::AbstractVector)
 end
 
 Base.Matrix{T}(A::ZeroMap) where {T} = zeros(T, length(A.range), length(A.domain))
->>>>>>> upstream/master
