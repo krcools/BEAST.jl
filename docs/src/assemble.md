@@ -134,7 +134,7 @@ function quaddata(operator::SingleLayerTrace,
 end
 
 function quadrule(op::SingleLayerTrace, g::LagrangeRefSpace, f::LagrangeRefSpace, i, τ, j, σ, qd)
-    DoubleQuadStrategy(
+    DoubleQuadRule(
         qd.tpoints[1,i],
         qd.bpoints[1,j]
     )
@@ -145,7 +145,7 @@ integrand(op::SingleLayerTrace, kernel, g, τ, f, σ) = f[1]*g[1]*kernel.green
 
 Every kernel corresponds with a type. Kernels can potentially depend on a set of parameters; these appear as fields in the type. Here our Nitsche kernel depends on the wavenumber. In quaddata we precompute quadrature points for all geometric cells in the supports of test and trial elements. This is fairly sloppy: only one rule for test and trial integration is considered. A high accuracy implementation would typically compute points for both low quality and high quality quadrature rules.
 
-Also `quadrule` is sloppy: we always select a `DoubleQuadStrategy` to perform the computation of interactions between local shape functions. No singularity extraction or other advanced technique is considered for nearby interactions. Clearly amateurs at work here!
+Also `quadrule` is sloppy: we always select a `DoubleQuadRule` to perform the computation of interactions between local shape functions. No singularity extraction or other advanced technique is considered for nearby interactions. Clearly amateurs at work here!
 
 `BEAST` provides a default implementation of an integration routine using double numerical quadrature. All that is required to tap into that implementation is a method overloading `integrand`. From the above formula it is clear what this method should look like.
 

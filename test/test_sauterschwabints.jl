@@ -31,9 +31,9 @@ op1 = BEAST.MWSingleLayer3D(1.0, 250.0, 1.0)
 op2 = BEAST.MWSingleLayer3D(1.0)
 op3 = BEAST.MWDoubleLayer3D(0.0)
 
-SE_strategy = BEAST.WiltonSEStrategy(
+SE_strategy = BEAST.WiltonSERule(
   tqd[1,1],
-  BEAST.DoubleQuadStrategy(
+  BEAST.DoubleQuadRule(
 	tqd[1,1],
 	bqd[1,1],
   ),
@@ -57,9 +57,9 @@ BEAST.momintegrals!(op2, rt, rt, t1, t1, z_ss2, SS_strategy)
 @test z_se2 ≈ z_ss2 atol=1e-4
 
 ## Common Vertex Case
-SE_strategy = BEAST.WiltonSEStrategy(
+SE_strategy = BEAST.WiltonSERule(
   tqd[1,1],
-  BEAST.DoubleQuadStrategy(
+  BEAST.DoubleQuadRule(
 	tqd[1,1],
 	bqd[1,2]))
 SS_strategy = SauterSchwabQuadrature.CommonVertex(BEAST._legendre(12,0.0,1.0))
@@ -103,9 +103,9 @@ t2 = simplex(
 tqd = BEAST.quadpoints(rt, [t1,t2], (12,))
 bqd = BEAST.quadpoints(rt, [t1,t2], (13,))
 
-SE_strategy = BEAST.WiltonSEStrategy(
+SE_strategy = BEAST.WiltonSERule(
     tqd[1,1],
-    BEAST.DoubleQuadStrategy(
+    BEAST.DoubleQuadRule(
         tqd[1,1],
         bqd[1,2]))
 SS_strategy = SauterSchwabQuadrature.CommonEdge(BEAST._legendre(12,0.0,1.0))

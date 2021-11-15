@@ -29,18 +29,21 @@ function testfunc1()
     print("test function!")
 end
 
-function quaddata(op::HelmholtzOperator2D, g::LagrangeRefSpace, f::LagrangeRefSpace, tels, bels)
+defaultquadstrat(op::HelmholtzOperator2D, tfs, bfs) = DoubleNumWiltonSauterQStrat(4,3,4,3,4,4,4,4)
 
-  tqd = quadpoints(g, tels, (4,))
-  bqd = quadpoints(f, bels, (3,))
+function quaddata(op::HelmholtzOperator2D, g::LagrangeRefSpace, f::LagrangeRefSpace, tels, bels,
+        qs::DoubleNumWiltonSauterQStrat)
+
+  tqd = quadpoints(g, tels, (qs.outer_rule_far,))
+  bqd = quadpoints(f, bels, (qs.inner_rule_far,))
 
   return (tpoints=tqd, bpoints=bqd)
 end
 
+function quadrule(op::HelmholtzOperator2D, g::LagrangeRefSpace, f::LagrangeRefSpace, i, τ, j, σ, qd,
+        qs::DoubleNumWiltonSauterQStrat)
 
-function quadrule(op::HelmholtzOperator2D, g::LagrangeRefSpace, f::LagrangeRefSpace, i, τ, j, σ, qd)
-
-    DoubleQuadStrategy(
+    DoubleQuadRule(
         qd.tpoints[1,i],
         qd.bpoints[1,j]
     )

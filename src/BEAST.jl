@@ -12,7 +12,11 @@ using SauterSchwabQuadrature
 using SauterSchwab3D
 using FastGaussQuadrature
 using LinearMaps
+<<<<<<< HEAD
 using ShunnHamQuadrature
+=======
+using LiftedMaps
+>>>>>>> upstream/master
 
 import LinearAlgebra: cross, dot
 import LinearAlgebra: ×, ⋅
@@ -125,7 +129,11 @@ include("utils/combinatorics.jl")
 include("utils/linearspace.jl")
 include("utils/matrixconv.jl")
 include("utils/polyeig.jl")
+<<<<<<< HEAD
 include("utils/liftmap.jl")
+=======
+include("utils/zeromap.jl")
+>>>>>>> upstream/master
 
 include("bases/basis.jl")
 include("bases/lincomb.jl")
@@ -158,6 +166,10 @@ include("bases/stagedtimestep.jl")
 include("bases/timebasis.jl")
 include("bases/tensorbasis.jl")
 
+include("quadrature/quadstrats.jl")
+include("quadrature/double_quadrature.jl")
+include("quadrature/singularity_extraction.jl")
+
 include("excitation.jl")
 include("operator.jl")
 include("localop.jl")
@@ -169,9 +181,12 @@ include("quaddata.jl")
 include("postproc.jl")
 include("postproc/segcurrents.jl")
 
+<<<<<<< HEAD
 include("quadrature/double_quadrature.jl")
 include("quadrature/singularity_extraction.jl")
 
+=======
+>>>>>>> upstream/master
 include("timedomain/tdintegralop.jl")
 include("timedomain/tdexcitation.jl")
 include("timedomain/motlu.jl")
@@ -200,6 +215,7 @@ include("helmholtz2d/helmholtzop.jl")
 include("helmholtz3d/hh3dexc.jl")
 include("helmholtz3d/hh3dops.jl")
 include("helmholtz3d/nitsche.jl")
+include("helmholtz3d/hh3dnear.jl")
 
 #suport for Volume Integral equation
 include("volumeintegral/vie.jl")

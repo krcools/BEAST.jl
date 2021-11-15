@@ -4,8 +4,8 @@ using BEAST
 using Test
 
 m1 = meshrectangle(1.0, 1.0, 0.5)
-m2 = translate!(meshrectangle(1.0, 1.0, 0.5), point(0,0,1))
-m3 = translate!(meshrectangle(1.0, 1.0, 0.5), point(0,0,2))
+m2 = CompScienceMeshes.translate!(meshrectangle(1.0, 1.0, 0.5), point(0,0,1))
+m3 = CompScienceMeshes.translate!(meshrectangle(1.0, 1.0, 0.5), point(0,0,2))
 
 X1 = raviartthomas(m1)
 X2 = raviartthomas(m2)

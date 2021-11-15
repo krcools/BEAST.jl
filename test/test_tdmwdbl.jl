@@ -51,10 +51,10 @@ test_els = BEAST.elements(G)
 trial_els = BEAST.elements(γ)
 time_els = [(0.0, 20.0)]
 
-qdt = BEAST.quaddata(K, refspace(X), refspace(Y), refspace(T2), test_els, trial_els, nothing)
-qrl = BEAST.quadrule(K,
-    refspace(X), refspace(Y), refspace(T2),
-    1, test_els[1], 1, trial_els[1], 1, time_els[1], qdt)
+qs = BEAST.defaultquadstrat(K,X,Y)
+qdt = BEAST.quaddata(K, refspace(X), refspace(Y), refspace(T2), test_els, trial_els, nothing, qs)
+qrl = BEAST.quadrule(K, refspace(X), refspace(Y), refspace(T2),
+    1, test_els[1], 1, trial_els[1], 1, time_els[1], qdt, qs)
 z = zeros(Float64, 3, 3, 10)
 BEAST.innerintegrals!(z, K, x, refspace(X), refspace(Y), refspace(T2), test_els[1], trial_els[1], (0.0, 20.0), qrl, w)
 @test_broken !any(isnan.(z))

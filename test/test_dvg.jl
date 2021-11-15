@@ -1,11 +1,19 @@
 using BEAST
 using CompScienceMeshes
 
+using SparseArrays
 using Test
 
 Γ = meshrectangle(1.0,1.0,1.0)
 γ = meshsegment(1.0,1.0,3)
-X = raviartthomas(Γ, γ)
+
+in_interior = CompScienceMeshes.interior_tpredicate(Γ)
+on_junction = CompScienceMeshes.overlap_gpredicate(γ)
+edges = skeleton(Γ,1) do edge
+    in_interior(edge) ||on_junction(chart(Γ,edge))
+end
+length(edges)
+X = raviartthomas(Γ, edges)
 
 x = divergence(X)
 

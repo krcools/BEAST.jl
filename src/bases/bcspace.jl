@@ -87,42 +87,76 @@ isclosed(a, pred) = length(a)>2 && pred(a[end], a[1])
 Construct the set of Buffa-Christiansen functions subject to mesh Γ and only
 enforcing zero normal components on ∂Γ ∖ γ.
 """
-function buffachristiansen(Γ, γ=mesh(coordtype(Γ),1,3); ibscaled=false)
+function buffachristiansen(Γ, γ=mesh(coordtype(Γ),1,3); ibscaled=false, sort=:spacefillingcurve, edges=:all)
 
     @assert CompScienceMeshes.isoriented(Γ)
 
     T = coordtype(Γ)
     P = vertextype(Γ)
 
-    edges = skeleton(Γ, 1)
-    fine = if ibscaled
-        CompScienceMeshes.lineofsight_refinement(Γ)
-    else
-        barycentric_refinement(Γ)
-    end
-
     in_interior = interior_tpredicate(Γ)
     on_junction = overlap_gpredicate(γ)
 
-    # first pass to determine the number of functions
-    numfuncs = 0
-    for edge in cells(edges)
-        ch = chart(edges, edge)
-        !in_interior(edge) && !on_junction(ch) && continue
-        numfuncs += 1
+    # edges = skeleton(Γ, 1; sort)
+
+    if edges == :all
+        edges = skeleton(Γ, 1; sort)
+        edges = submesh(edges) do edge
+            ch = chart(edges, edge)
+            !in_interior(edge) && !on_junction(ch) && return false
+            return true
+        end
     end
+    @assert edges isa CompScienceMeshes.AbstractMesh
+    @assert dimension(edges) == 1
+
+    fine = if ibscaled
+        CompScienceMeshes.lineofsight_refinement(Γ)
+    else
+        barycentric_refinement(Γ; sort)
+    end
+
+
+    # # first pass to determine the number of functions
+    # numfuncs = 0
+    # for edge in edges
+    #     ch = chart(edges, edge)
+    #     !in_interior(edge) && !on_junction(ch) && continue
+    #     numfuncs += 1
+    # end
 
     vtof, vton = vertextocellmap(fine)
     jct_pred = overlap_gpredicate(γ)
-    bcs, k = Vector{Vector{Shape{T}}}(undef,numfuncs), 1
-    pos = Vector{P}(undef,numfuncs)
-    for (i,edge) in enumerate(cells(edges))
+    bcs, k = Vector{Vector{Shape{T}}}(undef,length(edges)), 1
+    pos = Vector{P}(undef,length(edges))
+    for (i,edge) in enumerate(edges)
 
         ch = chart(edges, edge)
-        !in_interior(edge) && !on_junction(ch) && continue
+        ln = volume(ch)
+        # !in_interior(edge) && !on_junction(ch) && continue
 
         # index of edge center in fine's vertexbuffer
-        p = numvertices(edges) + i
+        v  = edge[1]
+        n = vton[v]
+        F = vtof[v,1:n]
+        supp = fine[F]
+        bnd = boundary(supp)
+        bnd_nodes = skeleton(bnd,0)
+        p = 0
+        for node in bnd_nodes
+            vert1 = vertices(Γ)[edge[1]]
+            vert2 = vertices(Γ)[edge[2]]
+            vert = vertices(fine)[node[1]]
+            dist = norm(vert-vert1)
+            node[1] == edge[1] && continue
+            if dot(vert-vert1,vert2-vert1) ≈ dist*ln
+                p = node[1]
+                break
+            end
+        end
+        @assert p != 0
+
+        # p = numvertices(edges) + i
         pos[k] = vertices(fine)[p]
 
         # sanity check
@@ -372,7 +406,7 @@ end
 using LinearAlgebra
 function buildhalfbc2(patch, port, dirichlet, prt_fluxes)
 
-    println()
+    # println()
 
     edges = skeleton(patch,1)
     verts = skeleton(patch,0)
@@ -383,8 +417,8 @@ function buildhalfbc2(patch, port, dirichlet, prt_fluxes)
         reverse(edge) in cells(bndry) && return true
         return false
     end
-    @show numcells(patch)
-    @show numcells(dirbnd)
+    # @show numcells(patch)
+    # @show numcells(dirbnd)
     @assert numcells(dirbnd) ≤ 4
 
     bnd_dirbnd = boundary(dirbnd)
@@ -393,25 +427,25 @@ function buildhalfbc2(patch, port, dirichlet, prt_fluxes)
         node in cells(bnd_dirbnd) && return false
         return true
     end
-    @show numcells(int_nodes_dirbnd)
+    # @show numcells(int_nodes_dirbnd)
     @assert numcells(int_nodes_dirbnd) ≤ 2
 
     int_pred = interior_tpredicate(patch)
     num_edges_on_port = 0
     num_edges_on_dirc = 0
-    @show numcells(edges)
+    # @show numcells(edges)
 
-    for edge in cells(edges)
-        println(edge)
-    end
-    println()
-    for edge in cells(dirbnd)
-        println(edge)
-    end
-    println()
-    for edge in cells(port)
-        println(edge)
-    end
+    # for edge in cells(edges)
+    #     println(edge)
+    # end
+    # println()
+    # for edge in cells(dirbnd)
+    #     println(edge)
+    # end
+    # println()
+    # for edge in cells(port)
+    #     println(edge)
+    # end
 
     int_edges = submesh(edges) do edge
         (edge in cells(port)) && (num_edges_on_port+=1 ; return false)
@@ -421,13 +455,13 @@ function buildhalfbc2(patch, port, dirichlet, prt_fluxes)
         (!int_pred(edge)) && return false
         return true
     end
-    println()
-    for edge in cells(int_edges)
-        println(edge)
-    end
-    @show numcells(int_edges)
-    @show num_edges_on_port
-    @show num_edges_on_dirc
+    # println()
+    # for edge in cells(int_edges)
+    #     println(edge)
+    # end
+    # @show numcells(int_edges)
+    # @show num_edges_on_port
+    # @show num_edges_on_dirc
 
     bnd_verts = skeleton(bndry,0)
     prt_verts = skeleton(port,0)
@@ -442,7 +476,7 @@ function buildhalfbc2(patch, port, dirichlet, prt_fluxes)
         node in cells(prt_verts) && return false
         return true
     end
-    @show numcells(int_verts)
+    # @show numcells(int_verts)
 
     RT_int = raviartthomas(patch, cellpairs(patch, int_edges))
     RT_prt = raviartthomas(patch, cellpairs(patch, port))
@@ -455,16 +489,17 @@ function buildhalfbc2(patch, port, dirichlet, prt_fluxes)
     Q = assemble(Id, divergence(RT_int), divergence(RT_prt))
     d = -Q * prt_fluxes
 
-    @show numfunctions(L0_int)
+    # @show numfunctions(L0_int)
     @assert numfunctions(L0_int) in [1,2]
     C = assemble(Id, curl(L0_int), RT_int)
     curl_L0_int = curl(L0_int)
     c = real(assemble(Id, curl_L0_int, RT_prt)) * prt_fluxes
 
-    x1 = pinv(D) * d
-    N = nullspace(D)
-    @show size(N)
-    @show size(C)
+    mD = Matrix(D)
+    x1 = pinv(mD) * d
+    N = nullspace(mD)
+    # @show size(N)
+    # @show size(C)
     p = (C*N) \ (c - C*x1)
     x = x1 + N*p
 
@@ -495,27 +530,27 @@ function buffachristiansen2(Faces::CompScienceMeshes.AbstractMesh)
     pos = Vector{vertextype(Faces)}(undef, numcells(Edges))
     dirichlet = boundary(faces)
     for (E,Edge) in enumerate(cells(Edges))
-        @show Edge
+        # @show Edge
         bfs[E] = Vector{Shape{T}}()
 
         pos[E] = cartesian(center(chart(Edges,Edge)))
         # port_vertex_idx = numvertices(Faces) + E
         port_vertex_idx = argmin(norm.(vertices(faces) .- Ref(pos[E])))
         # pos[E] = vertices(faces)[port_vertex_idx]
-        @show carttobary(chart(Edges,Edge),pos[E])
-        @show pos[E]
-        @show (Faces.vertices[Edge[1]]+Faces.vertices[Edge[2]])/2
+        # @show carttobary(chart(Edges,Edge),pos[E])
+        # @show pos[E]
+        # @show (Faces.vertices[Edge[1]]+Faces.vertices[Edge[2]])/2
 
         # Build the plus-patch
         ptch_vert_idx = Edge[1]
         ptch_face_idcs = [i for (i,face) in enumerate(cells(faces)) if ptch_vert_idx in face]
         patch = Mesh(vertices(faces), cells(faces)[ptch_face_idcs])
         patch_bnd = boundary(patch)
-        @show numcells(patch_bnd)
+        # @show numcells(patch_bnd)
         port = Mesh(vertices(faces), filter(c->port_vertex_idx in c, cells(patch_bnd)))
 
-        @show numcells(patch)
-        @show numcells(port)
+        # @show numcells(patch)
+        # @show numcells(port)
 
         # @assert numcells(patch) >= 6
         @assert numcells(port) == 2
@@ -600,9 +635,9 @@ function buffachristiansen3(Faces::CompScienceMeshes.AbstractMesh)
         patch_bnd = boundary(patch1)
         port = Mesh(vertices(faces), filter(c->port_vertex_idx in c, cells(patch_bnd)))
         patch = CompScienceMeshes.union(patch1, patch2)
-        @show numcells(patch_bnd)
-        @show numcells(patch)
-        @show numcells(port)
+        # @show numcells(patch_bnd)
+        # @show numcells(patch)
+        # @show numcells(port)
         # @assert numcells(skeleton(patch,1))+2 == numcells(skeleton(patch1,1)) + numcells(skeleton(patch2,1))
 
         @assert numcells(patch) >= 6

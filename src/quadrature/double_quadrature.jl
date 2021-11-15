@@ -1,4 +1,4 @@
-struct DoubleQuadStrategy{P,Q}
+struct DoubleQuadRule{P,Q}
   outer_quad_points::P
   inner_quad_points::Q
 end
@@ -9,7 +9,7 @@ end
 
 Function for the computation of moment integrals using simple double quadrature.
 """
-function momintegrals!(biop, tshs, bshs, tcell, bcell, z, strat::DoubleQuadStrategy)
+function momintegrals!(biop, tshs, bshs, tcell, bcell, z, strat::DoubleQuadRule)
 
     # memory allocation here is a result from the type instability on strat
     # which is on purpose, i.e. the momintegrals! method is chosen based

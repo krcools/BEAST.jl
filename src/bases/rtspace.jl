@@ -66,6 +66,18 @@ function raviartthomas(mesh, cellpairs::Array{Int,2})
 end
 
 
+function raviartthomas(mesh, edges::CompScienceMeshes.AbstractMesh{U,2} where {U})
+    cps = CompScienceMeshes.cellpairs(mesh, edges)
+    # ids = findall(x -> x>0, cps[2,:])
+    raviartthomas(mesh, cps)
+end
+
+function raviartthomas(mesh::CompScienceMeshes.AbstractMesh{U,3} where {U})
+    bnd = boundary(mesh)
+    edges = submesh(!in(bnd), skeleton(mesh,1))
+    return raviartthomas(mesh, edges)
+end
+
 
 """
     raviartthomas(mesh)
@@ -78,8 +90,8 @@ Calls raviartthomas(mesh::Mesh, cellpairs::Array{Int,2}), which constructs
 
 Returns the RT basis object.
 """
-function raviartthomas(mesh)
-    edges = skeleton(mesh, 1)
+function raviartthomas(mesh; sort=:spacefillingcurve)
+    edges = skeleton(mesh, 1; sort)
     cps = cellpairs(mesh, edges, dropjunctionpair=true)
     ids = findall(x -> x>0, cps[2,:])
     raviartthomas(mesh, cps[:,ids])
@@ -87,31 +99,30 @@ end
 
 
 
-"""
-    raviartthomas(Γ, γ)
+# """
+#     raviartthomas(Γ; neumann)
 
-Constructs the RT space relative to boundary `γ` of an open surface, only
-    selecting cell pairs whose common edge does not lie on `γ` . (This prevents
-    the calculation of physically-impossible surface currents, such as those
-    flowing 'off the edge' of a surface.)
+# Constructs the RT space relative to boundary `neumann` of an open surface, only
+#     selecting cell pairs whose common edge does lie on `γ` . (This prevents
+#     the calculation of physically-impossible surface currents, such as those
+#     flowing 'off the edge' of a surface.)
+# """
+# function raviartthomas(Γ; neumann)
 
-Calls raviartthomas(Γ, duals) which constructs
-    the RT basis on the `mesh`, using the cell pairs identified.
-"""
-function raviartthomas(Γ, γ)
+#     γ = neumann
 
-    in_interior = interior_tpredicate(Γ)
-    on_junction = overlap_gpredicate(γ)
+#     in_interior = interior_tpredicate(Γ)
+#     on_junction = overlap_gpredicate(γ)
 
-    pred = c -> (in_interior(c) || on_junction(chart(Γ,c)))
+#     pred = c -> (in_interior(c) || on_junction(chart(Γ,c)))
 
-    edges = skeleton(pred, Γ, 1)
-    cps = cellpairs(Γ, edges, dropjunctionpair=true)
+#     edges = skeleton(pred, Γ, 1)
+#     cps = cellpairs(Γ, edges, dropjunctionpair=true)
 
-    raviartthomas(Γ, cps)
-end
+#     raviartthomas(Γ, cps)
+# end
 
-raowiltonglisson = raviartthomas
+# raowiltonglisson = raviartthomas
 
 
 """

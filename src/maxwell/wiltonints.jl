@@ -1,12 +1,12 @@
 import WiltonInts84
 
-mutable struct WiltonSEStrategy{P,Q} <: SingularityExtractionStrategy
+mutable struct WiltonSERule{P,Q} <: SingularityExtractionRule
     outer_quad_points::P
-    regularpart_quadrule::DoubleQuadStrategy{P,Q}
+    regularpart_quadrule::DoubleQuadRule{P,Q}
 end
 
 function innerintegrals!(op::MWSingleLayer3DSng, p, g, f, t, s, z,
-        strat::WiltonSEStrategy, dx)
+        strat::WiltonSERule, dx)
 
     γ = op.gamma
     x = cartesian(p)
@@ -48,7 +48,7 @@ function innerintegrals!(op::MWSingleLayer3DSng, p, g, f, t, s, z,
 end
 
 
-function innerintegrals!(op::MWDoubleLayer3DSng, p, g, f, t, s, z, strat::WiltonSEStrategy, dx)
+function innerintegrals!(op::MWDoubleLayer3DSng, p, g, f, t, s, z, strat::WiltonSERule, dx)
 
     γ = op.gamma
     x = cartesian(p)

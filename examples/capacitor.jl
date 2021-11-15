@@ -23,11 +23,11 @@ println("λ = ", λₑ, "m; l = ", l ,"m")
 
 # Build and mesh the structure
 Γ₁ = meshrectangle(l,w,h);
-translate!(Γ₁, point(0.0,0.0,d))
+CompScienceMeshes.translate!(Γ₁, point(0.0,0.0,d))
 Γ₀ = meshrectangle(l,w,h)
 
 γ₁ = meshsegment(l, h, 3)
-translate!(γ₁, point(0.0,0.0,d))
+CompScienceMeshes.translate!(γ₁, point(0.0,0.0,d))
 γ₀ = meshsegment(l, h, 3)
 
 Γ = weld(Γ₁, Γ₀)
@@ -58,7 +58,7 @@ fcr,geo = facecurrents(u, RT); println("Face currents calculated")
 z = range(-0.5, stop=0.5, length=100)
 pts1 = point.(0.5,0.5,z)
 # pts1 = [point(0.5,0.5,a) for a in range(-0.5,stop=0.5,length=100)]
-volt = η*potential(MWSingleLayerPotential3D(κ), pts1, u, RT)
+volt = η*potential(MWSingleLayerPotential3D(κ), pts1, u, RT, type=ComplexF64)
 
 # Plot the Scalar potential
 using Plots

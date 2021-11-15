@@ -70,8 +70,8 @@ G = boundary(tetrs)
 Z = BEAST.ttrace(curl(X), G)
 
 fcr, geo = facecurrents(u, Z)
-import PlotlyJS
-PlotlyJS.plot(patch(geo, norm.(fcr)))
+import Plotly
+Plotly.plot(patch(geo, norm.(fcr)))
 
 const CSM = CompScienceMeshes
 hemi = submesh(tet -> cartesian(CSM.center(chart(tetrs,tet)))[3] < 0, tetrs)
@@ -82,5 +82,4 @@ Xhemi = BEAST.restrict(X, hemi)
 tXhemi = BEAST.ttrace(Xhemi, bnd_hemi)
 
 fcr, geo = facecurrents(u, tXhemi)
-import Plotly
 Plotly.plot(patch(geo, norm.(fcr)))

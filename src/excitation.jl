@@ -11,24 +11,27 @@ quadrule(fn::Functional, refs, p, cell, qd) = qd[1,p]
 Assemble the vector of test coefficients corresponding to functional
 `fn` and test functions `tfs`.
 """
-function assemble(field::Functional, tfs)
+function assemble(field::Functional, tfs; quaddata=quaddata, quadrule=quadrule)
 
     b = zeros(ComplexF64, numfunctions(tfs))
     store(v,m) = (b[m] += v)
-    assemble!(field, tfs, store)
+    assemble!(field, tfs, store, quaddata=quaddata, quadrule=quadrule)
     return b
 end
 
-function assemble!(field::Functional, tfs::DirectProductSpace, store)
+function assemble!(field::Functional, tfs::DirectProductSpace, store;
+    quaddata=quaddata, quadrule=quadrule)
+
     I = Int[0]
     for s in tfs.factors push!(I, last(I) + numfunctions(s)) end
     for (i,s) in enumerate(tfs.factors)
         store1(v,m) = store(v, m + I[i])
-        assemble!(field, s, store1)
+        assemble!(field, s, store1, quaddata=quaddata, quadrule=quadrule)
     end
 end
 
-function assemble!(field::Functional, tfs::Space, store)
+function assemble!(field::Functional, tfs::Space, store;
+    quaddata=quaddata, quadrule=quadrule)
 
     tels, tad = assemblydata(tfs)
 
@@ -51,7 +54,8 @@ function assemble!(field::Functional, tfs::Space, store)
 
 end
 
-function assemble!(field::Functional, tfs::subdBasis, store)
+function assemble!(field::Functional, tfs::subdBasis, store;
+    quaddata=quaddata, quadrule=quadrule)
 
     tels, tad = assemblydata(tfs)
 

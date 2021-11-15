@@ -127,11 +127,17 @@ function facecurrents(u, X::DirectProductSpace)
 	fcr, m
 end
 
+<<<<<<< HEAD
 function potential(op, points, coeffs, basis)
 	T = SVector{3,ComplexF64}
+=======
+function potential(op, points, coeffs, basis; type=SVector{3,ComplexF64})
+	# T = SVector{3,ComplexF64}
+	T = type
+>>>>>>> upstream/master
 	ff = zeros(T, size(points))
 	store(v,m,n) = (ff[m] += v*coeffs[n])
-	potential!(store, op, points, basis)
+	potential!(store, op, points, basis, type=T)
 	return ff
 end
 
@@ -143,25 +149,29 @@ function potential(op, points,coeffs, basis::SpaceTimeBasis)
 	return ff
 end
 
-function potential(op, points, coeffs, space::DirectProductSpace)
-	T = SVector{3,ComplexF64}
-	ff = zeros(T, length(points))
+function potential(op, points, coeffs, space::DirectProductSpace; type=SVector{3,ComplexF64})
+	# T = SVector{3,ComplexF64}
+	T = type
+	ff = zeros(T, size(points))
+	@show size(ff)
 
 	@assert length(coeffs) == numfunctions(space)
 
 	offset = 0
 	for fct in space.factors
 		store(v,m,n) = (ff[m] += v*coeffs[offset+n])
-		potential!(store, op, points, fct)
+		potential!(store, op, points, fct, type=T)
 		offset += numfunctions(fct)
 	end
 
 	ff
 end
 
-function potential!(store, op, points, basis)
+function potential!(store, op, points, basis; type=SVector{3,ComplexF64})
 
-	T = SVector{3,ComplexF64}
+	# T = SVector{3,ComplexF64}
+	T = type
+	# @show T
 	z = zeros(T,length(points))
 
 	els, ad = assemblydata(basis)

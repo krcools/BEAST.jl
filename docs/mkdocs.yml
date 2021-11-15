@@ -15,3 +15,4 @@ pages:
     - Home: index.md
     - Tutorial: tutorial.md
     - Assembly: assemble.md
+    - Quadrature Strategies: quadstrat.md
