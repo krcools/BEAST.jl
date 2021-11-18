@@ -158,7 +158,7 @@ function assemble!(operator::Operator, test_functions::Space, trial_functions::S
     threading::Type{Threading{:multi}} = Threading{:multi};
     quadstrat=defaultquadstrat(operator, test_functions, trial_functions))
 
-    @info "Multi-threaded assembly:"
+    # @info "Multi-threaded assembly:"
 
     P = Threads.nthreads()
     numchunks = P
