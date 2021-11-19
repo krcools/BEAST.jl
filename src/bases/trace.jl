@@ -24,7 +24,7 @@ function ntrace(X::Space, γ)
     # on_target = overlap_gpredicate(γ)
     # ad = assemblydata(X)
     x = refspace(X)
-    E, ad = assemblydata(X)
+    E, ad, P = assemblydata(X)
     igeo = geometry(X)
     @assert dimension(γ) == dimension(igeo)-1
     # Γ = geo
@@ -37,7 +37,8 @@ function ntrace(X::Space, γ)
         on_target(chart(ogeo,face))
     end
 
-    D = copy(transpose(connectivity(ogeo, igeo, abs)))
+    # D = copy(transpose(connectivity(ogeo, igeo, abs)))
+    D = connectivity(igeo, ogeo, abs)
     rows, vals = rowvals(D), nonzeros(D)
 
     T = scalartype(X)
@@ -53,7 +54,7 @@ function ntrace(X::Space, γ)
             # @assert norm(Q,Inf) != 0
             
             r = 0
-            for k in nzrange(D,p)
+            for k in nzrange(D,P[p])
                 vals[k] == q && (r = rows[k]; break)
             end
             @assert r != 0
