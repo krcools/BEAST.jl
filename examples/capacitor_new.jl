@@ -57,8 +57,9 @@ X = RT_int
 Y0 = RT_pt0 * C0
 Y1 = RT_pt1 * C1
 
+# This is ugly and will fail if the two ports are not equal...
 D = sparse(reshape([fill(+1.0, length(edges_pt0)); fill(-1.0, length(edges_pt1))],length(edges_pt0)+length(edges_pt1),1))
-RT_pt = BEAST.RTBasis(RT_pt0.geo, [RT_pt0.fns; RT_pt1.fns], [RT_pt0.pos; RT_pt1.pos])
+RT_pt = RT_pt0 + RT_pt1
 Z = RT_pt * D
 
 @hilbertspace x y0 y1 z
