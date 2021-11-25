@@ -16,6 +16,15 @@ struct DoubleNumQStrat{R}
     inner_rule::R
 end
 
+struct SauterSchwab3DQStrat{R,S}
+    outer_rule::R
+    inner_rule::R
+    sauter_schwab_1D::S
+    sauter_schwab_2D::S
+    sauter_schwab_3D::S
+    sauter_schwab_4D::S
+end
+
 
 defaultquadstrat(op, tfs, bfs) = defaultquadstrat(op, refspace(tfs), refspace(bfs))
 # macro defaultquadstrat(dop, body)

@@ -178,28 +178,35 @@ function integrand(viop::VIEDoubleLayer, kerneldata, tvals, tgeo, bvals, bgeo)
 end
 
 
+defaultquadstrat(op::VIEOperator, tfs, bfs) = SauterSchwab3DQStrat(3,3,3,3,3,3)
+
+
 function quaddata(op::VIEOperator,
     test_local_space::RefSpace, trial_local_space::RefSpace,
-    test_charts, trial_charts)
+    test_charts, trial_charts, qs::SauterSchwab3DQStrat)
 
     #The combinations of rules (6,7) and (5,7 are) BAAAADDDD
     # they result in many near singularity evaluations with any
     # resemblence of accuracy going down the drain! Simply don't!
     # (same for (5,7) btw...).
-    t_qp = quadpoints(test_local_space,  test_charts,  (3,))
-    b_qp = quadpoints(trial_local_space, trial_charts, (3,))
+    t_qp = quadpoints(test_local_space,  test_charts,  (qs.outer_rule))
+    b_qp = quadpoints(trial_local_space, trial_charts, (qs.inner_rule))
 
-    a, b = 0.0, 1.0
-    sing_qp = (SauterSchwab3D._legendre(3,a,b), SauterSchwab3D._shunnham2D(3), SauterSchwab3D._shunnham3D(3), SauterSchwab3D._shunnham4D(3),)
+   
+    sing_qp = (SauterSchwab3D._legendre(qs.sauter_schwab_1D,0,1), 
+               SauterSchwab3D._shunnham2D(qs.sauter_schwab_2D),
+               SauterSchwab3D._shunnham3D(qs.sauter_schwab_3D),
+               SauterSchwab3D._shunnham4D(qs.sauter_schwab_4D),)
 
 
     return (tpoints=t_qp, bpoints=b_qp, sing_qp=sing_qp)
 end
 
-quadrule(op::VolumeOperator, g::RefSpace, f::RefSpace, i, τ, j, σ, qd) = qr_volume(op, g, f, i, τ, j, σ, qd)
+quadrule(op::VolumeOperator, g::RefSpace, f::RefSpace, i, τ, j, σ, qd, qs) = qr_volume(op, g, f, i, τ, j, σ, qd, qs)
 
 
-function qr_volume(op::VolumeOperator, g::RefSpace, f::RefSpace, i, τ, j, σ, qd)
+function qr_volume(op::VolumeOperator, g::RefSpace, f::RefSpace, i, τ, j, σ, qd,
+    qs::SauterSchwab3DQStrat)
     
     dtol = 1.0e3 * eps(eltype(eltype(τ.vertices)))
 
@@ -233,15 +240,16 @@ function qr_volume(op::VolumeOperator, g::RefSpace, f::RefSpace, i, τ, j, σ, q
 
 
 
-    return DoubleQuadStrategy(
+    return DoubleQuadRule(
         qd[1][1,i],
         qd[2][1,j])
 
 end
 
-quadrule(op::BoundaryOperator, g::RefSpace, f::RefSpace, i, τ, j, σ, qd) = qr_boundary(op, g, f, i, τ, j, σ, qd)
+quadrule(op::BoundaryOperator, g::RefSpace, f::RefSpace, i, τ, j, σ, qd, qs) = qr_boundary(op, g, f, i, τ, j, σ, qd, qs)
 
-function qr_boundary(op::BoundaryOperator, g::RefSpace, f::RefSpace, i, τ, j,  σ, qd)
+function qr_boundary(op::BoundaryOperator, g::RefSpace, f::RefSpace, i, τ, j,  σ, qd,
+    qs::SauterSchwab3DQStrat)
     
     dtol = 1.0e3 * eps(eltype(eltype(τ.vertices)))
 
@@ -273,7 +281,7 @@ function qr_boundary(op::BoundaryOperator, g::RefSpace, f::RefSpace, i, τ, j,  
     hits == 1 && return SauterSchwab3D.CommonVertex5D_S(SauterSchwab3D.Singularity5DPoint(idx_t,idx_s),(qd.sing_qp[3],qd.sing_qp[2]))
 
 
-    return DoubleQuadStrategy(
+    return DoubleQuadRule(
         qd[1][1,i],
         qd[2][1,j])
 

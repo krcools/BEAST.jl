@@ -12,7 +12,6 @@ using SauterSchwabQuadrature
 using SauterSchwab3D
 using FastGaussQuadrature
 using LinearMaps
-using ShunnHamQuadrature
 using LiftedMaps
 
 import LinearAlgebra: cross, dot

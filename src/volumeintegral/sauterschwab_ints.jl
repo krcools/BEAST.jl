@@ -130,7 +130,7 @@ function momintegrals!(op::VIEOperator,
     nothing
 end
 
-function momintegrals!(biop::VIEOperator, tshs, bshs, tcell, bcell, z, strat::DoubleQuadStrategy)
+function momintegrals!(biop::VIEOperator, tshs, bshs, tcell, bcell, z, strat::DoubleQuadRule)
 
     # memory allocation here is a result from the type instability on strat
     # which is on purpose, i.e. the momintegrals! method is chosen based

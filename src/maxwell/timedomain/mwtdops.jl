@@ -139,11 +139,7 @@ end
 # end
 
 function assemble!(dl::MWDoubleLayerTDIO, W::SpaceTimeBasis, V::SpaceTimeBasis, store,
-<<<<<<< HEAD
-    threading=Threading{:multi})
-=======
     threading=Threading{:multi}; quadstrat=defaultquadstrat(dl,W,V))
->>>>>>> upstream/master
 
 	X, T = spatialbasis(W), temporalbasis(W)
 	Y, U = spatialbasis(V), temporalbasis(V)

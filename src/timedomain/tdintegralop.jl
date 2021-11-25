@@ -130,11 +130,7 @@ function allocatestorage(op::RetardedPotential, testST, basisST,
 end
 
 function assemble!(op::LinearCombinationOfOperators, tfs::SpaceTimeBasis, bfs::SpaceTimeBasis, store,
-<<<<<<< HEAD
-    threading=Threading{:multi})
-=======
     threading=Threading{:multi}; quadstrat=defaultquadstrat(op, tfs, bfs))
->>>>>>> upstream/master
 
     for (a,A) in zip(op.coeffs, op.ops)
         store1(v,m,n,k) = store(a*v,m,n,k)
@@ -143,11 +139,7 @@ function assemble!(op::LinearCombinationOfOperators, tfs::SpaceTimeBasis, bfs::S
 end
 
 function assemble!(op::RetardedPotential, testST, trialST, store,
-<<<<<<< HEAD
-    threading=Threading{:multi})
-=======
     threading=Threading{:multi}; quadstrat=defaultquadstrat(op, testST, trialST))
->>>>>>> upstream/master
 
 	Y, S = spatialbasis(testST), temporalbasis(testST)
 
