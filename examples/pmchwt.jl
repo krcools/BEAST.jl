@@ -55,7 +55,7 @@ ffpoints = [point(cos(ϕ)*sin(θ), sin(ϕ)*sin(θ), cos(θ)) for θ in Θ for ϕ
 # Don't forget the far field comprises two contributions
 ffm = potential(MWFarField3D(κ*im), ffpoints, u[m], X)
 ffj = potential(MWFarField3D(κ*im), ffpoints, u[j], X)
-ff = η*im*κ*ffm + im*κ*cross.(ffpoints, ffj)
+ff = -η*im*κ*ffj + im*κ*cross.(ffpoints, ffm)
 
 using Plots
 plot(xlabel="theta")
@@ -92,8 +92,12 @@ Z = range(-1,1,length=100)
 Y = range(-1,1,length=100)
 nfpoints = [point(0,y,z) for z in Z, y in Y]
 
-E_ex, H_ex = nearfield(u[m],u[j],X,X,κ,η,nfpoints,E,H)
-E_in, H_in = nearfield(-u[m],-u[j],X,X,κ′,η′,nfpoints)
+import Base.Threads: @spawn
+task1 = @spawn nearfield(u[m],u[j],X,X,κ,η,nfpoints,E,H)
+task2 = @spawn nearfield(-u[m],-u[j],X,X,κ′,η′,nfpoints)
+
+E_ex, H_ex = fetch(task1)
+E_in, H_in = fetch(task2)
 
 E_tot = E_in + E_ex
 H_tot = H_in + H_ex
@@ -108,3 +112,12 @@ heatmap(Z, Y, real.(getindex.(E_tot,1)))
 #plot!(real.(getindex.(H_tot[:,51],2)))
 
 
+# Compare the far field and the field far
+ffradius = 100.0
+E_far, H_far = nearfield(u[m],u[j],X,X,κ,η, ffradius .* ffpoints)
+nxE_far = cross.(ffpoints, E_far) * (4π*ffradius) / exp(-im*κ*ffradius)
+Et_far = -cross.(ffpoints, nxE_far)
+
+plot()
+plot!(Θ, norm.(ff),label="far field")
+scatter!(Θ, norm.(Et_far), label="field far")

@@ -27,19 +27,19 @@ end
 
 
 defaultquadstrat(op, tfs, bfs) = defaultquadstrat(op, refspace(tfs), refspace(bfs))
-# macro defaultquadstrat(dop, body)
-#     @assert dop.head == :tuple
-#     @assert length(dop.args) == 3
-#     op = dop.args[1]
-#     tfs = dop.args[2]
-#     bfs = dop.args[3]
-#     ex = quote
-#         function BEAST.defaultquadstrat(::typeof($op), ::typeof($tfs), ::typeof($bfs))
-#             $body
-#         end
-#     end
-#     return esc(ex)
-# end
+macro defaultquadstrat(dop, body)
+    @assert dop.head == :tuple
+    @assert length(dop.args) == 3
+    op = dop.args[1]
+    tfs = dop.args[2]
+    bfs = dop.args[3]
+    ex = quote
+        function BEAST.defaultquadstrat(::typeof($op), ::typeof($tfs), ::typeof($bfs))
+            $body
+        end
+    end
+    return esc(ex)
+end
 
 struct SingleNumQStrat
     quad_rule::Int

@@ -16,9 +16,26 @@ function LinearAlgebra.mul!(y::AbstractVector, L::ZeroMap, x::AbstractVector,
     y .*= β
 end
 
+# function LinearAlgebra.mul!(y::AbstractVector,
+#     Lt::LinearMaps.TransposeMap{<:Any,<:ZeroMap},
+#     x::AbstractVector, α::Number, β::Number)
+
+#     y .*= β
+# end
+
+
 function LinearAlgebra.mul!(y::AbstractVector, L::ZeroMap, x::AbstractVector)
     y .= 0
 end
+
+# function LinearAlgebra.mul!(y::AbstractVector,
+#     Lt::LinearMaps.TransposeMap{<:Any,<:ZeroMap}, x::AbstractVector)
+
+#     y .= 0
+# end
+
+LinearAlgebra.adjoint(A::ZeroMap{T}) where {T} = ZeroMap{T}(A.domain, A.range)
+LinearAlgebra.transpose(A::ZeroMap{T}) where {T} = ZeroMap{T}(A.domain, A.range)
 
 function Base.:(*)(A::ZeroMap, x::AbstractVector)
     T = eltype(A)

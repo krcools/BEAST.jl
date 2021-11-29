@@ -124,11 +124,12 @@ function duallagrangecxd0(mesh, vertexlist::Vector{Int})
 
     fine = barycentric_refinement(mesh)
     vtoc, vton = vertextocellmap(fine)
+    verts = vertices(mesh)
     for (k,v) in enumerate(vertexlist)
         n = vton[v]
         F = vtoc[v,1:n]
         fns[k] = singleduallagd0(fine, F, v)
-        push!(pos, mesh.vertices[v])
+        push!(pos, verts[v])
     end
 
     NF = 1
