@@ -72,6 +72,21 @@ function assemble!(biop::LocalOperator, tfs::Space, bfs::Space, store,
     return assemble_local_mixed!(biop, tfs, bfs, store; quadstrat)
 end
 
+function assemble!(biop::LocalOperator, tfs::Space, bfs::Space, store,
+    threading::Type{Threading{:single}};
+    quadstrat=defaultquadstrat(biop, tfs, bfs))
+
+if geometry(tfs) == geometry(bfs)
+    return assemble_local_matched!(biop, tfs, bfs, store; quadstrat)
+end
+
+if CompScienceMeshes.refines(geometry(tfs), geometry(bfs))
+    return assemble_local_refines!(biop, tfs, bfs, store; quadstrat)
+end
+
+return assemble_local_mixed!(biop, tfs, bfs, store; quadstrat)
+end
+
 function assemble_local_matched!(biop::LocalOperator, tfs::Space, bfs::Space, store;
     quadstrat=defaultquadstrat(biop, tfs, bfs))
 

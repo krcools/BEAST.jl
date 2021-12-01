@@ -9,12 +9,20 @@ ZeroMap{T}(range::U, domain::V) where {T,U,V} = ZeroMap{T,U,V}(range, domain)
 LinearMaps.MulStyle(A::ZeroMap) = LinearMaps.FiveArg()
 
 Base.size(A::ZeroMap) = (length(A.range), length(A.domain),)
+Base.axes(A::ZeroMap) = (A.range, A.domain)
 
 function LinearAlgebra.mul!(y::AbstractVector, L::ZeroMap, x::AbstractVector,
     α::Number, β::Number)
 
     y .*= β
 end
+
+function LinearAlgebra.mul!(Y::PseudoBlockMatrix, c::Number, X::ZeroMap, a::Number, b::Number)
+    @assert b == 1
+    return Y
+end
+
+
 
 # function LinearAlgebra.mul!(y::AbstractVector,
 #     Lt::LinearMaps.TransposeMap{<:Any,<:ZeroMap},

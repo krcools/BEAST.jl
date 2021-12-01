@@ -250,3 +250,13 @@ function Base.:*(space::Space, A::SparseMatrixCSC)
     end
     return (typeof(space))(space.geo, fns, pos)
 end
+
+
+function addf!(fn::Vector{<:Shape}, x::Vector, space::Space, idcs::Vector{Int})
+    for (m,bf) in enumerate(space.fns)
+        for sh in bf
+            cellid = idcs[sh.cellid]
+            BEAST.add!(fn, cellid, sh.refid, sh.coeff * x[m])
+        end
+    end
+end

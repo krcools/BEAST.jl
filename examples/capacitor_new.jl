@@ -14,7 +14,7 @@ end
 
 l = w = 1.0 #Length and width of capacitor plates
 d = 0.1     #seperation of plates
-h = 1/36    #size of meshes
+h = 1/60    #size of meshes
 
 Γ₀ = meshrectangle(l,w,h)
 Γ₁ = CompScienceMeshes.translate(Γ₀, point(0.0,0.0,d))
@@ -102,6 +102,6 @@ traceS0 = ntrace(S, γ₀)
 traceS1 = ntrace(S, γ₁)
 fcr0, geo0 = facecurrents(u, traceS0)
 fcr1, geo1 = facecurrents(u, traceS1)
-plot()
-plot!(imag.(fcr0))
-plot!(imag.(fcr1)) |> display
+Plots.plot()
+Plots.plot!(imag.(fcr0))
+Plots.plot!(imag.(fcr1)) |> display

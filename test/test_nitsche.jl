@@ -24,7 +24,7 @@ X = raviartthomas(Γ, edges)
 
 x = divergence(X)
 y = ntrace(X,γ)
-Z = assemble(S,y,x)
+Z = assemble(S,y,x; threading = BEAST.Threading{:single})
 
 # test for the correct sparsity pattern
 # I, J, V = findall(!iszero, Z)
