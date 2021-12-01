@@ -9,6 +9,7 @@ using BlockArrays
 using SparseMatrixDicts
 
 using SauterSchwabQuadrature
+using SauterSchwab3D
 using FastGaussQuadrature
 using LinearMaps
 using LiftedMaps
@@ -28,6 +29,9 @@ export lagdimension
 export restrict
 export raviartthomas, raowiltonglisson, positions
 export brezzidouglasmarini
+export brezzidouglasmarini3d
+export nedelecd3d
+export nedelecc3d
 export portcells, rt_ports, getindex_rtg, subset
 export StagedTimeStep
 export subdsurface,subdBasis,assemblydata,refspace
@@ -40,6 +44,7 @@ export timebasisshiftedlagrange
 export TimeBasisDeltaShifted
 export ntrace
 export strace
+export ttrace 
 export SingleLayer
 export DoubleLayer
 export DoubleLayerTransposed
@@ -63,6 +68,9 @@ export MWSingleLayerField3D
 export SingleLayerTrace
 export DoubleLayerRotatedMW3D
 export MWSingleLayerPotential3D
+
+export VIEOperator
+
 export gmres
 export @hilbertspace, @varform, @discretise
 export solve
@@ -89,6 +97,7 @@ export potential
 export get_scatter_parameters
 export quaddata
 
+export DofInterpolate
 
 
 export kernelvals
@@ -130,6 +139,7 @@ include("bases/local/ndlocal.jl")
 include("bases/local/bdmlocal.jl")
 include("bases/local/ndlcclocal.jl")
 include("bases/local/ndlcdlocal.jl")
+include("bases/local/bdm3dlocal.jl")
 
 include("bases/lagrange.jl")
 include("bases/rtspace.jl")
@@ -139,6 +149,7 @@ include("bases/ndspace.jl")
 include("bases/bdmdiv.jl")
 include("bases/ndlccspace.jl")
 include("bases/ndlcdspace.jl")
+include("bases/bdm3dspace.jl")
 
 
 include("bases/subdbasis.jl")
@@ -157,6 +168,7 @@ include("localop.jl")
 include("multiplicativeop.jl")
 include("identityop.jl")
 include("integralop.jl")
+include("interpolation.jl")
 include("quaddata.jl")
 include("postproc.jl")
 include("postproc/segcurrents.jl")
@@ -183,13 +195,20 @@ include("maxwell/spotential.jl")
 include("maxwell/maxwell.jl")
 include("maxwell/sourcefield.jl")
 
-# Support for the Helmholtz equation
+# Support for the Helmholtz equatio
 include("helmholtz2d/helmholtzop.jl")
 
 include("helmholtz3d/hh3dexc.jl")
 include("helmholtz3d/hh3dops.jl")
 include("helmholtz3d/nitsche.jl")
 include("helmholtz3d/hh3dnear.jl")
+
+#suport for Volume Integral equation
+include("volumeintegral/vie.jl")
+include("volumeintegral/vieexc.jl")
+include("volumeintegral/vieops.jl")
+include("volumeintegral/farfield.jl")
+include("volumeintegral/sauterschwab_ints.jl")
 
 include("decoupled/dpops.jl")
 include("decoupled/potentials.jl")

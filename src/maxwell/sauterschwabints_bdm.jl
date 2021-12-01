@@ -52,7 +52,7 @@ function momintegrals!(op::MWSingleLayer3D,
 
     igd = MWSL3DIntegrand2(test_triangular_element, trial_triangular_element,
         op, test_local_space, trial_local_space)
-    G = sauterschwab_parameterized(igd, strat)
+    G = SauterSchwabQuadrature.Sautersauterschwab_parameterized(igd, strat)
 
     A = levicivita(K) == 1 ? @SVector[1,2] : @SVector[2,1]
     B = levicivita(L) == 1 ? @SVector[1,2] : @SVector[2,1]

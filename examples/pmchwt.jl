@@ -1,19 +1,15 @@
 using CompScienceMeshes, BEAST
 using LinearAlgebra
 
-using BEAST.LinearMaps
-Base.axes(A::LinearMaps.LinearCombination) = axes(A.maps[1])
-Base.axes(A::LinearMaps.ScaledMap) = axes(A.lmap)
+T = tetmeshsphere(1.0,0.25)
+X = nedelecc3d(T)
+Γ = boundary(T)
 
-Γ = meshcuboid(0.5, 1.0, 1.0, 0.045)
-# Γ = meshcuboid(0.5, 1.0, 1.0, 0.15)
-CompScienceMeshes.translate!(Γ, point(-0.25, -0.5, -0.5))
-# Γ = meshsphere(1.0, 0.075)
 X = raviartthomas(Γ)
 @show numfunctions(X)
 
-κ,  η  = 6.0, 1.0
-κ′, η′ = 2.4κ, η/2.4
+κ,  η  = 1.0, 1.0
+κ′, η′ = 2.0κ, η/2.0
 
 T  = Maxwell3D.singlelayer(wavenumber=κ)
 T′ = Maxwell3D.singlelayer(wavenumber=κ′)
@@ -51,11 +47,7 @@ pmchwt = @discretise(
 # u, ch = IterativeSolvers.gmres!(u, Z, b, log=true,  maxiter=1000,
 #     restart=1000, reltol=1e-5, verbose=true)
 
-
-
-# u = BEAST.gmres(pmchwt, tol=1e-5)
-# error()
-u = BEAST.solve(pmchwt)
+u = solve(pmchwt)
 
 Θ, Φ = range(0.0,stop=2π,length=100), 0.0
 ffpoints = [point(cos(ϕ)*sin(θ), sin(ϕ)*sin(θ), cos(θ)) for θ in Θ for ϕ in Φ]
@@ -67,14 +59,14 @@ ff = -η*im*κ*ffj + im*κ*cross.(ffpoints, ffm)
 
 using Plots
 plot(xlabel="theta")
-plot!(Θ,norm.(ff),label="far field")
+plot!(Θ,norm.(ff),label="far field",title="PMCHWT")
 
-import Plotly
-using LinearAlgebra
-fcrj, _ = facecurrents(u[j],X)
-fcrm, _ = facecurrents(u[m],X)
-Plotly.plot(patch(Γ, norm.(fcrj)))
-Plotly.plot(patch(Γ, norm.(fcrm)))
+#import Plotly
+#using LinearAlgebra
+#fcrj, _ = facecurrents(u[j],X)
+#fcrm, _ = facecurrents(u[m],X)
+#Plotly.plot(patch(Γ, norm.(fcrj)))
+#Plotly.plot(patch(Γ, norm.(fcrm)))
 
 
 function nearfield(um,uj,Xm,Xj,κ,η,points,
@@ -95,6 +87,7 @@ function nearfield(um,uj,Xm,Xj,κ,η,points,
     return E, H
 end
 
+
 Z = range(-1,1,length=100)
 Y = range(-1,1,length=100)
 nfpoints = [point(0,y,z) for z in Z, y in Y]
@@ -113,10 +106,11 @@ contour(real.(getindex.(E_tot,1)))
 contour(real.(getindex.(H_tot,2)))
 
 heatmap(Z, Y, real.(getindex.(E_tot,1)))
-heatmap(Z, Y, real.(getindex.(H_tot,2)))
+#heatmap(Z, Y, real.(getindex.(H_tot,2)))
 
-plot(real.(getindex.(E_tot[:,51],1)))
-plot!(real.(getindex.(H_tot[:,51],2)))
+#plot(real.(getindex.(E_tot[:,51],1)))
+#plot!(real.(getindex.(H_tot[:,51],2)))
+
 
 # Compare the far field and the field far
 ffradius = 100.0
