@@ -61,6 +61,7 @@ using Plots
 plot(xlabel="theta")
 plot!(Θ,norm.(ff),label="far field",title="PMCHWT")
 
+#=
 #import Plotly
 #using LinearAlgebra
 #fcrj, _ = facecurrents(u[j],X)
@@ -121,3 +122,4 @@ Et_far = -cross.(ffpoints, nxE_far)
 plot()
 plot!(Θ, norm.(ff),label="far field")
 scatter!(Θ, norm.(Et_far), label="field far")
+=#

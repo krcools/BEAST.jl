@@ -186,7 +186,8 @@ end
 
 
 
-function assemble!(op::TransposedOperator, tfs::Space, bfs::Space, store;
+function assemble!(op::TransposedOperator, tfs::Space, bfs::Space, store,
+    threading::Type{Threading{:multi}} = Threading{:multi};
     quadstrat=defaultquadstrat(op, tfs, bfs))
 
     store1(v,m,n) = store(v,n,m)
@@ -212,7 +213,7 @@ function assemble!(op::Operator, tfs::DirectProductSpace, bfs::Space, store, thr
     for s in tfs.factors push!(I, last(I) + numfunctions(s)) end
     for (i,s) in enumerate(tfs.factors)
         store1(v,m,n) = store(v,m + I[i], n)
-        assemble!(op, s, bfs, store1; quadstrat)
+        assemble!(op, s, bfs, store1, threading; quadstrat)
     end
 end
 
@@ -223,7 +224,7 @@ function assemble!(op::Operator, tfs::Space, bfs::DirectProductSpace, store, thr
     for s in bfs.factors push!(J, last(J) + numfunctions(s)) end
     for (j,s) in enumerate(bfs.factors)
         store1(v,m,n) = store(v,m,n + J[j])
-        assemble!(op, tfs, s, store1; quadstrat)
+        assemble!(op, tfs, s, store1, threading; quadstrat)
     end
 end
 
@@ -233,6 +234,6 @@ function assemble!(op::Operator, tfs::DirectProductSpace, bfs::DirectProductSpac
     for s in tfs.factors push!(I, last(I) + numfunctions(s)) end
     for (i,s) in enumerate(tfs.factors)
         store1(v,m,n) = store(v,m + I[i],n)
-        assemble!(op, s, bfs, store1; quadstrat)
+        assemble!(op, s, bfs, store1, threading; quadstrat)
     end
 end
