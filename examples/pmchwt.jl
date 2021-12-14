@@ -86,12 +86,13 @@ using Plots
 Plots.plot(xlabel="theta")
 Plots.plot!(Θ,norm.(ff),label="far field",title="PMCHWT")
 
-import Plotly
-using LinearAlgebra
-fcrj, _ = facecurrents(u[j],X)
-fcrm, _ = facecurrents(u[m],X)
-Plotly.plot(patch(Γ, norm.(fcrj)))
-Plotly.plot(patch(Γ, norm.(fcrm)))
+error()
+#import Plotly
+#using LinearAlgebra
+#fcrj, _ = facecurrents(u[j],X)
+#fcrm, _ = facecurrents(u[m],X)
+#Plotly.plot(patch(Γ, norm.(fcrj)))
+#Plotly.plot(patch(Γ, norm.(fcrm)))
 
 
 

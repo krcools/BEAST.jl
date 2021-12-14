@@ -202,8 +202,8 @@ end
 
 
 
-function assemble!(op::TransposedOperator, tfs::Space, bfs::Space,
-    store, threading = Threading{:multi};
+function assemble!(op::TransposedOperator, tfs::Space, bfs::Space, store,
+    threading::Type{Threading{:multi}} = Threading{:multi};
     quadstrat=defaultquadstrat(op, tfs, bfs))
 
     store1(v,m,n) = store(v,n,m)
