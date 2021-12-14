@@ -41,14 +41,14 @@ module VSIE
 
         @assert gamma != nothing
 
-        alpha == nothing && (alpha = -gamma)
-        beta  == nothing && (beta  = -1/gamma)
+        alpha == nothing && (alpha = wavenumber*wavenumber)
+        beta  == nothing && (beta  = 1.0)
         tau   == nothing && (tau   = x->1.0)
 
         Mod.VSIESingleLayer(gamma, alpha, beta, tau)
     end
 
-    function singlelayer2(;
+    function singlelayerT(;
             gamma=nothing,
             wavenumber=nothing,
             alpha=nothing,
@@ -73,11 +73,11 @@ module VSIE
 
         @assert gamma != nothing
 
-        alpha == nothing && (alpha = -gamma)
-        beta  == nothing && (beta  = -1/gamma)
+        alpha == nothing && (alpha = wavenumber*wavenumber)
+        beta  == nothing && (beta  = 1.0)
         tau   == nothing && (tau   = x->1.0)
 
-        Mod.VSIESingleLayer2(gamma, alpha, beta, tau)
+        Mod.VSIESingleLayerT(gamma, alpha, beta, tau)
     end
 
     """

@@ -165,4 +165,3 @@ Plots.plot!(real.(getindex.(H_tot[:,51],2)))
 plot()
 plot!(Θ, norm.(ff),label="far field")
 scatter!(Θ, norm.(Et_far), label="field far")
-=#

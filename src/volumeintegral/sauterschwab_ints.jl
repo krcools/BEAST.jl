@@ -75,7 +75,7 @@ end
 function momintegrals!(op::VIEOperator,
     test_local_space::RefSpace, trial_local_space::RefSpace,
     test_tetrahedron_element, trial_tetrahedron_element, out, strat::SauterSchwab3DStrategy)
-    @timeit to "singular" begin
+
     #Find permutation of vertices to match location of singularity to SauterSchwab
     J, I= SauterSchwab3D.reorder(strat.sing)
       
@@ -127,13 +127,10 @@ function momintegrals!(op::VIEOperator,
             out[i,j] += Q[K[i],L[j]]*O1[i]*O2[j]
         end
     end
-
-    end
     nothing
 end
 
 function momintegrals!(biop::VIEOperator, tshs, bshs, tcell, bcell, z, strat::DoubleQuadRule)
-    @timeit to "regular" begin
     # memory allocation here is a result from the type instability on strat
     # which is on purpose, i.e. the momintegrals! method is chosen based
     # on dynamic polymorphism.
@@ -167,8 +164,7 @@ function momintegrals!(biop::VIEOperator, tshs, bshs, tcell, bcell, z, strat::Do
             end
         end
     end
-    
-    end
+
     return z
 end
 
@@ -241,7 +237,6 @@ function momintegrals!(biop::VSIEOperator, tshs, bshs, tcell, bcell, z, strat::D
     wimps = strat.inner_quad_points
 
     M, N = size(z)
-   
 
     for womp in womps
         tgeo = womp.point
