@@ -72,7 +72,7 @@ using Plots
 Plots.plot(xlabel="theta")
 Plots.plot!(Θ,norm.(ff),label="far field",title="PMCHWT")
 
-error()
+#=
 #import Plotly
 #using LinearAlgebra
 #fcrj, _ = facecurrents(u[j],X)
@@ -130,6 +130,7 @@ E_far, H_far = nearfield(u[m],u[j],X,X,κ,η, ffradius .* ffpoints)
 nxE_far = cross.(ffpoints, E_far) * (4π*ffradius) / exp(-im*κ*ffradius)
 Et_far = -cross.(ffpoints, nxE_far)
 
-Plots.plot()
-Plots.plot!(Θ, norm.(ff),label="far field")
-Plots.scatter!(Θ, norm.(Et_far), label="field far")
+plot()
+plot!(Θ, norm.(ff),label="far field")
+scatter!(Θ, norm.(Et_far), label="field far")
+=#

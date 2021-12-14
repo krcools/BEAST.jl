@@ -71,6 +71,7 @@ export DoubleLayerRotatedMW3D
 export MWSingleLayerPotential3D
 
 export VIEOperator
+export VSIEOperator
 
 export gmres
 export @hilbertspace, @varform, @discretise
@@ -212,7 +213,10 @@ include("volumeintegral/vie.jl")
 include("volumeintegral/vieexc.jl")
 include("volumeintegral/vieops.jl")
 include("volumeintegral/farfield.jl")
+include("volumeintegral/vsie.jl")
+include("volumeintegral/vsieops.jl")
 include("volumeintegral/sauterschwab_ints.jl")
+
 
 include("decoupled/dpops.jl")
 include("decoupled/potentials.jl")
