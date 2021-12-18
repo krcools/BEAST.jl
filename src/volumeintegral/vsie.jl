@@ -41,8 +41,8 @@ module VSIE
 
         @assert gamma != nothing
 
-        alpha == nothing && (alpha = wavenumber*wavenumber)
-        beta  == nothing && (beta  = 1.0)
+        alpha == nothing && (alpha = gamma)
+        beta  == nothing && (beta  = im*im/gamma)
         tau   == nothing && (tau   = x->1.0)
 
         Mod.VSIESingleLayer(gamma, alpha, beta, tau)
