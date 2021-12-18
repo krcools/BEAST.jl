@@ -7,7 +7,7 @@ using StaticArrays
 
 ntrc = X->ntrace(X,Γ)
 
-T = tetmeshsphere(1.0,0.5)
+T = tetmeshsphere(1.0,0.25)
 X = nedelecd3d(T)
 Γ = boundary(T)
 Y = raviartthomas(Γ)
@@ -18,7 +18,8 @@ Y = raviartthomas(Γ)
 
 κ,  η  = 1.0, 1.0
 κ′, η′ = √2.0κ, η/√2.0
-ϵ_r =2.0
+ϵ_r =3.0
+ϵ_b =2.0
 
 
 χ = x->(1.0-1.0/ϵ_r)
@@ -26,8 +27,8 @@ Y = raviartthomas(Γ)
 #Volume-Volume
 L,I,B = VIE.singlelayer(wavenumber=κ', tau=χ), Identity(), VIE.boundary(wavenumber=κ', tau=χ)
 #Volume-Surface 
-Lt,Bt,Kt = transpose(VSIE.singlelayer(wavenumber=κ', tau=χ)), transpose(VSIE.boundary(wavenumber=κ', tau=χ)), transpose(VSIE.doublelayer(wavenumber=κ', tau=χ))
-Ls,Bs,Ks = VSIE.singlelayer(wavenumber=κ'), VSIE.boundary(wavenumber=κ'), VSIE.doublelayer(wavenumber=κ')
+Lt,Bt,Kt = transpose(VSIE.singlelayer(wavenumber=κ')), transpose(VSIE.boundary(wavenumber=κ')), transpose(VSIE.doublelayer(wavenumber=κ'))
+Ls,Bs,Ks = VSIE.singlelayer(wavenumber=κ', tau=χ), VSIE.boundary(wavenumber=κ', tau=χ), VSIE.doublelayer(wavenumber=κ', tau=χ)
 #Surface-Surface
 T  = Maxwell3D.singlelayer(wavenumber=κ)  #Outside
 T′ = Maxwell3D.singlelayer(wavenumber=κ′) #Inside
@@ -41,17 +42,21 @@ e, h = (n × E) × n, (n × H) × n
 
 @hilbertspace D j m
 @hilbertspace k l o
-β = 1.0/ϵ_r
+β = 1.0/(ϵ_r*ϵ_b)
+ν = 1/ϵ_b
 α, α′ = 1/η, 1/η′
+γ′ = im*η′/κ′
+ζ′ = im*η′*κ′
+δ′ = im*κ′/ϵ_b
 
-eq = @varform (β*I[k,D]-L[k,D]-B[ntrc(k),D] +  Lt[k,j]+Bt[ntrc(k),j] +          Kt[k,m] +
-              Ls[l,D]+Bs[l,ntrc(D)] +       (η*T+η′*T′)[l,j] -      (K+K′)[l,m] +
-                         Ks[o,D] +            (K+K′)[o,j] + (α*T+α′*T′)[o,m] == -e[l] - h[o])
+eq = @varform (β*I[k,D]-ν*L[k,D]-ν*B[ntrc(k),D] +  η′*Lt[k,j]-γ′*Bt[ntrc(k),j] +         Kt[k,m] +
+               -δ′*Ls[l,D]-ν*Bs[l,ntrc(D)]    +             (η*T+η′*T′)[l,j] -      (K+K′)[l,m] +
+               ζ′*Ks[o,D] +                        (K+K′)[o,j] + (α*T+α′*T′)[o,m] == -e[l] - h[o])
   
 
 dvsie = @discretise eq  D∈X k∈X j∈Y m∈Y l∈Y o∈Y
 
-u = solve(dvsie)
+u_n = solve(dvsie)
 
 
 #Post processing
@@ -59,15 +64,22 @@ u = solve(dvsie)
 ffpoints = [point(cos(ϕ)*sin(θ), sin(ϕ)*sin(θ), cos(θ)) for θ in Θ for ϕ in Φ]
 
 # Don't forget the far field comprises two contributions
-ffm = potential(MWFarField3D(κ*im), ffpoints, u[m], Y)
-ffj = potential(MWFarField3D(κ*im), ffpoints, u[j], Y)
+ffm = potential(MWFarField3D(κ*im), ffpoints, u_n[m], Y)
+ffj = potential(MWFarField3D(κ*im), ffpoints, u_n[j], Y)
 ff = -η*im*κ*ffj + im*κ*cross.(ffpoints, ffm)
 
 
-ffd = potential(VIE.farfield(wavenumber=κ, tau=χ), ffpoints, u[D], X)
+ffd = potential(VIE.farfield(wavenumber=κ, tau=χ), ffpoints, u_n[D], X)
 ff2 = im*κ*ffd
 
 using Plots
 plot(xlabel="theta")
 plot!(Θ,norm.(ff),label="far field",title="DVSIE")
-plot!(Θ,norm.(ff2),label="far field",title="DVSIE 2")
+plot!(Θ,√6.0*norm.(ff),label="far field",title="DVSIE 2")
+
+import Plotly
+using LinearAlgebra
+fcrj, _ = facecurrents(u_n[j],Y)
+fcrm, _ = facecurrents(u_n[m],Y)
+Plotly.plot(patch(Γ, norm.(fcrj)))
+Plotly.plot(patch(Γ, norm.(fcrm)))
