@@ -40,9 +40,7 @@ Y = BEAST.buffachristiansen2(Γ)
 
 
 κ,  η  = 1.0, 1.0
-κ′, η′ = √5.0κ, η/√5.0
-
-N = NCross()
+κ′, η′ = √6.0κ, η/√6.0
 
 T  = Maxwell3D.singlelayer(wavenumber=κ)
 T′ = Maxwell3D.singlelayer(wavenumber=κ′)

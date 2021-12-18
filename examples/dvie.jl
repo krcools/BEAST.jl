@@ -5,7 +5,11 @@ using TimerOutputs
 using StaticArrays
 
 function tau(x::SVector{U,T}) where {U,T}
+<<<<<<< HEAD
     1.0-1.0/5.0
+=======
+    1.0-1.0/9.0
+>>>>>>> 72ee5ec (update vsie implementation)
 end
 
 ntrc = X->ntrace(X,y)
@@ -16,7 +20,11 @@ y = boundary(T)
 @show numfunctions(X)
 
 ϵ, μ, ω = 1.0, 1.0, 1.0; κ, η = ω * √(ϵ*μ), √(μ/ϵ)
+<<<<<<< HEAD
 ϵ_r =5.0
+=======
+ϵ_r =25.0
+>>>>>>> 72ee5ec (update vsie implementation)
 χ = tau
 K, I, B = VIE.singlelayer(wavenumber=κ, tau=χ), Identity(), VIE.boundary(wavenumber=κ, tau=χ)
 E = VIE.planewave(direction=ẑ, polarization=x̂, wavenumber=κ)
@@ -41,8 +49,13 @@ using Plots
 #Farfield
 plot(xlabel="theta")
 plot!(Θ, norm.(ff), label="far field", title="D-VIE")
+<<<<<<< HEAD
 =#
 using Plots
+=======
+
+#=
+>>>>>>> 72ee5ec (update vsie implementation)
 #NearField
 Z = range(-1,1,length=100)
 Y = range(-1,1,length=100)
@@ -54,6 +67,7 @@ Enear = reshape(Enear,100,100)
 contour(real.(getindex.(Enear,1)))
 heatmap(Z, Y,  real.(getindex.(Enear,1)))
 
+<<<<<<< HEAD
 
 plot!(Y[2:99],real.(getindex.(Enear[2:99,50],1)),label="D-VIE (simplex)", linestyle=:dash, linecolor=:darkorange4)
 #plot!(Y[2:99],real.(getindex.(Enear_simplex[2:99,50],1)),label="D-VIE (simplex)", linestyle=:solid, linecolor=:darkorange3)
@@ -63,6 +77,9 @@ import Cairo
 using DataFrames, Gadfly, RDatasets
 D = dataset("datasets","HairEyeColor")
 palette = ["skyblue","skyblue3"]
+=======
+=#
+>>>>>>> 72ee5ec (update vsie implementation)
 
 
 D = DataFrame(
