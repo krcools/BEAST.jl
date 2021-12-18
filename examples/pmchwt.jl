@@ -9,7 +9,7 @@ X = raviartthomas(Γ)
 @show numfunctions(X)
 
 κ,  η  = 1.0, 1.0
-κ′, η′ = 2.0κ, η/2.0
+κ′, η′ = √6.0κ, η/√6.0
 
 T  = Maxwell3D.singlelayer(wavenumber=κ)
 T′ = Maxwell3D.singlelayer(wavenumber=κ′)
@@ -61,7 +61,7 @@ using Plots
 plot(xlabel="theta")
 plot!(Θ,norm.(ff),label="far field",title="PMCHWT")
 
-#=
+
 #import Plotly
 #using LinearAlgebra
 #fcrj, _ = facecurrents(u[j],X)
@@ -122,4 +122,3 @@ Et_far = -cross.(ffpoints, nxE_far)
 plot()
 plot!(Θ, norm.(ff),label="far field")
 scatter!(Θ, norm.(Et_far), label="field far")
-=#

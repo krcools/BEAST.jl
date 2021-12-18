@@ -4,7 +4,7 @@ using Profile
 using StaticArrays
 
 function tau(x::SVector{U,T}) where {U,T}
-    1.0-1.0/4.0
+    1.0-1.0/9.0
 end
 
 ntrc = X->ntrace(X,y)
@@ -15,7 +15,7 @@ y = boundary(T)
 @show numfunctions(X)
 
 ϵ, μ, ω = 1.0, 1.0, 1.0; κ, η = ω * √(ϵ*μ), √(μ/ϵ)
-ϵ_r =4.0
+ϵ_r =25.0
 χ = tau
 K, I, B = VIE.singlelayer(wavenumber=κ, tau=χ), Identity(), VIE.boundary(wavenumber=κ, tau=χ)
 E = VIE.planewave(direction=ẑ, polarization=x̂, wavenumber=κ)
@@ -41,6 +41,7 @@ using Plots
 plot(xlabel="theta")
 plot!(Θ, norm.(ff), label="far field", title="D-VIE")
 
+#=
 #NearField
 Z = range(-1,1,length=100)
 Y = range(-1,1,length=100)
@@ -52,6 +53,6 @@ Enear = reshape(Enear,100,100)
 contour(real.(getindex.(Enear,1)))
 heatmap(Z, Y,  real.(getindex.(Enear,1)), clim=(0.0,1.0))
 
-
+=#
 
 

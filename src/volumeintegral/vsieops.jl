@@ -192,7 +192,7 @@ function integrand(viop::VSIEDoubleLayerT, kerneldata, tvals, tgeo, bvals, bgeo)
 end
 
 
-defaultquadstrat(op::VSIEOperator, tfs, bfs) = SauterSchwab3DQStrat(3,3,3,3,3,3)
+defaultquadstrat(op::VSIEOperator, tfs, bfs) = SauterSchwab3DQStrat(4,4,4,4,4,4)
 
 
 function quaddata(op::VSIEOperator,
