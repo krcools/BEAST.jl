@@ -563,7 +563,7 @@ function dual0forms_body(mesh::CompScienceMeshes.AbstractMesh{<:Any,3}, refd, bn
 
         myid = Threads.threadid()
         myid == 1 && F % 20 == 0 &&
-            println("Constructing dual 1-forms: $(F*num_threads) out of $(length(mesh)).")
+            println("Constructing dual 1-forms: $(F) out of $(length(mesh)).")
 
         idcs1 = v2t[Cell[1],1:v2n[Cell[1]]]
         idcs2 = v2t[Cell[2],1:v2n[Cell[2]]]

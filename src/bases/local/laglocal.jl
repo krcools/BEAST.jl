@@ -25,10 +25,17 @@ end
 # Evaluete linear lagrange elements on a triangle
 function (f::LagrangeRefSpace{T,1,3})(t) where T
     u,v,w, = barycentric(t)
+    # SVector(
+    #     (value=u,),
+    #     (value=v,),
+    #     (value=w,))
+
+    j = jacobian(t)
+    p = t.patch
     SVector(
-        (value=u,),
-        (value=v,),
-        (value=w,))
+        (value=u, curl=(p[3]-p[2])/j),
+        (value=v, curl=(p[1]-p[3])/j),
+        (value=w, curl=(p[2]-p[1])/j))
 end
 
 

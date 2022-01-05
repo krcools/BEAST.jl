@@ -2,7 +2,7 @@
 
 abstract type Functional end
 
-quaddata(fn::Functional, refs, cells) = quadpoints(refs, cells, [5])
+quaddata(fn::Functional, refs, cells) = quadpoints(refs, cells, [8])
 quadrule(fn::Functional, refs, p, cell, qd) = qd[1,p]
 
 """

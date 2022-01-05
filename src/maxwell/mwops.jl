@@ -80,7 +80,9 @@ function _legendre(n,a,b)
     collect(zip(x,w))
 end
 
-defaultquadstrat(op::MaxwellOperator3D, tfs, bfs) = DoubleNumWiltonSauterQStrat(2,3,6,7,5,5,4,3)
+defaultquadstrat(op::MaxwellOperator3D, tfs::Space, bfs::Space) = DoubleNumWiltonSauterQStrat(2,3,6,7,5,5,4,3)
+defaultquadstrat(op::MaxwellOperator3D, tfs::RefSpace, bfs::RefSpace) = DoubleNumWiltonSauterQStrat(2,3,6,7,5,5,4,3)
+
 
 function quaddata(op::MaxwellOperator3D,
     test_local_space::RefSpace, trial_local_space::RefSpace,
