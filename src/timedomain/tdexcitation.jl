@@ -41,16 +41,18 @@ function quadrule(exc::TDFunctional, testrefs, timerefs::DiracBoundary, p, τ, r
 end
 
 
-function assemble(exc::TDFunctional, testST)
+function assemble(exc::TDFunctional, testST; quaddata=quaddata, quadrule=quadrule)
     testfns = spatialbasis(testST)
     timefns = temporalbasis(testST)
     Z = zeros(eltype(exc), numfunctions(testfns), numfunctions(timefns))
     store(v,m,k) = (Z[m,k] += v)
-    assemble!(exc, testST, store)
+    assemble!(exc, testST, store, quaddata=quaddata, quadrule=quadrule)
     return Z
 end
 
-function assemble(exc::TDFunctional, testST::StagedTimeStep)
+function assemble(exc::TDFunctional, testST::StagedTimeStep; 
+    quaddata=quaddata, quadrule=quadrule)
+
     stageCount = length(testST.c);
     spatialBasis = testST.spatialBasis;
     Nt = testST.Nt;
@@ -59,12 +61,14 @@ function assemble(exc::TDFunctional, testST::StagedTimeStep)
     for i = 1:stageCount
         store(v,m,k) = (Z[(m-1)*stageCount+i,k] += v);
         tbsd = TimeBasisDeltaShifted(timebasisdelta(Δt, Nt), testST.c[i]);
-        assemble!(exc, spatialBasis ⊗ tbsd, store);
+        assemble!(exc, spatialBasis ⊗ tbsd, store,
+            quaddata=quaddata, quadrule=quadrule);
     end
     return Z;
 end
 
-function assemble!(exc::TDFunctional, testST, store)
+function assemble!(exc::TDFunctional, testST, store;
+    quaddata=quaddata, quadrule=quadrule)
 
     testfns = spatialbasis(testST)
     timefns = temporalbasis(testST)

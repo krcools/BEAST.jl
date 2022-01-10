@@ -13,10 +13,12 @@ Y = lagrangec0d1(Γ)
 x = refspace(X)
 y = refspace(Y)
 charts = [chart(Γ,c) for c in cells(Γ)]
-qd = quaddata(s, x, x, charts, charts)
+
+qs = BEAST.defaultquadstrat(s, x, x)
+qd = quaddata(s, x, x, charts, charts, qs)
 m1,m2 = 10,11
-ql = quadrule(s, x, x, m1, charts[m1], m2, charts[m2], qd)
-@show @which quadrule(s, x, x, m1, charts[m1], m2, charts[m2], qd)
+ql = quadrule(s, x, x, m1, charts[m1], m2, charts[m2], qd, qs)
+@show @which quadrule(s, x, x, m1, charts[m1], m2, charts[m2], qd, qs)
 @show typeof(ql)
 BEAST.momintegrals!(s, x, x, charts[10], charts[20],
     zeros(ComplexF64,3,3), ql)
@@ -43,11 +45,11 @@ u = solve(Eq)
 uj = u[1:numfunctions(X)]
 up = u[numfunctions(X)+1:end]
 
-#xrange = range(-2.0, stop=2.0, length=40)
-xrange = [0.0]
-yrange = [0.0]
+xrange = range(-2.0, stop=2.0, length=40)
+# xrange = [0.0]
+# yrange = [0.0]
 zrange = range(-2.0, stop=2.0, length=40)
-pts = [point(x,y,z) for x ∈ xrange, y ∈ yrange, z ∈ zrange]
+pts = [point(x,0,z) for x ∈ xrange, z ∈ zrange]
 
 A1 = BEAST.DPVectorialTerm(1.0, 1.0*im)
 A2 = BEAST.DPScalarTerm(1.0, 1.0*im)

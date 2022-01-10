@@ -25,35 +25,37 @@ g = ∂n(uⁱ)
 eq1 = @discretise a[v,u] == f[v] u∈X v∈X
 eq2 = @discretise b[v,u] == g[v] u∈X v∈X
 
-x1 = solve(eq1)
-x2 = solve(eq2)
+x1 = gmres(eq1)
+x2 = gmres(eq2)
 
 fcr1, geo1 = facecurrents(x1, X)
 fcr2, geo2 = facecurrents(x2, X)
 
 # include(Pkg.dir("CompScienceMeshes","examples","plotlyjs_patches.jl"))
-# p1 = patch(geo1, real.(norm.(fcr1)))
-# p2 = patch(geo2, real.(norm.(fcr2)))
-
 using LinearAlgebra
-using Test
+using Plotly
+pt1 = Plotly.plot(patch(geo1, real.(norm.(fcr1))));
+pt2 = Plotly.plot(patch(geo2, real.(norm.(fcr2))));
+display([pt1 pt2])
 
-## test the results
-Z = assemble(a,X,X);
-m1, m2 = 1, numfunctions(X)
-chm, chn = chart(Γ,cells(Γ)[m1]), chart(Γ,cells(Γ)[m2])
-ctm, ctn = center(chm), center(chn)
-R = norm(cartesian(ctm)-cartesian(ctn))
-G = exp(-im*κ*R)/(4π*R)
-Wmn = volume(chm) * volume(chn) * G
-@show abs(Wmn-Z[m1,m2]) / abs(Z[m1,m2])
-@test abs(Wmn-Z[m1,m2]) / abs(Z[m1,m2]) < 2.0e-3
+# using Test
 
-r = assemble(f,X)
-m1 = 1
-chm = chart(Γ,cells(Γ)[m1])
-ctm = center(chm)
-sm = volume(chm) * f(ctm)
-r[m1]
-@show abs(sm - r[m1]) / abs(r[m1])
-@test abs(sm - r[m1]) / abs(r[m1]) < 1e-3
+# ## test the results
+# Z = assemble(a,X,X);
+# m1, m2 = 1, numfunctions(X)
+# chm, chn = chart(Γ,cells(Γ)[m1]), chart(Γ,cells(Γ)[m2])
+# ctm, ctn = CompScienceMeshes.center(chm), CompScienceMeshes.center(chn)
+# R = norm(cartesian(ctm)-cartesian(ctn))
+# G = exp(-im*κ*R)/(4π*R)
+# Wmn = volume(chm) * volume(chn) * G
+# @show abs(Wmn-Z[m1,m2]) / abs(Z[m1,m2])
+# @test abs(Wmn-Z[m1,m2]) / abs(Z[m1,m2]) < 2.0e-3
+
+# r = assemble(f,X)
+# m1 = 1
+# chm = chart(Γ,cells(Γ)[m1])
+# ctm = CompScienceMeshes.center(chm)
+# sm = volume(chm) * f(ctm)
+# r[m1]
+# @show abs(sm - r[m1]) / abs(r[m1])
+# @test abs(sm - r[m1]) / abs(r[m1]) < 1e-3

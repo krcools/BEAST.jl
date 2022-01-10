@@ -8,6 +8,7 @@ mutable struct EmptyRP{T} <: RetardedPotential{T}
     speed_of_light::T
 end
 Base.eltype(::EmptyRP) = Int
+defaultquadstrat(::EmptyRP, tfs, bfs) = nothing
 quaddata(op::EmptyRP, xs...) = nothing
 quadrule(op::EmptyRP, xs...) = nothing
 momintegrals!(z, op::EmptyRP, xs...) = nothing
@@ -129,7 +130,7 @@ function allocatestorage(op::RetardedPotential, testST, basisST,
 end
 
 function assemble!(op::LinearCombinationOfOperators, tfs::SpaceTimeBasis, bfs::SpaceTimeBasis, store,
-    threading=Threading{:multi})
+    threading=Threading{:multi}; quadstrat=defaultquadstrat(op, tfs, bfs))
 
     for (a,A) in zip(op.coeffs, op.ops)
         store1(v,m,n,k) = store(a*v,m,n,k)
@@ -138,7 +139,7 @@ function assemble!(op::LinearCombinationOfOperators, tfs::SpaceTimeBasis, bfs::S
 end
 
 function assemble!(op::RetardedPotential, testST, trialST, store,
-    threading=Threading{:multi})
+    threading=Threading{:multi}; quadstrat=defaultquadstrat(op, testST, trialST))
 
 	Y, S = spatialbasis(testST), temporalbasis(testST)
 
@@ -158,7 +159,8 @@ function assemble!(op::RetardedPotential, testST, trialST, store,
 	assemble_chunk!(op, testST, trialST, store)
 end
 
-function assemble_chunk!(op::RetardedPotential, testST, trialST, store)
+function assemble_chunk!(op::RetardedPotential, testST, trialST, store; 
+    quadstrat=defaultquadstrat(op, testST, trialST))
 
 	myid = Threads.threadid()
 
@@ -188,7 +190,7 @@ function assemble_chunk!(op::RetardedPotential, testST, trialST, store)
     V = refspace(trialspace)
     W = refspace(timebasisfunction)
 
-    qd = quaddata(op, U, V, W, testels, trialels, nothing)
+    qd = quaddata(op, U, V, W, testels, trialels, nothing, quadstrat)
 
     udim = numfunctions(U)
     vdim = numfunctions(V)
@@ -209,7 +211,7 @@ function assemble_chunk!(op::RetardedPotential, testST, trialST, store)
 
 	            # compute interactions between reference shape functions
 	            fill!(z, 0)
-	            qr = quadrule(op, U, V, W, p, τ, q, σ, r, ι, qd)
+	            qr = quadrule(op, U, V, W, p, τ, q, σ, r, ι, qd, quadstrat)
                 momintegrals!(z, op, U, V, W, τ, σ, ι, qr)
 
 		        # assemble in the global matrix

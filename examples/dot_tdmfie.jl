@@ -9,15 +9,16 @@ o, x, y, z = euclidianbasis(3)
 X, Y = raviartthomas(Γ), buffachristiansen(Γ)
 
 # Δt, Nt = 0.11, 200
-Δt, Nt = 0.6, 200
+# Δt, Nt = 0.6, 200
 # Δt, Nt = 0.05, 400
+Δt ,Nt = 0.3, 200
 T = timebasisshiftedlagrange(Δt, Nt, 2)
 δ = timebasisdelta(Δt, Nt)
 
 V = X ⊗ T
 W = Y ⊗ δ
 # width, delay, scaling = 8.0, 12.0, 1.0
-duration = 20 * Δt
+duration = 20 * Δt * 2
 delay = 1.5 * duration
 amplitude = 1.0
 gaussian = derive(creategaussian(duration, delay, amplitude))

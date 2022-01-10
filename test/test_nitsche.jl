@@ -2,7 +2,6 @@
 
 using Test
 using LinearAlgebra
-#using LinearForms
 using CompScienceMeshes
 using BEAST
 
@@ -17,11 +16,16 @@ h = 0.25
 Γ = meshrectangle(1.0,1.0,h)
 γ = meshsegment(1.0,1.0,3)
 
-X = raviartthomas(Γ, γ)
+in_interior = CompScienceMeshes.interior_tpredicate(Γ)
+on_junction = CompScienceMeshes.overlap_gpredicate(γ)
+edges = skeleton(Γ,1) do edge
+    in_interior(edge) ||on_junction(chart(Γ,edge))
+end
+X = raviartthomas(Γ, edges)
 
 x = divergence(X)
 y = ntrace(X,γ)
-Z = assemble(S,y,x,threading=BEAST.Threading{:single})
+Z = assemble(S,y,x; threading = BEAST.Threading{:single})
 
 # test for the correct sparsity pattern
 # I, J, V = findall(!iszero, Z)

@@ -1,7 +1,7 @@
-abstract type SingularityExtractionStrategy end
-regularpart_quadrule(qr::SingularityExtractionStrategy) = qr.regularpart_quadrule
+abstract type SingularityExtractionRule end
+regularpart_quadrule(qr::SingularityExtractionRule) = qr.regularpart_quadrule
 
-function momintegrals!(op, g, f, t, s, z, strat::SingularityExtractionStrategy)
+function momintegrals!(op, g, f, t, s, z, strat::SingularityExtractionRule)
 
 
     womps = strat.outer_quad_points

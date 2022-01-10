@@ -11,12 +11,24 @@ width, height = 1.0, 0.5
 γ = meshsegment(width, width, 3)
 
 κ = 1.0
-S, T, I = SingleLayerTrace(κ), MWSingleLayer3D(κ), Identity()
+S, T, I = SingleLayerTrace(κ*im), MWSingleLayer3D(κ), Identity()
 St = transpose(S)
 E = Maxwell3D.planewave(direction=ẑ, polarization=x̂, wavenumber=κ)
 e = (n×E)×n
 
-X1, X2, X3 = raviartthomas(Γ1, γ), raviartthomas(Γ2, γ), raviartthomas(Γ3, γ)
+in_interior1 = CompScienceMeshes.interior_tpredicate(Γ1)
+in_interior2 = CompScienceMeshes.interior_tpredicate(Γ2)
+in_interior3 = CompScienceMeshes.interior_tpredicate(Γ3)
+
+on_junction = CompScienceMeshes.overlap_gpredicate(γ)
+edges1 = skeleton(e -> in_interior1(e) || on_junction(chart(Γ1,e)), Γ1,1)
+edges2 = skeleton(e -> in_interior2(e) || on_junction(chart(Γ2,e)), Γ2,1)
+edges3 = skeleton(e -> in_interior3(e) || on_junction(chart(Γ3,e)), Γ3,1)
+
+X1 = raviartthomas(Γ1, edges1)
+X2 = raviartthomas(Γ2, edges2)
+X3 = raviartthomas(Γ3, edges3)
+# X1, X2, X3 = raviartthomas(Γ1, γ), raviartthomas(Γ2, γ), raviartthomas(Γ3, γ)
 X = X1 × X2 × X3
 
 @hilbertspace j

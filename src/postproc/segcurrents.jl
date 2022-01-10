@@ -19,7 +19,7 @@ end
 """
     Hi
 """
-function grideval(points, coeffs, basis)
+function grideval(points, coeffs, basis; type=nothing)
 
     # charts: active charts
     # ad: assembly data (active_cell_idx, local_shape_idx) -> [dof1, dfo2, ...]
@@ -31,12 +31,15 @@ function grideval(points, coeffs, basis)
     T = promote_type(eltype(coeffs), eltype(V))
     P = similar_type(V, T)
 
-    values = zeros(P, length(points))
+    type != nothing && (P = type)
+
+    values = zeros(P, size(points))
 
     chart_tree = BEAST.octree(charts)
     for (j,point) in enumerate(points)
         i = CompScienceMeshes.findchart(charts, chart_tree, point)
         if i != nothing
+            # @show i
             chart = charts[i]
             u = carttobary(chart, point)
             vals = refs(neighborhood(chart,u))

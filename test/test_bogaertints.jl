@@ -23,9 +23,9 @@ z2 = zeros(z1)
 tqd = BE.quadpoints(x, [t], (12,13))
 bqd = BE.quadpoints(x, [t], (13,))
 
-SE_strategy = BE.WiltonSEStrategy(
+SE_strategy = BE.WiltonSERule(
   tqd[2,1],
-  BE.DoubleQuadStrategy(
+  BE.DoubleQuadRule(
 	tqd[1,1],
 	bqd[1,1],
   ),
@@ -47,9 +47,9 @@ BEAST.momintegrals!(op, x, x, t, s, z3, EE_strategy)
 z4 = zeros(ComplexF64, n, n)
 tqd = BE.quadpoints(x, [t], (12,13))
 bqd = BE.quadpoints(x, [s], (13,))
-SE_strategy = BE.WiltonSEStrategy(
+SE_strategy = BE.WiltonSERule(
   tqd[2,1],
-  BE.DoubleQuadStrategy(
+  BE.DoubleQuadRule(
 	tqd[1,1],
 	bqd[1,1],
   ),
@@ -73,9 +73,9 @@ BEAST.momintegrals!(op, x, x, t, s, z5, EE_strategy)
 z6 = zeros(ComplexF64, n, n)
 tqd = BE.quadpoints(x, [t], (12,13))
 bqd = BE.quadpoints(x, [s], (13,))
-SE_strategy = BE.WiltonSEStrategy(
+SE_strategy = BE.WiltonSERule(
   tqd[2,1],
-  BE.DoubleQuadStrategy(
+  BE.DoubleQuadRule(
 	tqd[1,1],
 	bqd[1,1],
   ),
@@ -115,14 +115,14 @@ z3 = zeros(ComplexF64, BE.numfunctions(x), BE.numfunctions(x))
 s1 = BEAST.BogaertEdgePatchStrategy(13, 30)
 tqd = BE.quadpoints(x, [t1], (12,13))
 bqd = BE.quadpoints(x, [t2], (13,))
-s2 = BE.WiltonSEStrategy(
+s2 = BE.WiltonSERule(
   tqd[2,1],
-  BE.DoubleQuadStrategy(
+  BE.DoubleQuadRule(
 	tqd[1,1],
 	bqd[1,1],
   ),
 )
-s3 = BE.DoubleQuadStrategy(
+s3 = BE.DoubleQuadRule(
   tqd[1,1],
   tqd[1,1],
 )
@@ -136,14 +136,14 @@ BEAST.momintegrals!(op, x, x, t1, t2, z3, s3)
 s1 = BEAST.BogaertPointPatchStrategy(9,10)
 tqd = BE.quadpoints(x, [t2], (12,13))
 bqd = BE.quadpoints(x, [t3], (13,))
-s2 = BE.WiltonSEStrategy(
+s2 = BE.WiltonSERule(
   tqd[2,1],
-  BE.DoubleQuadStrategy(
+  BE.DoubleQuadRule(
 	tqd[1,1],
 	bqd[1,1],
   ),
 )
-s3 = BE.DoubleQuadStrategy(
+s3 = BE.DoubleQuadRule(
   tqd[1,1],
   tqd[1,1],
 )
@@ -157,14 +157,14 @@ fill!(z3, 0); BEAST.momintegrals!(op, x, x, t2, t3, z3, s3)
 s1 = BEAST.BogaertSelfPatchStrategy(20)
 tqd = BE.quadpoints(x, [t1], (12,13))
 bqd = BE.quadpoints(x, [t1], (13,))
-s2 = BE.WiltonSEStrategy(
+s2 = BE.WiltonSERule(
   tqd[2,1],
-  BE.DoubleQuadStrategy(
+  BE.DoubleQuadRule(
 	tqd[1,1],
 	bqd[1,1],
   ),
 )
-s3 = BE.DoubleQuadStrategy(
+s3 = BE.DoubleQuadRule(
   tqd[1,1],
   tqd[1,1],
 )

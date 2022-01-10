@@ -117,7 +117,7 @@ function momintegrals!(op::MWOperator3D,
     #     op, test_local_space, trial_local_space)
     igd = kernel_in_bary(op, test_local_space, trial_local_space,
         test_triangular_element, trial_triangular_element)
-    G = sauterschwab_parameterized(igd, strat)
+    G = SauterSchwabQuadrature.sauterschwab_parameterized(igd, strat)
     for j ∈ 1:3, i ∈ 1:3
         out[i,j] += G[K[i],L[j]]
     end
@@ -147,12 +147,13 @@ function momintegrals_nested!(op::MWOperator3D,
         simplex(ct, p3, e2),
         simplex(ct, e2, p1)]
 
+    qs = defaultquadstrat(op, test_local_space, trial_local_space)
     qd = quaddata(op, test_local_space, trial_local_space,
-        [test_chart], refined_trial_chart)
+        [test_chart], refined_trial_chart, qs)
 
     for (q,chart) in enumerate(refined_trial_chart)
         qr = quadrule(op, test_local_space, trial_local_space,
-            1, test_chart, q ,chart, qd)
+            1, test_chart, q ,chart, qd, qs)
 
         Q = restrict(trial_local_space, trial_chart, chart)
         zlocal = zero(out)

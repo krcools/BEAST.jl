@@ -115,7 +115,7 @@ function duallagrangecxd0(mesh, jct=CompScienceMeshes.mesh(coordtype(mesh), dime
 end
 
 
-function duallagrangecxd0(mesh, vertexlist::Vector)
+function duallagrangecxd0(mesh, vertexlist::Vector{Int})
 
     T = coordtype(mesh)
 
@@ -124,15 +124,22 @@ function duallagrangecxd0(mesh, vertexlist::Vector)
 
     fine = barycentric_refinement(mesh)
     vtoc, vton = vertextocellmap(fine)
+    verts = vertices(mesh)
     for (k,v) in enumerate(vertexlist)
         n = vton[v]
         F = vtoc[v,1:n]
         fns[k] = singleduallagd0(fine, F, v)
-        push!(pos, mesh.vertices[v])
+        push!(pos, verts[v])
     end
 
     NF = 1
     LagrangeBasis{0,-1,NF}(fine, fns, pos)
+end
+
+
+function duallagrangecxd0(mesh, vertices::CompScienceMeshes.AbstractMesh{U,1}) where {U}
+    vertexlist = Int[v[1] for v in vertices]
+    return duallagrangecxd0(mesh, vertexlist)
 end
 
 
@@ -471,19 +478,16 @@ function duallagrangec0d1(mesh, mesh2, pred, ::Type{Val{2}})
 end
 
 gradient(space::LagrangeBasis{1,0}, geo, fns) = NDLCCBasis(geo, fns)
-gradient(space::LagrangeBasis{1,0}, geo::CompScienceMeshes.AbstractMesh{U,3} where {U}, fns) = NDBasis(geo, fns)
+# gradient(space::LagrangeBasis{1,0}, geo::CompScienceMeshes.AbstractMesh{U,3} where {U}, fns) = NDBasis(geo, fns)
 
 curl(space::LagrangeBasis{1,0}, geo, fns) = RTBasis(geo, fns)
 
-# function gradient(space::LagrangeBasis{1,0})
-#     crl = curl(space)
-#     for fn in crl.fns
-#         for (i,sh) in enumerate(fn)
-#             fn[i] = Shape(sh.cellid, sh.refid, -sh.coeff)
-#         end
-#     end
-#     return n × crl
-# end
+gradient(space::LagrangeBasis{1,0,<:CompScienceMeshes.AbstractMesh{<:Any,2}}, geo, fns) =
+    LagrangeBasis{0,-1,1}(geo, fns, space.pos)
+
+
+gradient(space::LagrangeBasis{1,0,<:CompScienceMeshes.AbstractMesh{<:Any,3}}, geo, fns) =
+    NDBasis(geo, fns, space.pos)
 
 #
 # Sclar trace for Laggrange element based spaces
@@ -498,4 +502,147 @@ function strace(X::LagrangeBasis{1,0}, geo, fns::Vector)
 
     trpos = deepcopy(positions(X))
     LagrangeBasis{1,0,NF}(geo, fns, trpos)
+end
+
+
+
+function extend_0_form(supp, dirichlet, x_prt, Lg_prt)
+
+    Id = BEAST.Identity()
+
+    bnd_supp = boundary(supp)
+    supp_nodes = CompScienceMeshes.skeleton_fast(supp, 0)
+
+    dir_compl = submesh(!in(dirichlet), bnd_supp)
+    dir_compl_nodes = CompScienceMeshes.skeleton_fast(dir_compl, 0)
+    int_nodes = submesh(!in(dir_compl_nodes), supp_nodes)
+
+    if length(int_nodes) == 0
+        T = scalartype(Id, Lg_prt, Lg_prt)
+        S = typeof(Lg_prt)
+        P = eltype(Lg_prt.pos)
+        return T[], int_nodes, S(supp, Vector{Vector{Shape{T}}}(), Vector{P}())
+    end
+
+    Lg_int = BEAST.lagrangec0d1(supp, int_nodes)
+
+    grad_Lg_prt = gradient(Lg_prt)
+    grad_Lg_int = gradient(Lg_int)
+
+    A = assemble(Id, grad_Lg_int, grad_Lg_int, threading=Threading{:single})
+    a = -assemble(Id, grad_Lg_int, grad_Lg_prt, threading=Threading{:single}) * x_prt
+
+    x_int = A \ a
+    return x_int, int_nodes, Lg_int
+end
+
+
+function dualforms_init(Supp, Dir)
+    tetrs = barycentric_refinement(Supp)
+    v2t, v2n = CompScienceMeshes.vertextocellmap(tetrs)
+    bnd = boundary(tetrs)
+    gpred = CompScienceMeshes.overlap_gpredicate(Dir)
+    dir = submesh(face -> gpred(chart(bnd,face)), bnd)
+    return tetrs, bnd, dir, v2t, v2n
+end
+
+function duallagrangec0d1(mesh::CompScienceMeshes.AbstractMesh{<:Any,3}, nodes, dirbnd)
+    refd, bnd, dir, v2t, v2n = dualforms_init(mesh, dirbnd)
+    dual0forms_body(mesh, refd, bnd, dir, v2t, v2n)
+end
+
+function dual0forms_body(mesh::CompScienceMeshes.AbstractMesh{<:Any,3}, refd, bnd, dir, v2t, v2n)
+
+    T = coordtype(refd)
+    S = Shape{T}
+    V = vertextype(mesh)
+    bfs = Vector{Vector{S}}(undef, length(mesh))
+    pos = Vector{V}(undef, length(mesh))
+
+    Cells = cells(mesh)
+    num_threads = Threads.nthreads()
+    for F in 1:length(mesh)
+        Cell = Cells[F]
+
+        myid = Threads.threadid()
+        myid == 1 && F % 20 == 0 &&
+            println("Constructing dual 1-forms: $(F) out of $(length(mesh)).")
+
+        idcs1 = v2t[Cell[1],1:v2n[Cell[1]]]
+        idcs2 = v2t[Cell[2],1:v2n[Cell[2]]]
+        idcs3 = v2t[Cell[3],1:v2n[Cell[3]]]
+
+        supp1 = refd[idcs1] # 2D
+        supp2 = refd[idcs2]
+        supp3 = refd[idcs3]
+
+        bnd_supp1 = boundary(supp1) # 1D
+        bnd_supp2 = boundary(supp2)
+        bnd_supp3 = boundary(supp3)
+
+        supp23 = submesh(in(bnd_supp2), bnd_supp3) # 1D
+        supp31 = submesh(in(bnd_supp3), bnd_supp1)
+        supp12 = submesh(in(bnd_supp1), bnd_supp2)
+
+        port = boundary(supp23) # 0D
+        port = submesh(in(boundary(supp31)), port)
+        port = submesh(in(boundary(supp12)), port)
+        @assert length(port) == 1
+
+        in_dir = in(dir)
+        dir1_edges = submesh(in_dir, bnd_supp1) # 1D
+        dir2_edges = submesh(in_dir, bnd_supp2)
+        dir3_edges = submesh(in_dir, bnd_supp3)
+
+        bnd_dir1 = boundary(dir1_edges) # 0D
+        bnd_dir2 = boundary(dir2_edges)
+        bnd_dir3 = boundary(dir3_edges)
+
+        dir23_nodes = submesh(in(bnd_dir2), bnd_dir3) # 0D
+        dir31_nodes = submesh(in(bnd_dir3), bnd_dir1)
+        dir12_nodes = submesh(in(bnd_dir1), bnd_dir2)
+
+        # Step 1: set port flux and extend to dual faces
+        x0 = ones(T,1)
+
+        Lg12_prt = BEAST.lagrangec0d1(supp12, port)
+        Lg23_prt = BEAST.lagrangec0d1(supp23, port)
+        Lg31_prt = BEAST.lagrangec0d1(supp31, port)
+
+        x23, supp23_int_nodes, _ = extend_0_form(supp23, dir23_nodes, x0, Lg23_prt)
+        x31, supp31_int_nodes, _ = extend_0_form(supp31, dir31_nodes, x0, Lg31_prt)
+        x12, supp12_int_nodes, _ = extend_0_form(supp12, dir12_nodes, x0, Lg12_prt)
+
+        port1_nodes = union(port, supp31_int_nodes, supp12_int_nodes)
+        port2_nodes = union(port, supp12_int_nodes, supp23_int_nodes)
+        port3_nodes = union(port, supp23_int_nodes, supp31_int_nodes)
+
+        x1_prt = [x0; x31; x12]
+        x2_prt = [x0; x12; x23]
+        x3_prt = [x0; x23; x31]
+
+        Lg1_prt = BEAST.lagrangec0d1(supp1, port1_nodes)
+        Lg2_prt = BEAST.lagrangec0d1(supp2, port2_nodes)
+        Lg3_prt = BEAST.lagrangec0d1(supp3, port3_nodes)
+
+        x1_int, _, Lg1_int = extend_0_form(supp1, dir1_edges, x1_prt, Lg1_prt)
+        x2_int, _, Lg2_int = extend_0_form(supp2, dir2_edges, x2_prt, Lg2_prt)
+        x3_int, _, Lg3_int = extend_0_form(supp3, dir3_edges, x3_prt, Lg3_prt)
+
+        # inject in the global space
+        fn = BEAST.Shape{Float64}[]
+        addf!(fn, x1_prt, Lg1_prt, idcs1)
+        addf!(fn, x1_int, Lg1_int, idcs1)
+
+        addf!(fn, x2_prt, Lg2_prt, idcs2)
+        addf!(fn, x2_int, Lg2_int, idcs2)
+
+        addf!(fn, x3_prt, Lg3_prt, idcs3)
+        addf!(fn, x3_int, Lg3_int, idcs3)
+
+        pos[F] = cartesian(CompScienceMeshes.center(chart(mesh, Cell)))
+        bfs[F] = fn
+    end
+
+    LagrangeBasis{1,0,3}(refd, bfs, pos)
 end

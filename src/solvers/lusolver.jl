@@ -1,3 +1,23 @@
+using LinearAlgebra
+
+function convert_to_dense(A::LinearMaps.LinearCombination)
+
+    @info "convert matrix to dense..."
+    T = eltype(A)
+    # M = zeros(T, size(A))
+    # M = PseudoBlockMatrix{T}(undef, BlockArrays.blocksizes(A)...)
+    # fill!(M,0)
+    M = zeros(eltype(A), axes(A))
+    @show typeof(M)
+    for map in A.maps
+        mul!(M, 1, map, 1, 1)
+        # M .+= Matrix(map)
+    end
+
+    @info "matrix converted to dense"
+    return M
+end
+
 """
 Solves a variational equation by simply creating the full system matrix
 and calling a traditional lu decomposition.
@@ -18,10 +38,12 @@ function solve(eq)
 
     b = assemble(rhs, test_space_dict)
     Z = assemble(lhs, test_space_dict, trial_space_dict)
+    M = convert_to_dense(Z)
+    println("Sysmatrix converted to dense.")
 
-    u = Z \ b
+    u = Matrix(M) \ Vector(b)
 
-    return u
+    return PseudoBlockVector(u, blocksizes(M,2))
 end
 
 

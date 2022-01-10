@@ -30,14 +30,15 @@ X1 = subset(X,I)
 T2 = zeros(scalartype(t,X1,X1),numfunctions(X1),numfunctions(X1))
 store(v,m,n) = (T2[m,n] += v)
 
+qs = BEAST.defaultquadstrat(t,X,X)
 test_elements, test_assembly_data,
 	trial_elements, trial_assembly_data,
-	quadrature_data, zlocal = BEAST.assembleblock_primer(t,X,X)
+	quadrature_data, zlocal = BEAST.assembleblock_primer(t,X,X, quadstrat=qs)
 
 BEAST.assembleblock_body!(t,
 	X, I, test_elements,  test_assembly_data,
     X, I, trial_elements, trial_assembly_data,
-    quadrature_data, zlocal, store)
+    quadrature_data, zlocal, store, quadstrat=qs)
 
 T1 = assemble(t,X1,X1)
 @test T1 == T2

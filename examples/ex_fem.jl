@@ -146,9 +146,9 @@ o, x, y, z = euclidianbasis(3)
 G = boundary(tetrs)
 Z = BEAST.ttrace(curl(X), G)
 
-# fcr, geo = facecurrents(u, Z)
+fcr, geo = facecurrents(u, Z)
 import Plotly
-# Plotly.plot(patch(geo, norm.(fcr)))
+Plotly.plot(patch(geo, norm.(fcr)))
 
 Dir = Mesh(vertices(tetrs), CompScienceMeshes.celltype(G)[])
 # error("stop")
@@ -182,3 +182,5 @@ fcr3, geo3 = facecurrents(v, divergence(ttXplus));
 # length(geometry(ttXplus)) == length(tetrs2)
 #
 # Conn = connectivity(tetrs1, tetrs2)
+fcr, geo = facecurrents(u, tXhemi)
+Plotly.plot(patch(geo, norm.(fcr)))

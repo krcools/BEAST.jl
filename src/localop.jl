@@ -2,10 +2,6 @@
 
 using CollisionDetection
 
-# mutable struct SingleQuadStrategy{T}
-#     coords::Vector{T}
-#     weights::Vector{T}
-# end
 
 abstract type LocalOperator <: Operator end
 
@@ -62,27 +58,37 @@ function allocatestorage(op::LocalOperator, test_functions, trial_functions,
 end
 
 function assemble!(biop::LocalOperator, tfs::Space, bfs::Space, store,
-    threading::Type{Threading{:single}})
+        threading::Type{Threading{:multi}};
+        quadstrat=defaultquadstrat(biop, tfs, bfs))
 
     if geometry(tfs) == geometry(bfs)
-        return assemble_local_matched!(biop, tfs, bfs, store)
+        return assemble_local_matched!(biop, tfs, bfs, store; quadstrat)
     end
 
     if CompScienceMeshes.refines(geometry(tfs), geometry(bfs))
-        return assemble_local_refines!(biop, tfs, bfs, store)
+        return assemble_local_refines!(biop, tfs, bfs, store; quadstrat)
     end
 
-    return assemble_local_mixed!(biop, tfs, bfs, store)
+    return assemble_local_mixed!(biop, tfs, bfs, store; quadstrat)
 end
 
 function assemble!(biop::LocalOperator, tfs::Space, bfs::Space, store,
-    threading::Type{Threading{:multi}})
+    threading::Type{Threading{:single}};
+    quadstrat=defaultquadstrat(biop, tfs, bfs))
 
-    assemble!(biop, tfs, bfs, store, Threading{:single})
+    if geometry(tfs) == geometry(bfs)
+        return assemble_local_matched!(biop, tfs, bfs, store; quadstrat)
+    end
 
+    if CompScienceMeshes.refines(geometry(tfs), geometry(bfs))
+        return assemble_local_refines!(biop, tfs, bfs, store; quadstrat)
+    end
+
+    return assemble_local_mixed!(biop, tfs, bfs, store; quadstrat)
 end
 
-function assemble_local_matched!(biop::LocalOperator, tfs::Space, bfs::Space, store)
+function assemble_local_matched!(biop::LocalOperator, tfs::Space, bfs::Space, store;
+    quadstrat=defaultquadstrat(biop, tfs, bfs))
 
     tels, tad, ta2g = assemblydata(tfs)
     bels, bad, ba2g = assemblydata(bfs)
@@ -93,7 +99,7 @@ function assemble_local_matched!(biop::LocalOperator, tfs::Space, bfs::Space, st
     trefs = refspace(tfs)
     brefs = refspace(bfs)
 
-    qd = quaddata(biop, trefs, brefs, tels, bels)
+    qd = quaddata(biop, trefs, brefs, tels, bels, quadstrat)
 
     verbose = length(tels) > 10_000
     verbose && print("dots out of 20: ")
@@ -104,7 +110,7 @@ function assemble_local_matched!(biop::LocalOperator, tfs::Space, bfs::Space, st
         q = bg2a[P]
         q == 0 && continue
 
-        qr = quadrule(biop, trefs, brefs, cell, qd)
+        qr = quadrule(biop, trefs, brefs, cell, qd, quadstrat)
         fill!(locmat, 0)
         cellinteractions_matched!(locmat, biop, trefs, brefs, cell, qr)
 
@@ -120,7 +126,8 @@ function assemble_local_matched!(biop::LocalOperator, tfs::Space, bfs::Space, st
 end
 
 
-function assemble_local_refines!(biop::LocalOperator, tfs::Space, bfs::Space, store)
+function assemble_local_refines!(biop::LocalOperator, tfs::Space, bfs::Space, store;
+    quadstrat=defaultquadstrat(biop, tfs, bfs))
 
     println("Using 'refines' algorithm for local assembly:")
 
@@ -137,7 +144,7 @@ function assemble_local_refines!(biop::LocalOperator, tfs::Space, bfs::Space, st
     bg2a = zeros(Int, length(geometry(bfs)))
     for (i,j) in enumerate(ba2g) bg2a[j] = i end
 
-    qd = quaddata(biop, trefs, brefs, tels, bels)
+    qd = quaddata(biop, trefs, brefs, tels, bels, quadstrat)
 
     print("dots out of 10: ")
     todo, done, pctg = length(tels), 0, 0
@@ -156,7 +163,7 @@ function assemble_local_refines!(biop::LocalOperator, tfs::Space, bfs::Space, st
             P = restrict(brefs, bcell, cell)
             Q = restrict(trefs, tcell, cell)
 
-            qr = quadrule(biop, trefs, brefs, cell, qd)
+            qr = quadrule(biop, trefs, brefs, cell, qd, quadstrat)
             zlocal = cellinteractions(biop, trefs, brefs, cell, qr)
             zlocal = Q * zlocal * P'
 
@@ -184,7 +191,8 @@ function assemble_local_refines!(biop::LocalOperator, tfs::Space, bfs::Space, st
 
 end
 
-function assemble_local_matched!(biop::LocalOperator, tfs::subdBasis, bfs::subdBasis, store)
+function assemble_local_matched!(biop::LocalOperator, tfs::subdBasis, bfs::subdBasis, store;
+    quadstrat=defaultquadstrat(biop, tfs, bfs))
 
     tels, tad = assemblydata(tfs)
     bels, bad = assemblydata(bfs)
@@ -192,10 +200,10 @@ function assemble_local_matched!(biop::LocalOperator, tfs::subdBasis, bfs::subdB
     trefs = refspace(tfs)
     brefs = refspace(bfs)
 
-    qd = quaddata(biop, trefs, brefs, tels, bels)
+    qd = quaddata(biop, trefs, brefs, tels, bels, quadstrat)
     for (p,cell) in enumerate(tels)
 
-        qr = quadrule(biop, trefs, brefs, cell, qd)
+        qr = quadrule(biop, trefs, brefs, cell, qd, quadstrat)
         locmat = cellinteractions(biop, trefs, brefs, cell, qr)
 
         for i in 1 : size(locmat, 1), j in 1 : size(locmat, 2)
@@ -240,7 +248,8 @@ end
 
 For use when basis and test functions are defined on different meshes
 """
-function assemble_local_mixed!(biop::LocalOperator, tfs::Space, bfs::Space, store)
+function assemble_local_mixed!(biop::LocalOperator, tfs::Space, bfs::Space, store;
+    quadstrat=defaultquadstrat(biop, tfs, bfs))
 
     tol = sqrt(eps(Float64))
 
@@ -250,7 +259,7 @@ function assemble_local_mixed!(biop::LocalOperator, tfs::Space, bfs::Space, stor
     tels, tad = assemblydata(tfs)
     bels, bad = assemblydata(bfs)
 
-    qd = quaddata(biop, trefs, brefs, tels, bels)
+    qd = quaddata(biop, trefs, brefs, tels, bels, quadstrat)
 
     # store the bcells in an octree
     tree = elementstree(bels)
@@ -275,7 +284,7 @@ function assemble_local_mixed!(biop::LocalOperator, tfs::Space, bfs::Space, stor
                         P = restrict(brefs, bcell, cell)
                         Q = restrict(trefs, tcell, cell)
 
-                        qr = quadrule(biop, trefs, brefs, cell, qd)
+                        qr = quadrule(biop, trefs, brefs, cell, qd, quadstrat)
                         zlocal = cellinteractions(biop, trefs, brefs, cell, qr)
                         zlocal = Q * zlocal * P'
 
