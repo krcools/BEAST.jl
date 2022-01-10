@@ -209,8 +209,11 @@ crl = BEAST.curl(lag)
 nxgrad = BEAST.n × BEAST.gradient(lag)
 
 for i in eachindex(crl.fns)
+    crli = sort(crl.fns[i], by=sh->(sh.cellid, sh.refid))
+    nxgradi = sort(nxgrad.fns[i], by=sh->(sh.cellid, sh.refid))
     for j in eachindex(crl.fns[i])
-        @test crl.fns[i][j] == nxgrad.fns[i][j]
+        # @test crl.fns[i][j] == nxgrad.fns[i][j]
+        @test crli[j].coeff == -nxgradi[j].coeff
     end
 end
 
