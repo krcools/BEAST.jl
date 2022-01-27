@@ -45,8 +45,8 @@ T = Matrix(assemble(𝓣,X,X))
 e = Vector(assemble(𝒆,X))
 j_EFIE = T\e
 
-nf_E_EFIE = potential(MWSingleLayerField3D(wavenumber=k), pts, j_EFIE, X)
-nf_H_EFIE = potential(BEAST.MWDoubleLayerField3D(wavenumber=k), pts, j_EFIE, X) ./ η
+nf_E_EFIE = potential(MWSingleLayerField3D(𝓣), pts, j_EFIE, X)
+nf_H_EFIE = potential(BEAST.MWDoubleLayerField3D(𝓚), pts, j_EFIE, X) ./ η
 ff_E_EFIE = potential(MWFarField3D(wavenumber=k), pts, j_EFIE, X)
 
 @test norm(nf_E_EFIE - E.(pts))/norm(E.(pts)) ≈ 0 atol=0.01
