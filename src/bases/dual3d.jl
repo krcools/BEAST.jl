@@ -1,14 +1,14 @@
 using LinearAlgebra
 
 
-function addf!(fn::Vector{<:Shape}, x::Vector, space::Space, idcs::Vector{Int})
-    for (m,bf) in enumerate(space.fns)
-        for sh in bf
-            cellid = idcs[sh.cellid]
-            BEAST.add!(fn, cellid, sh.refid, sh.coeff * x[m])
-        end
-    end
-end
+# function addf!(fn::Vector{<:Shape}, x::Vector, space::Space, idcs::Vector{Int})
+#     for (m,bf) in enumerate(space.fns)
+#         for sh in bf
+#             cellid = idcs[sh.cellid]
+#             BEAST.add!(fn, cellid, sh.refid, sh.coeff * x[m])
+#         end
+#     end
+# end
 
 function dual2forms_body(Edges, tetrs, bnd, dir, v2t, v2n)
 

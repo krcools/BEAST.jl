@@ -25,15 +25,20 @@ int_Nodes = submesh(!in(bnd_Nodes), Nodes)
 @show length(int_Edges)
 @show length(int_Faces)
 
-primal1 = BEAST.nedelecc3d(Tetrs, int_Edges)
 primal2 = BEAST.nedelecd3d(Tetrs, Faces)
+primal1 = BEAST.nedelecc3d(Tetrs, int_Edges)
 
 Dir = bnd_Faces
 Neu = submesh(!in(Dir), bnd_Faces)
 
-@time dual1 = BEAST.dual1forms(Tetrs, Faces, Dir)
+# tetrs, bnd, dir, v2t, v2n = BEAST.dualforms_init(Tetrs, Dir)
+# dual1 = BEAST.dual1forms_body(Faces, tetrs, bnd, dir, v2t, v2n)
+
 # error()
-@time dual2 = BEAST.dual2forms(Tetrs, int_Edges, Dir)
+
+dual2 = BEAST.dual2forms(Tetrs, int_Edges, Dir)
+dual1 = BEAST.dual1forms(Tetrs, Faces, Dir)
+
 
 @assert numfunctions(primal1) == numfunctions(dual2)
 @assert numfunctions(primal2) == numfunctions(dual1)

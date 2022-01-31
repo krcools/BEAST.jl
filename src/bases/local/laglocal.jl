@@ -97,8 +97,8 @@ function gradient(ref::LagrangeRefSpace{T,1,4}, sh, tet) where {T}
 end
 
 function gradient(ref::LagrangeRefSpace{T,1,3} where {T}, sh, el)
-    sh1 = Shape(sh.cellid, mod1(sh.refid+1,3), -sh.coeff)
-    sh2 = Shape(sh.cellid, mod1(sh.refid+2,3), +sh.coeff)
+    sh1 = Shape(sh.cellid, mod1(sh.refid+1,3), +sh.coeff)
+    sh2 = Shape(sh.cellid, mod1(sh.refid+2,3), -sh.coeff)
     return [sh1, sh2]
 end
 
@@ -117,28 +117,28 @@ end
 # end
 
 
-function gradient(ref::LagrangeRefSpace{T,1,3}, sh, tri) where {T}
+# function gradient(ref::LagrangeRefSpace{T,1,3}, sh, tri) where {T}
 
-    this_vert = tri.vertices[sh.refid]
-    opp_edge = faces(tri)[sh.refid]
-    ctr_opp_face = center(opp_edge)
-    # n = normal(ctr_opp_face)
-    n = -normalize(cross(opp_edge.tangents[1], normal(tri)))
-    h = -dot(this_vert - cartesian(ctr_opp_face), n)
-    @assert h > 0 "h = $h"
-    gradval = -(1/h)*n
-    output = Vector{Shape{T}}()
-    for (i,edge) in enumerate(CompScienceMeshes.edges(tri))
-        ctr_edge = center(edge)
-        tgt = tangents(ctr_edge,1)
-        tgt = normalize(tgt)
-        lgt = volume(edge)
-        cff = -lgt * dot(tgt, gradval)
-        isapprox(cff, 0, atol=sqrt(eps(T))) && continue
-        push!(output, Shape(sh.cellid, i, sh.coeff * cff))
-    end
-    return output
-end
+#     this_vert = tri.vertices[sh.refid]
+#     opp_edge = faces(tri)[sh.refid]
+#     ctr_opp_face = center(opp_edge)
+#     # n = normal(ctr_opp_face)
+#     n = -normalize(cross(opp_edge.tangents[1], normal(tri)))
+#     h = -dot(this_vert - cartesian(ctr_opp_face), n)
+#     @assert h > 0 "h = $h"
+#     gradval = -(1/h)*n
+#     output = Vector{Shape{T}}()
+#     for (i,edge) in enumerate(CompScienceMeshes.edges(tri))
+#         ctr_edge = center(edge)
+#         tgt = tangents(ctr_edge,1)
+#         tgt = normalize(tgt)
+#         lgt = volume(edge)
+#         cff = -lgt * dot(tgt, gradval)
+#         isapprox(cff, 0, atol=sqrt(eps(T))) && continue
+#         push!(output, Shape(sh.cellid, i, sh.coeff * cff))
+#     end
+#     return output
+# end
 
 
 function gradient(ref::LagrangeRefSpace{T,1,2}, sh, seg) where {T}
