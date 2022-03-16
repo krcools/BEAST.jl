@@ -1,5 +1,7 @@
 using CompScienceMeshes, BEAST
 using LinearAlgebra
+using LiftedMaps
+using BlockArrays
 
 T = CompScienceMeshes.tetmeshsphere(1.0,0.12)
 X = BEAST.nedelecc3d(T)
@@ -7,9 +9,13 @@ X = BEAST.nedelecc3d(T)
 
 X = raviartthomas(Γ)
 @show numfunctions(X)
+Y = BEAST.buffachristiansen2(Γ)
+
 
 κ,  η  = 1.0, 1.0
-κ′, η′ = √6.0κ, η/√6.0
+κ′, η′ = √5.0κ, η/√5.0
+
+N = NCross()
 
 T  = Maxwell3D.singlelayer(wavenumber=κ)
 T′ = Maxwell3D.singlelayer(wavenumber=κ′)
@@ -60,6 +66,40 @@ u = gmres(pmchwt)
 
 # @time for i in 1:300; BEAST.LinearMaps.mul!(y, Z, u); end
 
+#preconditioner
+#=
+Tyy = assemble(T,Y,Y); println("dual discretisation assembled.")
+Nxy = Matrix(assemble(N,X,Y)); println("duality form assembled.")
+
+iNxy = inv(Nxy); println("duality form inverted.")
+NTN = iNxy' * Tyy * iNxy 
+
+M = zeros(Int, 2)
+N = zeros(Int, 2)
+
+M[1] = M[2] = numfunctions(X)
+N[1] = N[2] = numfunctions(X)
+
+U = BlockArrays.blockedrange(M)
+V = BlockArrays.blockedrange(N)
+
+precond = BEAST.ZeroMap{Float32}(U, V)
+
+z1 = LiftedMap(NTN,Block(1),Block(1),U,V)
+z2 = LiftedMap(NTN,Block(2),Block(2),U,V)
+precond = precond + z1 + z2
+
+A_pmchwt_precond = precond*A_pmchwt
+
+#GMREs
+import IterativeSolvers
+cT = promote_type(eltype(A_pmchwt), eltype(rhs))
+x = PseudoBlockVector{cT}(undef, M)
+fill!(x, 0)
+x, ch = IterativeSolvers.gmres!(x, A_pmchwt, rhs, log=true,  reltol=1e-6)
+fill!(x, 0)
+x, ch = IterativeSolvers.gmres!(x, precond*A_pmchwt, precond*rhs, log=true,  reltol=1e-6)
+=#
 Θ, Φ = range(0.0,stop=2π,length=100), 0.0
 ffpoints = [point(cos(ϕ)*sin(θ), sin(ϕ)*sin(θ), cos(θ)) for θ in Θ for ϕ in Φ]
 
@@ -73,12 +113,12 @@ Plots.plot(xlabel="theta")
 Plots.plot!(Θ,norm.(ff),label="far field",title="PMCHWT")
 
 
-#import Plotly
-#using LinearAlgebra
-#fcrj, _ = facecurrents(u[j],X)
-#fcrm, _ = facecurrents(u[m],X)
-#Plotly.plot(patch(Γ, norm.(fcrj)))
-#Plotly.plot(patch(Γ, norm.(fcrm)))
+import Plotly
+using LinearAlgebra
+fcrj, _ = facecurrents(u[j],X)
+fcrm, _ = facecurrents(u[m],X)
+Plotly.plot(patch(Γ, norm.(fcrj)),Plotly.Layout(title="j PMCHWT"))
+Plotly.plot(patch(Γ, norm.(fcrm)),Plotly.Layout(title="m PMCHWT"))
 
 
 function nearfield(um,uj,Xm,Xj,κ,η,points,
@@ -123,7 +163,7 @@ Plots.heatmap(Z, Y, real.(getindex.(H_tot,2)))
 Plots.plot(real.(getindex.(E_tot[:,51],1)))
 Plots.plot!(real.(getindex.(H_tot[:,51],2)))
 
-
+#=
 # Compare the far field and the field far
 ffradius = 100.0
 E_far, H_far = nearfield(u[m],u[j],X,X,κ,η, ffradius .* ffpoints)
@@ -133,3 +173,4 @@ Et_far = -cross.(ffpoints, nxE_far)
 plot()
 plot!(Θ, norm.(ff),label="far field")
 scatter!(Θ, norm.(Et_far), label="field far")
+=#

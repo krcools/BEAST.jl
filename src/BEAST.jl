@@ -14,6 +14,8 @@ using FastGaussQuadrature
 using LinearMaps
 using LiftedMaps
 
+using TimerOutputs
+
 import LinearAlgebra: cross, dot
 import LinearAlgebra: ×, ⋅
 
@@ -246,5 +248,7 @@ export x̂, ŷ, ẑ
 
 const n = NormalVector()
 export n
+
+const to = TimerOutput()
 
 end # module
