@@ -15,6 +15,8 @@ using FastGaussQuadrature
 using LinearMaps
 using LiftedMaps
 
+using TimerOutputs
+
 using AbstractTrees
 using NestedUnitRanges
 

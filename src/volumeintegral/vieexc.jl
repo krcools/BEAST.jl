@@ -25,6 +25,15 @@ function (e::PlaneWaveVIE)(p)
     d = e.direction
     u = e.polarisation
     a = e.amplitude
+    x = p
+    a * exp(-im * k * dot(d, x)) * u
+  end
+
+  function (e::PlaneWaveVIE)(p::CompScienceMeshes.MeshPointNM)
+    k = e.wavenumber
+    d = e.direction
+    u = e.polarisation
+    a = e.amplitude
     x = cartesian(p)
     a * exp(-im * k * dot(d, x)) * u
   end
