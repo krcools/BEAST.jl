@@ -1,6 +1,9 @@
 abstract type VSIEOperator <: IntegralOperator end
 abstract type VolumeSurfaceOperator <: VSIEOperator end
 abstract type BoundarySurfaceOperator <: VSIEOperator end
+abstract type VSIEOperatorT <: VSIEOperator end
+abstract type VolumeSurfaceOperatorT <: VolumeSurfaceOperator end
+abstract type BoundarySurfaceOperatorT <: BoundarySurfaceOperator end
 
 struct KernelValsVSIE{T,U,P,Q,K}
     gamma::U
@@ -20,7 +23,6 @@ function kernelvals(viop::VSIEOperator, p ,q)
     expn = exp(-yR)
     green = expn / (4*pi*R)
     gradgreen = - (Y +1/R)*green/R*r
-    
 
     tau = viop.tau(cartesian(q))
 
@@ -46,26 +48,26 @@ struct VSIEDoubleLayer{T,U,P} <: VolumeSurfaceOperator
     tau::P
 end
 
-
-struct VSIESingleLayerT{T,U,P} <: VolumeSurfaceOperator
+#=
+struct VSIESingleLayer2{T,U,P} <: VolumeSurfaceOperator
     gamma::T
     α::U
     β::U
     tau::P
 end
 
-struct VSIEBoundaryT{T,U,P} <: BoundarySurfaceOperator
+struct VSIEBoundaryT{T,U,P} <: BoundarySurfaceOperatorT
     gamma::T
     α::U
     tau::P
 end
 
-struct VSIEDoubleLayerT{T,U,P} <: VolumeSurfaceOperator
+struct VSIEDoubleLayerT{T,U,P} <: VolumeSurfaceOperatorT
     gamma::T
     α::U
     tau::P
 end
-
+=#
 scalartype(op::VSIEOperator) = typeof(op.gamma)
 
 export VSIE
@@ -78,6 +80,15 @@ struct VSIEIntegrand{S,T,O,K,L}
     trial_local_space::L
 end
 
+#=
+struct VSIEIntegrandT{S,T,O,K,L}
+    test_tetrahedron_element::S
+    trial_triangle_element::T
+    op::O
+    test_local_space::K
+    trial_local_space::L
+end
+=#
 
 function (igd::VSIEIntegrand)(u,v)
 
@@ -97,6 +108,28 @@ function (igd::VSIEIntegrand)(u,v)
     
     integrand(igd.op, kerneldata,tval,tgeo,bval,tgeo) * j
 end
+
+
+#=
+function (igd::VSIEIntegrandT)(u,v)
+
+    #mesh points
+    tgeo = neighborhood(igd.test_tetrahedron_element,u)
+    bgeo = neighborhood(igd.trial_triangle_element,v)
+
+    #kernel values
+    kerneldata = kernelvals(igd.op,tgeo,bgeo)
+
+    #values & grad/div/curl of local shape functions
+    tval = igd.test_local_space(tgeo) 
+    bval = igd.trial_local_space(bgeo)
+
+    #jacobian
+    j = jacobian(tgeo) * jacobian(bgeo)
+    
+    integrand(igd.op, kerneldata,tval,tgeo,bval,tgeo) * j
+end
+=#
 
 
 function integrand(viop::VSIESingleLayer, kerneldata, tvals, tgeo, bvals, bgeo)
@@ -124,20 +157,21 @@ function integrand(viop::VSIEBoundary, kerneldata, tvals, tgeo, bvals, bgeo)
 
     G = kerneldata.green
 
-    Tx = kerneldata.tau
+    Ty = kerneldata.tau
 
     α = viop.α
 
-    @SMatrix[α * Tx * dgx[i] * fy[j] * G for i in 1:3, j in 1:1]
+    @SMatrix[α * Ty * dgx[i] * fy[j] * G for i in 1:3, j in 1:1]
 end
 
-function integrand(viop::VSIESingleLayerT, kerneldata, tvals, tgeo, bvals, bgeo)
+#=
+function integrand(viop::VSIESingleLayer2, kerneldata, tvals, tgeo, bvals, bgeo)
 
-    gx = @SVector[tvals[i].value for i in 1:4]
-    fy = @SVector[bvals[i].value for i in 1:3]
+    gx = @SVector[tvals[i].value for i in 1:3]
+    fy = @SVector[bvals[i].value for i in 1:4]
 
-    dgx = @SVector[tvals[i].divergence for i in 1:4]
-    dfy = @SVector[bvals[i].divergence for i in 1:3]
+    dgx = @SVector[tvals[i].divergence for i in 1:3]
+    dfy = @SVector[bvals[i].divergence for i in 1:4]
 
     G = kerneldata.green
 
@@ -146,7 +180,7 @@ function integrand(viop::VSIESingleLayerT, kerneldata, tvals, tgeo, bvals, bgeo)
     α = viop.α
     β = viop.β
 
-    @SMatrix[α * dot(gx[i],Ty*fy[j]) * G + β * (dgx[i] * Ty*dfy[j])*G for i in 1:3, j in 1:4]
+    @SMatrix[α * dot(gx[i],Ty*fy[j]) * G - β * (dgx[i] * Ty*dfy[j])*G for i in 1:3, j in 1:4]
 end
 
 
@@ -163,7 +197,7 @@ function integrand(viop::VSIEBoundaryT, kerneldata, tvals, tgeo, bvals, bgeo)
 
     @SMatrix[α * Tx * gx[i] * dfy[j] * G for i in 1:3, j in 1:1]
 end
-
+=#
 
 function integrand(viop::VSIEDoubleLayer, kerneldata, tvals, tgeo, bvals, bgeo)
     gx = @SVector[tvals[i].value for i in 1:3]
@@ -178,21 +212,23 @@ function integrand(viop::VSIEDoubleLayer, kerneldata, tvals, tgeo, bvals, bgeo)
     @SMatrix[α * dot(cross(Ty*fy[j],gx[i]),gradG) for i in 1:3, j in 1:4]
 end
 
+#=
 function integrand(viop::VSIEDoubleLayerT, kerneldata, tvals, tgeo, bvals, bgeo)
     gx = @SVector[tvals[i].value for i in 1:4]
     fy = @SVector[bvals[i].value for i in 1:3]
 
+
     gradG = kerneldata.gradgreen
-    
+ 
     Ty = kerneldata.tau
     
     α = viop.α
 
-    @SMatrix[α * dot(cross(Ty*fy[j],gx[i]),gradG) for i in 1:4, j in 1:3]
+    @SMatrix[α * transpose(cross(fy[j],gx[i])) *gradG for i in 1:4, j in 1:3]
 end
+=#
 
-
-defaultquadstrat(op::VSIEOperator, tfs, bfs) = SauterSchwab3DQStrat(4,4,4,4,4,4)
+defaultquadstrat(op::VSIEOperator, tfs, bfs) = SauterSchwab3DQStrat(3,3,3,3,3,3)
 
 
 function quaddata(op::VSIEOperator,
@@ -221,7 +257,9 @@ quadrule(op::VolumeSurfaceOperator, g::RefSpace, f::RefSpace, i, τ, j, σ, qd, 
 
 function qr_volume(op::VolumeSurfaceOperator, g::RefSpace, f::RefSpace, i, τ, j, σ, qd,
     qs::SauterSchwab3DQStrat)
-    
+  
+    @assert (length(τ.vertices)==3 && length(σ.vertices)==4)  "Expected simplex wrong"
+
     dtol = 1.0e3 * eps(eltype(eltype(τ.vertices)))
 
     hits = 0
@@ -236,8 +274,8 @@ function qr_volume(op::VolumeSurfaceOperator, g::RefSpace, f::RefSpace, i, τ, j
             d2 = LinearAlgebra.norm_sqr(t-s)
             dmin2 = min(dmin2, d2)
             if d2 < dtol
-                push!(idx_t,i)
-                push!(idx_s,j)
+                push!(idx_t,j)
+                push!(idx_s,i)
                 hits +=1
                 break
             end
@@ -249,8 +287,8 @@ function qr_volume(op::VolumeSurfaceOperator, g::RefSpace, f::RefSpace, i, τ, j
     hits == 3 && return SauterSchwab3D.CommonFace5D_S(SauterSchwab3D.Singularity5DFace(idx_t,idx_s),(qd.sing_qp[1],qd.sing_qp[2],qd.sing_qp[3]))
     hits == 2 && return SauterSchwab3D.CommonEdge5D_S(SauterSchwab3D.Singularity5DEdge(idx_t,idx_s),(qd.sing_qp[1],qd.sing_qp[2],qd.sing_qp[3]))
     hits == 1 && return SauterSchwab3D.CommonVertex5D_S(SauterSchwab3D.Singularity5DPoint(idx_t,idx_s),(qd.sing_qp[3],qd.sing_qp[2]))
-
-
+    #hits == 0 && return SauterSchwab3D.PositiveDistance5D_S(SauterSchwab3D.Singularity5DPositiveDistance(),(qd.sing_qp[3],qd.sing_qp[2]))
+    
     return DoubleQuadRule(
         qd[1][1,i],
         qd[2][1,j])

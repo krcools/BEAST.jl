@@ -40,7 +40,9 @@ Y = BEAST.buffachristiansen2(Γ)
 
 
 κ,  η  = 1.0, 1.0
-κ′, η′ = √6.0κ, η/√6.0
+κ′, η′ = √5.0κ, η/√5.0
+
+N = NCross()
 
 T  = Maxwell3D.singlelayer(wavenumber=κ)
 T′ = Maxwell3D.singlelayer(wavenumber=κ′)
@@ -147,8 +149,8 @@ E_in, H_in = fetch(task2)
 E_tot = E_in + E_ex
 H_tot = H_in + H_ex
 
-Plots.contour(real.(getindex.(E_tot,1)))
-Plots.contour(real.(getindex.(H_tot,2)))
+contour(real.(getindex.(E_tot,1)))
+contour(real.(getindex.(H_tot,2)))
 
 Plots.heatmap(Z, Y, clamp.(real.(getindex.(E_tot,1)),-1.5,1.5))
 Plots.heatmap(Z, Y, clamp.(imag.(getindex.(E_tot,1)),-1.5,1.5))
@@ -163,3 +165,4 @@ Plots.plot!(real.(getindex.(H_tot[:,51],2)))
 plot()
 plot!(Θ, norm.(ff),label="far field")
 scatter!(Θ, norm.(Et_far), label="field far")
+=#
