@@ -2,13 +2,14 @@ using BEAST
 using Test
 using LinearAlgebra
 
-width = 4.0
-delay = 6.0
+for T in [Float32, Float64]
+width = T(4.0)
+delay = T(6.0)
 g = BEAST.creategaussian(width, delay)
 G = BEAST.fouriertransform(g)
 
 dx = width / 15
-x0 = 0.0
+x0 = T(0.0)
 x = x0 : dx : 3*delay
 n = length(x)
 y = g.(x)
@@ -22,5 +23,5 @@ Z = G.(ω)
 # scatter!(ω, real(Z))
 # plot!(ω, imag(Y))
 # scatter!(ω, imag(Z))
-
-@test norm(Y-Z) < 1.e-10
+@test norm(Y-Z) < sqrt(eps(T))
+end

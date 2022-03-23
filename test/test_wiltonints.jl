@@ -1,5 +1,6 @@
 import BEAST; BE = BEAST;
 using CompScienceMeshes
+using StaticArrays
 using Test
 
 T = Float64

@@ -1,19 +1,19 @@
 using BEAST
 using CompScienceMeshes
 using Test
-
-dir = point(0,0,1)
-width = 1.0
-delay = 1.5
-scaling = 1.0
+for T in [Float32, Float64]
+dir = point(T,0,0,1)
+local width = T(1.0)
+delay = T(1.5)
+scaling = T(1.0)
 sig = creategaussian(width, delay, scaling)
 
-pw = BEAST.planewave(dir, 1.0, sig)
+pw = BEAST.planewave(dir, T(1.0), sig)
 
 CompScienceMeshes.cartesian(p::typeof(dir)) = p
 CompScienceMeshes.cartesian(p::Number) = p
-x = point(1,0,0)
-t = 1.0
+local x = point(T,1,0,0)
+local t = T(1.0)
 @test pw(x,t) ≈ sig(t-dot(dir,x))
 
 pw2 = BEAST.gradient(pw)
@@ -26,9 +26,10 @@ dsig = derive(sig)
 
 trc = dot(BEAST.n,pw2)
 ch = simplex(
-    point(0,0,0),
-    point(1,0,0),
-    point(0,1,0))
+    point(T,0,0,0),
+    point(T,1,0,0),
+    point(T,0,1,0))
 ctr = center(ch)
 val = trc(ctr,t)
 @test val ≈ -dsig(t-dot(dir,x))
+end

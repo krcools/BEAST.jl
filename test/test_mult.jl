@@ -4,9 +4,10 @@ using BEAST
 using Test
 using LinearAlgebra
 
-faces = meshrectangle(1.0, 1.0, 0.5, 3)
+for T in [Float32, Float64]
+faces = meshrectangle(T(1.0), T(1.0), T(0.5), 3)
 srt_bnd_faces = sort.(boundary(faces))
-edges = submesh(skeleton(faces,1)) do edge
+local edges = submesh(skeleton(faces,1)) do edge
     !(sort(edge) in srt_bnd_faces)
 end
 
@@ -19,7 +20,7 @@ end
 
 Conn = connectivity(nodes, edges, sign)
 
-X = raviartthomas(faces, cellpairs(faces,edges))
+local X = raviartthomas(faces, cellpairs(faces,edges))
 @test numfunctions(X) == 8
 
 divX = divergence(X)
@@ -29,4 +30,5 @@ DD = assemble(Id, divX, divX)
 L = divX * Conn
 for sh in L.fns[1]
     @test isapprox(sh.coeff, 0, atol=1e-8)
+end
 end

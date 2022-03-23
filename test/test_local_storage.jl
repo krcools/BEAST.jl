@@ -2,12 +2,12 @@ using Test
 using BEAST
 using CompScienceMeshes
 using SparseArrays
-
-fn = joinpath(@__DIR__, "assets/sphere5.in")
-m = readmesh(fn)
+for T in [Float32, Float64]
+local fn = joinpath(@__DIR__, "assets/sphere5.in")
+local m = readmesh(fn, T=T)
 
 Id = BEAST.Identity()
-X = BEAST.raviartthomas(m)
+local X = BEAST.raviartthomas(m)
 
 Z1 = assemble(Id, X, X, storage_policy=Val{:densestorage})
 Z2 = assemble(Id, X, X, storage_policy=Val{:bandedstorage})
@@ -19,3 +19,4 @@ Z3 = assemble(Id, X, X, storage_policy=Val{:sparsedicts})
 
 @test Z1 ≈ Z2 atol=1e-8
 @test Z1 ≈ Z3 atol=1e-8
+end

@@ -2,9 +2,11 @@ using CompScienceMeshes, BEAST
 using Test
 
 fn = joinpath(dirname(@__FILE__),"assets","sphere35.in")
-m = readmesh(fn)
-t = Maxwell3D.singlelayer(wavenumber=1.0)
-X = raviartthomas(m)
+
+for T in [Float32, Float64]
+local m = readmesh(fn,T=T)
+t = Maxwell3D.singlelayer(wavenumber=T(1.0))
+local X = raviartthomas(m)
 numfunctions(X)
 
 ##
@@ -20,10 +22,10 @@ T2 = BEAST.assemblerow(t,X1,X)
 # @test T1 == T2
 
 # T2 = BEAST.assembleblock(t,X,X)
-@test T1≈T2 atol=1e-8
+@test T1≈T2 atol=sqrt(eps(T))
 
 
-I = [3,2,7]
+local I = [3,2,7]
 X1 = subset(X,I)
 T2 = zeros(scalartype(t,X1,X1),numfunctions(X1),numfunctions(X1))
 store(v,m,n) = (T2[m,n] += v)
@@ -58,3 +60,4 @@ T4 = assemble(t,X,X)
 
 # @time blkasm(I,I)
 # @time assemble(t,X1,X1)
+end

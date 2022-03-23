@@ -3,16 +3,17 @@ using BEAST
 using Test
 using LinearAlgebra
 
-o, x, y, z = CompScienceMeshes.euclidianbasis(3)
+for T in [Float32, Float64]
+local o, x, y, z = CompScienceMeshes.euclidianbasis(3,T)
 tet = simplex(x,y,z,o)
 
-rs = BEAST.NDLCDRefSpace{Float64}()
+rs = BEAST.NDLCDRefSpace{T}()
 Q = BEAST.restrict(rs, tet, tet)
-@test Q ≈ Matrix(1.0LinearAlgebra.I, 4, 4)
+@test Q ≈ Matrix(T(1.0)LinearAlgebra.I, 4, 4)
 
-rs = BEAST.NDLCCRefSpace{Float64}()
+rs = BEAST.NDLCCRefSpace{T}()
 Q = BEAST.restrict(rs, tet, tet)
-@test Q ≈ Matrix(1.0LinearAlgebra.I, 6, 6)
+@test Q ≈ Matrix(T(1.0)LinearAlgebra.I, 6, 6)
 
 c = cartesian(center(tet))
 smalltet = simplex(x,y,z,c)
@@ -33,4 +34,5 @@ for j in axes(Q,1)
     @show x
     @show y
     @test x ≈ y
+end
 end

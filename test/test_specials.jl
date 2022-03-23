@@ -1,6 +1,7 @@
 using BEAST
 
-width, delay = 4.0, 6.0
+for T in [Float32, Float64]
+width, delay = T(4.0), T(6.0)
 f = BEAST.Gaussian(width=width, delay=delay)
 g = BEAST.integrate(f)
 
@@ -12,4 +13,5 @@ y1 = g.(x)
 y2 = cumsum(f.(x))*step
 
 using LinearAlgebra
-@assert norm(y1-y2, Inf) < 1e-2
+@assert norm(y1-y2, Inf) < T(1e-2)
+end

@@ -2,9 +2,11 @@ using CompScienceMeshes
 using BEAST
 using Test
 
+
+for T in [Float32, Float64]
 fn = joinpath(dirname(@__FILE__),"assets","rect1.in")
 
-mesh = readmesh(fn)
+mesh = readmesh(fn, T=T)
 edgs = skeleton(mesh,1)
 
 charts = [chart(edgs,edg) for edg in cells(edgs)]
@@ -32,3 +34,4 @@ fn = ND.fns[3]
 v1 = dot(fn[1].coeff*ndlocal(nbd1)[1][1],ut)
 v2 = dot(fn[2].coeff*ndlocal(nbd2)[2][1],ut)
 @test v1 ≈ v2 ≈ -1/√2 ≈ -1/volume(charts[3])
+end
