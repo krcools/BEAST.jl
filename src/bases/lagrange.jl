@@ -32,15 +32,15 @@ function lagrangecxd0(mesh)
 
     U = universedimension(mesh)
     D1 = dimension(mesh)+1
-
+    T = coordtype(mesh)
     geometry = mesh
     num_cells = numcells(mesh)
 
     # create the local shapes
-    fns = Vector{Vector{Shape{Float64}}}(undef,num_cells)
+    fns = Vector{Vector{Shape{T}}}(undef,num_cells)
     pos = Vector{vertextype(mesh)}(undef,num_cells)
     for (i,cell) in enumerate(cells(mesh))
-        fns[i] = [Shape(i, 1, 1.0)]
+        fns[i] = [Shape(i, 1, T(1.0))]
         pos[i] = cartesian(center(chart(mesh, cell)))
   end
 
@@ -193,7 +193,7 @@ function lagrangec0d1(mesh, vertexlist::Vector, ::Type{Val{3}})
     Verts = vertices(mesh)
 
     # create the local shapes
-    fns = Vector{Shape{Float64}}[]
+    fns = Vector{Shape{T}}[]
     pos = Vector{vertextype(mesh)}()
 
     sizehint!(fns, length(vertexlist))
@@ -203,7 +203,7 @@ function lagrangec0d1(mesh, vertexlist::Vector, ::Type{Val{3}})
         numshapes = ncells[v]
         numshapes == 0 && continue
 
-        shapes = Vector{Shape{Float64}}(undef,numshapes)
+        shapes = Vector{Shape{T}}(undef,numshapes)
         for s in 1: numshapes
             c = cellids[v,s]
             # cell = mesh.faces[c]
@@ -212,7 +212,7 @@ function lagrangec0d1(mesh, vertexlist::Vector, ::Type{Val{3}})
             localid = something(findfirst(isequal(v), cell),0)
             @assert localid != 0
 
-            shapes[s] = Shape(c, localid, 1.0)
+            shapes[s] = Shape(c, localid, T(1.0))
         end
 
         push!(fns, shapes)
@@ -247,14 +247,14 @@ function lagrangec0d1(mesh, vertexlist, ::Type{Val{2}})
         numshapes = ncells[v]
         numshapes == 0 && continue # skip detached vertices
 
-        shapes = Vector{Shape{Float64}}(undef,numshapes)
+        shapes = Vector{Shape{T}}(undef,numshapes)
         for s in 1: numshapes
             c = cellids[v,s]
             cell = mesh.faces[c]
             if cell[1] == v
-                shapes[s] = Shape(c, 1, 1.0)
+                shapes[s] = Shape(c, 1, T(1.0))
             elseif cell[2] == v
-                shapes[s] = Shape(c, 2, 1.0)
+                shapes[s] = Shape(c, 2, T(1.0))
             else
                 error("Junctions not supported")
             end
@@ -286,7 +286,7 @@ function lagrangec0d1(mesh, nodes::CompScienceMeshes.AbstractMesh{U,1} where {U}
         for k in nzrange(Conn,i)
             cellid = rows[k]
             refid  = vals[k]
-            push!(fn, Shape(cellid, refid, 1.0))
+            push!(fn, Shape(cellid, refid, T(1.0)))
         end
         push!(fns,fn)
         push!(pos,cartesian(center(chart(nodes,node))))
@@ -401,7 +401,7 @@ This basis function creats the dual Lagrange basis function and return an object
 It also return a gemoetry containing the refined mesh.
 """
 function duallagrangec0d1(mesh, mesh2, pred, ::Type{Val{2}})
-  T = Float64
+  T = coordtype(mesh)
   U = universedimension(mesh)
   # get the information about number of vertices, number of faces , and the maping between vertices and faces for the original mesh
   numverts1 = numvertices(mesh)
@@ -627,7 +627,7 @@ function dual0forms_body(mesh::CompScienceMeshes.AbstractMesh{<:Any,3}, refd, bn
         x3_int, _, Lg3_int = extend_0_form(supp3, dir3_edges, x3_prt, Lg3_prt)
 
         # inject in the global space
-        fn = BEAST.Shape{Float64}[]
+        fn = BEAST.Shape{T}[]
         addf!(fn, x1_prt, Lg1_prt, idcs1)
         addf!(fn, x1_int, Lg1_int, idcs1)
 

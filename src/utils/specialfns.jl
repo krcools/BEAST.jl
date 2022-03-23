@@ -6,8 +6,7 @@ struct Gaussian{T}
     delay::T
 end
 
-Gaussian(;scaling=1.0, width, delay) = Gaussian(scaling, width, delay)
-
+Gaussian(;scaling=1.0, width, delay) = Gaussian(typeof(width)(scaling), width, delay)
 (g::Gaussian)(s::Real) = 4*g.scaling/(g.width*√π) * exp(-(4*(s-g.delay)/g.width)^2)
 
 

@@ -243,8 +243,8 @@ end
 
 function Centervalues(mesh::Mesh,f::Functional)
     num_cells = numcells(mesh)
-
-    res = Vector{SVector{3,Complex{Float64}}}(undef, num_cells)
+    T = coordtype(mesh)
+    res = Vector{SVector{3,Complex{T}}}(undef, num_cells)
 
     for i in 1:num_cells
         cell = cells(mesh)[i]
@@ -264,11 +264,12 @@ end
 function EvalCenter(basis::Space, coeff)
 
     mesh = basis.geo
+    T = coordtype(mesh)
     num_cells = numcells(mesh)
     num_bfs = numfunctions(basis)
     ref_space = refspace(basis)
 
-    res = Vector{SVector{3,Complex{Float64}}}(undef, num_cells)
+    res = Vector{SVector{3,Complex{T}}}(undef, num_cells)
 
     for i in 1:num_cells
         res[i] = [0,0,0]

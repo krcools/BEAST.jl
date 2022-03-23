@@ -129,7 +129,7 @@ end
 
 function potential(op, points, coeffs, basis; type=SVector{3,ComplexF64})
 	# T = SVector{3,ComplexF64}
-	T = type
+	T = SVector{3,eltype(coeffs)}
 	ff = zeros(T, size(points))
 	store(v,m,n) = (ff[m] += v*coeffs[n])
 	potential!(store, op, points, basis, type=T)
@@ -137,7 +137,7 @@ function potential(op, points, coeffs, basis; type=SVector{3,ComplexF64})
 end
 
 function potential(op, points,coeffs, basis::SpaceTimeBasis)
-	T = SVector{3,ComplexF64}
+	T = SVector{3,eltype(coeffs)}
 	ff = zeros(T, length(points), size(coeffs)[2])
 	store(v,m,n,k,o) = (ff[m,k] += v*coeffs[n,o])
 	potential!(store, op, points, basis)
@@ -146,7 +146,7 @@ end
 
 function potential(op, points, coeffs, space::DirectProductSpace; type=SVector{3,ComplexF64})
 	# T = SVector{3,ComplexF64}
-	T = type
+	T = SVector{3,eltype(coeffs)}
 	ff = zeros(T, size(points))
 	@show size(ff)
 
@@ -216,7 +216,7 @@ function potential!(store, op, points, basis::SpaceTimeBasis)
 	Nt = numfunctions(time_basis)
 	Δt = timestep(time_basis)
 
-	T = SVector{3,ComplexF64}
+	T = SVector{3,Complex{eltype(eltype(points))}}
 
 	refs = refspace(space_basis)
 	trefs = refspace(time_basis)

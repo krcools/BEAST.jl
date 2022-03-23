@@ -9,6 +9,7 @@ function innerintegrals!(op::MWSingleLayer3DSng, p, g, f, t, s, z,
         strat::WiltonSERule, dx)
 
     γ = op.gamma
+    T = typeof(γ)
     x = cartesian(p)
     n = cross(s[1]-s[3],s[2]-s[3])
     n /= norm(n)
@@ -51,6 +52,7 @@ end
 function innerintegrals!(op::MWDoubleLayer3DSng, p, g, f, t, s, z, strat::WiltonSERule, dx)
 
     γ = op.gamma
+    T=typeof(γ)
     x = cartesian(p)
     n = cross(s[1]-s[3],s[2]-s[3])
     n /= norm(n)
@@ -59,8 +61,7 @@ function innerintegrals!(op::MWDoubleLayer3DSng, p, g, f, t, s, z, strat::Wilton
     scal, vec, grad = WiltonInts84.wiltonints(s[1], s[2], s[3], x, Val{1})
 
     # \int \nabla G_s with G_s = \nabla (1/R + 0.5*γ^2*R) / (4\pi)
-    ∫∇G = (-grad[1] - 0.5*γ^2*grad[3]) / (4π)
-
+    ∫∇G = T.((-grad[1] - 0.5*γ^2*grad[3]) / (4π))
     α = 1 / volume(t) / volume(s) / 4
     for i in 1 : numfunctions(g)
         a = t[i]

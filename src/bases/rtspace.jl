@@ -29,11 +29,11 @@ Returns an object of type `RTBasis`, which comprises both the mesh and pairs of
     coefficients and indices to compute the exact basis functions when required
     by the solver.
 """
-function raviartthomas(mesh, cellpairs::Array{Int,2})
+function raviartthomas(mesh::Mesh{U,D1,T}, cellpairs::Array{Int,2}) where {U,D1,T}
 
     # combine now the pairs of monopolar RWGs in div-conforming RWGs
     numpairs = size(cellpairs,2)
-    functions = Vector{Vector{Shape{Float64}}}(undef,numpairs)
+    functions = Vector{Vector{Shape{T}}}(undef,numpairs)
     positions = Vector{vertextype(mesh)}(undef,numpairs)
     Cells = cells(mesh)
     for i in 1:numpairs
@@ -42,8 +42,8 @@ function raviartthomas(mesh, cellpairs::Array{Int,2})
             c2 = cellpairs[2,i]; cell2 = Cells[c2] #mesh.faces[c2]
             e1, e2 = getcommonedge(cell1, cell2)
             functions[i] = [
-              Shape(c1, abs(e1), +1.0),
-              Shape(c2, abs(e2), -1.0)]
+              Shape{T}(c1, abs(e1), T(+1.0)),
+              Shape{T}(c2, abs(e2), T(-1.0))]
             isct = intersect(cell1, cell2)
             @assert length(isct) == 2
             @assert !(cell1[abs(e1)] in isct)
@@ -56,7 +56,7 @@ function raviartthomas(mesh, cellpairs::Array{Int,2})
             c1 = cellpairs[1,i]
             e1 = cellpairs[2,i]
             functions[i] = [
-            Shape(c1, abs(e1), +1.0)]
+            Shape(c1, abs(e1), T(+1.0))]
             positions[i] = cartesian(center(chart(mesh, Cells[c1])))
         end
     end
@@ -150,10 +150,11 @@ leaving or entering port defined by cellpairs cps.  weight defines the
 total current over the port and its direction (+ve = out, -ve = in)
 """
 function rt_cedge(cps::Array{Int,2}, weight)
+    T=typeof(weight)
   numpairs = size(cps,2)
   @assert numpairs > 0
   weight = weight / numpairs #total current leaving and entering equal 1
-  functions =  Vector{Shape{Float64}}(undef,numpairs) #note: not a Vector{Vector}
+  functions =  Vector{Shape{T}}(undef,numpairs) #note: not a Vector{Vector}
     for i in 1:numpairs
         c1 = cps[1,i]
         e1 = cps[2,i]
@@ -172,10 +173,11 @@ weight defines the magnitude of individual current in and out the half triangles
 and it's polarity simply defines whether to start with in or out
 """
 function rt_vedge(cps::Array{Int,2}, weight)
+  T=typeof(weight)
   numpairs = size(cps,2)
   @assert numpairs > 0
   #adjacent cells are considered a pair, so we have one less numpairs
-  functions =  Vector{Vector{Shape{Float64}}}(undef,numpairs - 1)
+  functions =  Vector{Vector{Shape{T}}}(undef,numpairs - 1)
     for i in 1:numpairs
       if i < numpairs # stop when on last cellpair
         c1 = cps[1,i]; e1 = cps[2,i]
@@ -215,14 +217,14 @@ function rt_ports(Γ, γ...)
         port1 = portcells(Γ, γ[i][1])
         port2 = portcells(Γ, γ[i][2])
 
-        ce1 = rt_cedge(port1, +1.0)
-        ce2 = rt_cedge(port2, -1.0)
+        ce1 = rt_cedge(port1, T(+1.0))
+        ce2 = rt_cedge(port2, T(-1.0))
 
         ffs = Vector{Shape{T}}(undef,length(ce1) + length(ce2))
         ffs = [ce1;ce2]
 
-        ve1 = rt_vedge(port1, +1.0)
-        ve2 = rt_vedge(port2, -1.0)
+        ve1 = rt_vedge(port1, T(+1.0))
+        ve2 = rt_vedge(port2, T(-1.0))
 
         fns = [fns;[ffs];ve1;ve2]
     end

@@ -62,10 +62,10 @@ end
 defaultquadstrat(::LocalOperator, ::LagrangeRefSpace{T,D1,2}, ::LagrangeRefSpace{T,D2,2}) where {T,D1,D2} = SingleNumQStrat(6)
 function quaddata(op::LocalOperator, g::LagrangeRefSpace{T,Deg,2} where {T,Deg},
     f::LagrangeRefSpace, tels::Vector, bels::Vector, qs::SingleNumQStrat)
-    
+    U = typeof(tels[1].volume)
     u, w = legendre(qs.quad_rule, 0.0, 1.0)
     qd = [(w[i],u[i]) for i in eachindex(w)]
-    A = _alloc_workspace(qd, g, f, tels, bels)
+    A = _alloc_workspace(Tuple{U,U}.(qd), g, f, tels, bels)
     return qd, A
 end
 
