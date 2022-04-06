@@ -104,8 +104,8 @@ x, ch = IterativeSolvers.gmres!(x, precond*A_pmchwt, precond*rhs, log=true,  rel
 ffpoints = [point(cos(ϕ)*sin(θ), sin(ϕ)*sin(θ), cos(θ)) for θ in Θ for ϕ in Φ]
 
 # Don't forget the far field comprises two contributions
-ffm = potential(MWFarField3D(κ*im, η), ffpoints, u[m], X)
-ffj = potential(MWFarField3D(κ*im, η), ffpoints, u[j], X)                                                                                                                                                                                                                                                          
+ffm = potential(MWFarField3D(gamma=κ*im), ffpoints, u[m], X)
+ffj = potential(MWFarField3D(gamma=κ*im), ffpoints, u[j], X)
 ff = -η*im*κ*ffj + im*κ*cross.(ffpoints, ffm)
 
 using Plots
