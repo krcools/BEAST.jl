@@ -23,39 +23,39 @@ function neighbortest(X)
 end
 
 for T in [Float32,Float64]
-tol = eps(T) * 10^3
+    tol = eps(T) * 10^3
 
-mesh = meshrectangle(T(1.0), T(1.0), T(0.5))
-@test numvertices(mesh) == 9
+    mesh = meshrectangle(T(1.0), T(1.0), T(0.5))
+    @test numvertices(mesh) == 9
 
-idcs = mesh.faces[1]
-@test size(idcs) == (3,)
+    idcs = mesh.faces[1]
+    @test size(idcs) == (3,)
 
-verts = vertices(mesh, idcs)
-@test size(verts) == (3,)
+    verts = vertices(mesh, idcs)
+    @test size(verts) == (3,)
 
-faces = skeleton(mesh, 2)
-idcs = faces.faces[1]
-verts = vertices(mesh, idcs)
-p = simplex(verts, Val{2})
-@test volume(p) == T(1/8)
+    faces = skeleton(mesh, 2)
+    idcs = faces.faces[1]
+    verts = vertices(mesh, idcs)
+    p = simplex(verts, Val{2})
+    @test volume(p) == T(1/8)
 
-edges = skeleton(mesh,1)
-@test numcells(edges) == 16
+    edges = skeleton(mesh,1)
+    @test numcells(edges) == 16
 
-cps = cellpairs(mesh, edges)
-@test size(cps) == (2,16)
+    cps = cellpairs(mesh, edges)
+    @test size(cps) == (2,16)
 
-# select only inner edges
-I = findall(x->(x>0), cps[2,:])
-cps = cps[:,I]
-@test size(cps) == (2,8)
+    # select only inner edges
+    I = findall(x->(x>0), cps[2,:])
+    cps = cps[:,I]
+    @test size(cps) == (2,8)
 
-# build the Raviart-Thomas elements
-rt = raviartthomas(mesh, cps)
-@test numfunctions(rt) == 8
+    # build the Raviart-Thomas elements
+    rt = raviartthomas(mesh, cps)
+    @test numfunctions(rt) == 8
 
 
 
-neighbortest(rt)
+    neighbortest(rt)
 end
