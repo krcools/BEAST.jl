@@ -1,14 +1,14 @@
 using CompScienceMeshes, BEAST
 using LinearAlgebra
 
-T = tetmeshsphere(1.0,0.25)
-X = nedelecc3d(T)
+T = CompScienceMeshes.tetmeshsphere(1.0,0.12)
+X = BEAST.nedelecc3d(T)
 Γ = boundary(T)
 
 X = raviartthomas(Γ)
 @show numfunctions(X)
 
-κ,  η  = 1.0, 1.0
+κ,  η  = π, 1.0
 κ′, η′ = 2.0κ, η/2.0
 
 T  = Maxwell3D.singlelayer(wavenumber=κ)
@@ -30,7 +30,12 @@ pmchwt = @discretise(
          (K+K′)[l,j] + (α*T+α′*T′)[l,m] == -e[k] - h[l],
     j∈X, m∈X, k∈X, l∈X)
 
-# Z = BEAST.sysmatrix(pmchwt)
+
+# Q = BEAST.sysmatrix(pmchwt)
+# M = BEAST.convert_to_dense(Q)
+# error()    
+# Q = assemble(T, X, X)
+# error()
 # b = BEAST.rhs(pmchwt)
 # M = BEAST.convert_to_dense(Z)
 # u = M \ b
@@ -47,20 +52,27 @@ pmchwt = @discretise(
 # u, ch = IterativeSolvers.gmres!(u, Z, b, log=true,  maxiter=1000,
 #     restart=1000, reltol=1e-5, verbose=true)
 
-u = solve(pmchwt)
+u = gmres(pmchwt)
+
+Z = BEAST.sysmatrix(pmchwt)
+u = zeros(ComplexF64, axes(Z,2))
+y = zeros(ComplexF64, axes(Z,1))
+
+@time for i in 1:300; BEAST.LinearMaps.mul!(y, Z, u); end
 
 Θ, Φ = range(0.0,stop=2π,length=100), 0.0
 ffpoints = [point(cos(ϕ)*sin(θ), sin(ϕ)*sin(θ), cos(θ)) for θ in Θ for ϕ in Φ]
 
 # Don't forget the far field comprises two contributions
 ffm = potential(MWFarField3D(κ*im), ffpoints, u[m], X)
-ffj = potential(MWFarField3D(κ*im), ffpoints, u[j], X)
+ffj = potential(MWFarField3D(κ*im), ffpoints, u[j], X)                                                                                                                                                                                                                                                          
 ff = -η*im*κ*ffj + im*κ*cross.(ffpoints, ffm)
 
 using Plots
 plot(xlabel="theta")
 plot!(Θ,norm.(ff),label="far field",title="PMCHWT")
 
+error()
 #import Plotly
 #using LinearAlgebra
 #fcrj, _ = facecurrents(u[j],X)
