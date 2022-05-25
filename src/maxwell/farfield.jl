@@ -1,4 +1,4 @@
-
+abstract type MWFarField end
 
 """
 Operator to compute the far field of a current distribution. In particular, given the current distribution ``j`` this operator allows for the computation of
@@ -9,22 +9,83 @@ A j = n × ∫_Γ e^{γ ̂x ⋅ y} dy
 
 where ``̂x`` is the unit vector in the direction of observation. Note that the assembly routing expects the observation directions to be normalised by the caller.
 """
-struct MWFarField3D{K}
+struct MWFarField3D{K, U} <: MWFarField
   gamma::K
+  waveimpedance::U
+end
+struct MWDoubleLayerFarField3D{K, U} <: MWFarField
+  gamma::K
+  waveimpedance::U
 end
 
-function MWFarField3D(;wavenumber=error("wavenumber is a required argument"))
-  if iszero(real(wavenumber))
-    MWFarField3D(-imag(wavenumber))
-  else
-    MWFarField3D(wavenumber*im)
-  end
+function MWFarField3D(;
+  gamma=nothing,
+  wavenumber=nothing,
+  waveimpedance=nothing
+)
+    if (gamma === nothing) && (wavenumber === nothing)
+        error("Supply one of (not both) gamma or wavenumber")
+    end
+
+    if (gamma !== nothing) && (wavenumber !== nothing)
+        error("Supply one of (not both) gamma or wavenumber")
+    end
+
+    if gamma === nothing
+        if iszero(real(wavenumber))
+            gamma = -imag(wavenumber)
+        else
+            gamma = im*wavenumber
+        end
+    end
+
+    @assert gamma !== nothing
+
+    waveimpedance === nothing && (waveimpedance = 1.0)
+    
+    return MWFarField3D(gamma, waveimpedance)
 end
 
-quaddata(op::MWFarField3D,rs,els) = quadpoints(rs,els,(3,))
-quadrule(op::MWFarField3D,refspace,p,y,q,el,qdata) = qdata[1,q]
+MWFarField3D(op::MWSingleLayer3D{T,U}) where {T,U} = MWFarField3D(op.gamma, sqrt(op.α*op.β))
 
-kernelvals(op::MWFarField3D,y,p) = exp(op.gamma*dot(y,cartesian(p)))
+function MWDoubleLayerFarField3D(;
+  gamma=nothing,
+  wavenumber=nothing,
+  waveimpedance=nothing
+)
+    if (gamma === nothing) && (wavenumber === nothing)
+        error("Supply one of (not both) gamma or wavenumber")
+    end
+
+    if (gamma !== nothing) && (wavenumber !== nothing)
+        error("Supply one of (not both) gamma or wavenumber")
+    end
+
+    if gamma === nothing
+        if iszero(real(wavenumber))
+            gamma = -imag(wavenumber)
+        else
+            gamma = im*wavenumber
+        end
+    end
+
+    @assert gamma !== nothing
+
+    waveimpedance === nothing && (waveimpedance = 1.0)
+    
+    return MWDoubleLayerFarField3D(gamma, waveimpedance)
+end
+
+MWDoubleLayerFarField3D(op::MWDoubleLayer3D{T}) where {T} = MWDoubleLayerFarField3D(op.gamma, 1.0)
+
+quaddata(op::MWFarField,rs,els) = quadpoints(rs,els,(3,))
+quadrule(op::MWFarField,refspace,p,y,q,el,qdata) = qdata[1,q]
+
+kernelvals(op::MWFarField,y,p) = exp(op.gamma*dot(y,cartesian(p)))
 function integrand(op::MWFarField3D,krn,y,f,p)
-    (y × (krn * f[1])) × y
+  op.waveimpedance*(y × (krn * f[1])) × y
+end
+
+function integrand(op::MWDoubleLayerFarField3D,krn,y,f,p)
+  op.waveimpedance*(y × (krn * f[1]))
 end
