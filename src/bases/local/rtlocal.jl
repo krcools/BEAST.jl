@@ -79,3 +79,26 @@ function restrict(ϕ::RTRefSpace{T}, dom1, dom2) where T
 
     return Q
 end
+
+
+const _vert_perms_rt = [
+    (1,2,3),
+    (2,3,1),
+    (3,1,2),
+    (2,1,3),
+    (1,3,2),
+    (3,2,1),
+]
+const _dof_perms_rt = [
+    (1,2,3),
+    (3,1,2),
+    (2,3,1),
+    (2,1,3),
+    (1,3,2),
+    (3,2,1),
+]
+
+function dof_permutation(vert_permutation)
+    i = findfirst(==(vert_permutation), _vert_perms_rt)
+    return _dof_perms_rt[i]
+end

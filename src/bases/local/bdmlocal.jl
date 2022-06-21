@@ -18,3 +18,32 @@ function (f::BDMRefSpace)(p)
         (value=u*tu/j,         divergence=d),
         (value=v*tv/j,         divergence=d),]
 end
+
+
+
+const _vert_perms_bdm = [
+    (1,2,3),
+    (2,3,1),
+    (3,1,2),
+    (2,1,3),
+    (1,3,2),
+    (3,2,1),
+]
+const _dof_perms_bdm = [
+    (1,2,3,4,5,6),
+    (5,6,1,2,3,4),
+    (3,4,5,6,1,2),
+    (4,3,2,1,6,5),
+    (2,1,6,5,4,3),
+    (6,5,4,3,2,1),
+]
+
+function dof_permutation(::BDMRefSpace, vert_permutation)
+    i = findfirst(==(tuple(vert_permutation...)), _vert_perms_bdm)
+    if !(i != nothing)
+        @show vert_permutation
+        @show i
+        error()
+    end
+    return _dof_perms_bdm[i]
+end
