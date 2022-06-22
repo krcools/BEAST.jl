@@ -2,20 +2,20 @@ using LinearAlgebra
 
 function convert_to_dense(A::LinearMaps.LinearCombination)
 
-    @info "convert matrix to dense..."
-    T = eltype(A)
-    # M = zeros(T, size(A))
-    # M = PseudoBlockMatrix{T}(undef, BlockArrays.blocksizes(A)...)
-    # fill!(M,0)
-    M = zeros(eltype(A), axes(A))
-    @show typeof(M)
-    for map in A.maps
-        mul!(M, 1, map, 1, 1)
-        # M .+= Matrix(map)
-    end
+    # @info "convert matrix to dense..."
+    # T = eltype(A)
+    # # M = zeros(T, size(A))
+    # # M = PseudoBlockMatrix{T}(undef, BlockArrays.blocksizes(A)...)
+    # # fill!(M,0)
+    # M = zeros(eltype(A), axes(A))
+    # @show typeof(M)
+    # for map in A.maps
+    #     mul!(M, 1, map, 1, 1)
+    # end
 
-    @info "matrix converted to dense"
-    return M
+    # @info "matrix converted to dense"
+    # return M
+    return Matrix(A)
 end
 
 """
