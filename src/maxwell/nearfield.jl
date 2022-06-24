@@ -1,42 +1,106 @@
 
 
-mutable struct MWSingleLayerField3D{K}
-    wavenumber::K
+mutable struct MWSingleLayerField3D{T, U}
+    gamma::T
+    α::U
+    β::U
 end
 
-mutable struct MWDoubleLayerField3D{K}
-    wavenumber::K
+mutable struct MWDoubleLayerField3D{T}
+    gamma::T
 end
 
 """
-    MWSingleLayerField3D(wavenumber = error())
+    MWSingleLayerField3D(;gamma, wavenumber, alpha, beta)
 
 Create the single layer near field operator, for use with `potential`.
 """
-MWSingleLayerField3D(;wavenumber = error("Missing arg: `wavenumber`")) = MWSingleLayerField3D(wavenumber)
-MWDoubleLayerField3D(;wavenumber = error("Missing arg: `wavenumber`")) = MWDoubleLayerField3D(wavenumber)
+function MWSingleLayerField3D(;
+    gamma=nothing,
+    wavenumber=nothing,
+    alpha=nothing,
+    beta=nothing
+)
 
+    if (gamma === nothing) && (wavenumber === nothing)
+        error("Supply one of (not both) gamma or wavenumber")
+    end
+
+    if (gamma !== nothing) && (wavenumber !== nothing)
+        error("Supply one of (not both) gamma or wavenumber")
+    end
+
+    if gamma === nothing
+        if iszero(real(wavenumber))
+            gamma = -imag(wavenumber)
+        else
+            gamma = im*wavenumber
+        end
+    end
+
+    @assert gamma !== nothing
+
+    alpha === nothing && (alpha = -gamma)
+    beta  === nothing && (beta  = -1/gamma)
+
+    MWSingleLayerField3D(gamma, alpha, beta)
+end
+
+MWSingleLayerField3D(op::MWSingleLayer3D{T,U}) where {T,U} = MWSingleLayerField3D(op.gamma, op.α, op.β)
+
+"""
+    MWDoubleLayerField3D(; gamma, wavenumber)
+
+Create the double layer near field operator, for use with `potential`.
+"""    
+function MWDoubleLayerField3D(;
+    gamma=nothing,
+    wavenumber=nothing
+) 
+
+    if (gamma === nothing) && (wavenumber === nothing)
+        error("Supply one of (not both) gamma or wavenumber")
+    end
+
+    if (gamma !== nothing) && (wavenumber !== nothing)
+        error("Supply one of (not both) gamma or wavenumber")
+    end
+
+    if gamma === nothing
+        if iszero(real(wavenumber))
+            gamma = -imag(wavenumber)
+        else
+            gamma = im*wavenumber
+        end
+    end
+
+    @assert gamma !== nothing
+
+    MWDoubleLayerField3D(gamma)
+end
+
+MWDoubleLayerField3D(op::MWDoubleLayer3D) = MWDoubleLayerField3D(op.gamma)
 
 const MWField3D = Union{MWSingleLayerField3D,MWDoubleLayerField3D}
 quaddata(op::MWField3D,rs,els) = quadpoints(rs,els,(2,))
 quadrule(op::MWField3D,refspace,p,y,q,el,qdata) = qdata[1,q]
 function kernelvals(op::MWField3D,y,p)
 
-        k = op.wavenumber
+        γ = op.gamma
         r = y - cartesian(p)
         R = norm(r)
 
-        kr = k * R
-        expn = exp(-im * k * R)
+        γR = γ*R
+        expn = exp(-γR)
         green = expn / (4pi*R)
-        gradgreen = -(im*k + 1/R) * green / R * r
+        gradgreen = -(γ + 1/R) * green / R * r
 
         krn = (trans=r, dist=R, green=green, gradgreen=gradgreen)
 end
 
 function integrand(op::MWSingleLayerField3D, krn, y, fp, p)
 
-    γ = im * op.wavenumber
+    γ = op.gamma
 
     j = fp.value
     ρ = fp.divergence
@@ -44,7 +108,7 @@ function integrand(op::MWSingleLayerField3D, krn, y, fp, p)
     G  = krn.green
     ∇G = krn.gradgreen
 
-    -γ*G*j + ∇G*ρ/γ
+    op.α*G*j - op.β*∇G*ρ
 end
 
 function integrand(op::MWDoubleLayerField3D, krn, y, fp, p)

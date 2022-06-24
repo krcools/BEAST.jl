@@ -1,7 +1,7 @@
 module Variational
 
 using BlockArrays
-
+import BEAST
 # import Base: start, done, next
 
 export transposecalls!
@@ -261,6 +261,14 @@ Return a LinForm corresponding to f[v]
 """
 getindex(f, v::HilbertVector) = LinForm(v.space, [LinTerm(v.idx, v.opstack, 1, f)])
 
+function getindex(f, V::Vector{HilbertVector})
+    terms = Vector{LinTerm}()
+    for v in V
+        term = LinTerm(v.idx, v.opstack, 1, f)
+        push!(terms, term)
+    end
+    return LinForm(first(V).space, terms)
+end
 
 """
     getindex(A, v::HilbertVector, u::HilbertVector)
@@ -270,6 +278,29 @@ Create a BilForm corresponding to A[v,u]
 function getindex(A, v::HilbertVector, u::HilbertVector)
     terms = [ BilTerm(v.idx, u.idx, v.opstack, u.opstack, 1, A) ]
     BilForm(v.space, u.space, terms)
+end
+
+
+function getindex(A::BEAST.BlockDiagonalOperator, V::Vector{HilbertVector}, U::Vector{HilbertVector})
+    op = A.op
+    terms = Vector{BilTerm}()
+    @assert length(V) == length(U)
+    for (v,u) in zip(V,U)
+            term = BilTerm(v.idx, u.idx, v.opstack, u.opstack, 1, op)
+            push!(terms, term)
+    end
+    return BilForm(first(V).space, first(U).space, terms)
+end
+
+function getindex(op::Any, V::Vector{HilbertVector}, U::Vector{HilbertVector})
+    terms = Vector{BilTerm}()
+    for v in V
+        for u in U
+            term = BilTerm(v.idx, u.idx, v.opstack, u.opstack, 1, op)
+            push!(terms, term)
+        end
+    end
+    return BilForm(first(V).space, first(U).space, terms)
 end
 
 

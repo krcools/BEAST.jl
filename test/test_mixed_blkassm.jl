@@ -33,7 +33,7 @@ k = 2π/λ
 ω = k*c
 η = sqrt(μ/ε)
 
-a = 1
+a = 1.0
 Γ = CompScienceMeshes.meshcuboid(a,a,a,0.2)
 
 𝓣 = Maxwell3D.singlelayer(wavenumber=k)

@@ -7,6 +7,7 @@ using SparseArrays
 using FillArrays
 using BlockArrays
 using SparseMatrixDicts
+using Polyester
 
 using SauterSchwabQuadrature
 using SauterSchwab3D

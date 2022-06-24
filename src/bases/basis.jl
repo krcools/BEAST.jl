@@ -148,7 +148,7 @@ function.
 *Note*: the indices `c` correspond to the position of the corresponding
 element whilst iterating over `geometry(basis)`.
 """
-function assemblydata(basis::Space)
+function assemblydata(basis::Space; onlyactives=true)
 
     @assert numfunctions(basis) != 0
 
@@ -163,10 +163,17 @@ function assemblydata(basis::Space)
     # # determine the maximum number of function defined over a given cell
     celltonum = make_celltonum(num_cells, num_refs, num_bfs, basis)
 
-    # # mark the active elements, i.e. elements over which
-    # # at least one function is defined.
-    active, index_among_actives, num_active_cells, act_to_global =
-        index_actives(num_cells, celltonum)
+    # mark the active elements, i.e. elements over which
+    # at least one function is defined.
+    if onlyactives
+        active, index_among_actives, num_active_cells, act_to_global =
+            index_actives(num_cells, celltonum)
+    else
+        active = trues(num_cells)
+        num_active_cells = num_cells
+        index_among_actives = collect(1:num_cells)
+        act_to_global = collect(1:num_cells)
+    end
 
     @assert num_active_cells != 0
     elements = instantiate_charts(geo, num_active_cells, active)
