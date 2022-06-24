@@ -292,7 +292,8 @@ function lagrangec0d1(mesh, nodes::CompScienceMeshes.AbstractMesh{U,1} where {U}
         push!(pos,cartesian(center(chart(nodes,node))))
     end
 
-    LagrangeBasis{1,0,3}(mesh, fns, pos)
+    NF = dimension(mesh) + 1
+    LagrangeBasis{1,0,NF}(mesh, fns, pos)
 end
 
 
@@ -477,6 +478,8 @@ function duallagrangec0d1(mesh, mesh2, pred, ::Type{Val{2}})
 end
 
 gradient(space::LagrangeBasis{1,0}, geo, fns) = NDLCCBasis(geo, fns)
+# gradient(space::LagrangeBasis{1,0}, geo::CompScienceMeshes.AbstractMesh{U,3} where {U}, fns) = NDBasis(geo, fns)
+
 curl(space::LagrangeBasis{1,0}, geo, fns) = RTBasis(geo, fns)
 
 gradient(space::LagrangeBasis{1,0,<:CompScienceMeshes.AbstractMesh{<:Any,2}}, geo, fns) =

@@ -76,15 +76,15 @@ function assemble!(biop::LocalOperator, tfs::Space, bfs::Space, store,
     threading::Type{Threading{:single}};
     quadstrat=defaultquadstrat(biop, tfs, bfs))
 
-if geometry(tfs) == geometry(bfs)
-    return assemble_local_matched!(biop, tfs, bfs, store; quadstrat)
-end
+    if geometry(tfs) == geometry(bfs)
+        return assemble_local_matched!(biop, tfs, bfs, store; quadstrat)
+    end
 
-if CompScienceMeshes.refines(geometry(tfs), geometry(bfs))
-    return assemble_local_refines!(biop, tfs, bfs, store; quadstrat)
-end
+    if CompScienceMeshes.refines(geometry(tfs), geometry(bfs))
+        return assemble_local_refines!(biop, tfs, bfs, store; quadstrat)
+    end
 
-return assemble_local_mixed!(biop, tfs, bfs, store; quadstrat)
+    return assemble_local_mixed!(biop, tfs, bfs, store; quadstrat)
 end
 
 function assemble_local_matched!(biop::LocalOperator, tfs::Space, bfs::Space, store;
@@ -100,6 +100,10 @@ function assemble_local_matched!(biop::LocalOperator, tfs::Space, bfs::Space, st
     brefs = refspace(bfs)
 
     qd = quaddata(biop, trefs, brefs, tels, bels, quadstrat)
+
+    verbose = length(tels) > 10_000
+    verbose && print("dots out of 20: ")
+    todo, done, pctg = length(tels), 0, 0
     locmat = zeros(scalartype(biop, trefs, brefs), numfunctions(trefs), numfunctions(brefs))
     for (p,cell) in enumerate(tels)
         P = ta2g[p]
@@ -113,7 +117,13 @@ function assemble_local_matched!(biop::LocalOperator, tfs::Space, bfs::Space, st
         for i in 1 : size(locmat, 1), j in 1 : size(locmat, 2)
             for (m,a) in tad[p,i], (n,b) in bad[q,j]
                 store(a * locmat[i,j] * b, m, n)
-end end end end
+        
+        end end
+
+        new_pctg = round(Int, (done += 1) / todo * 100)
+        verbose && new_pctg > pctg + 4 && (print("."); pctg = new_pctg)
+    end
+end
 
 
 function assemble_local_refines!(biop::LocalOperator, tfs::Space, bfs::Space, store;

@@ -1,6 +1,7 @@
+@info "Executing test_nitsche.jl"
+
 using Test
 using LinearAlgebra
-
 using CompScienceMeshes
 using BEAST
 
