@@ -4,6 +4,8 @@ struct NDBasis{T,M,P} <: Space{T}
     pos::Vector{P}
 end
 
+NDBasis(geo, fns) = NDBasis(geo, fns, Vector{vertextype(geo)}(undef,length(fns)))
+
 refspace(s::NDBasis) = NDRefSpace{scalartype(s)}()
 
 
@@ -39,6 +41,11 @@ function nedelec(surface, edges=skeleton(surface,1))
 end
 
 function LinearAlgebra.cross(::NormalVector, s::NDBasis)
-    @assert CompScienceMeshes.isoriented(s.geo)
+    # @assert CompScienceMeshes.isoriented(s.geo)
     RTBasis(s.geo, s.fns, s.pos)
+end
+
+
+function curl(space::NDBasis)
+    divergence(n × space)
 end

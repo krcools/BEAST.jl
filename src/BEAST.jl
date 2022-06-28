@@ -64,6 +64,7 @@ export PlaneWaveMW
 export dipolemw3d, DipoleMW
 export TangTraceMW, CrossTraceMW
 export curl
+export gradient
 export MWSingleLayerField3D
 export SingleLayerTrace
 export DoubleLayerRotatedMW3D
@@ -149,6 +150,7 @@ include("bases/ndspace.jl")
 include("bases/bdmdiv.jl")
 include("bases/ndlccspace.jl")
 include("bases/ndlcdspace.jl")
+include("bases/dual3d.jl")
 include("bases/bdm3dspace.jl")
 
 

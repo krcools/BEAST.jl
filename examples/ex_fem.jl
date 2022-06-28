@@ -1,8 +1,84 @@
 using CompScienceMeshes
 using BEAST
+using Makeitso
 
-tetrs = CompScienceMeshes.tetmeshsphere(1.0, 0.10)
-# tetrs = CompScienceMeshes.tetmeshsphere(1.0, 0.35)
+using SparseArrays
+function isdivconforming(space)
+
+    geo = geometry(space)
+    mesh = geo
+
+    edges = skeleton(mesh,1)
+    D = connectivity(edges, mesh, abs)
+    rows = rowvals(D)
+    vals = nonzeros(D)
+
+    Flux = zeros(Float64, numcells(mesh),3)
+    TotalFlux = zeros(Float64, numcells(edges), numfunctions(space))
+
+    for i in 1 : numfunctions(space)
+
+        fill!(Flux, 0)
+        bfs = BEAST.basisfunction(space,i)
+        for bf in bfs
+            c = bf.cellid
+            e = bf.refid
+            x = bf.coeff
+            Flux[c,e] += x
+        end
+
+        for E in 1 : numcells(edges)
+            for j in nzrange(D,E)
+                F = rows[j]
+                e = vals[j]
+                @assert 1 <= e <= 3
+                TotalFlux[E,i] += Flux[F,e]
+            end
+        end
+    end
+
+    I = findall(abs.(TotalFlux) .> 1e-6)
+    @show length(I)
+    return TotalFlux, I
+end
+
+
+import Plotly
+function showfn(space,i)
+    geo = geometry(space)
+    T = coordtype(geo)
+    X = Dict{Int,T}()
+    Y = Dict{Int,T}()
+    Z = Dict{Int,T}()
+    U = Dict{Int,T}()
+    V = Dict{Int,T}()
+    W = Dict{Int,T}()
+    for sh in space.fns[i]
+        chrt = chart(geo, cells(geo)[sh.cellid])
+        nbd = CompScienceMeshes.center(chrt)
+        vals = refspace(space)(nbd)
+        x,y,z = cartesian(nbd)
+        # @show vals[sh.refid].value
+        u,v,w = vals[sh.refid].value
+        # @show x, y, z
+        # @show u, v, w
+        X[sh.cellid] = x
+        Y[sh.cellid] = y
+        Z[sh.cellid] = z
+        U[sh.cellid] = get(U,sh.cellid,zero(T)) + sh.coeff * u
+        V[sh.cellid] = get(V,sh.cellid,zero(T)) + sh.coeff * v
+        W[sh.cellid] = get(W,sh.cellid,zero(T)) + sh.coeff * w
+    end
+    X = collect(values(X))
+    Y = collect(values(Y))
+    Z = collect(values(Z))
+    U = collect(values(U))
+    V = collect(values(V))
+    W = collect(values(W))
+    Plotly.cone(x=X,y=Y,z=Z,u=U,v=V,w=W)
+end
+
+tetrs = CompScienceMeshes.tetmeshsphere(1.0, 0.15)
 @show numcells(tetrs)
 
 bndry = boundary(tetrs)
@@ -26,7 +102,8 @@ A2 = assemble(Id, X, X)
 A = A1 - A2
 
 using LinearAlgebra
-f = BEAST.ScalarTrace(x -> point(1,0,0) * exp(-norm(x)^2/4))
+# f = BEAST.ScalarTrace(x -> point(1,0,0) * exp(-norm(x)^2/4))
+f = BEAST.ScalarTrace(x -> point(1,0,0))
 b = assemble(f, X)
 
 u = A \ b
@@ -73,13 +150,37 @@ fcr, geo = facecurrents(u, Z)
 import Plotly
 Plotly.plot(patch(geo, norm.(fcr)))
 
-const CSM = CompScienceMeshes
-hemi = submesh(tet -> cartesian(CSM.center(chart(tetrs,tet)))[3] < 0, tetrs)
-# error()
-bnd_hemi = boundary(hemi)
+Dir = Mesh(vertices(tetrs), CompScienceMeshes.celltype(G)[])
+# error("stop")
+Xplus = BEAST.nedelecc3d(tetrs, skeleton(tetrs,1))
 
-Xhemi = BEAST.restrict(X, hemi)
-tXhemi = BEAST.ttrace(Xhemi, bnd_hemi)
+bnd_tetrs = boundary(tetrs)
+ttXplus = BEAST.ttrace(Xplus, bnd_tetrs)
+TF, Idcs = isdivconforming(ttXplus)
+@show length(Idcs)
 
+# error("stop")
+@target Q ()->BEAST.dual2forms(tetrs, skeleton(tetrs,1), Dir)
+Q = @make Q
+
+
+QXplus = assemble(Id, Q, Xplus)
+curlX = curl(X)
+QcurlX = assemble(Id, Q, curlX)
+
+v = QXplus \ (QcurlX * u)
+fcr1, geo1 = facecurrents(v, BEAST.ttrace(Xplus, bnd_tetrs));
+fcr2, geo2 = facecurrents(u, BEAST.ttrace(curl(X), bnd_tetrs));
+fcr3, geo3 = facecurrents(v, divergence(ttXplus));
+
+
+# tetrs1 = skeleton(tetrs,1)
+# tetrs2 = skeleton(tetrs,2)
+# ttXplus = BEAST.ttrace(Xplus, bnd_tetrs)
+#
+# @assert dimension(geometry(ttXplus)) == 2
+# length(geometry(ttXplus)) == length(tetrs2)
+#
+# Conn = connectivity(tetrs1, tetrs2)
 fcr, geo = facecurrents(u, tXhemi)
 Plotly.plot(patch(geo, norm.(fcr)))
