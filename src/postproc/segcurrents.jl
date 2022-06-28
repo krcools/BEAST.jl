@@ -45,7 +45,7 @@ function grideval(points, coeffs, basis; type=nothing)
             vals = refs(neighborhood(chart,u))
             for r in 1 : numfunctions(refs)
                 for (m,w) in ad[i, r]
-                    values[j] += w * coeffs[m] * vals[r][1]
+                    values[j] += w * coeffs[m] * P(vals[r][1])
                 end
             end
         end
