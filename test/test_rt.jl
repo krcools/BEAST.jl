@@ -4,7 +4,8 @@ using BEAST
 using Test
 using StaticArrays
 
-T = Float64
+const third = one(Float64)/3
+for T in [Float32, Float64]
 P = SVector{3,T}
 
 tol = eps(T) * 10^3
@@ -26,8 +27,8 @@ function shapevals(ϕ, ts)
     return y
 end
 
-const third = one(T)/3
-m = meshrectangle(1.0,1.0,0.5);
+
+local m = meshrectangle(T(1.0),T(1.0),T(0.5));
 rwg = raviartthomas(m)
 ref = refspace(rwg)
 
@@ -35,7 +36,7 @@ ref = refspace(rwg)
 # ptch = simplex(vrts[1], vrts[2], vrts[3])
 ptch = chart(m, first(cells(m)))
 
-ctrd = neighborhood(ptch, [1,1]/3)
+ctrd = neighborhood(ptch, T.([1,1]/3))
 vals = shapevals(ref, [ctrd])
 
 # test edge detection
@@ -44,15 +45,15 @@ vp = cellpairs(m,edges)
 
 # test function evaluation
 v = [
-    point(0.0, 0.0, 0.0),
-    point(2.0, 0.0, 0.0),
-    point(0.0, 3.0, 0.0)]
+    point(T, 0.0, 0.0, 0.0),
+    point(T, 2.0, 0.0, 0.0),
+    point(T, 0.0, 3.0, 0.0)]
 
 cell = simplex(v[1], v[2], v[3])
 
 
-mp = neighborhood(cell,[third, third]);
-ϕ = BEAST.RTRefSpace{Float64}()
+mp = neighborhood(cell,[T(third), T(third)]);
+ϕ = BEAST.RTRefSpace{T}()
 fx = ϕ(mp)[2][1]
 
 A  = volume(cell)
@@ -65,10 +66,10 @@ gx = (r - v[2]) / 2A
 @test norm((r - v[3])/2A -  ϕ(mp)[3][1]) < tol
 
 # repeat the test but now on a random cell
-randpoint() = point(2*rand()-1, 2*rand()-1, 2*rand()-1)
+randpoint() = point(2*rand(T)-1, 2*rand(T)-1, 2*rand(T)-1)
 v = [randpoint(), randpoint(), randpoint()]
 cell = simplex(v[1], v[2], v[3])
-mp = neighborhood(cell,[third, third]);
+mp = neighborhood(cell,[T(third), T(third)]);
 
 fx = ϕ(mp)[2][1]
 #fx = evalfun(rs, mp)
@@ -81,3 +82,4 @@ gx = (r-v[2]) / 2A
 @test norm((r - v[1])/2A -  ϕ(mp)[1][1]) < tol
 @test norm((r - v[2])/2A -  ϕ(mp)[2][1]) < tol
 @test norm((r - v[3])/2A -  ϕ(mp)[3][1]) < tol
+end

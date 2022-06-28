@@ -28,13 +28,13 @@ function (rs::subReferenceSpace)(nbhd)
     return s #,scurl
 end
 
-function subdsurface(mesh)
+function subdsurface(mesh::Mesh{U,D1,T}) where {U,D1,T}
     subd_mesh = GSubdMesh(mesh)
     vertices = mesh.vertices
     subd_elements = subd_mesh.elements
     nvertices = length(vertices)
     nelem = length(subd_elements)
-    funs=Array{Vector{BEAST.Shape{Float64}}}(undef,nvertices)
+    funs=Array{Vector{BEAST.Shape{T}}}(undef,nvertices)
     for i = 1 : nvertices funs[i] = [] end
     for ie = 1:nelem
         inodes = subd_elements[ie].RingNodes
@@ -42,7 +42,7 @@ function subdsurface(mesh)
         for ib = 1:N
             nodeid = inodes[ib]
             coeff = 1.0
-            ifun = BEAST.Shape{Float64}(ie,ib,coeff)
+            ifun = BEAST.Shape{T}(ie,ib,coeff)
             push!(funs[nodeid], ifun)
         end
     end

@@ -140,7 +140,7 @@ end
 Create a temporal basis based on shifted copies of the quadratic spline. The
 spline is the convolution of a cxd0 and a c0d1 basis function.
 """
-function timebasisspline2(dt, numfunctions, T::Type=Float64)
+function timebasisspline2(dt, numfunctions, T::Type=typeof(dt))
     i, z = one(T), zero(T)
     polys = SVector{4,Polynomial{3,T}}(
         Polynomial(SVector(i/2, i/dt, i/2/dt/dt)),
@@ -159,11 +159,11 @@ function timebasisshiftedlagrange(dt, numfunctions, degree, T::Type=typeof(dt))
     for k = 0:degree
         f = c
         for i in 1:k
-            f = (1/i) * f * (i - t)
+            f = T(1/i) * f * (i - t)
         end
         g = c
         for i in 1:(degree-k)
-            g = (1/i) * g * (i + t)
+            g = T.(1/i) * g * (i + t)
         end
         push!(polys, f*g)
     end

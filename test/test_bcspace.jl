@@ -17,14 +17,14 @@ function isdivconforming(space)
 
     geo = geometry(space)
     mesh = geo
-
+    T=eltype(vertextype(mesh))
     edges = skeleton(mesh,1)
     D = connectivity(edges, mesh, abs)
     rows = rowvals(D)
     vals = nonzeros(D)
 
-    Flux = zeros(Float64, numcells(mesh),3)
-    TotalFlux = zeros(Float64, numcells(edges), numfunctions(space))
+    Flux = zeros(T, numcells(mesh),3)
+    TotalFlux = zeros(T, numcells(edges), numfunctions(space))
 
     for i in 1 : numfunctions(space)
 
@@ -85,74 +85,76 @@ function interior(mesh::Mesh)
 end
 
 #meshfile = Pkg.dir("BEAST","test","sphere2.in")
-meshfile = joinpath(dirname(@__FILE__),"assets","sphere316.in")
-mesh = readmesh(meshfile)
-@test numvertices(mesh) == 160
-@test numcells(mesh) == 316
+for T in [Float32, Float64]
+    meshfile = joinpath(dirname(@__FILE__),"assets","sphere316.in")
+    mesh = readmesh(meshfile,T=T)
+    @test numvertices(mesh) == 160
+    @test numcells(mesh) == 316
 
-rt = raviartthomas(mesh)
-@test numfunctions(rt) == 316 * 3 / 2
+    rt = raviartthomas(mesh)
+    @test numfunctions(rt) == 316 * 3 / 2
 
-fine = barycentric_refinement(mesh)
-edges = skeleton(mesh, 1)
+    local fine = barycentric_refinement(mesh)
+    local edges = skeleton(mesh, 1)
 
-bc = buffachristiansen(mesh)
-@test numfunctions(bc) == 316 * 3 / 2
+    bc = buffachristiansen(mesh)
+    @test numfunctions(bc) == 316 * 3 / 2
 
-lc = isdivconforming(rt)
-@test maximum(lc) < eps(Float64) * 1000
-println("RT space is div-conforming")
+    lc = isdivconforming(rt)
+    @test maximum(lc) < eps(T) * 1000
+    println("RT space is div-conforming")
 
-lc = isdivconforming(bc);
-@test maximum(lc) < eps(Float64) * 1000
-println("BC space is div-conforming")
+    lc = isdivconforming(bc);
+    @test maximum(lc) < eps(T) * 1000
+    println("BC space is div-conforming")
 
-# Now repeat the exercise with an open mesh
-mesh = meshrectangle(1.0, 1.0, 0.2);
-fine = barycentric_refinement(mesh);
+    # Now repeat the exercise with an open mesh
+    mesh = meshrectangle(T(1.0), T(1.0), T(0.2));
+    fine = barycentric_refinement(mesh);
 
-rt = raviartthomas(mesh)
-bc = buffachristiansen(mesh)
+    rt = raviartthomas(mesh)
+    bc = buffachristiansen(mesh)
 
-@test numfunctions(rt) == 65
-@test numfunctions(bc) == 65
+    @test numfunctions(rt) == 65
+    @test numfunctions(bc) == 65
 
-int_pred = interior_tpredicate(mesh)
-bnd_pred(s) = !int_pred(s)
+    int_pred = interior_tpredicate(mesh)
+    bnd_pred(s) = !int_pred(s)
 
-leaky_edges = findall(sum(abs.(isdivconforming(rt)),dims=1) .!= 0)
-@test length(leaky_edges) == 0
+    leaky_edges = findall(sum(abs.(isdivconforming(rt)),dims=1) .!= 0)
+    @test length(leaky_edges) == 0
 
-bnd = boundary(mesh)
-bndtch_pred = touches_predicate(bnd)
-edges = interior(mesh)
-bndtch_edges = findall(bndtch_pred, cells(edges))
-leaky_edges = findall(vec(sum(abs.(isdivconforming(bc)),dims=1)) .!= 0)
-@test bndtch_edges == leaky_edges
+    bnd = boundary(mesh)
+    bndtch_pred = touches_predicate(bnd)
+    edges = interior(mesh)
+    bndtch_edges = findall(bndtch_pred, cells(edges))
+    leaky_edges = findall(vec(sum(abs.(isdivconforming(bc)),dims=1)) .!= 0)
+    @test bndtch_edges == leaky_edges
 
 
-## Test the charge of BC functions
-#meshfile = Pkg.dir("BEAST","test","sphere2.in")
-meshfile = joinpath(dirname(@__FILE__),"assets","sphere316.in")
-mesh = readmesh(meshfile)
-bc = buffachristiansen(mesh)
-fine = geometry(bc)
-charges = zeros(numcells(fine))
+    ## Test the charge of BC functions
+    #meshfile = Pkg.dir("BEAST","test","sphere2.in")
+    meshfile = joinpath(dirname(@__FILE__),"assets","sphere316.in")
+    mesh = readmesh(meshfile,T=T)
+    bc = buffachristiansen(mesh)
+    fine = geometry(bc)
+    charges = zeros(numcells(fine))
 
-for fn in bc.fns
-    abs_charge = 0.0
-    net_charge = 0.0
-    fill!(charges,0)
-    for  _sh in fn
-        cellid = _sh.cellid
+    for fn in bc.fns
+        abs_charge = T(0.0)
+        net_charge = T(0.0)
+        fill!(charges,0)
+        for  _sh in fn
+            cellid = _sh.cellid
 
-        #cell = simplex(vertices(fine, fine.faces[cellid]))
-        net_charge += _sh.coeff
-        charges[cellid] += _sh.coeff
+            #cell = simplex(vertices(fine, fine.faces[cellid]))
+            net_charge += _sh.coeff
+            charges[cellid] += _sh.coeff
+        end
+        abs_charge = sum(abs.(charges))
+        @test net_charge + 1 ≈ 1
+        @test abs_charge ≈ 2
     end
-    abs_charge = sum(abs.(charges))
-    @test net_charge + 1 ≈ 1
-    @test abs_charge ≈ 2
 end
 
 # THe BC construction function should throw for non-oriented surfaces

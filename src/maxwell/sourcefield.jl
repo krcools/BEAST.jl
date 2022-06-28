@@ -1,5 +1,5 @@
 struct SourceField{F} <: Functional
-    f::F
+    field::F
 end
 
 (s::SourceField)(p) = s.f(cartesian(p))

@@ -15,13 +15,14 @@ function kernelvals(biop::MaxwellOperator3D, p, q)
 
     γ = biop.gamma
     r = cartesian(p) - cartesian(q)
+    T = eltype(r)
     R = norm(r)
     γR = γ*R
 
     inv_R = 1/R
 
     expn = exp(-γR)
-    green = expn * inv_R * inv_4pi
+    green = expn * inv_R * T(inv_4pi)
     gradgreen = -(γ + inv_R) * green * inv_R * r
 
     KernelValsMaxwell3D(γ, r, R, green, gradgreen)
@@ -33,12 +34,12 @@ function kernelvals(kernel::MaxwellOperator3DReg, p, q)
     r = p.cart - q.cart
     R = norm(r)
     γR = γ*R
-
+    P=typeof(γ)
     Exp = exp(-γ*R)
     green = (Exp - 1 + γR - 0.5*γR^2) / (4pi*R)
     gradgreen = ( - (γR + 1)*Exp + (1 - 0.5*γR^2) ) * (r/R^3) / (4π)
 
-    KernelValsMaxwell3D(γ, r, R, green, gradgreen)
+    KernelValsMaxwell3D(γ, r, R, P(green), gradgreen)
 end
 
 struct MWSingleLayer3D{T,U} <: MaxwellOperator3D
@@ -87,13 +88,14 @@ defaultquadstrat(op::MaxwellOperator3D, tfs::RefSpace, bfs::RefSpace) = DoubleNu
 function quaddata(op::MaxwellOperator3D,
     test_local_space::RefSpace, trial_local_space::RefSpace,
     test_charts, trial_charts, qs::DoubleNumWiltonSauterQStrat)
-
+    T = coordtype(test_charts[1])
     tqd = quadpoints(test_local_space,  test_charts,  (qs.outer_rule_far,qs.outer_rule_near))
     bqd = quadpoints(trial_local_space, trial_charts, (qs.inner_rule_far,qs.inner_rule_near))
+     
     leg = (
-      _legendre(qs.sauter_schwab_common_vert,0,1),
-      _legendre(qs.sauter_schwab_common_edge,0,1),
-      _legendre(qs.sauter_schwab_common_face,0,1),)
+      convert.(NTuple{2,T},_legendre(qs.sauter_schwab_common_vert,0,1)),
+      convert.(NTuple{2,T},_legendre(qs.sauter_schwab_common_edge,0,1)),
+      convert.(NTuple{2,T},_legendre(qs.sauter_schwab_common_face,0,1)),)
 
 
     # High accuracy rules (use them e.g. in LF MFIE scenarios)
@@ -154,10 +156,10 @@ end
 # function qrss(op, g, f, i, τ, j, σ, qd)
 function quadrule(op::MaxwellOperator3D, g::RTRefSpace, f::RTRefSpace,  i, τ, j, σ, qd,
       qs::DoubleNumWiltonSauterQStrat)
-
+    T = eltype(eltype(τ.vertices))
     hits = 0
-    dtol = 1.0e3 * eps(eltype(eltype(τ.vertices)))
-    dmin2 = floatmax(eltype(eltype(τ.vertices)))
+    dtol = 1.0e3 * eps(T)
+    dmin2 = floatmax(T)
     for t in τ.vertices
         for s in σ.vertices
             d2 = LinearAlgebra.norm_sqr(t-s)

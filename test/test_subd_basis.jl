@@ -18,20 +18,21 @@ function CompScienceMeshes.chart(Smesh::CompScienceMeshes.subdMesh,E)
     return chart = CompScienceMeshes.subd_chart(E,N,nodes,verticecoords)
 end
 
-
-G = readmesh(joinpath(dirname(@__FILE__),"assets","sphere872.in"))
+for T in [Float32, Float64]
+G = readmesh(joinpath(dirname(@__FILE__),"assets","sphere872.in"),T=T)
  # G0 = readmesh(fn)
 # G0 = meshsphere(1.0, 0.5)
 #G = readmesh("/Users/Benjamin/Documents/sphere.in")
 # G = Loop_subdivision(G0)
-X = subdsurface(G)
+local X = subdsurface(G)
 
 #els, ad = BEAST.assemblydata(X)
 
 identityop  = Identity()
-singlelayer = Helmholtz3D.singlelayer(gamma=1.0)
+singlelayer = Helmholtz3D.singlelayer(gamma=T(1.0))
 I = assemble(identityop, X, X)
 #S = assemble(singlelayer, X, X)
 ncd = cond(Matrix(I))
 
-@test ncd ≈ 64.50401358713235 rtol=1e-8
+@test ncd ≈ T(64.50401358713235) rtol=sqrt(eps(T))
+end

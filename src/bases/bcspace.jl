@@ -514,7 +514,7 @@ function buildhalfbc2(patch, port, dirichlet, prt_fluxes)
 end
 
 
-function buffachristiansen2(Faces::CompScienceMeshes.AbstractMesh)
+function buffachristiansen2(Faces::CompScienceMeshes.AbstractMesh{U,D1,T}) where {U,D1,T}
 
     faces = barycentric_refinement(Faces)
     Edges = skeleton(Faces,1)
@@ -525,7 +525,7 @@ function buffachristiansen2(Faces::CompScienceMeshes.AbstractMesh)
         return true
     end
 
-    T = Float64
+    #T = Float64
     bfs = Vector{Vector{Shape{T}}}(undef, numcells(Edges))
     pos = Vector{vertextype(Faces)}(undef, numcells(Edges))
     dirichlet = boundary(faces)
@@ -603,7 +603,7 @@ function buffachristiansen2(Faces::CompScienceMeshes.AbstractMesh)
 end
 
 
-function buffachristiansen3(Faces::CompScienceMeshes.AbstractMesh)
+function buffachristiansen3(Faces::CompScienceMeshes.AbstractMesh{U,D1,T}) where {U,D1,T}
 
     faces = barycentric_refinement(Faces)
     Edges = skeleton(Faces,1)
@@ -614,7 +614,7 @@ function buffachristiansen3(Faces::CompScienceMeshes.AbstractMesh)
         return true
     end
 
-    T = Float64
+    #T = Float64
     bfs = Vector{Vector{Shape{T}}}(undef, numcells(Edges))
     pos = Vector{vertextype(Faces)}(undef, numcells(Edges))
     dirichlet = boundary(faces)

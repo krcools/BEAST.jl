@@ -11,9 +11,9 @@ quadrule(fn::Functional, refs, p, cell, qd) = qd[1,p]
 Assemble the vector of test coefficients corresponding to functional
 `fn` and test functions `tfs`.
 """
-function assemble(field::Functional, tfs; quaddata=quaddata, quadrule=quadrule)
+function assemble(field::Functional, tfs::Space{T}; quaddata=quaddata, quadrule=quadrule) where T
 
-    b = zeros(ComplexF64, numfunctions(tfs))
+    b = zeros(Complex{T}, numfunctions(tfs))
     store(v,m) = (b[m] += v)
     assemble!(field, tfs, store, quaddata=quaddata, quadrule=quadrule)
     return b
@@ -78,10 +78,10 @@ function assemble!(field::Functional, tfs::subdBasis, store;
 
 end
 
-function celltestvalues(tshs, tcell, field, qr)
+function celltestvalues(tshs::RefSpace{T,NF}, tcell, field, qr) where {T,NF}
 
     num_tshs = numfunctions(tshs)
-    interactions = zeros(ComplexF64, num_tshs)
+    interactions = zeros(Complex{T}, num_tshs)
 
     num_oqp = length(qr)
 
@@ -104,11 +104,11 @@ function celltestvalues(tshs, tcell, field, qr)
     return interactions
 end
 
-function celltestvalues(tshs::subReferenceSpace, tcell, field, qr)
+function celltestvalues(tshs::subReferenceSpace{T,D}, tcell, field, qr) where {T,D}
 
     num_oqp = length(qr)
     num_tshs = length(qr[1].value[1])
-    interactions = (ComplexF64, num_tshs)
+    interactions = (Complex{T}, num_tshs)
     for p in 1 : num_oqp
         mp = qr[p].point
 
@@ -117,7 +117,7 @@ function celltestvalues(tshs::subReferenceSpace, tcell, field, qr)
         fval = field(mp)
         tvals = qr[p].value
 
-        interactions = zeros(ComplexF64, num_tshs)
+        interactions = zeros(Complex{T}, num_tshs)
         for m in 1 : num_tshs
             tval = tvals[1][m]
 

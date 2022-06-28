@@ -2,20 +2,22 @@ using CompScienceMeshes
 using BEAST
 using Test
 
-m = meshrectangle(1.0, 1.0, 0.25)
+for T in [Float32, Float64]
+    local m = meshrectangle(T(1.0), T(1.0), T(0.25))
 
-X = raviartthomas(m, BEAST.Continuity{:none})
-@test numfunctions(X) == 16*2*3
-@test all(length.(X.fns) .== 1)
+    local X = raviartthomas(m, BEAST.Continuity{:none})
+    @test numfunctions(X) == 16*2*3
+    @test all(length.(X.fns) .== 1)
 
-p = positions(X)
+    p = positions(X)
 
-i = 12
-c = X.fns[i][1].cellid
-ch = chart(m, cells(m)[c])
-ctr = cartesian(center(ch))
-@test ctr ≈ p[i]
+    i = 12
+    c = X.fns[i][1].cellid
+    ch = chart(m, cells(m)[c])
+    ctr = cartesian(center(ch))
+    @test ctr ≈ p[i]
 
-for (i,f) in enumerate(X.fns)
-    @test f[1].coeff == 1.0
+    for (i,f) in enumerate(X.fns)
+        @test f[1].coeff == T(1.0)
+    end
 end

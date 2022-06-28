@@ -248,10 +248,10 @@ end
 
 For use when basis and test functions are defined on different meshes
 """
-function assemble_local_mixed!(biop::LocalOperator, tfs::Space, bfs::Space, store;
-    quadstrat=defaultquadstrat(biop, tfs, bfs))
+function assemble_local_mixed!(biop::LocalOperator, tfs::Space{T}, bfs::Space{T}, store;
+    quadstrat=defaultquadstrat(biop, tfs, bfs)) where {T}
 
-    tol = sqrt(eps(Float64))
+    tol = sqrt(eps(T))
 
     trefs = refspace(tfs)
     brefs = refspace(bfs)
@@ -341,12 +341,12 @@ function cellinteractions_matched!(zlocal, biop, trefs, brefs, cell, qr)
     return zlocal
 end
 
-function cellinteractions(biop, trefs, brefs, cell, qr)
+function cellinteractions(biop, trefs::U, brefs::V, cell, qr) where {U<:RefSpace{T},V<:RefSpace{T}} where {T}
 
     num_tshs = length(qr[1][3])
     num_bshs = length(qr[1][4])
 
-    zlocal = zeros(Float64, num_tshs, num_bshs)
+    zlocal = zeros(T, num_tshs, num_bshs)
     for q in qr
 
         w, mp, tvals, bvals = q[1], q[2], q[3], q[4]
