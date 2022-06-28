@@ -29,7 +29,7 @@ export dot
 
 export planewave
 export RefSpace, numfunctions, coordtype, scalartype, assemblydata, geometry, refspace, valuetype
-export lagrangecxd0, lagrangec0d1, duallagrangec0d1
+export lagrangecxd0, lagrangec0d1, duallagrangec0d1, lagrangec0d2
 export duallagrangecxd0
 export lagdimension
 export restrict
@@ -207,8 +207,11 @@ include("timedomain/zdomain.jl")
 # Support for Maxwell equations
 include("maxwell/mwexc.jl")
 include("maxwell/mwops.jl")
-include("maxwell/nxdbllayer.jl")
 include("maxwell/wiltonints.jl")
+include("maxwell/sauterschwabints_rt.jl")
+include("maxwell/sauterschwabints_bdm.jl")
+include("maxwell/sauterschwabints_bdm_rt.jl")
+include("maxwell/nxdbllayer.jl")
 include("maxwell/nitsche.jl")
 include("maxwell/farfield.jl")
 include("maxwell/nearfield.jl")

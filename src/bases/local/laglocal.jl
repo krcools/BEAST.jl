@@ -11,6 +11,7 @@ numfunctions(s::LagrangeRefSpace{T,2,3}) where {T} = 6
 valuetype(ref::LagrangeRefSpace{T}, charttype) where {T} =
         SVector{numfunctions(ref), Tuple{T,T}}
 
+
 # Evaluate constant lagrange elements on anything
 (ϕ::LagrangeRefSpace{T,0})(tp) where {T} = SVector(((value=one(T), derivative=zero(T)),))
 
@@ -39,6 +40,25 @@ function (f::LagrangeRefSpace{T,1,3})(t) where T
         (value=w, curl=(p[2]-p[1])/j))
 end
 
+valuetype(ref::LagrangeRefSpace{T,1,3}, charttype) where {T} = 
+      SVector{1,T}
+
+# Evaluate quadratic lagrange elements on a triangle
+function (f::LagrangeRefSpace{T,2,3})(t) where T
+    u,v,w, = barycentric(t)
+    SVector(
+        (value=((2*u-1)*u),),
+        (value=((2*v-1)*v),),
+        (value=((2*w-1)*w),),
+        (value=(4*v*w),),
+        (value=(4*w*u),),
+        (value=(4*u*v),),
+        )
+end
+
+valuetype(ref::LagrangeRefSpace{T,2,3}, charttype) where {T} = 
+      SVector{1, T}
+    
 
 """
     f(tangent_space, Val{:withcurl})
@@ -70,6 +90,26 @@ function curl(ref::LagrangeRefSpace{T,1,3} where {T}, sh, el)
     sh1 = Shape(sh.cellid, mod1(sh.refid+1,3), -sh.coeff)
     sh2 = Shape(sh.cellid, mod1(sh.refid+2,3), +sh.coeff)
     return [sh1, sh2]
+end
+
+function curl(ref::LagrangeRefSpace{T,2,3}, sh, el) where T
+
+    j = 1.0 #volume(el) * factorial(dimension(el))
+
+    if sh.refid < 4
+        sh1 = Shape(sh.cellid, mod1(2*sh.refid+1,6), -sh.coeff*j)
+        sh2 = Shape(sh.cellid, mod1(2*sh.refid+2,6), 3*sh.coeff*j)
+        sh3 = Shape(sh.cellid, mod1(2*sh.refid+3,6), -3*sh.coeff*j)
+        sh4 = Shape(sh.cellid, mod1(2*sh.refid+4,6), sh.coeff*j)
+
+        return [sh1, sh2, sh3, sh4]
+    else 
+        sh1 = Shape(sh.cellid, 2*mod1(sh.refid,3)-1, 4*sh.coeff*j)
+        sh2 = Shape(sh.cellid, 2*mod1(sh.refid,3), -4*sh.coeff*j)
+
+        return [sh1, sh2]
+    end 
+
 end
 
 function gradient(ref::LagrangeRefSpace{T,1,4}, sh, tet) where {T}
@@ -219,3 +259,48 @@ function curl(ref::LagrangeRefSpace{T,2,3} where {T}, sh, el)
     end
     return [sh1, sh2, sh3, sh4]
 end
+
+function restrict(f::LagrangeRefSpace{T,2}, dom1, dom2) where T
+
+    D = numfunctions(f)
+    Q = zeros(T, D, D)
+
+    # for each point of the new domain
+    for i in 1:3
+
+        #vertices
+        v = dom2.vertices[i]
+
+        # find the barycentric coordinates in dom1
+        uvn = carttobary(dom1, v)
+
+        # evaluate the shape functions in this point
+        x = neighborhood(dom1, uvn)
+        fx = f(x)
+
+        for j in 1:D
+            Q[j,i] = fx[j][1]
+        end
+        
+            
+        #edges
+        # find the center of edge i of dom2
+        a = dom2.vertices[mod1(i+1,3)]
+        b = dom2.vertices[mod1(i+2,3)]
+        v = (a + b) / 2
+
+        # find the barycentric coordinates in dom1
+        uvn = carttobary(dom1, v)
+
+        # evaluate the shape functions in this point
+        x = neighborhood(dom1, uvn)
+        fx = f(x)
+  
+        for j in 4:D
+            Q[j,i+3] = fx[j][1]
+        end
+    end
+
+    return Q
+end
+
