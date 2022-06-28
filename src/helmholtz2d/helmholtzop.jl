@@ -128,12 +128,12 @@ mutable struct PlaneWaveNeumann{T,P} <: Functional
 end
 
 mutable struct ScalarTrace{F} <: Functional
-    f::F
+    field::F
 end
 
 strace(f, mesh::Mesh) = ScalarTrace(f)
 
-(s::ScalarTrace)(x) = s.f(cartesian(x))
+(s::ScalarTrace)(x) = s.field(cartesian(x))
 integrand(s::ScalarTrace, tx, fx) = dot(tx.value, fx)
 
 shapevals(f::Functional, ϕ, ts) = shapevals(ValOnly(), ϕ, ts)

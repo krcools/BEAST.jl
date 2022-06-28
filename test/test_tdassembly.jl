@@ -67,7 +67,7 @@ end end end end end end
 # Compare results for a single monomial
 z1 = zeros(numfunctions(x1), numfunctions(x2), numfunctions(q))
 for r in BEAST.rings(τ1, τ2, ΔR)
-    ι = BEAST.ring(r, ΔR)
+    local ι = BEAST.ring(r, ΔR)
     momintegrals!(z1, G, x1, x2, q, τ1, τ2, ι, DoubleQuadTimeDomainRule())
 end
 
@@ -75,7 +75,7 @@ qs = BEAST.defaultquadstrat(G,X1,X2)
 qd = quaddata(G, x1, x2, q, [τ1], [τ2], nothing, qs)
 z2 = zeros(numfunctions(x1), numfunctions(x2), numfunctions(q))
 for r in BEAST.rings(τ1, τ2, ΔR)
-    ι = BEAST.ring(r, ΔR)
+    local ι = BEAST.ring(r, ΔR)
     quad_rule = quadrule(G, x1, x2, q, 1, τ1, 1, τ2, r, ι, qd, qs)
     BEAST.momintegrals!(z2, G, x1, x2, q, τ1, τ2, ι, quad_rule)
 end

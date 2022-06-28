@@ -134,10 +134,10 @@ assemble(dbf::DiscreteBilform; materialize=BEAST.assemble) = assemble(dbf.bilfor
 assemble(dlf::DiscreteLinform) = assemble(dlf.linform, dlf.test_space_dict)
 
 function assemble(lform::LinForm, test_space_dict)
-
+    T=ComplexF64
     terms = lform.terms
-    T = ComplexF64
-
+    #T = Complex{typeof(terms[1].functional.field.wavenumber)}
+    #T = Complex{eltype(vertextype(test_space_dict[1].geo))}
     # I = Int[1]
     blocksizes1 = Int[]
     for p in 1:length(lform.test_space)
@@ -209,10 +209,10 @@ function td_assemble(lform::LinForm, test_space_dict)
     return B
 end
 
-function assemble_hide(bilform::BilForm, test_space_dict, trial_space_dict)
+function assemble_hide(bilform::BilForm, test_space_dict::Space{U}, trial_space_dict) where U
 
   lhterms = bilform.terms
-  T = ComplexF64 # TDOD: Fix this
+  T = Complex{U} # TDOD: Fix this
 
   blocksizes1 = Int[]
   for p in 1:length(bilform.test_space)
