@@ -29,14 +29,51 @@ function (igd::MWSL3DIntegrand2)(u,v)
         G = @SVector[αjG*g[i].value for i in 1:6]
         H = @SVector[βjG*g[i].divergence for i in 1:6]
 
-        @SMatrix[dot(f[i].value,G[j])+f[i].divergence*H[j] for i in 1:6, j in 1:6]
+        SMatrix{6,6}(tuple(
+            dot(f[1].value,G[1])+f[1].divergence*H[1],
+            dot(f[2].value,G[1])+f[2].divergence*H[1],
+            dot(f[3].value,G[1])+f[3].divergence*H[1],
+            dot(f[4].value,G[1])+f[4].divergence*H[1],
+            dot(f[5].value,G[1])+f[5].divergence*H[1],
+            dot(f[6].value,G[1])+f[6].divergence*H[1],
+            dot(f[1].value,G[2])+f[1].divergence*H[2],
+            dot(f[2].value,G[2])+f[2].divergence*H[2],
+            dot(f[3].value,G[2])+f[3].divergence*H[2],
+            dot(f[4].value,G[2])+f[4].divergence*H[2],
+            dot(f[5].value,G[2])+f[5].divergence*H[2],
+            dot(f[6].value,G[2])+f[6].divergence*H[2],
+            dot(f[1].value,G[3])+f[1].divergence*H[3],
+            dot(f[2].value,G[3])+f[2].divergence*H[3],
+            dot(f[3].value,G[3])+f[3].divergence*H[3],
+            dot(f[4].value,G[3])+f[4].divergence*H[3],
+            dot(f[5].value,G[3])+f[5].divergence*H[3],
+            dot(f[6].value,G[3])+f[6].divergence*H[3],
+            dot(f[1].value,G[4])+f[1].divergence*H[4],
+            dot(f[2].value,G[4])+f[2].divergence*H[4],
+            dot(f[3].value,G[4])+f[3].divergence*H[4],
+            dot(f[4].value,G[4])+f[4].divergence*H[4],
+            dot(f[5].value,G[4])+f[5].divergence*H[4],
+            dot(f[6].value,G[4])+f[6].divergence*H[4],
+            dot(f[1].value,G[5])+f[1].divergence*H[5],
+            dot(f[2].value,G[5])+f[2].divergence*H[5],
+            dot(f[3].value,G[5])+f[3].divergence*H[5],
+            dot(f[4].value,G[5])+f[4].divergence*H[5],
+            dot(f[5].value,G[5])+f[5].divergence*H[5],
+            dot(f[6].value,G[5])+f[6].divergence*H[5],
+            dot(f[1].value,G[6])+f[1].divergence*H[6],
+            dot(f[2].value,G[6])+f[2].divergence*H[6],
+            dot(f[3].value,G[6])+f[3].divergence*H[6],
+            dot(f[4].value,G[6])+f[4].divergence*H[6],
+            dot(f[5].value,G[6])+f[5].divergence*H[6],
+            dot(f[6].value,G[6])+f[6].divergence*H[6],
+        ))
 end
 
 function momintegrals!(op::MWSingleLayer3D,
     test_local_space::BDMRefSpace, trial_local_space::BDMRefSpace,
     test_triangular_element, trial_triangular_element, out, strat::SauterSchwabStrategy)
 
-    I, J, K, L = SauterSchwabQuadrature.reorder(
+    I, J, _, _ = SauterSchwabQuadrature.reorder(
         test_triangular_element.vertices,
         trial_triangular_element.vertices, strat)
 
@@ -52,23 +89,14 @@ function momintegrals!(op::MWSingleLayer3D,
 
     igd = MWSL3DIntegrand2(test_triangular_element, trial_triangular_element,
         op, test_local_space, trial_local_space)
-    G = SauterSchwabQuadrature.Sautersauterschwab_parameterized(igd, strat)
+    G = SauterSchwabQuadrature.sauterschwab_parameterized(igd, strat)
 
-    A = levicivita(K) == 1 ? @SVector[1,2] : @SVector[2,1]
-    B = levicivita(L) == 1 ? @SVector[1,2] : @SVector[2,1]
-    for j ∈ 1:3
-        q = L[j]
-        for i ∈ 1:3
-            p = K[i]
-            for n in 1:2
-                b = B[n]
-                for m in 1:2
-                    a = A[m]
-                    out[2*(i-1)+m,2*(j-1)+n] += G[2*(p-1)+a,2*(q-1)+b]
-                end
-            end
-        end
-    end
+    K = dof_permutation(test_local_space, I)
+    L = dof_permutation(trial_local_space, J)
+    for i in 1:numfunctions(test_local_space)
+        for j in 1:numfunctions(trial_local_space)
+            out[i,j] = G[K[i],L[j]]
+    end end
 
     nothing
 end

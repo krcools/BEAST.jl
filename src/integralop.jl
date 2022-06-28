@@ -214,8 +214,8 @@ end
 function assembleblock_primer(biop, tfs, bfs;
         quadstrat=defaultquadstrat(biop, tfs, bfs))
 
-    test_elements, tad = assemblydata(tfs)
-    bsis_elements, bad = assemblydata(bfs)
+    test_elements, tad = assemblydata(tfs; onlyactives=false)
+    bsis_elements, bad = assemblydata(bfs; onlyactives=false)
 
     tshapes = refspace(tfs); num_tshapes = numfunctions(tshapes)
     bshapes = refspace(bfs); num_bshapes = numfunctions(bshapes)
@@ -254,6 +254,12 @@ function assembleblock_body!(biop::IntegralOperator,
 
     active_test_el_ids = unique!(sort!(active_test_el_ids))
     active_trial_el_ids = unique!(sort!(active_trial_el_ids))
+
+    @assert length(active_test_el_ids) <= length(test_elements)
+    @assert length(active_trial_el_ids) <= length(bsis_elements)
+
+    @assert maximum(active_test_el_ids) <= length(test_elements) "$(maximum(active_test_el_ids)), $(length(test_elements))"
+    @assert maximum(active_trial_el_ids) <= length(bsis_elements) "$(maximum(active_trial_el_ids)), $(length(bsis_elements))"
 
     for p in active_test_el_ids
         tcell = test_elements[p]

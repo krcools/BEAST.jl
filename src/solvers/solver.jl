@@ -19,8 +19,26 @@ struct DiscreteLinform
     test_space_dict
 end
 
+function _expand_space_mappings(sms)
+    esms = []
+    for sm in sms
+        if first(sm) isa Vector
+            j = first(sm)
+            X = last(sm)
+            @assert X isa BEAST.DirectProductSpace
+            append!(esms, [(ji => Xi) for (ji,Xi) in zip(j,X.factors)])
+        else
+            append!(esms, [sm])
+        end
+    end
+    return esms
+end
+
 
 function discretise(bf::BilForm, space_mappings::Pair...)
+
+    space_mappings = _expand_space_mappings(space_mappings)
+
     trial_space_dict = Dict()
     test_space_dict = Dict()
     for sm in space_mappings
@@ -43,7 +61,7 @@ end
 
 
 function discretise(lf::LinForm, space_mappings::Pair...)
-    # trial_space_dict = Dict()
+    space_mappings = _expand_space_mappings(space_mappings)
     test_space_dict = Dict()
     for sm in space_mappings
 
@@ -65,6 +83,8 @@ end
 
 
 function discretise(eq, space_mappings::Pair...)
+    space_mappings = _expand_space_mappings(space_mappings)
+
     trial_space_dict = Dict()
     test_space_dict = Dict()
     for sm in space_mappings
@@ -110,7 +130,7 @@ sysmatrix(eq::DiscreteEquation; materialize=BEAST.assemble) =
     assemble(eq.equation.lhs, eq.test_space_dict, eq.trial_space_dict, materialize=materialize)
 rhs(eq::DiscreteEquation) = assemble(eq.equation.rhs, eq.test_space_dict)
 
-assemble(dbf::DiscreteBilform) = assemble(dbf.bilform, dbf.test_space_dict, dbf.trial_space_dict)
+assemble(dbf::DiscreteBilform; materialize=BEAST.assemble) = assemble(dbf.bilform, dbf.test_space_dict, dbf.trial_space_dict; materialize)
 assemble(dlf::DiscreteLinform) = assemble(dlf.linform, dlf.test_space_dict)
 
 function assemble(lform::LinForm, test_space_dict)

@@ -153,6 +153,13 @@ function allocatestorage(operator::LinearCombinationOfOperators,
         storage_policy, long_delays_policy)
 end
 
+struct _OffsetStore{F}
+    store::F
+    row_offset::Int
+    col_offset::Int
+end
+
+(f::_OffsetStore)(v,m,n) = f.store(v,m + f.row_offset, n + f.col_offset)
 
 function assemble!(operator::Operator, test_functions::Space, trial_functions::Space, store,
     threading::Type{Threading{:multi}} = Threading{:multi};
@@ -166,11 +173,13 @@ function assemble!(operator::Operator, test_functions::Space, trial_functions::S
     splits = [round(Int,s) for s in range(0, stop=numfunctions(test_functions), length=numchunks+1)]
 
     Threads.@threads for i in 1:P
+    # @batch per=thread for i in 1:P
         lo, hi = splits[i]+1, splits[i+1]
         lo <= hi || continue
         test_functions_p = subset(test_functions, lo:hi)
-        store1 = (v,m,n) -> store(v,lo+m-1,n)
-        assemblechunk!(operator, test_functions_p, trial_functions, store1; quadstrat)
+        # store1 = (v,m,n) -> store(v,lo+m-1,n)
+        store1 = _OffsetStore(store, lo-1, 0)
+        assemblechunk!(operator, test_functions_p, trial_functions, store1, quadstrat=quadstrat)
     end
 
 end
@@ -234,5 +243,33 @@ function assemble!(op::Operator, tfs::DirectProductSpace, bfs::DirectProductSpac
     for (i,s) in enumerate(tfs.factors)
         store1(v,m,n) = store(v,m + I[i],n)
         assemble!(op, s, bfs, store1; quadstrat)
+    end
+end
+
+# Discretisation and assembly of these operators
+# will respect the direct product structure of the
+# HilbertSpace/FiniteElmeentSpace
+struct BlockDiagonalOperator <: AbstractOperator
+    op::AbstractOperator
+end
+
+diag(op::AbstractOperator) = BlockDiagonalOperator(op)
+
+scalartype(op::BlockDiagonalOperator) = scalartype(op.op)
+defaultquadstrat(op::BlockDiagonalOperator, U::DirectProductSpace, V::DirectProductSpace) = defaultquadstrat(op.op, U, V)
+
+function assemble!(op::BlockDiagonalOperator, U::DirectProductSpace, V::DirectProductSpace,
+    store, threading=Threading{:multi};
+    quadstrat = defaultquadstrat(op, U, V))
+    
+    @assert length(U.factors) == length(V.factors)
+    I = Int[0]; for u in U.factors push!(I, last(I) + numfunctions(u)) end
+    J = Int[0]; for v in V.factors push!(J, last(J) + numfunctions(v)) end
+
+    k = 1
+    for (u,v) in zip(U.factors, V.factors)
+        store1(v,m,n) = store(v, I[k] + m, J[k] + n)
+        assemble!(op.op, u, v, store1; quadstrat)
+        k += 1
     end
 end
