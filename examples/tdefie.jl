@@ -1,9 +1,11 @@
 using CompScienceMeshes, BEAST, LinearAlgebra
-Γ = readmesh(joinpath(@__DIR__,"sphere2.in"))
+# Γ = readmesh(joinpath(@__DIR__,"sphere2.in"))
+Γ = meshsphere(radius=1.0, h=0.1)
 
 X = raviartthomas(Γ)
 
-Δt, Nt = 0.3, 200
+Δt = 0.1
+Nt = 200
 T = timebasisshiftedlagrange(Δt, Nt, 3)
 U = timebasisdelta(Δt, Nt)
 
@@ -28,7 +30,7 @@ import Plots
 Plots.plot(xefie[1,:])
 
 import Plotly
-fcr, geo = facecurrents(xefie[:,60], X)
+fcr, geo = facecurrents(xefie[:,125], X)
 Plotly.plot(patch(geo, norm.(fcr)))
 
 

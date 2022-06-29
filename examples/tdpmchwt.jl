@@ -6,7 +6,8 @@ using CompScienceMeshes, BEAST
 using LinearAlgebra
 
 # Γ = meshcuboid(1.0, 1.0, 1.0, 0.25)
-Γ = meshsphere(1.0, 0.3)
+h = 0.3
+Γ = meshsphere(1.0, h)
 X = raviartthomas(Γ)
 Y = buffachristiansen(Γ, ibscaled=true)
 

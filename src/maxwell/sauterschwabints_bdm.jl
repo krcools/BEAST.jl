@@ -1,3 +1,66 @@
+struct Integrand{Op,LSt,LSb,Elt,Elb}
+    operator::Op
+    local_test_space::LSt
+    local_trial_space::LSb
+    test_chart::Elt
+    trial_chart::Elb
+end
+
+
+function momintegrals!(op::Operator,
+    test_local_space::RefSpace, trial_local_space::RefSpace,
+    test_chart, trial_chart, out, strat::SauterSchwabStrategy)
+
+    I, J, _, _ = SauterSchwabQuadrature.reorder(
+        test_chart.vertices,
+        trial_chart.vertices, strat)
+
+    test_chart  = simplex(
+        test_chart.vertices[I[1]],
+        test_chart.vertices[I[2]],
+        test_chart.vertices[I[3]])
+
+    trial_chart = simplex(
+        trial_chart.vertices[J[1]],
+        trial_chart.vertices[J[2]],
+        trial_chart.vertices[J[3]])
+
+    igd = Integrand(op, test_local_space, trial_local_space, test_chart, trial_chart)
+    G = SauterSchwabQuadrature.sauterschwab_parameterized(igd, strat)
+
+    K = dof_permutation(test_local_space, I)
+    L = dof_permutation(trial_local_space, J)
+    for i in 1:numfunctions(test_local_space)
+        for j in 1:numfunctions(trial_local_space)
+            out[i,j] = G[K[i],L[j]]
+    end end
+
+    nothing
+end
+
+
+function (igd::Integrand{<:DoubleLayerRotatedMW3D})(u,v)
+
+    x = neighborhood(igd.test_chart,u)
+    y = neighborhood(igd.trial_chart,v)
+    j = jacobian(x) * jacobian(y)
+    nx = normal(x)
+
+    r = cartesian(x) - cartesian(y)
+    R = norm(r)
+    iR = 1/R
+    γ = igd.operator.gamma
+    G = exp(-γ*R)/(4π*R)
+    K = -(γ + iR) * G * (iR * r)
+
+    f = igd.local_test_space(x)
+    gq = igd.local_trial_space(y)
+
+    Kg = [cross(K, j*gi.value) for gi in gq]
+    return [dot(fj.value, cross(nx, Kgi)) for fj in f, Kgi in Kg]
+end
+
+
 struct MWSL3DIntegrand2{C,O,L}
         test_triangular_element::C
         trial_triangular_element::C
