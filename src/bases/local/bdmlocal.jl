@@ -40,10 +40,7 @@ const _dof_perms_bdm = [
 
 function dof_permutation(::BDMRefSpace, vert_permutation)
     i = findfirst(==(tuple(vert_permutation...)), _vert_perms_bdm)
-    if !(i != nothing)
-        @show vert_permutation
-        @show i
-        error()
-    end
     return _dof_perms_bdm[i]
 end
+
+dimtype(::BDMRefSpace, ::CompScienceMeshes.Simplex{U,2}) where {U} = Val{6}

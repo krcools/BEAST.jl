@@ -54,9 +54,9 @@ function (igd::Integrand{<:DoubleLayerRotatedMW3D})(u,v)
     K = -(γ + iR) * G * (iR * r)
 
     f = igd.local_test_space(x)
-    gq = igd.local_trial_space(y)
+    g = igd.local_trial_space(y)
 
-    Kg = [cross(K, j*gi.value) for gi in gq]
+    Kg = [cross(K, j*gi.value) for gi in g]
     return [dot(fj.value, cross(nx, Kgi)) for fj in f, Kgi in Kg]
 end
 

@@ -29,7 +29,7 @@ Returns an object of type `RTBasis`, which comprises both the mesh and pairs of
     coefficients and indices to compute the exact basis functions when required
     by the solver.
 """
-function raviartthomas(mesh::Mesh{U,D1,T}, cellpairs::Array{Int,2}) where {U,D1,T}
+function raviartthomas(mesh::CompScienceMeshes.AbstractMesh{U,D1,T}, cellpairs::Array{Int,2}) where {U,D1,T}
 
     # combine now the pairs of monopolar RWGs in div-conforming RWGs
     numpairs = size(cellpairs,2)
