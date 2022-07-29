@@ -303,6 +303,11 @@ function getindex(op::Any, V::Vector{HilbertVector}, U::Vector{HilbertVector})
     return BilForm(first(V).space, first(U).space, terms)
 end
 
+function getindex(A::Matrix, v::HilbertVector, u::HilbertVector)
+    terms = [ BilTerm(v.idx, u.idx, v.opstack, u.opstack, 1, A) ]
+    BilForm(v.space, u.space, terms)
+end
+
 
 "Add two BilForms together"
 function +(a::BilForm, b::BilForm)

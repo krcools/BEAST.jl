@@ -1,8 +1,8 @@
 using CompScienceMeshes
 using BEAST
 
-# Γ = readmesh(joinpath(dirname(pathof(BEAST)),"../examples/sphere2.in"))
-Γ = meshsphere(radius=1.0, h=0.1)
+Γ = readmesh(joinpath(dirname(pathof(BEAST)),"../examples/sphere2.in"))
+# Γ = meshsphere(radius=1.0, h=0.1)
 X = raviartthomas(Γ)
 
 κ, η = 3.0, 1.0
