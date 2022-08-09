@@ -90,6 +90,13 @@ function assemble(operator::AbstractOperator, test_functions, trial_functions;
     return Z()
 end
 
+
+function assemble(A::Matrix, testfns, trialfns)
+    @assert numfunctions(testfns) == size(A,1)
+    @assert numfunctions(trialfns) == size(A,2)
+    return A
+end
+
 function assemblerow(operator::AbstractOperator, test_functions, trial_functions,
     storage_policy = Val{:bandedstorage},
     long_delays_policy = LongDelays{:ignore};

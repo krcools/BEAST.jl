@@ -45,6 +45,9 @@ module Maxwell3D
         Mod.MWSingleLayer3D(gamma, alpha, beta)
     end
 
+    weaklysingular(;wavenumber) = singlelayer(;wavenumber, alpha=-im*wavenumber, beta=zero(im*wavenumber))
+    hypersingular(;wavenumber) = singlelayer(; wavenumber, alpha=zero(im*wavenumber), beta=-1/(im*wavenumber))
+
     """
         doublelayer(;gamma)
         doublelaher(;wavenumber)
