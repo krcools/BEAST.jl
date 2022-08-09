@@ -195,7 +195,7 @@ function assemble!(operator::Operator, test_functions::Space, trial_functions::S
     threading::Type{Threading{:single}};
     quadstrat=defaultquadstrat(operator, test_functions, trial_functions))
 
-    @info "Single-threaded assembly"
+    # @info "Single-threaded assembly"
 
     assemblechunk!(operator, test_functions, trial_functions, store; quadstrat)
 end

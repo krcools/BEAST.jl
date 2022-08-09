@@ -175,3 +175,56 @@ function momintegrals_nested!(op::IntegralOperator,
     momintegrals!(op, test_local_space, trial_local_space,
         test_chart, trial_chart, out, strat)
 end
+
+function momintegrals_trial_refines_test!(op::IntegralOperator,
+    test_local_space::RefSpace, trial_local_space::RefSpace,
+    test_chart, trial_chart, out, strat)
+
+    momintegrals!(op, test_local_space, trial_local_space,
+        test_chart, trial_chart, out, strat)
+end
+
+
+function momintegrals_trial_refines_test!(op::MWOperator3D,
+    test_local_space::RTRefSpace, trial_local_space::RTRefSpace,
+    test_chart, trial_chart, out, strat::SauterSchwabStrategy)
+
+    # 1. Refine the test_chart
+    p1, p2, p3 = test_chart.vertices
+
+    # TODO: generalise this to include more general refinements
+    e1 = cartesian(neighborhood(test_chart, (0,1/2)))
+    e2 = cartesian(neighborhood(test_chart, (1/2,0)))
+    e3 = cartesian(neighborhood(test_chart, (1/2,1/2)))
+
+    ct = cartesian(center(test_chart))
+
+    refined_test_chart = [
+        simplex(ct, p1, e3),
+        simplex(ct, e3, p2),
+        simplex(ct, p2, e1),
+        simplex(ct, e1, p3),
+        simplex(ct, p3, e2),
+        simplex(ct, e2, p1)]
+
+    qs = defaultquadstrat(op, test_local_space, trial_local_space)
+    qd = quaddata(op, test_local_space, trial_local_space,
+        refined_test_chart, [trial_chart], qs)
+
+    for (p,chart) in enumerate(refined_test_chart)
+        qr = quadrule(op, test_local_space, trial_local_space,
+            p, chart, 1, trial_chart, qd, qs)
+
+        Q = restrict(test_local_space, test_chart, chart)
+        zlocal = zero(out)
+        momintegrals!(op, test_local_space, trial_local_space,
+            chart, trial_chart, zlocal, qr)
+
+        for j in 1:3
+            for i in 1:3
+                for k in 1:3
+                # out[i,j] += zlocal[i,k] * Q[j,k]
+                out[i,j] += Q[i,k] * zlocal[k,j]
+        end end end
+    end
+end
