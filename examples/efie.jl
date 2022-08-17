@@ -5,7 +5,7 @@ using BEAST
 # Γ = meshsphere(radius=1.0, h=0.1)
 X = raviartthomas(Γ)
 
-κ, η = 3.0, 1.0
+κ, η = 1.0, 1.0
 t = Maxwell3D.singlelayer(wavenumber=κ)
 E = Maxwell3D.planewave(direction=ẑ, polarization=x̂, wavenumber=κ)
 # E = -η/(im*κ)*BEAST.CurlCurlGreen(κ, ẑ, point(2,0,0))

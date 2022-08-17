@@ -98,7 +98,8 @@ const _dof_perms_rt = [
     (3,2,1),
 ]
 
-function dof_permutation(vert_permutation)
-    i = findfirst(==(vert_permutation), _vert_perms_rt)
+function dof_permutation(::RTRefSpace, vert_permutation)
+    i = findfirst(==(tuple(vert_permutation...)), _vert_perms_rt)
+    @assert i != nothing
     return _dof_perms_rt[i]
 end

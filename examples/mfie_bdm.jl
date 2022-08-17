@@ -8,7 +8,7 @@ Y = brezzidouglasmarini(Γ)
 # X = raviartthomas(Γ)
 # Y = raviartthomas(Γ)
 
-ϵ, μ, ω = 1.0, 1.0, 3.0; κ = ω * √(ϵ*μ)
+ϵ, μ, ω = 1.0, 1.0, 1.0; κ = ω * √(ϵ*μ)
 # κ = 3.0
 NK, Id = BEAST.DoubleLayerRotatedMW3D(im*κ), Identity()
 E = Maxwell3D.planewave(direction=ẑ, polarization=x̂, wavenumber=κ)

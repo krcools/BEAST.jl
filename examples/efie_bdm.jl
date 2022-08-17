@@ -5,7 +5,7 @@ using BEAST
 Γ = meshsphere(radius=1.0, h=0.2)
 X = brezzidouglasmarini(Γ)
 
-κ = 3.0
+κ = 1.0
 t = Maxwell3D.singlelayer(wavenumber=κ)
 E = Maxwell3D.planewave(direction=ẑ, polarization=x̂, wavenumber=κ)
 e = (n × E) × n

@@ -1,130 +1,68 @@
-struct MWSL3DIntegrand{C,O,L}
-    test_triangular_element::C
-    trial_triangular_element::C
-    op::O
-    test_local_space::L
-    trial_local_space::L
-end
+
+
 
 const i4pi = 1 / (4pi)
-function (igd::MWSL3DIntegrand)(u,v)
-        α = igd.op.α
-        β = igd.op.β
-        γ = igd.op.gamma
+function (igd::Integrand{<:MWSingleLayer3D})(u,v)
+    
+    x = neighborhood(igd.test_chart,u)
+    y = neighborhood(igd.trial_chart,v)
+    
+    f = igd.local_test_space(x)
+    g = igd.local_trial_space(y)
 
-        x = neighborhood(igd.test_triangular_element,u)
-        y = neighborhood(igd.trial_triangular_element,v)
-
-        r = cartesian(x) - cartesian(y)
-        R = norm(r)
-        iR = 1 / R
-        G = exp(-γ*R)*(i4pi*iR)
-
-        f = igd.test_local_space(x)
-        g = igd.trial_local_space(y)
-
-        j = jacobian(x) * jacobian(y)
-
-        jG = j*G
-        αjG = α*jG
-        βjG = β*jG
-
-        G = @SVector [αjG*g[1].value, αjG*g[2].value, αjG*g[3].value]
-        H = @SVector [βjG*g[1].divergence, βjG*g[2].divergence, βjG*g[3].divergence]
-
-        SMatrix{3,3}((
-            dot(f[1].value,G[1]) + f[1].divergence*H[1],
-            dot(f[2].value,G[1]) + f[2].divergence*H[1],
-            dot(f[3].value,G[1]) + f[3].divergence*H[1],
-            dot(f[1].value,G[2]) + f[1].divergence*H[2],
-            dot(f[2].value,G[2]) + f[2].divergence*H[2],
-            dot(f[3].value,G[2]) + f[3].divergence*H[2],
-            dot(f[1].value,G[3]) + f[1].divergence*H[3],
-            dot(f[2].value,G[3]) + f[2].divergence*H[3],
-            dot(f[3].value,G[3]) + f[3].divergence*H[3]))
+    return jacobian(x) * jacobian(y) * igd(x,y,f,g)
 end
 
-struct MWDL3DIntegrand{C,O,L}
-        test_triangular_element::C
-        trial_triangular_element::C
-        op::O
-        test_local_space::L
-        trial_local_space::L
+
+function (igd::Integrand{<:MWSingleLayer3D})(x,y,f,g)
+    α = igd.operator.α
+    β = igd.operator.β
+    γ = igd.operator.gamma
+
+    r = cartesian(x) - cartesian(y)
+    R = norm(r)
+    iR = 1 / R
+    green = exp(-γ*R)*(i4pi*iR)
+
+    αG = α * green
+    βG = β * green
+
+    G = αG * getvalue(g)
+    H = βG * getdivergence(g)
+
+    fvalue = getvalue(f)
+    fdivergence = getdivergence(f)
+
+    # 5 pct speedup can be achieved I think by combining into a single call
+    return _krondot(fvalue, G) + _krondot(fdivergence, H)
 end
 
-function (igd::MWDL3DIntegrand)(u,v)
+function (igd::Integrand{<:MWDoubleLayer3D})(u,v)
 
-        γ = igd.op.gamma
+        γ = igd.operator.gamma
 
-        x = neighborhood(igd.test_triangular_element,u)
-        y = neighborhood(igd.trial_triangular_element,v)
+        x = neighborhood(igd.test_chart,u)
+        y = neighborhood(igd.trial_chart,v)
 
         r = cartesian(x) - cartesian(y)
         R = norm(r)
         iR = 1/R
-        G = exp(-γ*R)*(iR*i4pi)
+        green = exp(-γ*R)*(iR*i4pi)
 
-        f = igd.test_local_space(x)
-        g = igd.trial_local_space(y)
+        f = igd.local_test_space(x)
+        g = igd.local_trial_space(y)
 
         j = jacobian(x) * jacobian(y)
 
-        GG = -(γ + iR) * G * (iR * r)
+        gradgreen = -(γ + iR) * green * (iR * r)
 
-        G = @SVector [cross(GG,(j*g[1].value)), cross(GG,(j*g[2].value)), cross(GG,(j*g[3].value))]
-        SMatrix{3,3}((
-            dot(f[1].value, G[1]),
-            dot(f[2].value, G[1]),
-            dot(f[3].value, G[1]),
-            dot(f[1].value, G[2]),
-            dot(f[2].value, G[2]),
-            dot(f[3].value, G[2]),
-            dot(f[1].value, G[3]),
-            dot(f[2].value, G[3]),
-            dot(f[3].value, G[3])))
+        fvalue = getvalue(f)
+        jgvalue = j * getvalue(g)
+        G = cross.(Ref(gradgreen), jgvalue)
+        return _krondot(fvalue, G)
 end
-
-kernel_in_bary(op::MWSingleLayer3D,
-    test_local_space::RTRefSpace, trial_local_space::RTRefSpace,
-    test_chart, trial_chart) = MWSL3DIntegrand(
-        test_chart, trial_chart, op, test_local_space, trial_local_space)
-
-kernel_in_bary(op::MWDoubleLayer3D,
-    test_local_space::RTRefSpace, trial_local_space::RTRefSpace,
-    test_chart, trial_chart) = MWDL3DIntegrand(
-        test_chart, trial_chart, op, test_local_space, trial_local_space)
 
 const MWOperator3D = Union{MWSingleLayer3D, MWDoubleLayer3D}
-function momintegrals!(op::MWOperator3D,
-    test_local_space::RTRefSpace, trial_local_space::RTRefSpace,
-    test_triangular_element, trial_triangular_element, out, strat::SauterSchwabStrategy)
-
-    I, J, K, L = SauterSchwabQuadrature.reorder(
-        test_triangular_element.vertices,
-        trial_triangular_element.vertices, strat)
-
-    test_triangular_element  = simplex(
-        test_triangular_element.vertices[I[1]],
-        test_triangular_element.vertices[I[2]],
-        test_triangular_element.vertices[I[3]])
-
-    trial_triangular_element = simplex(
-        trial_triangular_element.vertices[J[1]],
-        trial_triangular_element.vertices[J[2]],
-        trial_triangular_element.vertices[J[3]])
-
-    # igd = MWSL3DIntegrand(test_triangular_element, trial_triangular_element,
-    #     op, test_local_space, trial_local_space)
-    igd = kernel_in_bary(op, test_local_space, trial_local_space,
-        test_triangular_element, trial_triangular_element)
-    G = SauterSchwabQuadrature.sauterschwab_parameterized(igd, strat)
-    for j ∈ 1:3, i ∈ 1:3
-        out[i,j] += G[K[i],L[j]]
-    end
-
-    nothing
-end
-
 function momintegrals_nested!(op::MWOperator3D,
     test_local_space::RTRefSpace, trial_local_space::RTRefSpace,
     test_chart, trial_chart, out, strat::SauterSchwabStrategy)
@@ -139,7 +77,7 @@ function momintegrals_nested!(op::MWOperator3D,
 
     ct = cartesian(center(trial_chart))
 
-    refined_trial_chart = [
+    refined_trial_chart = SA[
         simplex(ct, p1, e3),
         simplex(ct, e3, p2),
         simplex(ct, p2, e1),
@@ -199,7 +137,7 @@ function momintegrals_trial_refines_test!(op::MWOperator3D,
 
     ct = cartesian(center(test_chart))
 
-    refined_test_chart = [
+    refined_test_chart = SA[
         simplex(ct, p1, e3),
         simplex(ct, e3, p2),
         simplex(ct, p2, e1),
