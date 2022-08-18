@@ -14,6 +14,27 @@ function (igd::Integrand{<:MWSingleLayer3D})(u,v)
 end
 
 
+function _integrands_gen(f::Type{U}, g::Type{V}) where {U<:SVector{N}, V<:SVector{M}} where {M,N}
+    ex = :(SMatrix{N,M}(()))
+    for m in 1:M
+        for n in 1:N
+            push!(ex.args[2].args, :(integrand(op, kervals, f[$n], x, g[$m], y)))
+        end
+    end
+    return ex
+end
+
+@generated _integrands(op, kervals, f::SVector{N}, x, g::SVector{M}, y) where {M,N} = _integrands_gen(f, g)
+
+function (igd::Integrand)(x,y,f,g)
+
+    op = igd.operator
+    kervals = kernelvals(op, x, y)
+    _integrands(op, kervals, f, x, g, y)
+
+end
+
+
 function (igd::Integrand{<:MWSingleLayer3D})(x,y,f,g)
     α = igd.operator.α
     β = igd.operator.β
@@ -27,14 +48,15 @@ function (igd::Integrand{<:MWSingleLayer3D})(x,y,f,g)
     αG = α * green
     βG = β * green
 
-    G = αG * getvalue(g)
-    H = βG * getdivergence(g)
-
+    gvalue = getvalue(g)
     fvalue = getvalue(f)
+    ws = _krondot(fvalue, gvalue)
+    
+    gdivergence = getdivergence(g)
     fdivergence = getdivergence(f)
+    hs = _krondot(fdivergence, gdivergence)
 
-    # 5 pct speedup can be achieved I think by combining into a single call
-    return _krondot(fvalue, G) + _krondot(fdivergence, H)
+    return αG * ws + βG * hs
 end
 
 function (igd::Integrand{<:MWDoubleLayer3D})(u,v)

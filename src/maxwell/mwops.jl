@@ -109,7 +109,8 @@ end
 
 # use Union type so this code can be shared between the operator
 # and its regular part.
-MWSL3DGen = Union{MWSingleLayer3D,MWSingleLayer3DReg}
+# MWSL3DGen = Union{MWSingleLayer3D,MWSingleLayer3DReg}
+MWSL3DGen = Union{MWSingleLayer3DReg}
 function integrand(biop::MWSL3DGen, kerneldata, tvals, tgeo, bvals, bgeo)
 
   gx = tvals[1]

@@ -11,12 +11,10 @@ Function for the computation of moment integrals using simple double quadrature.
 """
 function momintegrals!(biop, tshs, bshs, tcell, bcell, z, strat::DoubleQuadRule)
 
-    # memory allocation here is a result from the type instability on strat
-    # which is on purpose, i.e. the momintegrals! method is chosen based
-    # on dynamic polymorphism.
+    igd = Integrand(biop, tshs, bshs, tcell, bcell)
+
     womps = strat.outer_quad_points
     wimps = strat.inner_quad_points
-
     
     for womp in womps
         tgeo = womp.point
@@ -31,16 +29,12 @@ function momintegrals!(biop, tshs, bshs, tcell, bcell, z, strat::DoubleQuadRule)
             jy = wimp.weight
 
             j = jx * jy
-            kernel = kernelvals(biop, tgeo, bgeo)
 
-            for n in 1 : N
-                bval = bvals[n]
-                for m in 1 : M
-                    tval = tvals[m]
-                    igd = integrand(biop, kernel, tval, tgeo, bval, bgeo)
-                    z[m,n] += j * igd
-                end
-            end
+            z1 = j * igd(tgeo, bgeo, tvals, bvals)
+            for n in 1:N
+                for m in 1:M
+                    z[m,n] += z1[m,n]
+            end end
         end
     end
 
