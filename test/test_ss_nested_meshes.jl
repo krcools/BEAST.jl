@@ -37,13 +37,15 @@ function BEAST.quaddata(op::BEAST.MaxwellOperator3D,
     return (tpoints=tqd, bpoints=bqd, gausslegendre=leg)
 end
 
+qs_strat = BEAST.DoubleNumWiltonSauterQStrat(1,1,6,7,10,10,10,10)
+
 sauterschwab = BEAST.SauterSchwabQuadrature.CommonFace(nothing)
 out_ss = zeros(T, numfunctions(𝒳), numfunctions(𝒳))
-BEAST.momintegrals_nested!(𝒜,𝒳,𝒳,test_chart,trial_chart,out_ss,sauterschwab)
+BEAST.momintegrals_nested!(𝒜,𝒳,𝒳,test_chart,trial_chart,out_ss,sauterschwab,qs_strat)
 
 wiltonsingext = BEAST.WiltonSERule(test_quadpoints, BEAST.DoubleQuadRule(test_quadpoints, trial_quadpoints))
 out_dw = zeros(T, numfunctions(𝒳), numfunctions(𝒳))
-BEAST.momintegrals_nested!(𝒜,𝒳,𝒳,test_chart,trial_chart,out_dw,wiltonsingext)
+BEAST.momintegrals_nested!(𝒜,𝒳,𝒳,test_chart,trial_chart,out_dw,wiltonsingext,qs_strat)
 
 @show norm(out_ss-out_dw) / norm(out_dw)
 
