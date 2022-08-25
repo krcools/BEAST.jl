@@ -17,7 +17,7 @@ h = [0.1, 0.05, 0.025, 0.0125]
 κ = [1.0, 10.0]
 
 h = 0.3
-κ = 0.1
+κ = 0.000001
 γ = im*κ
 
 # function runsim(;h, κ)
@@ -37,7 +37,7 @@ edges = setminus(skeleton(Γ,1), ∂Γ)
 verts = setminus(skeleton(Γ,0), skeleton(∂Γ,0))
 
 Σ = Matrix(connectivity(Γ, edges, sign))
-Λ = Matrix(connectivity(Γ, edges, sign))
+Λ = Matrix(connectivity(Γ, verts, sign))
 
 PΣ = Σ * pinv(Σ'*Σ) * Σ'
 PΛH = I - PΣ

@@ -143,7 +143,8 @@ end
 regularpart(op::MWDoubleLayer3D) = MWDoubleLayer3DReg(op.gamma)
 singularpart(op::MWDoubleLayer3D) = MWDoubleLayer3DSng(op.gamma)
 
-const MWDL3DGen = Union{MWDoubleLayer3D,MWDoubleLayer3DReg}
+# const MWDL3DGen = Union{MWDoubleLayer3D,MWDoubleLayer3DReg}
+const MWDL3DGen = Union{MWDoubleLayer3DReg}
 function integrand(biop::MWDL3DGen, kerneldata, tvals, tgeo, bvals, bgeo)
     g = tvals[1]
     f = bvals[1]

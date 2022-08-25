@@ -2,7 +2,7 @@
 
 
 const i4pi = 1 / (4pi)
-function (igd::Integrand{<:MWSingleLayer3D})(u,v)
+function (igd::Integrand)(u,v)
     
     x = neighborhood(igd.test_chart,u)
     y = neighborhood(igd.trial_chart,v)
@@ -59,29 +59,54 @@ function (igd::Integrand{<:MWSingleLayer3D})(x,y,f,g)
     return αG * ws + βG * hs
 end
 
-function (igd::Integrand{<:MWDoubleLayer3D})(u,v)
+# function (igd::Integrand{<:MWDoubleLayer3D})(u,v)
 
-        γ = igd.operator.gamma
+#         γ = igd.operator.gamma
 
-        x = neighborhood(igd.test_chart,u)
-        y = neighborhood(igd.trial_chart,v)
+#         x = neighborhood(igd.test_chart,u)
+#         y = neighborhood(igd.trial_chart,v)
 
-        r = cartesian(x) - cartesian(y)
-        R = norm(r)
-        iR = 1/R
-        green = exp(-γ*R)*(iR*i4pi)
+#         r = cartesian(x) - cartesian(y)
+#         R = norm(r)
+#         iR = 1/R
+#         green = exp(-γ*R)*(iR*i4pi)
 
-        f = igd.local_test_space(x)
-        g = igd.local_trial_space(y)
+#         f = igd.local_test_space(x)
+#         g = igd.local_trial_space(y)
 
-        j = jacobian(x) * jacobian(y)
+#         j = jacobian(x) * jacobian(y)
 
-        gradgreen = -(γ + iR) * green * (iR * r)
+#         gradgreen = -(γ + iR) * green * (iR * r)
 
-        fvalue = getvalue(f)
-        jgvalue = j * getvalue(g)
-        G = cross.(Ref(gradgreen), jgvalue)
-        return _krondot(fvalue, G)
+#         fvalue = getvalue(f)
+#         jgvalue = j * getvalue(g)
+#         G = cross.(Ref(gradgreen), jgvalue)
+#         return _krondot(fvalue, G)
+# end
+
+function (igd::Integrand{<:MWDoubleLayer3D})(x,y,f,g)
+    
+    # x = neighborhood(igd.test_chart,u)
+    # y = neighborhood(igd.trial_chart,v)
+
+    # f = igd.local_test_space(x)
+    # g = igd.local_trial_space(y)
+
+    γ = igd.operator.gamma
+
+    r = cartesian(x) - cartesian(y)
+    R = norm(r)
+    iR = 1/R
+    green = exp(-γ*R)*(iR*i4pi)
+
+    # j = jacobian(x) * jacobian(y)
+
+    gradgreen = -(γ + iR) * green * (iR * r)
+
+    fvalue = getvalue(f)
+    gvalue = getvalue(g)
+    G = cross.(Ref(gradgreen), gvalue)
+    return _krondot(fvalue, G)
 end
 
 const MWOperator3D = Union{MWSingleLayer3D, MWDoubleLayer3D}
