@@ -112,7 +112,7 @@ end
 const MWOperator3D = Union{MWSingleLayer3D, MWDoubleLayer3D}
 function momintegrals_nested!(op::MWOperator3D,
     test_local_space::RTRefSpace, trial_local_space::RTRefSpace,
-    test_chart, trial_chart, out, strat::SauterSchwabStrategy)
+    test_chart, trial_chart, out, strat::SauterSchwabStrategy, quadstrat)
 
     # 1. Refine the trial_chart
     p1, p2, p3 = trial_chart.vertices
@@ -132,13 +132,12 @@ function momintegrals_nested!(op::MWOperator3D,
         simplex(ct, p3, e2),
         simplex(ct, e2, p1)]
 
-    qs = defaultquadstrat(op, test_local_space, trial_local_space)
     qd = quaddata(op, test_local_space, trial_local_space,
-        [test_chart], refined_trial_chart, qs)
+        [test_chart], refined_trial_chart, quadstrat)
 
     for (q,chart) in enumerate(refined_trial_chart)
         qr = quadrule(op, test_local_space, trial_local_space,
-            1, test_chart, q ,chart, qd, qs)
+            1, test_chart, q ,chart, qd, quadstrat)
 
         Q = restrict(trial_local_space, trial_chart, chart)
         zlocal = zero(out)
@@ -155,7 +154,7 @@ end
 
 function momintegrals_nested!(op::IntegralOperator,
     test_local_space::RefSpace, trial_local_space::RefSpace,
-    test_chart, trial_chart, out, strat)
+    test_chart, trial_chart, out, strat, quadstrat)
 
     momintegrals!(op, test_local_space, trial_local_space,
         test_chart, trial_chart, out, strat)
@@ -163,7 +162,7 @@ end
 
 function momintegrals_trial_refines_test!(op::IntegralOperator,
     test_local_space::RefSpace, trial_local_space::RefSpace,
-    test_chart, trial_chart, out, strat)
+    test_chart, trial_chart, out, strat, quadstrat)
 
     momintegrals!(op, test_local_space, trial_local_space,
         test_chart, trial_chart, out, strat)
@@ -172,7 +171,7 @@ end
 
 function momintegrals_trial_refines_test!(op::MWOperator3D,
     test_local_space::RTRefSpace, trial_local_space::RTRefSpace,
-    test_chart, trial_chart, out, strat::SauterSchwabStrategy)
+    test_chart, trial_chart, out, strat::SauterSchwabStrategy, quadstrat)
 
     # 1. Refine the test_chart
     p1, p2, p3 = test_chart.vertices
@@ -192,13 +191,12 @@ function momintegrals_trial_refines_test!(op::MWOperator3D,
         simplex(ct, p3, e2),
         simplex(ct, e2, p1)]
 
-    qs = defaultquadstrat(op, test_local_space, trial_local_space)
     qd = quaddata(op, test_local_space, trial_local_space,
-        refined_test_chart, [trial_chart], qs)
+        refined_test_chart, [trial_chart], quadstrat)
 
     for (p,chart) in enumerate(refined_test_chart)
         qr = quadrule(op, test_local_space, trial_local_space,
-            p, chart, 1, trial_chart, qd, qs)
+            p, chart, 1, trial_chart, qd, quadstrat)
 
         Q = restrict(test_local_space, test_chart, chart)
         zlocal = zero(out)

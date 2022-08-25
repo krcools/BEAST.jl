@@ -154,7 +154,7 @@ function assemblechunk_body_nested_meshes!(biop,
 
             fill!(zlocal, 0)
             qrule = quadrule(biop, test_shapes, trial_shapes, p, tcell, q, bcell, qd, quadstrat)
-            momintegrals_nested!(biop, test_shapes, trial_shapes, tcell, bcell, zlocal, qrule)
+            momintegrals_nested!(biop, test_shapes, trial_shapes, tcell, bcell, zlocal, qrule, quadstrat)
             I = length(test_assembly_data[p])
             J = length(trial_assembly_data[q])
             for j in 1 : J, i in 1 : I
@@ -188,7 +188,7 @@ for (p,tcell) in enumerate(test_elements)
 
         fill!(zlocal, 0)
         qrule = quadrule(biop, test_shapes, trial_shapes, p, tcell, q, bcell, qd, quadstrat)
-        momintegrals_trial_refines_test!(biop, test_shapes, trial_shapes, tcell, bcell, zlocal, qrule)
+        momintegrals_trial_refines_test!(biop, test_shapes, trial_shapes, tcell, bcell, zlocal, qrule, quadstrat)
         I = length(test_assembly_data[p])
         J = length(trial_assembly_data[q])
         for j in 1 : J, i in 1 : I
@@ -362,7 +362,7 @@ function assembleblock_body_nested!(biop::IntegralOperator,
 
             fill!(zlocals[Threads.threadid()], 0)
             qrule = quadrule(biop, test_shapes, trial_shapes, p, tcell, q, bcell, quadrature_data, quadstrat)
-            momintegrals_nested!(biop, test_shapes, trial_shapes, tcell, bcell, zlocals[Threads.threadid()], qrule)
+            momintegrals_nested!(biop, test_shapes, trial_shapes, tcell, bcell, zlocals[Threads.threadid()], qrule, quadstrat)
 
             for j in 1 : size(zlocals[Threads.threadid()],2)
                 for i in 1 : size(zlocals[Threads.threadid()],1)
