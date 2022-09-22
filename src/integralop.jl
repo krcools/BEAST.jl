@@ -87,13 +87,13 @@ function assemblechunk!(biop::IntegralOperator, tfs::Space, bfs::Space, store;
     #         qd, zlocal, store; quadstrat)
     # else
     if CompScienceMeshes.refines(tgeo, bgeo)
-        @info "assemblechunk: test refines trial mesh"
+        # @info "assemblechunk: test refines trial mesh"
         assemblechunk_body_nested_meshes!(biop,
             tshapes, test_elements, tad,
             bshapes, bsis_elements, bad,
             qd, zlocal, store; quadstrat)
     elseif CompScienceMeshes.refines(bgeo, tgeo)
-        @info "assemblechunk: trial refines test mesh"
+        # @info "assemblechunk: trial refines test mesh"
         assemblechunk_body_trial_refines_test!(biop,
             tshapes, test_elements, tad,
             bshapes, bsis_elements, bad,

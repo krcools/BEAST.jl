@@ -165,14 +165,6 @@ function dual2forms(Tetrs, Faces, Dir)
     dual2forms_body(Faces, tetrs, bnd, dir, v2t, v2n)
 end
 
-# function dualforms_init(Tetrs, Dir)
-#     tetrs = barycentric_refinement(Tetrs)
-#     v2t, v2n = CompScienceMeshes.vertextocellmap(tetrs)
-#     bnd = boundary(tetrs)
-#     gpred = CompScienceMeshes.overlap_gpredicate(Dir)
-#     dir = submesh(face -> gpred(chart(bnd,face)), bnd)
-#     return tetrs, bnd, dir, v2t, v2n
-# end
 
 
 function dual1forms_body(Faces, tetrs, bnd, dir, v2t, v2n)

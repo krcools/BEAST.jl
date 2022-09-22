@@ -408,8 +408,6 @@ function duallagrangec0d1(mesh, mesh2, pred, ::Type{Val{2}})
   numverts1 = numvertices(mesh)
   num_cells1 = numcells(mesh)
   cellids1, ncells1=vertextocellmap(mesh)
-  # obtain the refined mesh from the original mesh
-  #mesh2 = barycentric_refinement(mesh)
   # get the information about number of vertices, number of faces , and the maping between vertices and faces for the refined mesh
   num_cells2 = numcells(mesh2)
   numverts2 = numvertices(mesh2)

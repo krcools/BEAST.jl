@@ -28,19 +28,19 @@ function kernelvals(biop::MaxwellOperator3D, p, q)
     KernelValsMaxwell3D(γ, r, R, green, gradgreen)
 end
 
-function kernelvals(kernel::MaxwellOperator3DReg, p, q)
+# function kernelvals(kernel::MaxwellOperator3DReg, p, q)
 
-    γ = kernel.gamma
-    r = p.cart - q.cart
-    R = norm(r)
-    γR = γ*R
-    P=typeof(γ)
-    Exp = exp(-γ*R)
-    green = (Exp - 1 + γR - 0.5*γR^2) / (4pi*R)
-    gradgreen = ( - (γR + 1)*Exp + (1 - 0.5*γR^2) ) * (r/R^3) / (4π)
+#     γ = kernel.gamma
+#     r = p.cart - q.cart
+#     R = norm(r)
+#     γR = γ*R
+#     P=typeof(γ)
+#     Exp = exp(-γ*R)
+#     green = (Exp - 1 + γR - 0.5*γR^2) / (4pi*R)
+#     gradgreen = ( - (γR + 1)*Exp + (1 - 0.5*γR^2) ) * (r/R^3) / (4π)
 
-    KernelValsMaxwell3D(γ, r, R, P(green), gradgreen)
-end
+#     KernelValsMaxwell3D(γ, r, R, P(green), gradgreen)
+# end
 
 struct MWSingleLayer3D{T,U} <: MaxwellOperator3D
   gamma::T
@@ -110,23 +110,23 @@ end
 # use Union type so this code can be shared between the operator
 # and its regular part.
 # MWSL3DGen = Union{MWSingleLayer3D,MWSingleLayer3DReg}
-MWSL3DGen = Union{MWSingleLayer3DReg}
-function integrand(biop::MWSL3DGen, kerneldata, tvals, tgeo, bvals, bgeo)
+# MWSL3DGen = Union{MWSingleLayer3DReg}
+# function integrand(biop::MWSL3DGen, kerneldata, tvals, tgeo, bvals, bgeo)
 
-  gx = tvals[1]
-  fy = bvals[1]
+#   gx = tvals[1]
+#   fy = bvals[1]
 
-  dgx = tvals[2]
-  dfy = bvals[2]
+#   dgx = tvals[2]
+#   dfy = bvals[2]
 
-  G = kerneldata.green
-  γ = kerneldata.gamma
+#   G = kerneldata.green
+#   γ = kerneldata.gamma
 
-  α = biop.α
-  β = biop.β
+#   α = biop.α
+#   β = biop.β
 
-  t = (α * dot(gx, fy) + β * (dgx*dfy)) * G
-end
+#   t = (α * dot(gx, fy) + β * (dgx*dfy)) * G
+# end
 
 struct MWDoubleLayer3D{T} <: MaxwellOperator3D
   gamma::T
@@ -144,13 +144,13 @@ regularpart(op::MWDoubleLayer3D) = MWDoubleLayer3DReg(op.gamma)
 singularpart(op::MWDoubleLayer3D) = MWDoubleLayer3DSng(op.gamma)
 
 # const MWDL3DGen = Union{MWDoubleLayer3D,MWDoubleLayer3DReg}
-const MWDL3DGen = Union{MWDoubleLayer3DReg}
-function integrand(biop::MWDL3DGen, kerneldata, tvals, tgeo, bvals, bgeo)
-    g = tvals[1]
-    f = bvals[1]
-    ∇G = kerneldata.gradgreen
-    (f × g) ⋅ ∇G
-end
+# const MWDL3DGen = Union{MWDoubleLayer3DReg}
+# function integrand(biop::MWDL3DGen, kerneldata, tvals, tgeo, bvals, bgeo)
+#     g = tvals[1]
+#     f = bvals[1]
+#     ∇G = kerneldata.gradgreen
+#     (f × g) ⋅ ∇G
+# end
 
 
 # quadrule(op::MaxwellOperator3D, g::RTRefSpace, f::RTRefSpace, i, τ, j, σ, qd) = qrss(op, g, f, i, τ, j, σ, qd)
