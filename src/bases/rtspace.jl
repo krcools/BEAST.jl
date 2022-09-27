@@ -35,11 +35,15 @@ function raviartthomas(mesh::CompScienceMeshes.AbstractMesh{U,D1,T}, cellpairs::
     numpairs = size(cellpairs,2)
     functions = Vector{Vector{Shape{T}}}(undef,numpairs)
     positions = Vector{vertextype(mesh)}(undef,numpairs)
-    Cells = cells(mesh)
+    # Cells = cells(mesh)
     for i in 1:numpairs
         if cellpairs[2,i] > 0
-            c1 = cellpairs[1,i]; cell1 = Cells[c1] #mesh.faces[c1]
-            c2 = cellpairs[2,i]; cell2 = Cells[c2] #mesh.faces[c2]
+            c1 = cellpairs[1,i]; # cell1 = Cells[c1] #mesh.faces[c1]
+            c2 = cellpairs[2,i]; # cell2 = Cells[c2] #mesh.faces[c2]
+
+            cell1 = CompScienceMeshes.indices(mesh, c1)
+            cell2 = CompScienceMeshes.indices(mesh, c2)
+
             e1, e2 = getcommonedge(cell1, cell2)
             functions[i] = [
               Shape{T}(c1, abs(e1), T(+1.0)),
@@ -49,15 +53,15 @@ function raviartthomas(mesh::CompScienceMeshes.AbstractMesh{U,D1,T}, cellpairs::
             @assert !(cell1[abs(e1)] in isct)
             @assert !(cell2[abs(e2)] in isct)
 
-            ctr1 = cartesian(center(chart(mesh, cell1)))
-            ctr2 = cartesian(center(chart(mesh, cell2)))
+            ctr1 = cartesian(center(chart(mesh, c1)))
+            ctr2 = cartesian(center(chart(mesh, c2)))
             positions[i] = (ctr1 + ctr2) / 2
         else
             c1 = cellpairs[1,i]
             e1 = cellpairs[2,i]
             functions[i] = [
             Shape(c1, abs(e1), T(+1.0))]
-            positions[i] = cartesian(center(chart(mesh, Cells[c1])))
+            positions[i] = cartesian(center(chart(mesh, c1)))
         end
     end
 
@@ -134,11 +138,12 @@ function portcells(Γ, γ)
   in_interior = interior_tpredicate(Γ)
 
   overlaps = overlap_gpredicate(γ)
-  on_junction = c -> overlaps(simplex(vertices(Γ,c)))
+  on_junction = (m,c) -> overlaps(chart(m,c))
 
-  pred = x -> (!in_interior(x) && on_junction(x)) #check only for exterior overlapping edges
+  pred = (m,x) -> (!in_interior(m,x) && on_junction(m,x)) #check only for exterior overlapping edges
   # - if γ is defined to overlap within the structure Γ, this isn't considered a port -
-  edges = skeleton(pred, Γ, 1) #Take only exterior edges overlapping γ segment
+  #   edges = skeleton(pred, Γ, 1) #Take only exterior edges overlapping γ segment
+  edges = submesh(pred, skeleton(Γ,1))
   cps = cellpairs(Γ, edges, dropjunctionpair=true)
   return cps
 end

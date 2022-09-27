@@ -27,7 +27,7 @@ G1 = weld(-G01, -G12, seam=b)
 G2 = weld(-G02, G12, seam=b)
 @test CompScienceMeshes.isoriented(G2)
 
-isclosed(m) = (numcells(boundary(m)) == 0)
+isclosed(m) = (length(boundary(m)) == 0)
 
 @test isclosed(G1)
 @test isclosed(G2)

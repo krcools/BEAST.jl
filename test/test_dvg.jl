@@ -9,9 +9,13 @@ using Test
 
 in_interior = CompScienceMeshes.interior_tpredicate(Γ)
 on_junction = CompScienceMeshes.overlap_gpredicate(γ)
-edges = skeleton(Γ,1) do edge
-    in_interior(edge) ||on_junction(chart(Γ,edge))
+edges = submesh(skeleton(Γ,1)) do m,e
+    in_interior(m, e) ||on_junction(chart(m, e))
 end
+
+# edges = skeleton(Γ,1) do m, e
+#     in_interior(m, e) ||on_junction(chart(m, e))
+# end
 length(edges)
 X = raviartthomas(Γ, edges)
 
@@ -23,7 +27,7 @@ for (_f,_g) in zip(x.fns, X.fns)
     @test length(_f) == length(_g)
     if length(_f) == 1
         c = _f[1].cellid
-        _s = chart(Γ, Γ.faces[c])
+        _s = chart(Γ, c)
         @test _f[1].coeff == 1 / volume(_s)
     else
         @test _f[1].coeff + _f[2].coeff == 0

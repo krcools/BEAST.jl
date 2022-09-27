@@ -22,7 +22,7 @@ function nedelec(surface, edges=skeleton(surface,1))
 
     fns = Vector{Vector{Shape{T}}}(undef,num_edges)
     pos = Vector{P}(undef,num_edges)
-    for (i,edge) in enumerate(cells(edges))
+    for (i,edge) in enumerate(edges)
 
         fns[i] = Vector{Shape{T}}()
         pos[i] = cartesian(center(chart(edges,edge)))

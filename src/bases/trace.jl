@@ -33,8 +33,9 @@ function ntrace(X::Space, γ)
 
     ogeo = boundary(igeo)
     on_target = overlap_gpredicate(γ)
-    ogeo = submesh(ogeo) do face
-        on_target(chart(ogeo,face))
+    ogeo = submesh(ogeo) do m,f
+        ch = chart(m,f)
+        on_target(ch)
     end
 
     # D = copy(transpose(connectivity(ogeo, igeo, abs)))
@@ -59,7 +60,7 @@ function ntrace(X::Space, γ)
             end
             @assert r != 0
             
-            fc1 = chart(ogeo, cells(ogeo)[r])
+            fc1 = chart(ogeo, r)
             Q = ntrace(x, el, q, fc1)
 
             for i in 1:size(Q,1)
@@ -116,8 +117,8 @@ function strace(X::Space, γ, dim1::Type{Val{2}})
             @assert e != 0
 
             # make sure we use fc as oriented in Σ
-            cell = Σ.faces[e]
-            fc = chart(Σ, cell)
+            cell = CompScienceMeshes.indices(Σ,e) #Σ.faces[e]
+            fc = chart(Σ, e)
             on_target(fc) || continue
 
             Q = strace(x,el,q,fc)
@@ -201,14 +202,13 @@ function ttrace(X::Space, γ)
     igeo = geometry(X)
     @assert dimension(γ) == dimension(igeo)-1
 
-    # ogeo = skeleton(igeo, dimension(γ))
     ogeo = boundary(igeo)
     on_target = overlap_gpredicate(γ)
-    ogeo = submesh(ogeo) do face
-        on_target(chart(ogeo, face))
+    ogeo = submesh(ogeo) do m,face
+        ch = chart(m,face)
+        on_target(ch)
     end
 
-    # D = copy(transpose(connectivity(ogeo, igeo, abs)))
     D = connectivity(igeo, ogeo, abs)
     rows, vals = rowvals(D), nonzeros(D)
 
@@ -227,7 +227,7 @@ function ttrace(X::Space, γ)
             end
             @assert r != 0
 
-            fc1 = chart(ogeo, cells(ogeo)[r])
+            fc1 = chart(ogeo, r)
             @assert cartesian(center(fc)) ≈ cartesian(center(fc1))
 
             Q = ttrace(x, el, q, fc1)

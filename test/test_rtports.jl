@@ -40,12 +40,14 @@ cps = cellpairs(sum_mesh, edges)
 
 # select only outer edges
 overlaps = overlap_gpredicate(Γ)
-on_junction = c -> overlaps(simplex(vertices(meshZ,c)))
+on_junction = (m,c) -> overlaps(chart(m,c))
 
-pred = x -> on_junction(x)
-edges = skeleton(pred, meshZ, 1) #Take only exterio
-@test numcells(edges) == 2
-@test size(edges.faces[1]) == (2,)
+# pred = x -> on_junction(x)
+edges = submesh(on_junction, skeleton(meshZ,1))
+# edges = skeleton(pred, meshZ, 1)
+@test length(edges) == 2
+# @test size(edges.faces[1]) == (2,)
+@test dimension(edges) == 1
 
 cps = cellpairs(sum_mesh, edges)
 @test size(cps) == (2,2)

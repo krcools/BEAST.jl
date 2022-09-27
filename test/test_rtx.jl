@@ -13,7 +13,7 @@ for T in [Float32, Float64]
 
     i = 12
     c = X.fns[i][1].cellid
-    ch = chart(m, cells(m)[c])
+    ch = chart(m, c)
     ctr = cartesian(center(ch))
     @test ctr ≈ p[i]
 

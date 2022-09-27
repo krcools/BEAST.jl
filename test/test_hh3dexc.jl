@@ -19,7 +19,7 @@ for T in [Float32, Float64]
     import BEAST.∂n
     p = ∂n(f)
 
-    local s = chart(sphere,first(cells(sphere)))
+    local s = chart(sphere,first(sphere))
     local c = neighborhood(s, T.([1,1]/3))
 
     r = cartesian(c)

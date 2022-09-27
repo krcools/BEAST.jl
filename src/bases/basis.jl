@@ -230,12 +230,13 @@ end
 
 
 function instantiate_charts(geo, num_active_cells, active)
-    E = typeof(chart(geo, first(cells(geo))))
+    @assert length(geo) != 0
+    E = typeof(chart(geo, first(geo)))
     elements = Vector{E}(undef,num_active_cells)
     j = 1
-    for (i,cell) in enumerate(cells(geo))
+    for (i,p) in enumerate(geo)
         active[i] || continue
-        elements[j] = chart(geo, cell)
+        elements[j] = chart(geo, p)
         j += 1
     end
     return elements

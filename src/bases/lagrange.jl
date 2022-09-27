@@ -39,7 +39,7 @@ function lagrangecxd0(mesh)
     # create the local shapes
     fns = Vector{Vector{Shape{T}}}(undef,num_cells)
     pos = Vector{vertextype(mesh)}(undef,num_cells)
-    for (i,cell) in enumerate(cells(mesh))
+    for (i,cell) in enumerate(mesh)
         fns[i] = [Shape(i, 1, T(1.0))]
         pos[i] = cartesian(center(chart(mesh, cell)))
   end
@@ -153,8 +153,8 @@ function singleduallagd0(fine, F, v)
     T = coordtype(fine)
     fn = Shape{T}[]
     for cellid in F
-        cell = cells(fine)[cellid]
-        ptch = chart(fine, cell)
+        # cell = cells(fine)[cellid]
+        ptch = chart(fine, cellid)
         coeff = 1 / volume(ptch) / length(F)
         refid = 1
         push!(fn, Shape(cellid, refid, coeff))
@@ -320,16 +320,19 @@ function duallagrangec0d1(mesh, refined, jct_pred, ::Type{Val{3}})
     uv_ctr = ones(dimension(mesh))/(dimension(mesh)+1)
 
     vtoc, vton = vertextocellmap(refined)
-    for (i,coarse_idcs) in enumerate(cells(mesh))
+    for (i,p) in enumerate(mesh)
+        coarse_idcs = CompScienceMeshes.indices(mesh, p)
+        coarse_chart = chart(mesh,p)
+
         fns[i] = Vector{Shape{T}}()
-        push!(pos, cartesian(center(chart(mesh, coarse_idcs))))
+        push!(pos, cartesian(center(coarse_chart)))
 
         # It is assumed the vertices of this cell have the same index
         # mesh and its refinement.
-        coarse_cell = chart(mesh, coarse_idcs)
+        # coarse_cell = chart(mesh, coarse_idcs)
 
         # get the index in fine.vertices of the centroid of coarse_cell
-        centroid = barytocart(coarse_cell, uv_ctr)
+        centroid = barytocart(coarse_chart, uv_ctr)
         I = CollisionDetection.find(fine_vertices, centroid)
         @assert length(I) == 1
         centroid_id = I[1]
@@ -343,7 +346,7 @@ function duallagrangec0d1(mesh, refined, jct_pred, ::Type{Val{3}})
             uv_face_ctr[f] = 0
             uv_face_ctr = uv_face_ctr[1:end-1]
 
-            face_ctr = barytocart(coarse_cell, uv_face_ctr)
+            face_ctr = barytocart(coarse_chart, uv_face_ctr)
             I = CollisionDetection.find(fine_vertices, face_ctr)
             @assert length(I) == 1
             face_center_ids[f] = I[1]
@@ -468,7 +471,7 @@ function duallagrangec0d1(mesh, mesh2, pred, ::Type{Val{2}})
     end
     # Now assign all of these shapes to the relevent segment in the coarse mesh
     fns[segment_coarse]=shapes
-    push!(pos, cartesian(center(chart(mesh, mesh.faces[segment_coarse]))))
+    push!(pos, cartesian(center(chart(mesh, segment_coarse))))
   end
 
   NF = 2

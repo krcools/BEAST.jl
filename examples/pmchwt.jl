@@ -54,18 +54,18 @@ pmchwt = @discretise(
 
 u = gmres(pmchwt)
 
-Z = BEAST.sysmatrix(pmchwt)
-u = zeros(ComplexF64, axes(Z,2))
-y = zeros(ComplexF64, axes(Z,1))
+# Z = BEAST.sysmatrix(pmchwt)
+# u = zeros(ComplexF64, axes(Z,2))
+# y = zeros(ComplexF64, axes(Z,1))
 
-@time for i in 1:300; BEAST.LinearMaps.mul!(y, Z, u); end
+# @time for i in 1:300; BEAST.LinearMaps.mul!(y, Z, u); end
 
 Θ, Φ = range(0.0,stop=2π,length=100), 0.0
 ffpoints = [point(cos(ϕ)*sin(θ), sin(ϕ)*sin(θ), cos(θ)) for θ in Θ for ϕ in Φ]
 
 # Don't forget the far field comprises two contributions
-ffm = potential(MWFarField3D(κ*im), ffpoints, u[m], X)
-ffj = potential(MWFarField3D(κ*im), ffpoints, u[j], X)                                                                                                                                                                                                                                                          
+ffm = potential(MWFarField3D(κ*im, η), ffpoints, u[m], X)
+ffj = potential(MWFarField3D(κ*im, η), ffpoints, u[j], X)                                                                                                                                                                                                                                                          
 ff = -η*im*κ*ffj + im*κ*cross.(ffpoints, ffm)
 
 using Plots
@@ -118,10 +118,10 @@ contour(real.(getindex.(E_tot,1)))
 contour(real.(getindex.(H_tot,2)))
 
 heatmap(Z, Y, real.(getindex.(E_tot,1)))
-#heatmap(Z, Y, real.(getindex.(H_tot,2)))
+heatmap(Z, Y, real.(getindex.(H_tot,2)))
 
-#plot(real.(getindex.(E_tot[:,51],1)))
-#plot!(real.(getindex.(H_tot[:,51],2)))
+plot(real.(getindex.(E_tot[:,51],1)))
+plot!(real.(getindex.(H_tot[:,51],2)))
 
 
 # Compare the far field and the field far

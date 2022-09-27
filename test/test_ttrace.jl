@@ -113,8 +113,8 @@ for T in [Float32, Float64]
     pa = Y.fns[1][1].cellid
     pb = Y.fns[1][2].cellid
 
-    tria = chart(m2, cells(m2)[pa])
-    trib = chart(m2, cells(m2)[pb])
+    tria = chart(m2, pa)
+    trib = chart(m2, pb)
 
     ra = Y.fns[1][1].refid
     rb = Y.fns[1][2].refid

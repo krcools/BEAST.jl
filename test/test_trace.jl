@@ -21,7 +21,7 @@ for i in eachindex(rwg.fns)
     length(nt.fns[i]) == 1 || continue
     global n += 1
     c = nt.fns[i][1].cellid
-    edge = chart(Σ, cells(Σ)[c])
+    edge = chart(Σ, c)
     @test on_bnd(edge)
     @test nt.fns[i][1].refid == 1
     @test nt.fns[i][1].coeff == 2.0

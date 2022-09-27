@@ -6,10 +6,11 @@ using Test
 
 m = meshrectangle(1.0, 1.0, 0.5, 3)
 nodes = skeleton(m,0)
-srt_bnd_nodes = sort.(skeleton(boundary(m),0))
-int_nodes = submesh(nodes) do node
-    !(sort(node) in srt_bnd_nodes)
-end
+int_nodes = submesh(!in(skeleton(boundary(m),0)), nodes)
+# srt_bnd_nodes = sort.(skeleton(boundary(m),0))
+# int_nodes = submesh(nodes) do node
+#     !(sort(node) in srt_bnd_nodes)
+# end
 
 @test length(int_nodes) == 1
 

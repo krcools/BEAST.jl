@@ -34,7 +34,7 @@ ref = refspace(rwg)
 
 # vrts = vertices(m, first(cells(m)))
 # ptch = simplex(vrts[1], vrts[2], vrts[3])
-ptch = chart(m, first(cells(m)))
+ptch = chart(m, first(m))
 
 ctrd = neighborhood(ptch, T.([1,1]/3))
 vals = shapevals(ref, [ctrd])
