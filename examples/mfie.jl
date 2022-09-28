@@ -1,6 +1,6 @@
 using CompScienceMeshes, BEAST
 
-Γ = readmesh(joinpath(dirname(@__FILE__),"sphere2.in"))
+Γ = readmesh(joinpath(dirname(pathof(BEAST)),"../examples/sphere2.in"))
 X, Y = raviartthomas(Γ), buffachristiansen(Γ)
 
 ϵ, μ, ω = 1.0, 1.0, 1.0; κ, η = ω * √(ϵ*μ), √(μ/ϵ)

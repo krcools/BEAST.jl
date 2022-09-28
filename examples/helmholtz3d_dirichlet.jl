@@ -2,10 +2,9 @@ using CompScienceMeshes, BEAST
 
 o, x, y, z = euclidianbasis(3)
 
-# Γ = meshsphere(1.0, 0.11)
-Γ = readmesh(joinpath(@__DIR__,"sphere2.in"))
-# Γ = readmesh("/Users/Benjamin/Documents/sphere.in")
-# Γ = readmesh(joinpath(@__DIR__,"sphere_subd1.in"))
+
+Γ = readmesh(joinpath(dirname(pathof(BEAST)),"../examples/sphere2.in"))
+
 X = lagrangecxd0(Γ)
 # X = subdsurface(Γ)
 # X = raviartthomas(Γ)
