@@ -4,7 +4,7 @@
 using CompScienceMeshes, BEAST
 using LinearAlgebra
 
-Γ = readmesh(joinpath(@__DIR__,"sphere2.in"))
+Γ = readmesh(joinpath(dirname(pathof(BEAST)),"../examples/sphere2.in"))
 println("Mesh with $(numvertices(Γ)) vertices and $(numcells(Γ)) cells.")
 X = raviartthomas(Γ)
 Y = BEAST.buffachristiansen2(Γ)

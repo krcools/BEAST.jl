@@ -1,7 +1,7 @@
 using CompScienceMeshes
 using BEAST
 
-Γ1 = readmesh(joinpath(@__DIR__,"sphere2.in"))
+Γ1 = readmesh(joinpath(dirname(pathof(BEAST)),"../examples/sphere2.in"))
 Γ2 = CompScienceMeshes.SComplex2D(Γ1)
 # Y = raviartthomas(Γ1)
 Nd1 = BEAST.nedelec(Γ1)

@@ -3,7 +3,7 @@ o, x, y, z = euclidianbasis(3)
 
 # D, Δx = 1.0, 0.35
 
-Γ = readmesh(joinpath(@__DIR__,"sphere2.in"))
+Γ = readmesh(joinpath(dirname(pathof(BEAST)),"../examples/sphere2.in"))
 # Γ = meshsphere(1.0, 0.08)
 @show numcells(Γ)
 X, Y = raviartthomas(Γ), buffachristiansen(Γ)
