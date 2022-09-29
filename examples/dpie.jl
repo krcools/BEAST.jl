@@ -1,7 +1,7 @@
 using CompScienceMeshes
 using BEAST
 
-Γ = readmesh(joinpath(@__DIR__,"sphere2.in"))
+Γ = readmesh(joinpath(dirname(pathof(BEAST)),"../examples/sphere2.in"))
 X = raviartthomas(Γ)
 
 d = BEAST.CurlSingleLayerDP3D(1.0im, 1.0)
