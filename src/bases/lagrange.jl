@@ -543,7 +543,7 @@ function dualforms_init(Supp, Dir)
     v2t, v2n = CompScienceMeshes.vertextocellmap(tetrs)
     bnd = boundary(tetrs)
     gpred = CompScienceMeshes.overlap_gpredicate(Dir)
-    dir = submesh(face -> gpred(chart(bnd,face)), bnd)
+    dir = submesh((m,face) -> gpred(chart(m,face)), bnd)
     return tetrs, bnd, dir, v2t, v2n
 end
 

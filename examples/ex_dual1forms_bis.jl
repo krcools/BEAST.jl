@@ -5,12 +5,12 @@ using LinearAlgebra
 const Id = BEAST.Identity()
 const Nx = BEAST.NCross()
 
-function Base.in(mesh::CompScienceMeshes.AbstractMesh)
-    cells_mesh = sort.(mesh)
-    function f(cell)
-        sort(cell) in cells_mesh
-    end
-end
+# function Base.in(mesh::CompScienceMeshes.AbstractMesh)
+#     cells_mesh = sort.(mesh)
+#     function f(cell)
+#         sort(cell) in cells_mesh
+#     end
+# end
 
 function add!(fn, x, space, idcs)
     for (m,bf) in enumerate(space.fns)
@@ -150,7 +150,7 @@ Faces = submesh(!in(Bnd), CompScienceMeshes.skeleton_fast(Tetrs,2))
 
 F = 396
 Face = cells(Faces)[F]
-pos = cartesian(center(chart(Faces, Face)))
+pos = cartesian(center(chart(Faces, F)))
 
 idcs1 = v2t[Face[1],1:v2n[Face[1]]]
 idcs2 = v2t[Face[2],1:v2n[Face[2]]]
@@ -180,7 +180,7 @@ port_edges = submesh(in(boundary(supp12)), port_edges)
 x0 = ones(length(port_edges)) / length(port_edges)
 for (i,edge) in enumerate(port_edges)
     tgt = tangents(center(chart(port_edges, edge)),1)
-    if dot(normal(chart(Faces, Face)), tgt) < 0
+    if dot(normal(chart(Faces, F)), tgt) < 0
         x0[i] *= -1
     end
 end
@@ -221,11 +221,11 @@ add!(fn, x2_int, Nd2_int, idcs2)
 add!(fn, x3_prt, Nd3_prt, idcs3)
 add!(fn, x3_int, Nd3_int, idcs3)
 
-pos = cartesian(CompScienceMeshes.center(chart(Faces, Face)))
+pos = cartesian(CompScienceMeshes.center(chart(Faces, F)))
 space = BEAST.NDLCCBasis(tetrs, [fn], [pos])
 
 
-tetrs, bnd, dir, v2t, v2n = BEAST.dual1forms_init(Tetrs, Dir)
+tetrs, bnd, dir, v2t, v2n = BEAST.dualforms_init(Tetrs, Dir)
 D1 = BEAST.dual1forms_body(Faces, tetrs, bnd, dir, v2t, v2n)
 P2 = BEAST.nedelecd3d(Tetrs, Faces)
 # S = BEAST.dual1forms(Tetrs, Faces[collect(396:405)], Dir)
@@ -246,7 +246,7 @@ CDP = assemble(Id, D1, curl_P1)
 CPD = CDP'
 GDD = assemble(Id, D1, D1)
 
-iM = inv(M)
-A1 = CPD * inv(GDD) * CDP;
+iM = inv(Matrix(M))
+A1 = CPD * inv(Matrix(GDD)) * CDP;
 A2 = assemble(Id, curl_P1, curl_P1)
-A3 = CPD * iM' * inv(GDD) * iM * CDP;
+A3 = CPD * iM' * inv(Matrix(GDD)) * iM * CDP;

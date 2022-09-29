@@ -19,8 +19,8 @@ u = gmres(efie)
 
 Θ, Φ = range(0.0,stop=π,length=100), 0.0
 ffpoints = [point(cos(ϕ)*sin(θ), sin(ϕ)*sin(θ), cos(θ)) for θ in Θ for ϕ in Φ]
-farfield = potential(MWFarField3D(κ*im), ffpoints, u, X)
+farfield = potential(MWFarField3D(wavenumber=κ), ffpoints, u, X)
 
 using Plots
 using LinearAlgebra
-plot(Θ,norm.(farfield))
+Plots.plot(Θ,norm.(farfield))

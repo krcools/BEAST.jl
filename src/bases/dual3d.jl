@@ -42,7 +42,7 @@ function dual2forms_body(Edges, tetrs, bnd, dir, v2t, v2n)
 
         x0 = zeros(length(port_faces))
         total_vol = sum(volume(chart(port_faces, fc)) for fc in port_faces)
-        tgt = tangents(center(chart(Edges, Edge)),1)
+        tgt = tangents(center(chart(Edges, F)),1)
         for (i,face) in enumerate(port_faces)
             chrt = chart(port_faces, face)
             nrm = normal(chrt)
@@ -58,7 +58,7 @@ function dual2forms_body(Edges, tetrs, bnd, dir, v2t, v2n)
         x2_int, _, RT2_int = extend_2_form(supp2, dir2_faces, x0, port_faces)
 
         bfs[F] = Vector{Shape{T}}()
-        pos[F] = cartesian(center(chart(Edges,Edge)))
+        pos[F] = cartesian(center(chart(Edges,F)))
         addf!(bfs[F], x1_int, RT1_int, idcs1)
         addf!(bfs[F], x0, RT1_prt, idcs1)
 
@@ -179,6 +179,7 @@ function dual1forms_body(Faces, tetrs, bnd, dir, v2t, v2n)
     num_threads = Threads.nthreads()
     Threads.@threads for F in 1:length(Faces)
         Face = Cells[F]
+        Chart = chart(Faces, F)
 
         myid = Threads.threadid()
         myid == 1 && F % 20 == 0 &&
@@ -220,7 +221,7 @@ function dual1forms_body(Faces, tetrs, bnd, dir, v2t, v2n)
         # Step 1: set port flux and extend to dual faces
         x0 = zeros(length(port_edges))
         total_vol = sum(volume(chart(port_edges, edge)) for edge in port_edges)
-        nrm = normal(chart(Faces, Face))
+        nrm = normal(Chart)
         for (i,edge) in enumerate(port_edges)
             cht = chart(port_edges, edge)
             tgt = tangents(center(cht),1)
@@ -263,7 +264,7 @@ function dual1forms_body(Faces, tetrs, bnd, dir, v2t, v2n)
         addf!(fn, x3_prt, Nd3_prt, idcs3)
         addf!(fn, x3_int, Nd3_int, idcs3)
 
-        pos[F] = cartesian(CompScienceMeshes.center(chart(Faces, Face)))
+        pos[F] = cartesian(CompScienceMeshes.center(Chart))
         bfs[F] = fn
     end
 

@@ -28,19 +28,6 @@ function kernelvals(biop::MaxwellOperator3D, p, q)
     KernelValsMaxwell3D(γ, r, R, green, gradgreen)
 end
 
-# function kernelvals(kernel::MaxwellOperator3DReg, p, q)
-
-#     γ = kernel.gamma
-#     r = p.cart - q.cart
-#     R = norm(r)
-#     γR = γ*R
-#     P=typeof(γ)
-#     Exp = exp(-γ*R)
-#     green = (Exp - 1 + γR - 0.5*γR^2) / (4pi*R)
-#     gradgreen = ( - (γR + 1)*Exp + (1 - 0.5*γR^2) ) * (r/R^3) / (4π)
-
-#     KernelValsMaxwell3D(γ, r, R, P(green), gradgreen)
-# end
 
 struct MWSingleLayer3D{T,U} <: MaxwellOperator3D
   gamma::T
@@ -88,7 +75,9 @@ defaultquadstrat(op::MaxwellOperator3D, tfs::RefSpace, bfs::RefSpace) = DoubleNu
 function quaddata(op::MaxwellOperator3D,
     test_local_space::RefSpace, trial_local_space::RefSpace,
     test_charts, trial_charts, qs::DoubleNumWiltonSauterQStrat)
+
     T = coordtype(test_charts[1])
+
     tqd = quadpoints(test_local_space,  test_charts,  (qs.outer_rule_far,qs.outer_rule_near))
     bqd = quadpoints(trial_local_space, trial_charts, (qs.inner_rule_far,qs.inner_rule_near))
      
@@ -97,36 +86,8 @@ function quaddata(op::MaxwellOperator3D,
       convert.(NTuple{2,T},_legendre(qs.sauter_schwab_common_edge,0,1)),
       convert.(NTuple{2,T},_legendre(qs.sauter_schwab_common_face,0,1)),)
 
-
-    # High accuracy rules (use them e.g. in LF MFIE scenarios)
-    # tqd = quadpoints(test_local_space, test_charts, (8,8))
-    # bqd = quadpoints(trial_local_space, trial_charts, (8,9))
-    # leg = (_legendre(8,a,b), _legendre(10,a,b), _legendre(5,a,b),)
-
-
     return (tpoints=tqd, bpoints=bqd, gausslegendre=leg)
 end
-
-# use Union type so this code can be shared between the operator
-# and its regular part.
-# MWSL3DGen = Union{MWSingleLayer3D,MWSingleLayer3DReg}
-# MWSL3DGen = Union{MWSingleLayer3DReg}
-# function integrand(biop::MWSL3DGen, kerneldata, tvals, tgeo, bvals, bgeo)
-
-#   gx = tvals[1]
-#   fy = bvals[1]
-
-#   dgx = tvals[2]
-#   dfy = bvals[2]
-
-#   G = kerneldata.green
-#   γ = kerneldata.gamma
-
-#   α = biop.α
-#   β = biop.β
-
-#   t = (α * dot(gx, fy) + β * (dgx*dfy)) * G
-# end
 
 struct MWDoubleLayer3D{T} <: MaxwellOperator3D
   gamma::T
@@ -143,21 +104,9 @@ end
 regularpart(op::MWDoubleLayer3D) = MWDoubleLayer3DReg(op.gamma)
 singularpart(op::MWDoubleLayer3D) = MWDoubleLayer3DSng(op.gamma)
 
-# const MWDL3DGen = Union{MWDoubleLayer3D,MWDoubleLayer3DReg}
-# const MWDL3DGen = Union{MWDoubleLayer3DReg}
-# function integrand(biop::MWDL3DGen, kerneldata, tvals, tgeo, bvals, bgeo)
-#     g = tvals[1]
-#     f = bvals[1]
-#     ∇G = kerneldata.gradgreen
-#     (f × g) ⋅ ∇G
-# end
-
-
-# quadrule(op::MaxwellOperator3D, g::RTRefSpace, f::RTRefSpace, i, τ, j, σ, qd) = qrss(op, g, f, i, τ, j, σ, qd)
-
-# function qrss(op, g, f, i, τ, j, σ, qd)
 function quadrule(op::MaxwellOperator3D, g::RTRefSpace, f::RTRefSpace,  i, τ, j, σ, qd,
       qs::DoubleNumWiltonSauterQStrat)
+
     T = eltype(eltype(τ.vertices))
     hits = 0
     dtol = 1.0e3 * eps(T)
@@ -208,11 +157,6 @@ function quadrule(op::MaxwellOperator3D, g::BDMRefSpace, f::BDMRefSpace,  i, τ,
   h2 = volume(σ)
   xtol2 = 0.2 * 0.2
   k2 = abs2(op.gamma)
-  # max(dmin2*k2, dmin2/16h2) < xtol2 && return WiltonSERule(
-  #     qd.tpoints[2,i],
-  #     DoubleQuadRule(
-  #         qd.tpoints[2,i],
-  #         qd.bpoints[2,j],),)
   return DoubleQuadRule(
       qd.tpoints[1,i],
       qd.bpoints[1,j],)
@@ -220,10 +164,8 @@ end
 
 
 function qrib(op::MaxwellOperator3D, g::RTRefSpace, f::RTRefSpace, i, τ, j, σ, qd)
-  # defines coincidence of points
-  dtol = 1.0e3 * eps(eltype(eltype(τ.vertices)))
 
-  # decides on whether to use singularity extraction
+  dtol = 1.0e3 * eps(eltype(eltype(τ.vertices)))
   xtol = 0.2
 
   k = norm(op.gamma)
@@ -241,21 +183,21 @@ function qrib(op::MaxwellOperator3D, g::RTRefSpace, f::RTRefSpace, i, τ, j, σ,
     end
   end
 
-    hits == 3   && return BogaertSelfPatchStrategy(5)
-    hits == 2   && return BogaertEdgePatchStrategy(8, 4)
-    hits == 1   && return BogaertPointPatchStrategy(2, 3)
-    rmin = xmin/k
-    xmin < xtol && return WiltonSERule(
-      qd.tpoints[1,i],
-      DoubleQuadRule(
-        qd.tpoints[2,i],
-        qd.bpoints[2,j],
-      ),
-    )
-    return DoubleQuadRule(
-      qd.tpoints[1,i],
-      qd.bpoints[1,j],
-    )
+  hits == 3   && return BogaertSelfPatchStrategy(5)
+  hits == 2   && return BogaertEdgePatchStrategy(8, 4)
+  hits == 1   && return BogaertPointPatchStrategy(2, 3)
+  rmin = xmin/k
+  xmin < xtol && return WiltonSERule(
+    qd.tpoints[1,i],
+    DoubleQuadRule(
+      qd.tpoints[2,i],
+      qd.bpoints[2,j],
+    ),
+  )
+  return DoubleQuadRule(
+    qd.tpoints[1,i],
+    qd.bpoints[1,j],
+  )
 
 end
 

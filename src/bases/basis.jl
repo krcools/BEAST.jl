@@ -64,7 +64,7 @@ defaultquadstrat(op, tfs::DirectProductSpace, bfs::Space) = defaultquadstrat(op,
 # defaultquadstrat(op, tfs::DirectProductSpace, bfs::DirectProductSpace) = defaultquadstrat(op, tfs.factors[1], bfs.factors[1])
 # defaultquadstrat(op, tfs::RefSpace, bfs::DirectProductSpace) = defaultquadstrat(op, tfs, bfs.factors[1])
 # defaultquadstrat(op, tfs::DirectProductSpace, bfs::RefSpace) = defaultquadstrat(op, tfs.factors[1], bfs)
-
+# scalartype(sp::DirectProductSpace{T}) where {T} = T
 
 export cross, ×
 

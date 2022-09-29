@@ -12,7 +12,7 @@ Y = lagrangec0d1(Γ)
 
 x = refspace(X)
 y = refspace(Y)
-charts = [chart(Γ,c) for c in cells(Γ)]
+charts = [chart(Γ,c) for c in Γ]
 
 qs = BEAST.defaultquadstrat(s, x, x)
 qd = quaddata(s, x, x, charts, charts, qs)

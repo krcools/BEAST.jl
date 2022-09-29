@@ -38,12 +38,18 @@ function solve(eq)
 
     b = assemble(rhs, test_space_dict)
     Z = assemble(lhs, test_space_dict, trial_space_dict)
-    M = convert_to_dense(Z)
-    println("Sysmatrix converted to dense.")
+    # M = convert_to_dense(Z)
+    # println("Sysmatrix converted to dense.")
 
-    u = Matrix(M) \ Vector(b)
+    print("Converting system to Matrix...")
+    M = Matrix(Z)
+    println("done.")
 
-    return PseudoBlockVector(u, blocksizes(M,2))
+    print("LU solution of the linear system...")
+    u = M \ Vector(b)
+    println("done.")
+
+    return PseudoBlockVector(u, blocksizes(Z,2))
 end
 
 

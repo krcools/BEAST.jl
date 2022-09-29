@@ -70,7 +70,7 @@ w1 = eigvals(Sxx)
 w2 = eigvals(Q)
 
 using Plots
-plot()
-scatter!(w1)
-scatter!(w2)
+Plots.plot()
+Plots.scatter!(w1)
+Plots.scatter!(w2)
 

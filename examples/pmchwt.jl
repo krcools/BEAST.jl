@@ -69,8 +69,8 @@ ffj = potential(MWFarField3D(κ*im, η), ffpoints, u[j], X)
 ff = -η*im*κ*ffj + im*κ*cross.(ffpoints, ffm)
 
 using Plots
-plot(xlabel="theta")
-plot!(Θ,norm.(ff),label="far field",title="PMCHWT")
+Plots.plot(xlabel="theta")
+Plots.plot!(Θ,norm.(ff),label="far field",title="PMCHWT")
 
 error()
 #import Plotly
@@ -114,14 +114,14 @@ E_in, H_in = fetch(task2)
 E_tot = E_in + E_ex
 H_tot = H_in + H_ex
 
-contour(real.(getindex.(E_tot,1)))
-contour(real.(getindex.(H_tot,2)))
+Plots.contour(real.(getindex.(E_tot,1)))
+Plots.contour(real.(getindex.(H_tot,2)))
 
-heatmap(Z, Y, real.(getindex.(E_tot,1)))
-heatmap(Z, Y, real.(getindex.(H_tot,2)))
+Plots.heatmap(Z, Y, real.(getindex.(E_tot,1)))
+Plots.heatmap(Z, Y, real.(getindex.(H_tot,2)))
 
-plot(real.(getindex.(E_tot[:,51],1)))
-plot!(real.(getindex.(H_tot[:,51],2)))
+Plots.plot(real.(getindex.(E_tot[:,51],1)))
+Plots.plot!(real.(getindex.(H_tot[:,51],2)))
 
 
 # Compare the far field and the field far
@@ -130,6 +130,6 @@ E_far, H_far = nearfield(u[m],u[j],X,X,κ,η, ffradius .* ffpoints)
 nxE_far = cross.(ffpoints, E_far) * (4π*ffradius) / exp(-im*κ*ffradius)
 Et_far = -cross.(ffpoints, nxE_far)
 
-plot()
-plot!(Θ, norm.(ff),label="far field")
-scatter!(Θ, norm.(Et_far), label="field far")
+Plots.plot()
+Plots.plot!(Θ, norm.(ff),label="far field")
+Plots.scatter!(Θ, norm.(Et_far), label="field far")

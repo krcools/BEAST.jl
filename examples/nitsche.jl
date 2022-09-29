@@ -21,9 +21,13 @@ in_interior2 = CompScienceMeshes.interior_tpredicate(Γ2)
 in_interior3 = CompScienceMeshes.interior_tpredicate(Γ3)
 
 on_junction = CompScienceMeshes.overlap_gpredicate(γ)
-edges1 = skeleton(e -> in_interior1(e) || on_junction(chart(Γ1,e)), Γ1,1)
-edges2 = skeleton(e -> in_interior2(e) || on_junction(chart(Γ2,e)), Γ2,1)
-edges3 = skeleton(e -> in_interior3(e) || on_junction(chart(Γ3,e)), Γ3,1)
+edges1 = submesh((m,e)->in_interior1(m,e) || on_junction(chart(m,e)), skeleton(Γ1,1))
+edges2 = submesh((m,e)->in_interior2(m,e) || on_junction(chart(m,e)), skeleton(Γ2,1))
+edges3 = submesh((m,e)->in_interior3(m,e) || on_junction(chart(m,e)), skeleton(Γ3,1))
+
+# edges1 = skeleton(e -> in_interior1(e) || on_junction(chart(Γ1,e)), Γ1,1)
+# edges2 = skeleton(e -> in_interior2(e) || on_junction(chart(Γ2,e)), Γ2,1)
+# edges3 = skeleton(e -> in_interior3(e) || on_junction(chart(Γ3,e)), Γ3,1)
 
 X1 = raviartthomas(Γ1, edges1)
 X2 = raviartthomas(Γ2, edges2)
@@ -40,7 +44,7 @@ u = solve(eq)
 
 Θ, Φ = range(0.0,stop=π,length=100), 0.0
 ffpoints = [point(cos(ϕ)*sin(θ), sin(ϕ)*sin(θ), cos(θ)) for θ in Θ for ϕ in Φ]
-farfield = potential(MWFarField3D(κ*im), ffpoints, u, X)
+farfield = potential(MWFarField3D(wavenumber=κ), ffpoints, u, X)
 
 using Plots
 using LinearAlgebra

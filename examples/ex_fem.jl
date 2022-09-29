@@ -1,6 +1,6 @@
 using CompScienceMeshes
 using BEAST
-using Makeitso
+# using Makeitso
 
 using SparseArrays
 function isdivconforming(space)
@@ -84,12 +84,13 @@ tetrs = CompScienceMeshes.tetmeshsphere(1.0, 0.15)
 bndry = boundary(tetrs)
 edges = skeleton(tetrs, 1)
 
-bndry_edges = [sort(c) for c in cells(skeleton(bndry, 1))]
-function is_interior(edge)
-    !(sort(edge) in bndry_edges)
-end
+# bndry_edges = [sort(c) for c in cells(skeleton(bndry, 1))]
+# function is_interior(edge)
+#     !(sort(edge) in bndry_edges)
+# end
 
-interior_edges = submesh(is_interior, edges)
+# interior_edges = submesh(is_interior, edges)
+interior_edges = submesh(!in(skeleton(bndry,1)), edges)
 @assert numcells(interior_edges) + numcells(skeleton(bndry,1)) == numcells(edges)
 
 X = BEAST.nedelecc3d(tetrs, interior_edges)
@@ -119,7 +120,7 @@ plot(norm.(vals2), m=2)
 
 # Inspect the value of a single basis function
 p = 120
-tet = chart(tetrs, cells(tetrs)[p])
+tet = chart(tetrs, p)
 nbd = neighborhood(tet, [0.5, 0.5, 0.0])
 edg = simplex(tet.vertices[1], tet.vertices[2])
 tgt = normalize(edg.vertices[2] - edg.vertices[1])
@@ -160,8 +161,9 @@ TF, Idcs = isdivconforming(ttXplus)
 @show length(Idcs)
 
 # error("stop")
-@target Q ()->BEAST.dual2forms(tetrs, skeleton(tetrs,1), Dir)
-Q = @make Q
+# @target Q ()->BEAST.dual2forms(tetrs, skeleton(tetrs,1), Dir)
+# Q = @make Q
+Q = BEAST.dual2forms(tetrs, skeleton(tetrs,1), Dir)
 
 
 QXplus = assemble(Id, Q, Xplus)
@@ -182,5 +184,5 @@ fcr3, geo3 = facecurrents(v, divergence(ttXplus));
 # length(geometry(ttXplus)) == length(tetrs2)
 #
 # Conn = connectivity(tetrs1, tetrs2)
-fcr, geo = facecurrents(u, tXhemi)
+# fcr, geo = facecurrents(u, X)
 Plotly.plot(patch(geo, norm.(fcr)))

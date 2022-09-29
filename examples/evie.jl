@@ -9,7 +9,7 @@ end
 
 ttrc = X->ttrace(X,y)
 
-T= tetmeshsphere(1.0,0.25)
+T = CompScienceMeshes.tetmeshsphere(1.0,0.25)
 X = nedelecc3d(T)
 y = boundary(T)
 @show numfunctions(X)

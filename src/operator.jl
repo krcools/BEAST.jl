@@ -19,7 +19,7 @@ mutable struct TransposedOperator <: Operator
 end
 
 scalartype(op::TransposedOperator) = scalartype(op.op)
-defaultquadstrat(op::TransposedOperator, tfs, bfs) = defaultquadstrat(op.op, tfs, bfs)
+defaultquadstrat(op::TransposedOperator, tfs::Space, bfs::Space) = defaultquadstrat(op.op, tfs, bfs)
 
 mutable struct LinearCombinationOfOperators{T} <: AbstractOperator
     coeffs::Vector{T}

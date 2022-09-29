@@ -280,7 +280,7 @@ function buildhalfbc(fine, S, v, p, onjunction, ibscaled)
     # This charge needs to be compensated by interior divergence
     total_charge = (!c_on_boundary || num_junctions == 2) ? 1 : 0
     charges = if ibscaled
-        face_areas = [volume(chart(fine, cells(fine)[s])) for s in S]
+        face_areas = [volume(chart(fine, s)) for s in S]
         face_areas / sum(face_areas)
     else
         fill(total_charge/n, n)
@@ -342,7 +342,7 @@ function buildhalfbc(fine, S, v, p, onjunction, ibscaled)
             face = cells(fine)[f]
             i = something(findfirst(==(v),face), 0)
             @assert i != 0
-            ch = chart(fine, cells(fine)[f])
+            ch = chart(fine, f)
             area = volume(ch)
             qps = quadpoints(ch, 3)
             @assert sum(w for (p,w) in qps) ≈ area
@@ -362,7 +362,7 @@ function buildhalfbc(fine, S, v, p, onjunction, ibscaled)
             face = cells(fine)[f]
             i = something(findfirst(==(v), face), 0)
             @assert i != 0
-            ch = chart(fine, face)
+            ch = chart(fine, f)
             area = volume(ch)
             vct = ch.vertices[mod1(i+2,3)] - ch.vertices[mod1(i+1,3)]
             γ += 0.25/area * dot(vct,vct)
@@ -384,7 +384,7 @@ function buildhalfbc(fine, S, v, p, onjunction, ibscaled)
             face = cells(fine)[f]
             i = something(findfirst(==(v),face), 0)
             @assert i != 0
-            ch = chart(fine, cells(fine)[f])
+            ch = chart(fine, f)
             area = volume(ch)
             qps = quadpoints(ch, 3)
             @assert sum(w for (p,w) in qps) ≈ area

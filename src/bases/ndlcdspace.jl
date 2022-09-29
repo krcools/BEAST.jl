@@ -20,7 +20,7 @@ function nedelecd3d(mesh, faces)
 
     fns = Vector{Vector{Shape{T}}}(undef,num_faces)
     pos = Vector{P}(undef,num_faces)
-    for (i,face) in enumerate(cells(faces))
+    for (i,face) in enumerate(faces)
 
         fns[i] = Vector{Shape{T}}()
         pos[i] = cartesian(center(chart(faces,face)))

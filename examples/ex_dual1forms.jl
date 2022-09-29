@@ -66,45 +66,63 @@ tetrs = barycentric_refinement(Tetrs)
 
 bnd_Tetrs = boundary(Tetrs)
 bnd_tetrs = boundary(tetrs)
-srt_bnd_Tetrs = sort.(bnd_Tetrs)
-srt_bnd_tetrs = sort.(bnd_tetrs)
+# srt_bnd_Tetrs = sort.(bnd_Tetrs)
+# srt_bnd_tetrs = sort.(bnd_tetrs)
 
-Faces = submesh(Face -> !(sort(Face) in srt_bnd_Tetrs), skeleton(Tetrs,2))
+Faces = submesh(!in(bnd_Tetrs), skeleton(Tetrs,2))
+# Faces = submesh(Face -> !(sort(Face) in srt_bnd_Tetrs), skeleton(Tetrs,2))
 @show length(Faces)
 
 F = 396
 Face = cells(Faces)[F]
-pos = cartesian(center(chart(Faces, Face)))
+pos = cartesian(center(chart(Faces, F)))
 
-supp1 = submesh(tet -> Face[1] in tet, tetrs.mesh)
-supp2 = submesh(tet -> Face[2] in tet, tetrs.mesh)
-supp3 = submesh(tet -> Face[3] in tet, tetrs.mesh)
+supp1 = submesh((m,tet) -> Face[1] in CompScienceMeshes.indices(m,tet), tetrs.mesh)
+supp2 = submesh((m,tet) -> Face[2] in CompScienceMeshes.indices(m,tet), tetrs.mesh)
+supp3 = submesh((m,tet) -> Face[3] in CompScienceMeshes.indices(m,tet), tetrs.mesh)
 
 supp = CompScienceMeshes.union(supp1, supp2)
 supp = CompScienceMeshes.union(supp, supp3)
 # PlotlyJS.plot(patch(boundary(supp)))
 
 port = skeleton(supp1, 1)
-port = submesh(edge -> sort(edge) in sort.(skeleton(supp2,1)), port)
-port = submesh(edge -> sort(edge) in sort.(skeleton(supp3,1)), port)
+port = submesh(in(skeleton(supp2,1)), port)
+port = submesh(in(skeleton(supp3,1)), port)
+# port = submesh(edge -> sort(edge) in sort.(skeleton(supp2,1)), port)
+# port = submesh(edge -> sort(edge) in sort.(skeleton(supp3,1)), port)
 @show length(port)
 @assert 1 ≤ length(port) ≤ 2
 
-dir = submesh(face -> sort(face) in srt_bnd_tetrs, boundary(supp))
+dir = submesh(in(bnd_tetrs), boundary(supp))
+# dir = submesh(face -> sort(face) in srt_bnd_tetrs, boundary(supp))
 rim = boundary(dir)
 @show length(dir)
 
-srt_port = sort.(port)
-srt_dir_edges = sort.(skeleton(dir,1))
-srt_bnd_edges = sort.(skeleton(boundary(supp),1))
-srt_rim = sort.(rim)
-int_edges = submesh(skeleton(supp,1)) do edge
-    sort(edge) in srt_port && return false
-    sort(edge) in srt_rim && return false
-    sort(edge) in srt_dir_edges && return true
-    sort(edge) in srt_bnd_edges && return false
+# srt_port = sort.(port)
+# srt_dir_edges = sort.(skeleton(dir,1))
+# srt_bnd_edges = sort.(skeleton(boundary(supp),1))
+# srt_rim = sort.(rim)
+
+in_port = in(port)
+in_dir_edges = in(skeleton(dir,1))
+in_bnd_edges = in(skeleton(boundary(supp),1))
+in_rim = in(rim)
+
+int_edges = submesh(skeleton(supp,1)) do m,edge
+    in_port(m,edge) && return false
+    in_rim(m,edge) && return false
+    in_dir_edges(m,edge) && return true
+    in_bnd_edges(m,edge) && return false
     return true
 end
+
+# int_edges = submesh(skeleton(supp,1)) do edge
+#     sort(edge) in srt_port && return false
+#     sort(edge) in srt_rim && return false
+#     sort(edge) in srt_dir_edges && return true
+#     sort(edge) in srt_bnd_edges && return false
+#     return true
+# end
 @show length(int_edges)
 @assert length(skeleton(supp,0)) - length(skeleton(supp,1)) +
     length(skeleton(supp,2)) - length(supp) == 1
@@ -116,13 +134,13 @@ Nd_int = BEAST.nedelecc3d(supp, int_edges)
 x0 = ones(length(port)) / length(port)
 for (i,edge) in enumerate(port)
     tgt = tangents(center(chart(port,edge)),1)
-    if dot(normal(chart(Faces,Face)), tgt) < 0
+    if dot(normal(chart(Faces,F)), tgt) < 0
         x0[i] *= -1
     end
 end
 
 curl_Nd_int = curl(Nd_int)
-A = assemble(Id, curl_Nd_int, curl_Nd_int)
+A = Matrix(assemble(Id, curl_Nd_int, curl_Nd_int))
 N = nullspace(A)
 @show size(N,2)
 a = -assemble(Id, curl_Nd_int, curl(Nd_prt)) * x0
@@ -131,11 +149,19 @@ x1 = pinv(A) * a
 @show norm(N'*a)
 @show norm(A*x1-a)
 
-srt_bnd_verts = sort.(skeleton(boundary(supp),0))
-srt_prt_verts = sort.(skeleton(port,0))
-int_verts = submesh(skeleton(supp,0)) do vert
-    sort(vert) in srt_bnd_verts && return false
-    sort(vert) in srt_prt_verts && return false
+# srt_bnd_verts = sort.(skeleton(boundary(supp),0))
+# srt_prt_verts = sort.(skeleton(port,0))
+# int_verts = submesh(skeleton(supp,0)) do vert
+#     sort(vert) in srt_bnd_verts && return false
+#     sort(vert) in srt_prt_verts && return false
+#     return true
+# end
+
+in_bnd_verts = in(skeleton(boundary(supp),0))
+in_prt_verts = in(skeleton(port,0))
+int_verts = submesh(skeleton(supp,0)) do m,vert
+    in_bnd_verts(m,vert) && return false
+    in_prt_verts(m,vert) && return false
     return true
 end
 @show length(int_verts)
@@ -146,9 +172,10 @@ grad_L0_int = BEAST.gradient(L0_int)
 @assert numfunctions(grad_L0_int) == numfunctions(L0_int)
 B = assemble(Id, grad_L0_int, Nd_int)
 
-B2, store = BEAST.allocatestorage(Id, grad_L0_int, Nd_int,
+freeze, store = BEAST.allocatestorage(Id, grad_L0_int, Nd_int,
     Val{:bandedstorage}, BEAST.LongDelays{:ignore})
 BEAST.assemble_local_mixed!(Id, grad_L0_int, Nd_int, store)
+B2 = freeze()
 @assert isapprox(B, B2, atol=1e-8)
 @show rank(B2)
 
@@ -172,8 +199,9 @@ check_edge_values(EV)
 
 error("stop")
 
-Y = BEAST.dual1forms(Tetrs, Faces)
+Dir = boundary(Tetrs)
+Y = BEAST.dual1forms(Tetrs, Faces, Dir)
 curlY = curl(Y)
 CC = assemble(Id, curlY, curlY)
 
-Plotly.plot(svdvals(CC))
+Plotly.plot(svdvals(Matrix(CC)))
