@@ -101,9 +101,9 @@ function buffachristiansen(Γ, γ=mesh(coordtype(Γ),1,3); ibscaled=false, sort=
 
     if edges == :all
         edges = skeleton(Γ, 1; sort)
-        edges = submesh(edges) do edge
+        edges = submesh(edges) do edges, edge
             ch = chart(edges, edge)
-            !in_interior(edge) && !on_junction(ch) && return false
+            !in_interior(edges, edge) && !on_junction(ch) && return false
             return true
         end
     end
@@ -129,9 +129,10 @@ function buffachristiansen(Γ, γ=mesh(coordtype(Γ),1,3); ibscaled=false, sort=
     jct_pred = overlap_gpredicate(γ)
     bcs, k = Vector{Vector{Shape{T}}}(undef,length(edges)), 1
     pos = Vector{P}(undef,length(edges))
-    for (i,edge) in enumerate(edges)
+    for (i,e) in enumerate(edges)
 
-        ch = chart(edges, edge)
+        edge = CompScienceMeshes.indices(edges,e)
+        ch = chart(edges, e)
         ln = volume(ch)
         # !in_interior(edge) && !on_junction(ch) && continue
 
@@ -143,7 +144,8 @@ function buffachristiansen(Γ, γ=mesh(coordtype(Γ),1,3); ibscaled=false, sort=
         bnd = boundary(supp)
         bnd_nodes = skeleton(bnd,0)
         p = 0
-        for node in bnd_nodes
+        for bn in bnd_nodes
+            node = CompScienceMeshes.indices(bnd_nodes, bn)
             vert1 = vertices(Γ)[edge[1]]
             vert2 = vertices(Γ)[edge[2]]
             vert = vertices(fine)[node[1]]
@@ -278,7 +280,7 @@ function buildhalfbc(fine, S, v, p, onjunction, ibscaled)
     # This charge needs to be compensated by interior divergence
     total_charge = (!c_on_boundary || num_junctions == 2) ? 1 : 0
     charges = if ibscaled
-        face_areas = [volume(chart(fine, cells(fine)[s])) for s in S]
+        face_areas = [volume(chart(fine, s)) for s in S]
         face_areas / sum(face_areas)
     else
         fill(total_charge/n, n)
@@ -340,7 +342,7 @@ function buildhalfbc(fine, S, v, p, onjunction, ibscaled)
             face = cells(fine)[f]
             i = something(findfirst(==(v),face), 0)
             @assert i != 0
-            ch = chart(fine, cells(fine)[f])
+            ch = chart(fine, f)
             area = volume(ch)
             qps = quadpoints(ch, 3)
             @assert sum(w for (p,w) in qps) ≈ area
@@ -360,7 +362,7 @@ function buildhalfbc(fine, S, v, p, onjunction, ibscaled)
             face = cells(fine)[f]
             i = something(findfirst(==(v), face), 0)
             @assert i != 0
-            ch = chart(fine, face)
+            ch = chart(fine, f)
             area = volume(ch)
             vct = ch.vertices[mod1(i+2,3)] - ch.vertices[mod1(i+1,3)]
             γ += 0.25/area * dot(vct,vct)
@@ -382,7 +384,7 @@ function buildhalfbc(fine, S, v, p, onjunction, ibscaled)
             face = cells(fine)[f]
             i = something(findfirst(==(v),face), 0)
             @assert i != 0
-            ch = chart(fine, cells(fine)[f])
+            ch = chart(fine, f)
             area = volume(ch)
             qps = quadpoints(ch, 3)
             @assert sum(w for (p,w) in qps) ≈ area
@@ -412,10 +414,12 @@ function buildhalfbc2(patch, port, dirichlet, prt_fluxes)
     verts = skeleton(patch,0)
     bndry = boundary(patch)
 
-    dirbnd = submesh(dirichlet) do edge
-        edge in cells(bndry) && return true
-        reverse(edge) in cells(bndry) && return true
-        return false
+    in_bndry = in(bndry)
+    dirbnd = submesh(dirichlet) do m,edge
+        in_bndry(m,edge)
+        # edge in cells(bndry) && return true
+        # reverse(edge) in cells(bndry) && return true
+        # return false
     end
     # @show numcells(patch)
     # @show numcells(dirbnd)
@@ -423,9 +427,11 @@ function buildhalfbc2(patch, port, dirichlet, prt_fluxes)
 
     bnd_dirbnd = boundary(dirbnd)
     nodes_dirbnd = skeleton(dirbnd,0)
-    int_nodes_dirbnd = submesh(nodes_dirbnd) do node
-        node in cells(bnd_dirbnd) && return false
-        return true
+    in_bnd_dirbnd = in(bnd_dirbnd)
+    int_nodes_dirbnd = submesh(nodes_dirbnd) do m,node
+        # node in cells(bnd_dirbnd) && return false
+        # return true
+        return !in_bnd_dirbnd(m, node)
     end
     # @show numcells(int_nodes_dirbnd)
     @assert numcells(int_nodes_dirbnd) ≤ 2
@@ -447,13 +453,21 @@ function buildhalfbc2(patch, port, dirichlet, prt_fluxes)
     #     println(edge)
     # end
 
-    int_edges = submesh(edges) do edge
-        (edge in cells(port)) && (num_edges_on_port+=1 ; return false)
-        (reverse(edge) in cells(port)) && (num_edges_on_port+=1 ; return false)
-        edge in cells(dirbnd) && (num_edges_on_dirc+=1; return true)
-        reverse(edge) in cells(dirbnd) && (num_edges_on_dirc+=1; return true)
-        (!int_pred(edge)) && return false
+    in_port = in(port)
+    in_dirbnd = in(dirbnd)
+    int_edges = submesh(edges) do m,edge
+
+        in_port(m,edge) && (num_edges_on_port+=1; return false)
+        in_dirbnd(m,edge) && (num_edges_on_dirc+=1; return true)
+        !int_pred(m,edge) && return false
         return true
+
+        # (edge in cells(port)) && (num_edges_on_port+=1 ; return false)
+        # (reverse(edge) in cells(port)) && (num_edges_on_port+=1 ; return false)
+        # edge in cells(dirbnd) && (num_edges_on_dirc+=1; return true)
+        # reverse(edge) in cells(dirbnd) && (num_edges_on_dirc+=1; return true)
+        # (!int_pred(edge)) && return false
+        # return true
     end
     # println()
     # for edge in cells(int_edges)
@@ -470,11 +484,18 @@ function buildhalfbc2(patch, port, dirichlet, prt_fluxes)
     # end
     # int_verts = submesh(!isonboundary, verts)
     # dirichlet_nodes = skeleton(dirichlet,0)
-    int_verts = submesh(verts) do node
-        node in cells(int_nodes_dirbnd) && return true
-        node in cells(bnd_verts) && return false
-        node in cells(prt_verts) && return false
+    in_int_nodes_dirbnd = in(int_nodes_dirbnd)
+    in_bnd_verts = in(bnd_verts)
+    in_prt_verts = in(prt_verts)
+    int_verts = submesh(verts) do m,node
+        in_int_nodes_dirbnd(m,node) && return true
+        in_bnd_verts(m,node) && return false
+        in_prt_verts(m,node) && return false
         return true
+        # node in cells(int_nodes_dirbnd) && return true
+        # node in cells(bnd_verts) && return false
+        # node in cells(prt_verts) && return false
+        # return true
     end
     # @show numcells(int_verts)
 
@@ -519,17 +540,20 @@ function buffachristiansen2(Faces::CompScienceMeshes.AbstractMesh{U,D1,T}) where
     faces = barycentric_refinement(Faces)
     Edges = skeleton(Faces,1)
     Bndry = boundary(Faces)
-    Edges = submesh(Edges) do Edge
-        Edge in cells(Bndry) && return false
-        reverse(Edge) in cells(Bndry) && return false
-        return true
+    inBndry = in(Bndry)
+    Edges = submesh(Edges) do m,Edge
+        return !inBndry(m,Edge)
+        # Edge in cells(Bndry) && return false
+        # reverse(Edge) in cells(Bndry) && return false
+        # return true
     end
 
     #T = Float64
     bfs = Vector{Vector{Shape{T}}}(undef, numcells(Edges))
     pos = Vector{vertextype(Faces)}(undef, numcells(Edges))
     dirichlet = boundary(faces)
-    for (E,Edge) in enumerate(cells(Edges))
+    for (E,Edge) in enumerate(Edges)
+        EdgeInds = CompScienceMeshes.indices(Edges, Edge)
         # @show Edge
         bfs[E] = Vector{Shape{T}}()
 
@@ -542,7 +566,7 @@ function buffachristiansen2(Faces::CompScienceMeshes.AbstractMesh{U,D1,T}) where
         # @show (Faces.vertices[Edge[1]]+Faces.vertices[Edge[2]])/2
 
         # Build the plus-patch
-        ptch_vert_idx = Edge[1]
+        ptch_vert_idx = EdgeInds[1]
         ptch_face_idcs = [i for (i,face) in enumerate(cells(faces)) if ptch_vert_idx in face]
         patch = Mesh(vertices(faces), cells(faces)[ptch_face_idcs])
         patch_bnd = boundary(patch)
@@ -573,8 +597,8 @@ function buffachristiansen2(Faces::CompScienceMeshes.AbstractMesh{U,D1,T}) where
         end
 
         # Build the minus-patch
-        ptch_vert_idx = Edge[2]
-        ptch_face_idcs = [i for (i,face) in enumerate(cells(faces)) if ptch_vert_idx in face]
+        ptch_vert_idx = EdgeInds[2]
+        ptch_face_idcs = [i for (i,face) in enumerate((faces)) if ptch_vert_idx in CompScienceMeshes.indices(faces, face)]
         patch = Mesh(vertices(faces), cells(faces)[ptch_face_idcs])
         port = Mesh(vertices(faces), filter(c->port_vertex_idx in c, cells(boundary(patch))))
         # @assert numcells(patch) >= 6
@@ -608,9 +632,10 @@ function buffachristiansen3(Faces::CompScienceMeshes.AbstractMesh{U,D1,T}) where
     faces = barycentric_refinement(Faces)
     Edges = skeleton(Faces,1)
     Bndry = boundary(Faces)
-    Edges = submesh(Edges) do Edge
-        Edge in cells(Bndry) && return false
-        reverse(Edge) in cells(Bndry) && return false
+    inBndry = in(Bndry)
+    Edges = submesh(Edges) do m,Edge
+        inBndry(m,Edge) && return false
+        # reverse(Edge) in cells(Bndry) && return false
         return true
     end
 
@@ -618,7 +643,7 @@ function buffachristiansen3(Faces::CompScienceMeshes.AbstractMesh{U,D1,T}) where
     bfs = Vector{Vector{Shape{T}}}(undef, numcells(Edges))
     pos = Vector{vertextype(Faces)}(undef, numcells(Edges))
     dirichlet = boundary(faces)
-    for (E,Edge) in enumerate(cells(Edges))
+    for (E,Edge) in enumerate(Edges)
         bfs[E] = Vector{Shape{T}}()
 
         # port_vertex_idx = numvertices(Faces) + E
@@ -628,8 +653,9 @@ function buffachristiansen3(Faces::CompScienceMeshes.AbstractMesh{U,D1,T}) where
         port_vertex_idx = argmin(norm.(vertices(faces) .- Ref(pos[E])))
 
         # Build the dual support
-        ptch_face_idcs1 = [i for (i,face) in enumerate(cells(faces)) if Edge[1] in face]
-        ptch_face_idcs2 = [i for (i,face) in enumerate(cells(faces)) if Edge[2] in face]
+        EdgeInds = CompScienceMeshes.indices(Edges, Edge)
+        ptch_face_idcs1 = [i for (i,face) in enumerate(faces) if EdgeInds[1] in CompScienceMeshes.indices(faces,face)]
+        ptch_face_idcs2 = [i for (i,face) in enumerate(faces) if EdgeInds[2] in CompScienceMeshes.indices(faces,face)]
         patch1 = Mesh(vertices(faces), cells(faces)[ptch_face_idcs1])
         patch2 = Mesh(vertices(faces), cells(faces)[ptch_face_idcs2])
         patch_bnd = boundary(patch1)

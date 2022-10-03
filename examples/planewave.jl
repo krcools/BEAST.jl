@@ -19,4 +19,4 @@ fcr, geo = facecurrents(x, Y)
 
 using Plotly
 using LinearAlgebra
-Plotly.plot(patch(geo.mesh, norm.(fcr), (0.0, 1.0)))
+Plotly.plot(patch(geo.mesh, norm.(fcr); caxis=(0.0, 1.0)))

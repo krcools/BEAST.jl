@@ -10,7 +10,7 @@ Faces = CompScienceMeshes.skeleton_fast(Tetrs, 2)
 Edges = CompScienceMeshes.skeleton_fast(Tetrs, 1)
 Nodes = CompScienceMeshes.skeleton_fast(Tetrs, 0)
 
-hemi = submesh(Tetrs) do Tetr
+hemi = submesh(Tetrs) do m,Tetr
     cartesian(CompScienceMeshes.center(chart(Tetrs, Tetr)))[3] < 0
 end
 
@@ -119,7 +119,7 @@ fcr, geo = facecurrents(eg, ncurl_primal1_hemi)
 Plotly.plot(patch(geo, norm.(fcr)))
 
 tetrs = geometry(dual1)
-bary_hemi = submesh(tetrs) do tetr
+bary_hemi = submesh(tetrs) do m,tetr
     cartesian(CompScienceMeshes.center(chart(tetrs, tetr)))[1] < 0
 end
 

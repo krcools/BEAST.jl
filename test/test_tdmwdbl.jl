@@ -41,7 +41,7 @@ Z2 = fr2()
 @test all(==(0), Z2[:,:,1])
 
 γ = geometry(Y)
-ch1 = chart(G, first(cells(G)))
+ch1 = chart(G, first(G))
 qps = quadpoints(ch1, 3)
 
 x = qps[1][1]

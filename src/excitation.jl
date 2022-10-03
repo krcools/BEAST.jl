@@ -11,9 +11,10 @@ quadrule(fn::Functional, refs, p, cell, qd) = qd[1,p]
 Assemble the vector of test coefficients corresponding to functional
 `fn` and test functions `tfs`.
 """
-function assemble(field::Functional, tfs::Space{T}; quaddata=quaddata, quadrule=quadrule) where T
+function assemble(field::Functional, tfs; quaddata=quaddata, quadrule=quadrule)
 
-    b = zeros(Complex{T}, numfunctions(tfs))
+    R = scalartype(tfs)
+    b = zeros(Complex{R}, numfunctions(tfs))
     store(v,m) = (b[m] += v)
     assemble!(field, tfs, store, quaddata=quaddata, quadrule=quadrule)
     return b

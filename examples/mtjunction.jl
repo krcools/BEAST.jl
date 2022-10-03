@@ -132,5 +132,5 @@ pts = [point(cos(ϕ)*sin(θ), sin(ϕ)*sin(θ), cos(θ)) for ϕ in Φ for θ in �
 ffd_mt = potential(MWFarField3D(wavenumber=κ), pts, u1, X)
 ffd_st = potential(MWFarField3D(wavenumber=κ), pts, ust, X123)
 
-plot(norm.(ffd_mt))
-scatter!(norm.(ffd_st))
+Plots.plot(norm.(ffd_mt))
+Plots.scatter!(norm.(ffd_st))

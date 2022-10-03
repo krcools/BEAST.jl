@@ -49,7 +49,7 @@ for T in [Float32, Float64]
     NumF = 3
     f = BEAST.LagrangeRefSpace{T,Degr,Dim1,NumF}()
     sphere = readmesh(joinpath(dirname(@__FILE__),"assets","sphere5.in"),T=T)
-    s = chart(sphere, first(cells(sphere)))
+    s = chart(sphere, first(sphere))
     t = neighborhood(s, T.([1,1]/3))
     v = f(t, Val{:withcurl})
 
@@ -108,8 +108,8 @@ for T in [Float64]
 
     x = refspace(X)
 
-    cell = chart(m, first(cells(m)))
-    face = chart(b, first(cells(b)))
+    cell = chart(m, first(m))
+    face = chart(b, first(b))
     Q = BEAST.strace(x, cell, 3, face)
     @test Q == [1 0 0; 0 1 0]
 end
@@ -132,8 +132,8 @@ for T in [Float64]
 
     p = point(T, 0.5, 0.0, 0.0)
     for _s in X.fns[1]
-        _cell = m.faces[_s.cellid]
-        patch = chart(m, _cell)
+        # _cell = m.faces[_s.cellid]
+        patch = chart(m, _s.cellid)
         bary = carttobary(patch, p)
         mp = neighborhood(patch, bary)
     end
@@ -162,8 +162,8 @@ for _fn in X.fns
     for _sh in _fn
         @test _sh.refid == 1
         cellid = _sh.cellid
-        _cell = cells(fine)[cellid]
-        ptch = chart(fine, _cell)
+        # _cell = cells(fine)[cellid]
+        ptch = chart(fine, cellid)
         @test _sh.coeff * volume(ptch) ≈ 1/_n
     end
 end
@@ -203,8 +203,10 @@ lag = lagrangec0d1(m, int_nodes)
 @test numfunctions(lag) == 1
 
 rs = refspace(lag)
-cl = cells(m)[2]
-ch = chart(m, cl)
+# cl = cells(m)[2]
+p = 2
+cl = CompScienceMeshes.indices(m,p)
+ch = chart(m, p)
 nbd = neighborhood(ch, carttobary(ch, [0.5, 0.5, 0]))
 vals = getfield.(rs(nbd), :value)
 @test vals ≈ [0, 1, 0]

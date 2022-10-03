@@ -11,7 +11,7 @@ for T in [Float32, Float64]
     mesh = readmesh(fn, T=T)
     edgs = skeleton(mesh,1)
 
-    charts = [chart(edgs,edg) for edg in cells(edgs)]
+    charts = [chart(edgs,edg) for edg in edgs]
     ctrs = [cartesian(center(cht)) for cht in charts]
 
     ND = BEAST.nedelec(mesh, edgs)
@@ -25,7 +25,7 @@ for T in [Float32, Float64]
 
     # center of the diagonal
     ctr = center(charts[3])
-    face_charts = [chart(mesh,fce) for fce in cells(mesh)]
+    face_charts = [chart(mesh,fce) for fce in mesh]
     nbd1 = neighborhood(face_charts[1], carttobary(face_charts[1], ctr))
     nbd2 = neighborhood(face_charts[2], carttobary(face_charts[2], ctr))
     t = tangents(ctr,1)

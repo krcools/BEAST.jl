@@ -64,7 +64,7 @@ defaultquadstrat(op, tfs::DirectProductSpace, bfs::Space) = defaultquadstrat(op,
 # defaultquadstrat(op, tfs::DirectProductSpace, bfs::DirectProductSpace) = defaultquadstrat(op, tfs.factors[1], bfs.factors[1])
 # defaultquadstrat(op, tfs::RefSpace, bfs::DirectProductSpace) = defaultquadstrat(op, tfs, bfs.factors[1])
 # defaultquadstrat(op, tfs::DirectProductSpace, bfs::RefSpace) = defaultquadstrat(op, tfs.factors[1], bfs)
-
+# scalartype(sp::DirectProductSpace{T}) where {T} = T
 
 export cross, ×
 
@@ -230,12 +230,13 @@ end
 
 
 function instantiate_charts(geo, num_active_cells, active)
-    E = typeof(chart(geo, first(cells(geo))))
+    @assert length(geo) != 0
+    E = typeof(chart(geo, first(geo)))
     elements = Vector{E}(undef,num_active_cells)
     j = 1
-    for (i,cell) in enumerate(cells(geo))
+    for (i,p) in enumerate(geo)
         active[i] || continue
-        elements[j] = chart(geo, cell)
+        elements[j] = chart(geo, p)
         j += 1
     end
     return elements

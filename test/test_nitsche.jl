@@ -18,9 +18,13 @@ h = 0.25
 
 in_interior = CompScienceMeshes.interior_tpredicate(Γ)
 on_junction = CompScienceMeshes.overlap_gpredicate(γ)
-edges = skeleton(Γ,1) do edge
-    in_interior(edge) ||on_junction(chart(Γ,edge))
+edges = submesh(skeleton(Γ,1)) do m, edge
+    in_interior(m,edge) || on_junction(chart(m,edge))
 end
+
+# edges = skeleton(Γ,1) do edge
+#     in_interior(edge) ||on_junction(chart(Γ,edge))
+# end
 X = raviartthomas(Γ, edges)
 
 x = divergence(X)
@@ -63,8 +67,8 @@ Nyx = assemble(N,Y,X)
 
 @test size(Nyx) == (1,1)
 
-sx = chart(m, first(cells(m)))
-sy = chart(n, first(cells(n)))
+sx = chart(m, first(m))
+sy = chart(n, first(n))
 
 cx = neighborhood(sx, [1,1]/3)
 cy = neighborhood(sy, [1]/2)
@@ -98,7 +102,7 @@ end
 for _f in Y.fns
     @test length(_f) == 1
     @test 0 < _f[1].cellid < 4
-    seg = chart(Σ, cells(Σ)[_f[1].cellid])
+    seg = chart(Σ, _f[1].cellid)
     @test _f[1].refid == 1
     @test _f[1].coeff ≈ (1 / volume(seg))
 end

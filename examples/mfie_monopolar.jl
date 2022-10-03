@@ -29,9 +29,11 @@ fcr2, _ = facecurrents(u2, Z)
 using LinearAlgebra
 using Plots
 
-plot(title="Compare current density")
-plot!(norm.(fcr1), label="MxMIFE")
-scatter!(norm.(fcr2), label="DGMFIE", c=:red)
+Plots.plot(title="Compare current density")
+Plots.plot!(norm.(fcr1), label="MxMIFE")
+Plots.scatter!(norm.(fcr2), label="DGMFIE", c=:red)
 
+u = u2
+X = Z
 include("utils/postproc.jl")
 include("utils/plotresults.jl")

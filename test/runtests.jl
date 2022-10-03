@@ -14,7 +14,6 @@ import BEAST
 
 include("test_fourier.jl")
 include("test_specials.jl")
-# include("test_sparsend.jl")
 
 include("test_basis.jl")
 include("test_directproduct.jl")
@@ -41,7 +40,6 @@ include("test_gram.jl")
 include("test_vector_gram.jl")
 include("test_local_storage.jl")
 include("test_embedding.jl")
-include("test_laminated.jl")
 
 include("test_assemblerow.jl")
 include("test_mixed_blkassm.jl")
@@ -70,9 +68,6 @@ include("test_tdrhs_scaling.jl")
 
 include("test_variational.jl")
 
-# include("test_farfield.jl")
-
-#include("test_assemblerow.jl")
 
 try
     Pkg.installed("BogaertInts10")

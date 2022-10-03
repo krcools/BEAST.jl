@@ -30,14 +30,14 @@ fcr1, geo1 = facecurrents(x1, X)
 fcr2, geo2 = facecurrents(x2, X)
 
 using Plots
-plot(title="Comparse 1st and 2nd kind eqs.")
-plot!(norm.(fcr1),c=:blue,label="1st")
-scatter!(norm.(fcr2),c=:red,label="2nd")
+Plots.plot(title="Comparse 1st and 2nd kind eqs.")
+Plots.plot!(norm.(fcr1),c=:blue,label="1st")
+Plots.scatter!(norm.(fcr2),c=:red,label="2nd")
 
 import Plotly
-Plotly.plot(patch(Γ, norm.(fcr1)))
-Plotly.plot(patch(Γ, norm.(fcr2)))
-
+plt1 = Plotly.plot(patch(Γ, norm.(fcr1)))
+plt2 = Plotly.plot(patch(Γ, norm.(fcr2)))
+display([plt1 plt2])
 
 ys = range(-2,2,length=200)
 zs = range(-2,2,length=200)

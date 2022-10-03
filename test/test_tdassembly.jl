@@ -31,8 +31,8 @@ q = refspace(Q)
 
 # Overwrite the default quadrature strategy for
 # this operator/space combination
-τ1 = chart(S1, first(Iterators.drop(cells(S1),0)))
-τ2 = chart(S2, first(Iterators.drop(cells(S2),0)))
+τ1 = chart(S1, first(Iterators.drop(S1,0)))
+τ2 = chart(S2, first(Iterators.drop(S2,0)))
 ι = BEAST.ring(first(BEAST.rings(τ1, τ2, ΔR)), ΔR)
 
 struct DoubleQuadTimeDomainRule end

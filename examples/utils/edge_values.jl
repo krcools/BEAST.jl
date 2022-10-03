@@ -8,17 +8,14 @@ function edge_values(space, m)
     Vals = zeros(scalartype(space), length(supp), length(edgs))
     for (i,sh) in enumerate(space.fns[m])
         tet_id = sh.cellid
-        tet = chart(supp, cells(supp)[tet_id])
+        tet = chart(supp, tet_id)
         for k in nzrange(Conn, tet_id)
             edg_id = rowvals(Conn)[k]
-            # loc_id = abs(nonzeros(Conn)[k])
-            # edge = CompScienceMeshes.edges(tet)[loc_id]
-            edge = chart(edgs, cells(edgs)[edg_id])
+            edge = chart(edgs, edg_id)
             ctr = center(edge)
             tgt = tangents(ctr,1)
             ctr1 = neighborhood(tet, carttobary(tet, cartesian(ctr)))
             vals = rs(ctr1)
-            # @show vals
             val = vals[sh.refid].value
             Vals[tet_id, edg_id] += dot(sh.coeff * val, tgt)
         end

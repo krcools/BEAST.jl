@@ -61,9 +61,7 @@ end
 function (f::LagrangeRefSpace{T,0,3})(t, ::Type{Val{:withcurl}}) where T
     i = one(T)
     z = zero(cartesian(t))
-    (
-        (value=i, curl=z,),
-    )
+    SVector(((value=i, curl=z,),))
 end
 
 

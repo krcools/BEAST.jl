@@ -32,14 +32,14 @@ edges_all = skeleton(Γ, 1)
 edges_int = submesh(!in(boundary(Γ)), edges_all)
 
 on_γ₀ = overlap_gpredicate(γ₀)
-edges_pt0 = submesh(edges_all) do edge
-    ch = chart(edges_all, edge)
+edges_pt0 = submesh(edges_all) do m, edge
+    ch = chart(m, edge)
     return on_γ₀(ch)
 end
 
 on_γ₁ = overlap_gpredicate(γ₁)
-edges_pt1 = submesh(edges_all) do edge
-    ch = chart(edges_all, edge)
+edges_pt1 = submesh(edges_all) do m, edge
+    ch = chart(m, edge)
     return on_γ₁(ch)
 end
 
@@ -92,7 +92,7 @@ Plotly.plot(patch(geo, norm.(fcr))) |> display
 # gap of 1V comes out as a 'natural' condition on the solution.
 zs = range(-0.5, stop=0.5, length=100)
 pts = [point(0.5,0.5,z) for z ∈ zs]
-Φ = potential(MWSingleLayerPotential3D(κ), pts, u, S, type=ComplexF64)
+Φ = potential(MWSingleLayerPotential3D(κ), pts, u, S; type=ComplexF64)
 Plots.plot(zs, real(Φ), xlabel="height",ylabel="scalar potential",label=false) |> display
 
 # Plot current along γ₀ and γ₁. Note: in this symmetric situation, we 

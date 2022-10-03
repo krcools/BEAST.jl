@@ -324,8 +324,8 @@ end
 
 Γ = readmesh(joinpath(dirname(@__FILE__),"assets","sphere2.in"))
 nc = numcells(Γ)
-t = chart(Γ, first(cells(Γ)))
-s = chart(Γ, last(cells(Γ)))
+t = chart(Γ, first(Γ))
+s = chart(Γ, nc)
 
 X = BEAST.raviartthomas(Γ)
 x = BEAST.refspace(X)

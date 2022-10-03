@@ -34,6 +34,33 @@ function quadrule(operator::DoubleLayerRotatedMW3D,
     )
 end
 
+# TODO: this method needs to go and dispatch needs to be dealt with using the defaultquadstrat mechanism
+function quadrule(op::DoubleLayerRotatedMW3D, g::RTRefSpace, f::RTRefSpace,  i, τ, j, σ, qd,
+    qs::DoubleNumWiltonSauterQStrat)
+  
+    hits = 0
+    dtol = 1.0e3 * eps(eltype(eltype(τ.vertices)))
+    dmin2 = floatmax(eltype(eltype(τ.vertices)))
+    for t in τ.vertices
+        for s in σ.vertices
+            d2 = LinearAlgebra.norm_sqr(t-s)
+            dmin2 = min(dmin2, d2)
+            hits += (d2 < dtol)
+        end
+    end
+  
+    hits == 3 && return SauterSchwabQuadrature.CommonFace(qd.gausslegendre[3])
+    hits == 2 && return SauterSchwabQuadrature.CommonEdge(qd.gausslegendre[2])
+    hits == 1 && return SauterSchwabQuadrature.CommonVertex(qd.gausslegendre[1])
+  
+    h2 = volume(σ)
+    xtol2 = 0.2 * 0.2
+    k2 = abs2(op.gamma)
+    return DoubleQuadRule(
+        qd.tpoints[1,i],
+        qd.bpoints[1,j],)
+end
+
 function integrand(op::DoubleLayerRotatedMW3D, kernel_vals, test_vals, test_nbd, trial_vals, trial_nbd)
 
     n = normal(test_nbd)

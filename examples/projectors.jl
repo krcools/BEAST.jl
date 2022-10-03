@@ -37,8 +37,9 @@ edges = setminus(skeleton(Γ,1), ∂Γ)
 verts = setminus(skeleton(Γ,0), skeleton(∂Γ,0))
 
 Σ = Matrix(connectivity(Γ, edges, sign))
-Λ = Matrix(connectivity(Γ, verts, sign))
+Λ = Matrix(connectivity(verts, edges, sign))
 
+I = LinearAlgebra.I
 PΣ = Σ * pinv(Σ'*Σ) * Σ'
 PΛH = I - PΣ
 

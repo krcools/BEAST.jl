@@ -129,7 +129,8 @@ end
 
 function potential(op, points, coeffs, basis; type=SVector{3,ComplexF64})
 	# T = SVector{3,ComplexF64}
-	T = SVector{3,eltype(coeffs)}
+	# T = SVector{3,eltype(coeffs)}
+	T = type
 	ff = zeros(T, size(points))
 	store(v,m,n) = (ff[m] += v*coeffs[n])
 	potential!(store, op, points, basis, type=T)
