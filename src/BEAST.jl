@@ -53,6 +53,12 @@ export HH3DSingleLayerTDBIO
 export HH3DDoubleLayerTDBIO
 export ∂n
 export HH3DHyperSingularFDBIO
+
+export HH3DSingleLayerNear
+export HH3DDoubleLayerNear
+export HH3DDoubleLayerTransposedNear
+export HH3DHyperSingularNear
+
 export NitscheHH3
 export MWSingleLayerTDIO
 export MWDoubleLayerTDIO
