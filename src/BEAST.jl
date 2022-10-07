@@ -14,7 +14,7 @@ using FastGaussQuadrature
 using LinearMaps
 using LiftedMaps
 
-using TimerOutputs
+#using TimerOutputs
 
 import LinearAlgebra: cross, dot
 import LinearAlgebra: ×, ⋅
@@ -190,10 +190,10 @@ include("timedomain/zdomain.jl")
 include("maxwell/mwexc.jl")
 include("maxwell/mwops.jl")
 include("maxwell/wiltonints.jl")
-include("maxwell/sauterschwabints_rt.jl")
+include("maxwell/nxdbllayer.jl")
 include("maxwell/sauterschwabints_bdm.jl")
 include("maxwell/sauterschwabints_bdm_rt.jl")
-include("maxwell/nxdbllayer.jl")
+include("maxwell/sauterschwabints_rt.jl")
 include("maxwell/nitsche.jl")
 include("maxwell/farfield.jl")
 include("maxwell/nearfield.jl")
@@ -250,6 +250,6 @@ export x̂, ŷ, ẑ
 const n = NormalVector()
 export n
 
-const to = TimerOutput()
+#const to = TimerOutput()
 
 end # module

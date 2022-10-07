@@ -1,8 +1,8 @@
 using CompScienceMeshes, BEAST
 using LinearAlgebra
 using Profile
-using LiftedMaps
-using BlockArrays
+#using LiftedMaps
+#using BlockArrays
 using StaticArrays
 
 
@@ -128,8 +128,8 @@ x, ch = IterativeSolvers.gmres!(x, precond*A_dvsie, precond*Rhs, log=true,  relt
 ffpoints = [point(cos(ϕ)*sin(θ), sin(ϕ)*sin(θ), cos(θ)) for θ in Θ for ϕ in Φ]
 
 # Don't forget the far field comprises two contributions
-ffm = potential(MWFarField3D(κ*im), ffpoints, u_n[m], Y)
-ffj = potential(MWFarField3D(κ*im), ffpoints, u_n[j], Y)
+ffm = potential(MWFarField3D(gamma=κ*im), ffpoints, u_n[m], Y)
+ffj = potential(MWFarField3D(gamma=κ*im), ffpoints, u_n[j], Y)
 ff = -η*im*κ*ffj + im*κ*cross.(ffpoints, ffm)
 
 
