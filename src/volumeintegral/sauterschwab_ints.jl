@@ -75,7 +75,7 @@ end
 function momintegrals!(op::VIEOperator,
     test_local_space::RefSpace, trial_local_space::RefSpace,
     test_tetrahedron_element, trial_tetrahedron_element, out, strat::SauterSchwab3DStrategy)
-    @timeit to "singular" begin
+    #@timeit to "singular" begin
     #Find permutation of vertices to match location of singularity to SauterSchwab
     J, I= SauterSchwab3D.reorder(strat.sing)
       
@@ -128,7 +128,7 @@ function momintegrals!(op::VIEOperator,
         end
     end
 
-    end
+    #end #end of timeit
     nothing
 end
 
@@ -167,7 +167,7 @@ function momintegrals!(biop::VIEOperator, tshs, bshs, tcell, bcell, z, strat::Do
         end
     end
     
-    end
+    #end #end of @timeit
     return z
 end
 

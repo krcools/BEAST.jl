@@ -1,8 +1,10 @@
 using CompScienceMeshes, BEAST
+
 using LinearAlgebra
-using Profile
-using TimerOutputs
+#using Profile
+#using TimerOutputs
 using StaticArrays
+using Plots
 
 function tau(x::SVector{U,T}) where {U,T}
     1.0-1.0/5.0
@@ -42,7 +44,7 @@ using Plots
 plot(xlabel="theta")
 plot!(Θ, norm.(ff), label="far field", title="D-VIE")
 =#
-using Plots
+
 #NearField
 Z = range(-1,1,length=100)
 Y = range(-1,1,length=100)
