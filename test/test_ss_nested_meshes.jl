@@ -17,11 +17,25 @@ d = point(1/3,-1/3,0)
 
 # Relative weights chosen to make the two terms equally important
 𝒜 = Maxwell3D.singlelayer(wavenumber=0.0, alpha=22.0, beta=1.0)
-𝒳 = BEAST.RTRefSpace{Float64}()
-T = scalartype(𝒜, 𝒳, 𝒳)
 
-test_chart = simplex(e,x̂,c)
-trial_chart = simplex(o,x̂,ŷ)
+coarse = Mesh([o,x̂,ŷ], [CompScienceMeshes.index(1,2,3)])
+fine = barycentric_refinement(coarse)
+
+X = raviartthomas(coarse, skeleton(coarse,1))
+Y = raviartthomas(fine, skeleton(fine,1))
+
+𝒳 = refspace(X)
+T = scalartype(𝒜, 𝒳, 𝒳)
+@test 𝒳 == refspace(Y)
+@test CompScienceMeshes.parent(geometry(Y)) == geometry(X)
+
+p = 6
+trial_chart = chart(coarse,1)
+test_chart = chart(fine,p)
+# @show test_chart.vertices
+
+# test_chart_old = simplex(e,x̂,c)
+# trial_chart_old = simplex(o,x̂,ŷ)
 
 test_quadpoints  = BEAST.quadpoints(𝒳, [test_chart],  (12,))[1,1]
 trial_quadpoints = BEAST.quadpoints(𝒳, [trial_chart], (13,))[1,1]
@@ -39,13 +53,20 @@ end
 
 qs_strat = BEAST.DoubleNumWiltonSauterQStrat(1,1,6,7,10,10,10,10)
 
-sauterschwab = BEAST.SauterSchwabQuadrature.CommonFace(nothing)
+sauterschwab = BEAST.SauterSchwabQuadrature.CommonFace(BEAST._legendre(10,0.0,1.0))
 out_ss = zeros(T, numfunctions(𝒳), numfunctions(𝒳))
-BEAST.momintegrals_nested!(𝒜,𝒳,𝒳,test_chart,trial_chart,out_ss,sauterschwab,qs_strat)
+BEAST.momintegrals_test_refines_trial!(out_ss, 𝒜,
+    Y, p, test_chart,
+    X, 1, trial_chart,
+    sauterschwab, qs_strat)
+
 
 wiltonsingext = BEAST.WiltonSERule(test_quadpoints, BEAST.DoubleQuadRule(test_quadpoints, trial_quadpoints))
 out_dw = zeros(T, numfunctions(𝒳), numfunctions(𝒳))
-BEAST.momintegrals_nested!(𝒜,𝒳,𝒳,test_chart,trial_chart,out_dw,wiltonsingext,qs_strat)
+BEAST.momintegrals_test_refines_trial!(out_dw, 𝒜,
+    Y, p, test_chart,
+    X, 1, trial_chart,
+    wiltonsingext, qs_strat)
 
 @show norm(out_ss-out_dw) / norm(out_dw)
 

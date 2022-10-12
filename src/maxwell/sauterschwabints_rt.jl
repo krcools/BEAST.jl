@@ -109,33 +109,37 @@ function (igd::Integrand{<:MWDoubleLayer3DReg})(x,y,f,g)
     return _krondot(fvalue, G)
 end
 
-const MWOperator3D = Union{MWSingleLayer3D, MWDoubleLayer3D}
-function momintegrals_nested!(op::MWOperator3D,
-    test_local_space::RTRefSpace, trial_local_space::RTRefSpace,
-    test_chart, trial_chart, out, strat::SauterSchwabStrategy, quadstrat)
+function momintegrals_test_refines_trial!(out, op,
+    test_functions, test_cell, test_chart,
+    trial_functions, trial_cell, trial_chart,
+    quadrule, quadstrat)
 
-    # 1. Refine the trial_chart
-    p1, p2, p3 = trial_chart.vertices
+    test_local_space = refspace(test_functions)
+    trial_local_space = refspace(trial_functions)
 
-    # TODO: generalise this to include more general refinements
-    e1 = cartesian(neighborhood(trial_chart, (0,1/2)))
-    e2 = cartesian(neighborhood(trial_chart, (1/2,0)))
-    e3 = cartesian(neighborhood(trial_chart, (1/2,1/2)))
+    momintegrals!(op, test_local_space, trial_local_space,
+        test_chart, trial_chart, out, quadrule)
+end
 
-    ct = cartesian(center(trial_chart))
+# const MWOperator3D = Union{MWSingleLayer3D, MWDoubleLayer3D}
+function momintegrals_test_refines_trial!(out, op,
+    test_functions, test_cell, test_chart,
+    trial_functions, trial_cell, trial_chart,
+    qr::SauterSchwabStrategy, quadstrat)
 
-    refined_trial_chart = SA[
-        simplex(ct, p1, e3),
-        simplex(ct, e3, p2),
-        simplex(ct, p2, e1),
-        simplex(ct, e1, p3),
-        simplex(ct, p3, e2),
-        simplex(ct, e2, p1)]
+    test_local_space = refspace(test_functions)
+    trial_local_space = refspace(trial_functions)
+
+    test_mesh = geometry(test_functions)
+    trial_mesh = geometry(trial_functions)
+
+    parent_mesh = CompScienceMeshes.parent(test_mesh)
+    trial_charts = [chart(test_mesh, p) for p in CompScienceMeshes.children(parent_mesh, trial_cell)]
 
     qd = quaddata(op, test_local_space, trial_local_space,
-        [test_chart], refined_trial_chart, quadstrat)
+        [test_chart], trial_charts, quadstrat)
 
-    for (q,chart) in enumerate(refined_trial_chart)
+    for (q,chart) in enumerate(trial_charts)
         qr = quadrule(op, test_local_space, trial_local_space,
             1, test_chart, q ,chart, qd, quadstrat)
 
@@ -147,54 +151,42 @@ function momintegrals_nested!(op::MWOperator3D,
         for j in 1:3
             for i in 1:3
                 for k in 1:3
-                out[i,j] += zlocal[i,k] * Q[j,k]
-        end end end
-    end
-end
+                    out[i,j] += zlocal[i,k] * Q[j,k]
+end end end end end
 
-function momintegrals_nested!(op::IntegralOperator,
-    test_local_space::RefSpace, trial_local_space::RefSpace,
-    test_chart, trial_chart, out, strat, quadstrat)
 
-    momintegrals!(op, test_local_space, trial_local_space,
-        test_chart, trial_chart, out, strat)
-end
 
-function momintegrals_trial_refines_test!(op::IntegralOperator,
-    test_local_space::RefSpace, trial_local_space::RefSpace,
-    test_chart, trial_chart, out, strat, quadstrat)
+function momintegrals_trial_refines_test!(out, op,
+    test_functions, test_cell, test_chart,
+    trial_functions, trial_cell, trial_chart,
+    quadrule, quadstrat)
+
+    test_local_space = refspace(test_functions)
+    trial_local_space = refspace(trial_functions)
 
     momintegrals!(op, test_local_space, trial_local_space,
-        test_chart, trial_chart, out, strat)
+        test_chart, trial_chart, out, quadrule)
 end
 
 
-function momintegrals_trial_refines_test!(op::MWOperator3D,
-    test_local_space::RTRefSpace, trial_local_space::RTRefSpace,
-    test_chart, trial_chart, out, strat::SauterSchwabStrategy, quadstrat)
+function momintegrals_trial_refines_test!(out, op,
+    test_functions, test_cell, test_chart,
+    trial_functions, trial_cell, trial_chart,
+    qr::SauterSchwabStrategy, quadstrat)
 
-    # 1. Refine the test_chart
-    p1, p2, p3 = test_chart.vertices
+    test_local_space = refspace(test_functions)
+    trial_local_space = refspace(trial_functions)
 
-    # TODO: generalise this to include more general refinements
-    e1 = cartesian(neighborhood(test_chart, (0,1/2)))
-    e2 = cartesian(neighborhood(test_chart, (1/2,0)))
-    e3 = cartesian(neighborhood(test_chart, (1/2,1/2)))
+    test_mesh = geometry(test_functions)
+    trial_mesh = geometry(trial_functions)
 
-    ct = cartesian(center(test_chart))
-
-    refined_test_chart = SA[
-        simplex(ct, p1, e3),
-        simplex(ct, e3, p2),
-        simplex(ct, p2, e1),
-        simplex(ct, e1, p3),
-        simplex(ct, p3, e2),
-        simplex(ct, e2, p1)]
+    parent_mesh = CompScienceMeshes.parent(trial_mesh)
+    test_charts = [chart(trial_mesh, p) for p in CompScienceMeshes.children(parent_mesh, test_cell)] 
 
     qd = quaddata(op, test_local_space, trial_local_space,
-        refined_test_chart, [trial_chart], quadstrat)
+        test_charts, [trial_chart], quadstrat)
 
-    for (p,chart) in enumerate(refined_test_chart)
+    for (p,chart) in enumerate(test_charts)
         qr = quadrule(op, test_local_space, trial_local_space,
             p, chart, 1, trial_chart, qd, quadstrat)
 
@@ -206,8 +198,7 @@ function momintegrals_trial_refines_test!(op::MWOperator3D,
         for j in 1:3
             for i in 1:3
                 for k in 1:3
-                # out[i,j] += zlocal[i,k] * Q[j,k]
-                out[i,j] += Q[i,k] * zlocal[k,j]
+                    out[i,j] += Q[i,k] * zlocal[k,j]
         end end end
     end
 end
