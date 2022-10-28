@@ -29,7 +29,11 @@ fr1, store1 = BEAST.allocatestorage(K, W, V,
 
 BEAST.assemble!(K, W, V, store1)
 Z = fr1()
-@test all(==(0), Z[:,:,1])
+
+T = scalartype(K,W,V)
+Z1 = zeros(T, size(Z)[1:2])
+BEAST.ConvolutionOperators.timeslice!(Z1, Z, 1)
+@test all(==(0), Z1)
 
 W = X⊗δ
 V = Y⊗T2
@@ -38,7 +42,12 @@ K = TDMaxwell3D.doublelayer(speedoflight=1.0, numdiffs=1)
 fr2, store2 = BEAST.allocatestorage(K, W, V, Val{:densestorage}, BEAST.LongDelays{:ignore})
 BEAST.assemble!(K, W, V, store2)
 Z2 = fr2()
-@test all(==(0), Z2[:,:,1])
+
+T = scalartype(K,W,V)
+Z21 = zeros(T, size(Z)[1:2])
+BEAST.ConvolutionOperators.timeslice!(Z21, Z2, 1)
+@test all(==(0), Z21)
+# @test all(==(0), Z2[:,:,1])
 
 γ = geometry(Y)
 ch1 = chart(G, first(G))

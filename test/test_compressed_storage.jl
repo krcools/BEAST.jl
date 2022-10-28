@@ -46,7 +46,20 @@ fr2, store2 = BEAST.allocatestorage(SL0, X⊗δ, X⊗T1,
 BEAST.assemble!(SL0, X⊗δ, X⊗T1, store1); Z1 = fr1()
 BEAST.assemble!(SL0, X⊗δ, X⊗T1, store2); Z2 = fr2()
 
-@test norm(Z1-Z2,Inf) < 1e-12
+for k in axes(Z1,3)
+    local T = scalartype(SL0, X⊗δ, X⊗T1)
+    Z1k = zeros(T, size(Z1)[1:2])
+    Z2k = zeros(T, size(Z2)[1:2])
+    BEAST.ConvolutionOperators.timeslice!(Z1k, Z1, k)
+    BEAST.ConvolutionOperators.timeslice!(Z2k, Z2, k)
+    @test norm(Z1k .- Z2k, Inf) < 1e-12
+end
+# for m in axes(Z1,1)
+#     for n in axes(Z1,2)
+#         for k in axes(Z1,3)
+#             @test norm(Z1[m,n,k] - Z2[m,n,k]) < 1e-12
+# end end end
+# @test norm(Z1-Z2,Inf) < 1e-12
 
 fr3, store7 = BEAST.allocatestorage(SL1, X⊗δ, X⊗T2,
     BEAST.Val{:bandedstorage},
@@ -74,16 +87,33 @@ BEAST.assemble!(SL1, X⊗δ, X⊗T2, store8); Z4 = fr4()
 b = assemble(E, X⊗δ)
 b1 = assemble(E1, X⊗δ)
 
-W1 = inv(Z1[:,:,1])
-W2 = inv(Z2[:,:,1])
+function timeslice(T,Z,k)
+    Zk = zeros(T, size(Z)[1:2])
+    BEAST.ConvolutionOperators.timeslice!(Zk, Z, k)
+end
+
+T = scalartype(SL0, X⊗δ, X⊗T1)
+W1 = inv(timeslice(T,Z1,1))
+W2 = inv(timeslice(T,Z2,1))
+
+# W1 = inv(AbstractArray(Z1)[:,:,1])
+# W2 = inv(AbstractArray(Z2)[:,:,1])
+# W1 = inv(BEAST.timeslice(Z1,1))
+# W2 = inv(BEAST.timeslice(Z2,1))
 @test norm(W1-W2,Inf) < 1e-12
 
-W3 = inv(Z3[:,:,1])
-W4 = inv(Z4[:,:,1])
+T = scalartype(SL1, X⊗δ, X⊗T2)
+W3 = inv(timeslice(T,Z3,1))
+W4 = inv(timeslice(T,Z4,1))
+
+# W3 = inv(AbstractArray(Z3)[:,:,1])
+# W4 = inv(AbstractArray(Z4)[:,:,1])
+# W3 = inv(BEAST.timeslice(Z3,1))
+# W4 = inv(BEAST.timeslice(Z4,1))
 @test norm(W3-W4) < 1e-12
 
 x1 = marchonintime(W1, Z1, b, Nt)
-x2 = marchonintime(W1, Z2, b, Nt)
+x2 = marchonintime(W2, Z2, b, Nt)
 @test norm(x1-x2,Inf) < 1e-12
 
 x3 = marchonintime(W3, Z3, b1, Nt)
@@ -110,7 +140,21 @@ fr10, store10 = BEAST.allocatestorage(DLh...,
 Z9 = fr9()
 Z10 = fr10()
 
-@test norm(Z9-Z10,Inf) < 1e-12
+for k in axes(Z9,3)
+    local T = scalartype(DLh...)
+    Z9k = zeros(T, size(Z9)[1:2])
+    Z10k = zeros(T, size(Z10)[1:2])
+    BEAST.ConvolutionOperators.timeslice!(Z9k, Z9, k)
+    BEAST.ConvolutionOperators.timeslice!(Z10k, Z10, k)
+    @test norm(Z9k .- Z10k, Inf) < 1e-12
+end
+
+# # @test norm(Z9-Z10,Inf) < 1e-12
+# for m in axes(Z9,1)
+#     for n in axes(Z9,2)
+#         for k in axes(Z9,3)
+#             @test norm(Z9[m,n,k] - Z10[m,n,k]) < 1e-12
+# end end end
 
 iDLh = (integrate(DL0), Y2⊗δ, X2⊗T1)
 fr11, store11 = BEAST.allocatestorage(iDLh..., BEAST.Val{:densestorage}, BEAST.LongDelays{:ignore})
@@ -122,5 +166,19 @@ BEAST.assemble!(iDLh..., store11); Z11 = fr11()
 BEAST.assemble!(iDLh..., store12); Z12 = fr12()
 # BEAST.assemble!(iDLh..., store13); Z13 = fr13()
 
-@test norm(Z11-Z12,Inf) < 1e-8
+# @test norm(Z11-Z12,Inf) < 1e-8
+# for m in axes(Z11,1)
+#     for n in axes(Z11,2)
+#         for k in axes(Z11,3)
+#             @test norm(Z11[m,n,k] - Z12[m,n,k]) < 1e-12
+# end end end
 # @test norm(Z11-Z13,Inf) < 1e-8
+
+for k in axes(Z11,3)
+    local T = scalartype(iDLh...)
+    Z11k = zeros(T, size(Z11)[1:2])
+    Z12k = zeros(T, size(Z12)[1:2])
+    BEAST.ConvolutionOperators.timeslice!(Z11k, Z11, k)
+    BEAST.ConvolutionOperators.timeslice!(Z12k, Z12, k)
+    @test norm(Z11k .- Z12k, Inf) < 1e-12
+end

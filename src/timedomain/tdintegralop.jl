@@ -39,7 +39,8 @@ function allocatestorage(op::RetardedPotential, testST, basisST,
     kmax = maximum(K1);
 	Z = zeros(eltype(op), M, N, kmax)
     store1(v,m,n,k) = (Z[m,n,k] += v)
-    return ()->MatrixConvolution(Z), store1
+    # return ()->MatrixConvolution(Z), store1
+    return ()->ConvolutionOperators.DenseConvOp(Z), store1
 end
 
 
@@ -116,7 +117,7 @@ function allocatestorage(op::RetardedPotential, testST, basisST,
     tail = zeros(T, M, N)
     # kmax = maximum(K1)
     len = has_tail ? Nt : maximum(K1)
-	Z = ConvOp(data, K0, K1, tail, len)
+	Z = ConvolutionOperators.ConvOp(data, K0, K1, tail, len)
 
     function store1(v,m,n,k)
 		if Z.k0[m,n] ≤ k ≤ Z.k1[m,n]
@@ -197,7 +198,7 @@ function assemble_chunk!(op::RetardedPotential, testST, trialST, store;
     wdim = numfunctions(W)
     z = zeros(eltype(op), udim, vdim, wdim)
 
-	@show length(testels) length(trialels)
+	# @show length(testels) length(trialels)
 
     myid == 1 && print("dots out of 10: ")
     todo, done, pctg = length(testels), 0, 0

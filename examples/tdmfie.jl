@@ -5,7 +5,7 @@ using CompScienceMeshes, BEAST
 X = raviartthomas(Γ)
 Y = buffachristiansen(Γ)
 
-Δt, Nt = 0.3, 200
+Δt, Nt = 0.1, 200
 T = timebasisshiftedlagrange(Δt, Nt, 2)
 δ = timebasisdelta(Δt, Nt)
 

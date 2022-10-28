@@ -19,13 +19,13 @@ for T in [Float32, Float64]
 
     i = 3
     local j = 3
-    edg = simplex(p1, p2)
+    local edg = simplex(p1, p2)
 
 
     x = BEAST.NDLCDRefSpace{T}()
     y = BEAST.NDRefSpace{T}()
 
-    p = neighborhood(tet, T.([0.5, 0.5, 0.0]))
+    local p = neighborhood(tet, T.([0.5, 0.5, 0.0]))
     r = neighborhood(tri, T.([0.5, 0.5]))
 
     @test carttobary(edg, cartesian(p)) ≈ T.([0.5])

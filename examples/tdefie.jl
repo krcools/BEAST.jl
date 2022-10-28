@@ -1,6 +1,6 @@
 using CompScienceMeshes, BEAST, LinearAlgebra
-# Γ = readmesh(joinpath(@__DIR__,"sphere2.in"))
-Γ = meshsphere(radius=1.0, h=0.1)
+Γ = readmesh(joinpath(@__DIR__,"sphere2.in"))
+# Γ = meshsphere(radius=1.0, h=0.1)
 
 X = raviartthomas(Γ)
 
@@ -44,3 +44,6 @@ _, i1 = findmin(abs.(ω.-1.0))
 
 ω1 = ω[i1]
 ue = Xefie[:,i1] / fouriertransform(gaussian)(ω1)
+
+fcr, geo = facecurrents(ue, X)
+Plotly.plot(patch(geo, norm.(fcr)))

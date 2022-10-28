@@ -15,8 +15,8 @@ X = raviartthomas(Γ)
 Y = buffachristiansen(Γ, ibscaled=true)
 
 sol = 1.0
-T = TDMaxwell3D.singlelayer(speedoflight=sol, numdiffs=1)
-K = TDMaxwell3D.doublelayer(speedoflight=sol, numdiffs=1)
+T = TDMaxwell3D.singlelayer(speedoflight=sol, numdiffs=0)
+K = TDMaxwell3D.doublelayer(speedoflight=sol, numdiffs=0)
 
 Δt, Nt = 0.4, 300
 δ = timebasisdelta(Δt, Nt)
@@ -31,26 +31,27 @@ amplitude = 1.0
 gaussian = creategaussian(duration, delay, amplitude)
 
 direction, polarisation = ẑ, x̂
-E = BEAST.planewave(polarisation, direction, derive(gaussian), 1.0)
+E = BEAST.planewave(polarisation, direction, gaussian, 1.0)
 H = direction × E
 
 @hilbertspace j m
 @hilbertspace k l
 
-pmchwt = @discretise(
-    2.0T[k,j] + 2.0K[k,m] -
-    2.0K[l,j] + 2.0T[l,m] == H[k] + E[l],
-    j∈X⊗T2, m∈Y⊗T2, k∈X⊗δ, l∈Y⊗δ)
+# pmchwt = @discretise(
+#     2.0T[k,j] + 2.0K[k,m] -
+#     2.0K[l,j] + 2.0T[l,m] == H[k] + E[l],
+#     j∈X⊗T2, m∈Y⊗T2, k∈X⊗δ, l∈Y⊗δ)
 
 pmchwt = @discretise(
     2.0T[k,j] + 2.0K[k,m] -
     2.0K[l,j] + 2.0T[l,m] == H[k] + E[l],
-    j∈X⊗T2, m∈X⊗T2, k∈X⊗δ, l∈X⊗δ)
+    j∈X⊗T1, m∈X⊗T1, k∈X⊗δ, l∈X⊗δ)
 
-Z = BEAST.td_assemble(pmchwt.equation.lhs, pmchwt.test_space_dict, pmchwt.trial_space_dict);
+# Z = BEAST.td_assemble(pmchwt.equation.lhs, pmchwt.test_space_dict, pmchwt.trial_space_dict);
 # error()
 
 u = solve(pmchwt)
+error()
 
 # nX = numfunctions(X)
 # uj = u[1:nX]

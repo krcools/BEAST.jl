@@ -60,8 +60,13 @@ function td_solve(eq)
     # bilform = eq.equation.lhs
 
     A = td_assemble(eq.equation.lhs, eq.test_space_dict, eq.trial_space_dict)
-    S = timeslice(A,1)
-    iS = inv(Array(S))
+    T = eltype(A)
+    S = zeros(T, size(A)[1:2])
+    ConvolutionOperators.timeslice!(S, A, 1)
+
+    # S = timeslice(A,1)
+    # iS = inv(Array(S))
+    iS = inv(S)
 
     b = td_assemble(eq.equation.rhs, eq.test_space_dict)
 
@@ -83,7 +88,9 @@ function timeslice(A::BlockArray, k)
             isassigned(A.blocks, i, j) || continue
             A[Block(i,j)] isa Zeros && continue
             A[Block(i,j)] isa Fill && continue
-            S[Block(i,j)] = A[Block(i,j)].convop[:,:,k]
+            Aij = A[Block(i,j)]
+            Ak = AbstractArray(A[Block(i,j)].convop)[:,:,k]
+            S[Block(i,j)] = Ak
         end
     end
 

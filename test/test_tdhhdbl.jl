@@ -33,7 +33,11 @@ W = Y ⊗ T
 fr2, store2 = BEAST.allocatestorage(K, V, V, Val{:densestorage}, BEAST.LongDelays{:ignore})
 BEAST.assemble!(K, W, V, store2)
 Z = fr2()
-@test all(==(0), Z[:,:,1])
+
+T = scalartype(K,V,V)
+Z1 = zeros(T, size(Z)[1:2])
+BEAST.ConvolutionOperators.timeslice!(Z1, Z, 1)
+@test all(==(0), Z1)
 
 # import WiltonInts84
 # trial_element = chart(G, first(cells(G)))

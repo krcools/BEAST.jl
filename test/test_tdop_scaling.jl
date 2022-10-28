@@ -39,7 +39,10 @@ t = MWSingleLayerTDIO(sol,-1/sol,-sol,2,0)
 Z3 = assemble(t, W, V)
 
 m = n = 1
-@test findall(Z1[m,n,:] .!= 0) == findall(Z3[m,n,:] .!= 0)
+M1 = AbstractArray(Z1)
+M3 = AbstractArray(Z3)
 
-I = findall(Z1[m,n,:] .!= 0)
-@test all(sol*Z1[m,n,I] .≈ Z3[m,n,I])
+@test findall(M1[m,n,:] .!= 0) == findall(M3[m,n,:] .!= 0)
+
+I = findall(M1[m,n,:] .!= 0)
+@test all(sol*M1[m,n,I] .≈ M3[m,n,I])

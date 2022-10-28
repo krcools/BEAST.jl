@@ -48,11 +48,11 @@ end
 
 function momintegrals!(op::Operator,
     test_local_space::RefSpace, trial_local_space::RefSpace,
-    test_chart, trial_chart, out, strat::SauterSchwabStrategy)
+    test_chart, trial_chart, out, rule::SauterSchwabStrategy)
 
     I, J, _, _ = SauterSchwabQuadrature.reorder(
         test_chart.vertices,
-        trial_chart.vertices, strat)
+        trial_chart.vertices, rule)
 
     test_chart  = simplex(
         test_chart.vertices[I[1]],
@@ -65,7 +65,7 @@ function momintegrals!(op::Operator,
         trial_chart.vertices[J[3]])
 
     igd = Integrand(op, test_local_space, trial_local_space, test_chart, trial_chart)
-    G = SauterSchwabQuadrature.sauterschwab_parameterized(igd, strat)
+    G = SauterSchwabQuadrature.sauterschwab_parameterized(igd, rule)
 
     K = dof_permutation(test_local_space, I)
     L = dof_permutation(trial_local_space, J)

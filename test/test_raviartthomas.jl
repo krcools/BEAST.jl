@@ -37,13 +37,13 @@ for T in [Float32,Float64]
     faces = skeleton(mesh, 2)
     idcs = faces.faces[1]
     verts = vertices(mesh, idcs)
-    p = simplex(verts, Val{2})
+    local p = simplex(verts, Val{2})
     @test volume(p) == T(1/8)
 
-    edges = skeleton(mesh,1)
+    local edges = skeleton(mesh,1)
     @test numcells(edges) == 16
 
-    cps = cellpairs(mesh, edges)
+    local cps = cellpairs(mesh, edges)
     @test size(cps) == (2,16)
 
     # select only inner edges

@@ -21,12 +21,12 @@ BEAST.convolve!(y, Z::FillArrays.Zeros, x, csx, i, k_start, k_stop) = nothing
 BEAST.convolve!(y, Z::FillArrays.Fill, x, csx, i, k_start, k_stop) = nothing
 
 
-struct SpaceTimeData{T} <: AbstractArray{Vector{T},1}
-    data::Array{T,2}
-end
+# struct SpaceTimeData{T} <: AbstractArray{Vector{T},1}
+#     data::Array{T,2}
+# end
 
-Base.eltype(x::SpaceTimeData{T}) where {T} = Vector{T}
-Base.size(x::SpaceTimeData) = (size(x.data)[1],)
-Base.getindex(x::SpaceTimeData, i::Int) = x.data[i,:]
+# Base.eltype(x::SpaceTimeData{T}) where {T} = Vector{T}
+# Base.size(x::SpaceTimeData) = (size(x.data)[1],)
+# Base.getindex(x::SpaceTimeData, i::Int) = x.data[i,:]
 
 end # module

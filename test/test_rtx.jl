@@ -13,8 +13,8 @@ for T in [Float32, Float64]
 
     i = 12
     c = X.fns[i][1].cellid
-    ch = chart(m, c)
-    ctr = cartesian(center(ch))
+    local ch = chart(m, c)
+    local ctr = cartesian(center(ch))
     @test ctr ≈ p[i]
 
     for (i,f) in enumerate(X.fns)
