@@ -8,7 +8,7 @@ using LinearAlgebra
 # Γ = meshcuboid(1.0, 1.0, 1.0, 0.25)
 # h = 0.3
 fn = joinpath(dirname(pathof(CompScienceMeshes)),"geos/torus.geo")
-Γ = CompScienceMeshes.meshgeo(fn; dim=2, h=0.4)
+Γ = CompScienceMeshes.meshgeo(fn; dim=2, h=1.0)
 
 # Γ = meshsphere(1.0, h)
 X = raviartthomas(Γ)
@@ -18,7 +18,7 @@ sol = 1.0
 T = TDMaxwell3D.singlelayer(speedoflight=sol, numdiffs=0)
 K = TDMaxwell3D.doublelayer(speedoflight=sol, numdiffs=0)
 
-Δt, Nt = 0.4, 300
+Δt, Nt = 1.6, 300
 δ = timebasisdelta(Δt, Nt)
 T0 = timebasiscxd0(Δt, Nt)
 T1 = timebasisshiftedlagrange(Δt,Nt,1)
@@ -47,8 +47,22 @@ pmchwt = @discretise(
     2.0K[l,j] + 2.0T[l,m] == H[k] + E[l],
     j∈X⊗T1, m∈X⊗T1, k∈X⊗δ, l∈X⊗δ)
 
-# Z = BEAST.td_assemble(pmchwt.equation.lhs, pmchwt.test_space_dict, pmchwt.trial_space_dict);
-# error()
+Z = BEAST.td_assemble(pmchwt.equation.lhs, pmchwt.test_space_dict, pmchwt.trial_space_dict);
+error()
+
+
+function cones(mesh, arrows; sizeref=2)
+    centers = [cartesian(CompScienceMeshes.center(chart(mesh,cell))) for cell in mesh]
+    x = getindex.(centers,1)
+    y = getindex.(centers,2)
+    z = getindex.(centers,3)
+    u = getindex.(arrows,1)
+    v = getindex.(arrows,2)
+    w = getindex.(arrows,3)
+    Plotly.cone(x=x,y=y,z=z,u=u,v=v,w=w,sizemode="absolute", sizeref=sizeref)
+end
+
+
 
 u = solve(pmchwt)
 error()

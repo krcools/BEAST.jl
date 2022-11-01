@@ -1,10 +1,11 @@
 using CompScienceMeshes, BEAST
 
 # Γ = readmesh(joinpath(@__DIR__,"sphere2.in"))
-Γ = readmesh(joinpath(dirname(pathof(BEAST)),"../examples/sphere2.in"))
+# Γ = readmesh(joinpath(dirname(pathof(BEAST)),"../examples/sphere2.in"))
+Γ = meshsphere(radius=1.0, h=0.4)
 X = raviartthomas(Γ)
 
-Δt, Nt = 0.6, 200
+Δt, Nt = 1.2, 200
 T = timebasisshiftedlagrange(Δt, Nt, 1)
 U = timebasisdelta(Δt, Nt)
 
@@ -24,6 +25,8 @@ SL = TDMaxwell3D.singlelayer(speedoflight=1.0)
 @hilbertspace j
 @hilbertspace j′
 efie_nodot = @discretise SL[j′,j] == E[j′] j∈V j′∈W
+error()
+
 xefie_nodot = solve(efie_nodot)
 
 Xefie, Δω, ω0 = fouriertransform(xefie_nodot, Δt, 0.0, 2)

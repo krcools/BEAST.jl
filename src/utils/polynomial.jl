@@ -111,13 +111,13 @@ function substitute(p::Polynomial, q::Polynomial)
     return r
 end
 
-mutable struct PieceWisePolynomial
-end
+# mutable struct PieceWisePolynomial
+# end
 
-function Bernstein(n,u)
-    basis = zeros(n+1,1)
-    for i = 0:n
-        basis[i+1] = binomial(n,i) * u^i * (1.0-u)^(n-i)
-    end
-    basis
-end
+# function Bernstein(n,u)
+#     basis = zeros(n+1,1)
+#     for i = 0:n
+#         basis[i+1] = binomial(n,i) * u^i * (1.0-u)^(n-i)
+#     end
+#     basis
+# end
