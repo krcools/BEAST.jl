@@ -125,14 +125,9 @@ using SparseArrays
 function convolve end
 
 include("utils/polynomial.jl")
-# include("utils/mixedblockarrays.jl")
-# include("timedomain/convop.jl")
-# include("utils/sparsend.jl")
 include("utils/specialfns.jl")
 include("utils/combinatorics.jl")
 include("utils/linearspace.jl")
-# include("utils/matrixconv.jl")
-# include("utils/polyeig.jl")
 include("utils/zeromap.jl")
 
 include("bases/basis.jl")
