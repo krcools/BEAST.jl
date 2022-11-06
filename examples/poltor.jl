@@ -1,19 +1,21 @@
 using CompScienceMeshes
 using LinearAlgebra
 
-function cone(p,q; sizemode="absolute", sizeref=2, kwargs...)
-    x = getindex.(p,1)
-    y = getindex.(p,2)
-    z = getindex.(p,3)
-    u = getindex.(q,1)
-    v = getindex.(q,2)
-    w = getindex.(q,3)
-    Plotly.cone(;x,y,z,u,v,w, sizemode, sizeref, kwargs...)
-end
+# function cone(p,q; sizemode="absolute", sizeref=2, kwargs...)
+#     x = getindex.(p,1)
+#     y = getindex.(p,2)
+#     z = getindex.(p,3)
+#     u = getindex.(q,1)
+#     v = getindex.(q,2)
+#     w = getindex.(q,3)
+#     Plotly.cone(;x,y,z,u,v,w, sizemode, sizeref, kwargs...)
+# end
 
 
 fn = joinpath(dirname(pathof(CompScienceMeshes)),"geos/torus.geo")
-Γ = CompScienceMeshes.meshgeo(fn; dim=2, h=0.5)
+fn = joinpath(@__DIR__, "assets/rectangular_torus.geo")
+h = 0.08
+Γ = CompScienceMeshes.meshgeo(fn; dim=2, h)
 
 Γ0 = skeleton(Γ,0)
 Γ1 = skeleton(Γ,1)
@@ -43,11 +45,11 @@ using LinearAlgebra
 v0 = V[:,end]
 
 fcr, geo = facecurrents(v0, X)
-pts = [cartesian(center(chart(Γ,p))) for p in Γ]
+# pts = [cartesian(center(chart(Γ,p))) for p in Γ]
 
 import Plotly
 pt1 = patch(Γ,norm.(fcr), opacity=0.5)
-pt2 = cone(pts, fcr, sizeref=0.2)
+pt2 = CompScienceMeshes.cones(Γ, fcr, sizeref=0.4)
 Plotly.plot([pt1, pt2])
 
 G = assemble(Id,X,X)
@@ -57,23 +59,7 @@ norm(v0)
 norm(Σ'*v0)
 norm(Λ'*G*v0)
 
-# Study the kernel of the PMCHWT
-SL = Maxwell3D.singlelayer(wavenumber=0.01)
-DL = Maxwell3D.doublelayer(wavenumber=0.01)
-
-@hilbertspace m j
-@hilbertspace k l
-a =
-    DL[k,m] - SL[k,j] +
-    SL[l,m] + DL[l,j]
-
-A = assemble(@discretise(a, m∈X, j∈X, k∈X, l∈X))
-M = Matrix(A)
-(;U,S,V) = svd(M)
-
-using Plots
-plotly()
-plot()
-
-v0 = V[:,end]
-v1 = V[:,end-1]
+# Dict{Any, Any} with 3 entries:
+#   0.5   => 0.370836
+#   0.25  => 0.315732
+#   0.125 => 0.265276

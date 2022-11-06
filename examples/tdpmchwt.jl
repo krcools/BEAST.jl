@@ -7,18 +7,18 @@ using LinearAlgebra
 
 # Γ = meshcuboid(1.0, 1.0, 1.0, 0.25)
 # h = 0.3
-fn = joinpath(dirname(pathof(CompScienceMeshes)),"geos/torus.geo")
-Γ = CompScienceMeshes.meshgeo(fn; dim=2, h=1.0)
+# fn = joinpath(dirname(pathof(CompScienceMeshes)),"geos/torus.geo")
+# Γ = CompScienceMeshes.meshgeo(fn; dim=2, h=1.0)
 
-# Γ = meshsphere(1.0, h)
+Γ = meshsphere(radius=1.0, h=0.35)
 X = raviartthomas(Γ)
-Y = buffachristiansen(Γ, ibscaled=true)
+Y = buffachristiansen(Γ)
 
 sol = 1.0
 T = TDMaxwell3D.singlelayer(speedoflight=sol, numdiffs=1)
 K = TDMaxwell3D.doublelayer(speedoflight=sol, numdiffs=1)
 
-Δt, Nt = 1.6, 300
+Δt, Nt = 0.1, 300
 δ = timebasisdelta(Δt, Nt)
 T0 = timebasiscxd0(Δt, Nt)
 T1 = timebasisshiftedlagrange(Δt,Nt,1)
@@ -37,10 +37,10 @@ H = direction × E
 @hilbertspace j m
 @hilbertspace k l
 
-pmchwt = @discretise(
-    2.0T[k,j] + 2.0K[k,m] -
-    2.0K[l,j] + 2.0T[l,m] == H[k] + E[l],
-    j∈X⊗T2, m∈Y⊗T2, k∈X⊗δ, l∈Y⊗δ)
+# pmchwt = @discretise(
+#     2.0T[k,j] + 2.0K[k,m] -
+#     2.0K[l,j] + 2.0T[l,m] == H[k] + E[l],
+#     j∈X⊗T2, m∈Y⊗T2, k∈X⊗δ, l∈Y⊗δ)
 
 pmchwt = @discretise(
     2.0T[k,j] + 2.0K[k,m] -
@@ -48,9 +48,13 @@ pmchwt = @discretise(
     j∈X⊗T2, m∈X⊗T2, k∈X⊗δ, l∈X⊗δ)
 
 Z = BEAST.td_assemble(pmchwt.equation.lhs, pmchwt.test_space_dict, pmchwt.trial_space_dict);
-error()
+w = BEAST.ConvolutionOperators.polyvals(Z)
+# error()
 
 u = solve(pmchwt)
+
+using Plots
+plot(u[1,:])
 
 # nX = numfunctions(X)
 # uj = u[1:nX]
@@ -75,10 +79,10 @@ u = solve(pmchwt)
 # PlotlyJS.plot(patch(Γ, norm.(fcrj)))
 
 # Study the pmchwt static nullspace
-pmchwt = @discretise(
-    2.0T[k,j] + 2.0K[k,m] -
-    2.0K[l,j] + 2.0T[l,m] == H[k] + E[l],
-    j∈X⊗T2, m∈X⊗T2, k∈X⊗δ, l∈X⊗δ)
+# pmchwt = @discretise(
+#     2.0T[k,j] + 2.0K[k,m] -
+#     2.0K[l,j] + 2.0T[l,m] == H[k] + E[l],
+#     j∈X⊗T2, m∈X⊗T2, k∈X⊗δ, l∈X⊗δ)
 
 
 # Z = BEAST.td_assemble(pmchwt.equation.lhs, pmchwt.test_space_dict, pmchwt.trial_space_dict)
