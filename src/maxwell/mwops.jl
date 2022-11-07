@@ -237,3 +237,85 @@ function qrdf(op::MaxwellOperator3D, g::RTRefSpace, f::RTRefSpace, i, τ, j, σ,
   )
 
 end
+
+################################################################################
+#
+#  Kernel definitions
+#
+################################################################################
+
+const i4pi = 1 / (4pi)
+function (igd::Integrand{<:MWSingleLayer3D})(x,y,f,g)
+    α = igd.operator.α
+    β = igd.operator.β
+    γ = igd.operator.gamma
+
+    r = cartesian(x) - cartesian(y)
+    R = norm(r)
+    iR = 1 / R
+    green = exp(-γ*R)*(i4pi*iR)
+
+    αG = α * green
+    βG = β * green
+
+    _integrands(f,g) do fi,gj
+        αG * dot(fi.value, gj.value) + βG * dot(fi.divergence, gj.divergence)
+    end
+end
+
+function (igd::Integrand{<:MWSingleLayer3DReg})(x,y,f,g)
+    α = igd.operator.α
+    β = igd.operator.β
+    γ = igd.operator.gamma
+
+    r = cartesian(x) - cartesian(y)
+    R = norm(r)
+    γR = γ*R
+    # iR = 1 / R
+    green = (expm1(-γR) + γR - 0.5*γR^2) / (4pi*R)
+
+    αG = α * green
+    βG = β * green
+
+    _integrands(f,g) do fi,gj
+        αG * dot(fi.value, gj.value) + βG * dot(fi.divergence, gj.divergence)
+    end
+end
+
+
+function (igd::Integrand{<:MWDoubleLayer3D})(x,y,f,g)
+    
+    γ = igd.operator.gamma
+
+    r = cartesian(x) - cartesian(y)
+    R = norm(r)
+    iR = 1/R
+    green = exp(-γ*R)*(iR*i4pi)
+    gradgreen = -(γ + iR) * green * (iR * r)
+
+    fvalue = getvalue(f)
+    gvalue = getvalue(g)
+    G = cross.(Ref(gradgreen), gvalue)
+    return _krondot(fvalue, G)
+end
+
+
+function (igd::Integrand{<:MWDoubleLayer3DReg})(x,y,f,g)
+    
+    γ = igd.operator.gamma
+
+    r = cartesian(x) - cartesian(y)
+    R = norm(r)
+    γR = γ*R
+    iR = 1/R
+    expo = exp(-γR)
+    green = (expo - 1 + γR - 0.5*γR^2) * (i4pi*iR)
+    gradgreen = ( -(γR + 1)*expo + (1 - 0.5*γR^2) ) * (i4pi*iR^3) * r
+
+    fvalue = getvalue(f)
+    gvalue = getvalue(g)
+    G = cross.(Ref(gradgreen), gvalue)
+    return _krondot(fvalue, G)
+end
+
+

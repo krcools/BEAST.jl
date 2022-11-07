@@ -1,7 +1,12 @@
+struct Integrand{Op,LSt,LSb,Elt,Elb}
+    operator::Op
+    local_test_space::LSt
+    local_trial_space::LSb
+    test_chart::Elt
+    trial_chart::Elb
+end
 
 
-
-const i4pi = 1 / (4pi)
 function (igd::Integrand)(u,v)
     
     x = neighborhood(igd.test_chart,u)
@@ -13,6 +18,46 @@ function (igd::Integrand)(u,v)
     return jacobian(x) * jacobian(y) * igd(x,y,f,g)
 end
 
+getvalue(a::SVector{N}) where {N} = SVector{N}(getvalue(a.data))
+getvalue(a::NTuple{1}) = (a[1].value,)
+getvalue(a::NTuple{N}) where {N} = tuple(a[1].value, getvalue(Base.tail(a))...)
+
+getdivergence(a::SVector{N}) where {N} = SVector{N}(getdivergence(a.data))
+getdivergence(a::NTuple{1}) = (a[1].divergence,)
+getdivergence(a::NTuple{N}) where {N} = tuple(a[1].divergence, getdivergence(Base.tail(a))...)
+
+function _krondot_gen(a::Type{U}, b::Type{V}) where {U<:SVector{N}, V<:SVector{M}} where {M,N}
+    ex = :(SMatrix{N,M}(()))
+    for m in 1:M
+        for n in 1:N
+            push!(ex.args[2].args, :(dot(a[$n], b[$m])))
+        end
+    end
+    return ex
+end
+@generated function _krondot(a::SVector{N}, b::SVector{M}) where {M,N}
+    ex = _krondot_gen(a,b)
+    return ex
+end
+
+function _integrands_gen(::Type{U}, ::Type{V}) where {U<:SVector{N}, V<:SVector{M}} where {M,N}
+    ex = :(SMatrix{N,M}(()))
+    for m in 1:M
+        for n in 1:N
+            # push!(ex.args[2].args, :(dot(a[$n], b[$m])))
+            push!(ex.args[2].args, :(f(a[$n], b[$m])))
+        end
+    end
+    return ex
+end
+@generated function _integrands(f, a::SVector{N}, b::SVector{M}) where {M,N}
+    ex = _integrands_gen(a,b)
+    # println(ex)
+    return ex
+end
+
+
+
 
 function _integrands_leg_gen(f::Type{U}, g::Type{V}) where {U<:SVector{N}, V<:SVector{M}} where {M,N}
     ex = :(SMatrix{N,M}(()))
@@ -23,8 +68,10 @@ function _integrands_leg_gen(f::Type{U}, g::Type{V}) where {U<:SVector{N}, V<:SV
     end
     return ex
 end
+@generated function _integrands_leg(op, kervals, f::SVector{N}, x, g::SVector{M}, y) where {M,N}
+    _integrands_leg_gen(f, g)
+end
 
-@generated _integrands_leg(op, kervals, f::SVector{N}, x, g::SVector{M}, y) where {M,N} = _integrands_leg_gen(f, g)
 
 # Support for legacy kernels
 function (igd::Integrand)(x,y,f,g)
@@ -35,79 +82,37 @@ function (igd::Integrand)(x,y,f,g)
 
 end
 
+function momintegrals!(op::Operator,
+    test_local_space::RefSpace, trial_local_space::RefSpace,
+    test_chart, trial_chart, out, rule::SauterSchwabStrategy)
 
-function (igd::Integrand{<:MWSingleLayer3D})(x,y,f,g)
-    α = igd.operator.α
-    β = igd.operator.β
-    γ = igd.operator.gamma
+    I, J, _, _ = SauterSchwabQuadrature.reorder(
+        test_chart.vertices,
+        trial_chart.vertices, rule)
 
-    r = cartesian(x) - cartesian(y)
-    R = norm(r)
-    iR = 1 / R
-    green = exp(-γ*R)*(i4pi*iR)
+    test_chart  = simplex(
+        test_chart.vertices[I[1]],
+        test_chart.vertices[I[2]],
+        test_chart.vertices[I[3]])
 
-    αG = α * green
-    βG = β * green
+    trial_chart = simplex(
+        trial_chart.vertices[J[1]],
+        trial_chart.vertices[J[2]],
+        trial_chart.vertices[J[3]])
 
-    _integrands(f,g) do fi,gj
-        αG * dot(fi.value, gj.value) + βG * dot(fi.divergence, gj.divergence)
-    end
+    igd = Integrand(op, test_local_space, trial_local_space, test_chart, trial_chart)
+    G = SauterSchwabQuadrature.sauterschwab_parameterized(igd, rule)
+
+    K = dof_permutation(test_local_space, I)
+    L = dof_permutation(trial_local_space, J)
+    for i in 1:numfunctions(test_local_space)
+        for j in 1:numfunctions(trial_local_space)
+            out[i,j] = G[K[i],L[j]]
+    end end
+
+    nothing
 end
 
-function (igd::Integrand{<:MWSingleLayer3DReg})(x,y,f,g)
-    α = igd.operator.α
-    β = igd.operator.β
-    γ = igd.operator.gamma
-
-    r = cartesian(x) - cartesian(y)
-    R = norm(r)
-    γR = γ*R
-    # iR = 1 / R
-    green = (expm1(-γR) + γR - 0.5*γR^2) / (4pi*R)
-
-    αG = α * green
-    βG = β * green
-
-    _integrands(f,g) do fi,gj
-        αG * dot(fi.value, gj.value) + βG * dot(fi.divergence, gj.divergence)
-    end
-end
-
-
-function (igd::Integrand{<:MWDoubleLayer3D})(x,y,f,g)
-    
-    γ = igd.operator.gamma
-
-    r = cartesian(x) - cartesian(y)
-    R = norm(r)
-    iR = 1/R
-    green = exp(-γ*R)*(iR*i4pi)
-    gradgreen = -(γ + iR) * green * (iR * r)
-
-    fvalue = getvalue(f)
-    gvalue = getvalue(g)
-    G = cross.(Ref(gradgreen), gvalue)
-    return _krondot(fvalue, G)
-end
-
-
-function (igd::Integrand{<:MWDoubleLayer3DReg})(x,y,f,g)
-    
-    γ = igd.operator.gamma
-
-    r = cartesian(x) - cartesian(y)
-    R = norm(r)
-    γR = γ*R
-    iR = 1/R
-    expo = exp(-γR)
-    green = (expo - 1 + γR - 0.5*γR^2) * (i4pi*iR)
-    gradgreen = ( -(γR + 1)*expo + (1 - 0.5*γR^2) ) * (i4pi*iR^3) * r
-
-    fvalue = getvalue(f)
-    gvalue = getvalue(g)
-    G = cross.(Ref(gradgreen), gvalue)
-    return _krondot(fvalue, G)
-end
 
 function momintegrals_test_refines_trial!(out, op,
     test_functions, test_cell, test_chart,

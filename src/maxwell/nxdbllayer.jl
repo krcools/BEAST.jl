@@ -61,12 +61,37 @@ function quadrule(op::DoubleLayerRotatedMW3D, g::RTRefSpace, f::RTRefSpace,  i, 
         qd.bpoints[1,j],)
 end
 
-function integrand(op::DoubleLayerRotatedMW3D, kernel_vals, test_vals, test_nbd, trial_vals, trial_nbd)
+# function integrand(op::DoubleLayerRotatedMW3D, kernel_vals, test_vals, test_nbd, trial_vals, trial_nbd)
 
-    n = normal(test_nbd)
-    g = test_vals[1]
-    f = trial_vals[1]
-    ∇G = kernel_vals.gradgreen
+#     n = normal(test_nbd)
+#     g = test_vals[1]
+#     f = trial_vals[1]
+#     ∇G = kernel_vals.gradgreen
 
-    return g ⋅ (n × (∇G × f))
+#     return g ⋅ (n × (∇G × f))
+# end
+
+function (igd::Integrand{<:DoubleLayerRotatedMW3D})(u,v)
+
+    x = neighborhood(igd.test_chart,u)
+    y = neighborhood(igd.trial_chart,v)
+    j = jacobian(x) * jacobian(y)
+    nx = normal(x)
+
+    r = cartesian(x) - cartesian(y)
+    R = norm(r)
+    iR = 1/R
+    γ = igd.operator.gamma
+    G = exp(-γ*R)/(4π*R)
+    K = -(γ + iR) * G * (iR * r)
+
+    f = igd.local_test_space(x)
+    g = igd.local_trial_space(y)
+
+    fvalue = getvalue(f)
+    gvalue = getvalue(g)
+
+    jKg = cross.(Ref(K), j*gvalue)
+    jnxKg = cross.(Ref(nx), jKg)
+    return _krondot(fvalue, jnxKg)
 end
