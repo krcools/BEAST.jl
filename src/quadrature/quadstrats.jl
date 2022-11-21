@@ -25,6 +25,10 @@ struct SauterSchwab3DQStrat{R,S}
     sauter_schwab_4D::S
 end
 
+struct OuterNumInnerAnalyticQStrat{R}
+    outer_rule::R
+end
+
 
 defaultquadstrat(op, tfs, bfs) = defaultquadstrat(op, refspace(tfs), refspace(bfs))
 macro defaultquadstrat(dop, body)

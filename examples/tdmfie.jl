@@ -12,7 +12,7 @@ T = timebasisshiftedlagrange(Δt, Nt, 2)
 V = X ⊗ T
 W = Y ⊗ δ
 
-duration = 20 * Δt * 2
+duration = 20 * Δt
 delay = 1.5 * duration
 amplitude = 1.0
 gaussian = creategaussian(duration, delay, amplitude)

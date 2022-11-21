@@ -74,10 +74,10 @@ end # module TDMaxwell3D
 
 export TDMaxwell3D
 
-defaultquadstrat(::MWSingleLayerTDIO, tfs, bfs) = nothing
+defaultquadstrat(::MWSingleLayerTDIO, tfs, bfs) = OuterNumInnerAnalyticQStrat(3)
 
 function quaddata(op::MWSingleLayerTDIO, testrefs, trialrefs, timerefs,
-        testels, trialels, timeels, ::Nothing)
+        testels, trialels, timeels, quadstrat::OuterNumInnerAnalyticQStrat)
 
     dmax = numfunctions(timerefs)-1
     bn = binomial.((0:dmax),(0:dmax)')
@@ -85,12 +85,12 @@ function quaddata(op::MWSingleLayerTDIO, testrefs, trialrefs, timerefs,
     V = eltype(testels[1].vertices)
     ws = WiltonInts84.workspace(V)
     # quadpoints(testrefs, testels, (3,)), bn, ws
-    quadpoints(testrefs, testels, (3,)), bn, ws
+    quadpoints(testrefs, testels, (quadstrat.outer_rule,)), bn, ws
 end
 
 
 quadrule(op::MWSingleLayerTDIO, testrefs, trialrefs, timerefs,
-        p, testel, q, trialel, r, timeel, qd, ::Nothing) = WiltonInts84Strat(qd[1][1,p],qd[2],qd[3])
+        p, testel, q, trialel, r, timeel, qd, ::OuterNumInnerAnalyticQStrat) = WiltonInts84Strat(qd[1][1,p],qd[2],qd[3])
 
 
 struct TransposedStorage{F}
@@ -99,44 +99,6 @@ end
 
 @inline (f::TransposedStorage)(v,m,n,k) = f.store(v,n,m,k)
 
-
-# function allocatestorage(op::MWDoubleLayerTDIO, testST, basisST,
-# 	::Type{Val{:bandedstorage}},
-# 	::Type{LongDelays{:ignore}})
-
-#     # tfs = spatialbasis(testST)
-#     # bfs = spatialbasis(basisST)
-# 	X, T = spatialbasis(testST), temporalbasis(testST)
-# 	Y, U = spatialbasis(basisST), temporalbasis(basisST)
-
-# 	if CompScienceMeshes.refines(geometry(Y), geometry(X))
-# 		testST = Y⊗T
-# 		basisST = X⊗U
-# 	end
-
-#     M = numfunctions(X)
-#     N = numfunctions(Y)
-
-#     K0 = fill(typemax(Int), M, N)
-#     K1 = zeros(Int, M, N)
-
-#     function store(v,m,n,k)
-#         K0[m,n] = min(K0[m,n],k)
-#         K1[m,n] = max(K1[m,n],k)
-#     end
-
-#     aux = EmptyRP(op.speed_of_light)
-#     print("Allocating memory for convolution operator: ")
-#     assemble!(aux, testST, basisST, store)
-#     println("\nAllocated memory for convolution operator.")
-
-# 	maxk1 = maximum(K1)
-# 	bandwidth = maximum(K1 .- K0 .+ 1)
-# 	data = zeros(eltype(op), bandwidth, M, N)
-# 	Z = SparseND.Banded3D(K0, data, maxk1)
-#     store1(v,m,n,k) = (Z[m,n,k] += v)
-#     return ()->Z, store1
-# end
 
 function assemble!(dl::MWDoubleLayerTDIO, W::SpaceTimeBasis, V::SpaceTimeBasis, store,
     threading=Threading{:multi}; quadstrat=defaultquadstrat(dl,W,V))
@@ -168,41 +130,41 @@ function assemble!(dl::MWDoubleLayerTDIO, W::SpaceTimeBasis, V::SpaceTimeBasis, 
 	# return assemble_chunk!(dl, W, V, store1)
 end
 
-defaultquadstrat(::MWDoubleLayerTDIO, tfs, bfs) = nothing
+defaultquadstrat(::MWDoubleLayerTDIO, tfs, bfs) = OuterNumInnerAnalyticQStrat(3)
 
 function quaddata(op::MWDoubleLayerTDIO, testrefs, trialrefs, timerefs,
-        testels, trialels, timeels, quadstrat::Nothing)
+        testels, trialels, timeels, quadstrat::OuterNumInnerAnalyticQStrat)
 
     dmax = numfunctions(timerefs)-1
     bn = binomial.((0:dmax),(0:dmax)')
 
     V = eltype(testels[1].vertices)
     ws = WiltonInts84.workspace(V)
-    # quadpoints(testrefs, testels, (3,)), bn, ws
-    quadpoints(testrefs, testels, (3,)), bn, ws
+
+    quadpoints(testrefs, testels, (quadstrat.outer_rule,)), bn, ws
 end
 
 quadrule(op::MWDoubleLayerTDIO, testrefs, trialrefs, timerefs,
-    p, testel, q, trialel, r, timeel, qd, quadstrat::Nothing) =
+    p, testel, q, trialel, r, timeel, qd, quadstrat::OuterNumInnerAnalyticQStrat) =
         WiltonInts84Strat(qd[1][1,p],qd[2],qd[3])
 
 
-defaultquadstrat(::MWDoubleLayerTransposedTDIO, tfs, bfs) = nothing
+defaultquadstrat(::MWDoubleLayerTransposedTDIO, tfs, bfs) = OuterNumInnerAnalyticQStrat(3)
 
 function quaddata(op::MWDoubleLayerTransposedTDIO,
 		testrefs, trialrefs, timerefs,
-        testels, trialels, timeels, quadstrat::Nothing)
+        testels, trialels, timeels, quadstrat::OuterNumInnerAnalyticQStrat)
 
     dmax = numfunctions(timerefs)-1
     bn = binomial.((0:dmax),(0:dmax)')
 
     V = eltype(testels[1].vertices)
     ws = WiltonInts84.workspace(V)
-    quadpoints(testrefs, testels, (3,)), bn, ws
+    quadpoints(testrefs, testels, (quadstrat.outer_rule,)), bn, ws
 end
 
 quadrule(op::MWDoubleLayerTransposedTDIO, testrefs, trialrefs, timerefs,
-    p, testel, q, trialel, r, timeel, qd, quadstrat::Nothing) =
+    p, testel, q, trialel, r, timeel, qd, quadstrat::OuterNumInnerAnalyticQStrat) =
         WiltonInts84Strat(qd[1][1,p],qd[2],qd[3])
 
 function momintegrals!(z, op::MWDoubleLayerTransposedTDIO,

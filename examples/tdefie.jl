@@ -12,7 +12,7 @@ U = timebasisdelta(Δt, Nt)
 V = X ⊗ T
 W = X ⊗ U
 
-duration = 20 * Δt * 2
+duration = 20 * Δt
 delay = 1.5 * duration
 amplitude = 1.0
 gaussian = creategaussian(duration, delay, amplitude)
@@ -21,6 +21,8 @@ E = planewave(polarisation, direction, derive(gaussian), 1.0)
 
 @hilbertspace j
 @hilbertspace j′
+
+BEAST.@defaultquadstrat (SL, W, V) BEAST.OuterNumInnerAnalyticQStrat(7)
 
 SL = TDMaxwell3D.singlelayer(speedoflight=1.0, numdiffs=1)
 tdefie = @discretise SL[j′,j] == -1.0E[j′]   j∈V  j′∈W
