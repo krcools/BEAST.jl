@@ -138,7 +138,8 @@ end
 
 
 function duallagrangecxd0(mesh, vertices::CompScienceMeshes.AbstractMesh{U,1}) where {U}
-    vertexlist = Int[v[1] for v in vertices]
+    # vertexlist = Int[v[1] for v in vertices]
+    vertexlist =Int[CompScienceMeshes.indices(vertices, v)[1] for v in vertices]
     return duallagrangecxd0(mesh, vertexlist)
 end
 
@@ -560,10 +561,12 @@ function dual0forms_body(mesh::CompScienceMeshes.AbstractMesh{<:Any,3}, refd, bn
     bfs = Vector{Vector{S}}(undef, length(mesh))
     pos = Vector{V}(undef, length(mesh))
 
-    Cells = cells(mesh)
+    # Cells = cells(mesh)
+    Cells = [c for c in mesh]
     num_threads = Threads.nthreads()
     for F in 1:length(mesh)
-        Cell = Cells[F]
+        # Cell = Cells[F]
+        Cell = CompScienceMeshes.indices(mesh, Cells[F])
 
         myid = Threads.threadid()
         # myid == 1 && F % 20 == 0 &&
@@ -641,7 +644,7 @@ function dual0forms_body(mesh::CompScienceMeshes.AbstractMesh{<:Any,3}, refd, bn
         addf!(fn, x3_prt, Lg3_prt, idcs3)
         addf!(fn, x3_int, Lg3_int, idcs3)
 
-        pos[F] = cartesian(CompScienceMeshes.center(chart(mesh, Cell)))
+        pos[F] = cartesian(CompScienceMeshes.center(chart(mesh, Cells[F])))
         bfs[F] = fn
     end
 
