@@ -11,7 +11,7 @@ LinearMaps.MulStyle(A::ZeroMap) = LinearMaps.FiveArg()
 Base.size(A::ZeroMap) = (length(A.range), length(A.domain),)
 Base.axes(A::ZeroMap) = (A.range, A.domain)
 
-function LinearAlgebra.mul!(y::AbstractVector, L::ZeroMap, x::AbstractVector, α::Number, β::Number)
+function LinearMaps._unsafe_mul!(y::AbstractVector, L::ZeroMap, x::AbstractVector, α::Number, β::Number)
     y .*= β
 end
 
@@ -20,12 +20,12 @@ end
 #     return Y
 # end
 
-function LinearAlgebra.mul!(Y::AbstractMatrix, X::ZeroMap, c::Number, a::Number, b::Number)
+function LinearMaps._unsafe_mul!(Y::AbstractMatrix, X::ZeroMap, c::Number, a::Number, b::Number)
     rmul!(Y, b)
     return Y
 end
 
-function LinearAlgebra.mul!(Y::AbstractMatrix, X::ZeroMap, c::Number)
+function LinearMaps._unsafe_mul!(Y::AbstractMatrix, X::ZeroMap, c::Number)
     fill!(Y, false)
     return Y
 end
@@ -38,7 +38,7 @@ end
 # end
 
 
-function LinearAlgebra.mul!(y::AbstractVector, L::ZeroMap, x::AbstractVector)
+function LinearMaps._unsafe_mul!(y::AbstractVector, L::ZeroMap, x::AbstractVector)
     y .= 0
 end
 
