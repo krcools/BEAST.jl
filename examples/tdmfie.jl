@@ -1,6 +1,6 @@
 using CompScienceMeshes, BEAST
 Γ = readmesh(joinpath(dirname(pathof(BEAST)),"../examples/sphere2.in"))
-# Γ = meshsphere(1.0, 0.4)
+Γ = meshsphere(radius=1.0, h=0.1)
 
 X = raviartthomas(Γ)
 Y = buffachristiansen(Γ)
@@ -12,7 +12,7 @@ T = timebasisshiftedlagrange(Δt, Nt, 2)
 V = X ⊗ T
 W = Y ⊗ δ
 
-duration = 20 * Δt
+duration = 2 * 20 * Δt
 delay = 1.5 * duration
 amplitude = 1.0
 gaussian = creategaussian(duration, delay, amplitude)

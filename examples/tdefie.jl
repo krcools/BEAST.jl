@@ -1,6 +1,6 @@
 using CompScienceMeshes, BEAST, LinearAlgebra
 Γ = readmesh(joinpath(@__DIR__,"sphere2.in"))
-# Γ = meshsphere(radius=1.0, h=0.1)
+Γ = meshsphere(radius=1.0, h=0.1)
 
 X = raviartthomas(Γ)
 
@@ -12,7 +12,7 @@ U = timebasisdelta(Δt, Nt)
 V = X ⊗ T
 W = X ⊗ U
 
-duration = 20 * Δt
+duration = 2 * 20 * Δt
 delay = 1.5 * duration
 amplitude = 1.0
 gaussian = creategaussian(duration, delay, amplitude)
@@ -22,9 +22,9 @@ E = planewave(polarisation, direction, derive(gaussian), 1.0)
 @hilbertspace j
 @hilbertspace j′
 
-BEAST.@defaultquadstrat (SL, W, V) BEAST.OuterNumInnerAnalyticQStrat(7)
-
 SL = TDMaxwell3D.singlelayer(speedoflight=1.0, numdiffs=1)
+# BEAST.@defaultquadstrat (SL, W, V) BEAST.OuterNumInnerAnalyticQStrat(7)
+
 tdefie = @discretise SL[j′,j] == -1.0E[j′]   j∈V  j′∈W
 xefie = solve(tdefie)
 

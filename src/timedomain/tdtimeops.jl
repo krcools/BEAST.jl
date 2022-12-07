@@ -86,12 +86,12 @@ function allocatestorage(op::TensorOperator, test_functions, trial_functions,
     K0 = ones(Int, M, N)
     bandwidth = numintervals(time_basis_function) - 1
     K1 = ones(Int,M,N) .+ (bandwidth - 1)
-    T  = scalartype(op)
+    T  = scalartype(op, test_functions, trial_functions)
     data = zeros(T, bandwidth, M, N)
     tail = zeros(T, M, N)
 
     Nt = numfunctions(temporalbasis(trial_functions))
-    Z = ConvOp(data, K0, K1, tail, Nt)
+    Z = ConvolutionOperators.ConvOp(data, K0, K1, tail, Nt)
     function store1(v,m,n,k)
 		if Z.k0[m,n] ≤ k ≤ Z.k1[m,n]
 			Z.data[k - Z.k0[m,n] + 1,m,n] += v
@@ -99,7 +99,7 @@ function allocatestorage(op::TensorOperator, test_functions, trial_functions,
 			Z.tail[m,n] += v
 		end
 	end
-    return Z, store1
+    return ()->Z, store1
 end
 
 # function allocatestorage(op::TensorOperator, test_functions, trial_functions)
@@ -132,7 +132,7 @@ end
 # end
 
 function assemble!(operator::TensorOperator, testfns, trialfns, store,
-    threading = Threading{:multi})
+    threading = Threading{:multi}; quadstrat=defaultquadstrat(operator, testfns, trialfns))
 
     space_operator = operator.spatial_factor
     time_operator  = operator.temporal_factor

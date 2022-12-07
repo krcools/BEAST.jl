@@ -150,7 +150,7 @@ function potential(op, points, coeffs, space::DirectProductSpace; type=SVector{3
 	# T = SVector{3,eltype(coeffs)}
 	T = type
 	ff = zeros(T, size(points))
-	@show size(ff)
+	# @show size(ff)
 
 	@assert length(coeffs) == numfunctions(space)
 

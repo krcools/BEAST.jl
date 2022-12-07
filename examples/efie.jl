@@ -3,6 +3,7 @@ using BEAST
 
 Γ = readmesh(joinpath(dirname(pathof(BEAST)),"../examples/sphere2.in"))
 # Γ = meshsphere(radius=1.0, h=0.1)
+# Γ = CompScienceMeshes.meshmobius(h=0.035)
 X = raviartthomas(Γ)
 
 κ, η = 1.0, 1.0
@@ -14,7 +15,7 @@ e = (n × E) × n
 @hilbertspace j
 @hilbertspace k
 efie = @discretise t[k,j]==e[k]  j∈X k∈X
-u = gmres(efie)
+u = gmres(efie; restart=1500)
 
 include("utils/postproc.jl")
 include("utils/plotresults.jl")
