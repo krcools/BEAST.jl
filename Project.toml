@@ -1,6 +1,6 @@
 name = "BEAST"
 uuid = "bb4162c7-ba94-5a20-af32-d8ec4428bdd1"
-version = "1.8.0"
+version = "1.8.1"
 
 [deps]
 BlockArrays = "8e7c35d0-a365-5155-bbbb-fb81a777f24e"
