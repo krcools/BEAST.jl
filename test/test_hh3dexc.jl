@@ -16,6 +16,12 @@ for T in [Float32, Float64]
     @test v1 ≈ +1
     @test v2 ≈ -1
 
+    lp = HH3DLinearPotential(direction=point(T,0,1,0), amplitude=2.0)
+    @test lp(point(T,1,1,0)) == T(2.0)
+
+    gradlp = grad(lp)
+    @test gradlp(point(T,1,1,0)) == point(T, 0, 2, 0)
+
     import BEAST.∂n
     p = ∂n(f)
 

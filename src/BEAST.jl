@@ -52,8 +52,11 @@ export DoubleLayerTransposed
 export HyperSingular
 export HH3DSingleLayerTDBIO
 export HH3DDoubleLayerTDBIO
-export ∂n
+export ∂n, grad
 export HH3DHyperSingularFDBIO
+export DirichletTrace
+export HH3DMonopole, gradHH3DMonopole
+export HH3DLinearPotential
 
 export HH3DSingleLayerNear
 export HH3DDoubleLayerNear
