@@ -4,7 +4,7 @@ using StaticArrays
 using LinearAlgebra
 using Test
 
-#@testset "Helmholtz potential operators" begin
+@testset "Helmholtz potential operators" begin
     r = 10.0
     λ = 20 * r
     k = 2 * π / λ
@@ -155,4 +155,4 @@ using Test
     @test err_EDPDL_field < 0.03
     @test err_ENPSL_field < 0.01
     @test err_ENPDL_field < 0.02
-#end
+end
