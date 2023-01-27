@@ -73,7 +73,7 @@ end
 
 function integrand(op::HH3DDoubleLayerNear,krn,y,f,p)
 
-  ∇G = krn.gradgreen
+  ∇G = -krn.gradgreen
   nx = krn.nx
 
   fx = f.value

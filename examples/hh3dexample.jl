@@ -35,44 +35,40 @@ for (i, h) in enumerate(hs)
     S = Helmholtz3D.singlelayer(; gamma=0.0)
     D = Helmholtz3D.doublelayer(; gamma=0.0)
     Dt = Helmholtz3D.doublelayer_transposed(; gamma=0.0)
-    N = -Helmholtz3D.hypersingular(; gamma=0.0)
+    N = Helmholtz3D.hypersingular(; gamma=0.0)
 
     q = 100.0
     ϵ = 1.0
+# Interior problem
+# Formulations from Sauter and Schwab, Boundary Element Methods(2011), Chapter 3.4.1.1
 
     pos1 = SVector(r * 1.5, 0.0, 0.0)
     pos2 = SVector(-r * 1.5, 0.0, 0.0)
-    Φ_inc(x) = q / (4 * π * ϵ) * (1 / (norm(x - pos1)) - 1 / (norm(x - pos2)))
 
-    function ∂nΦ_inc(x)
-        return -q / (r * 4 * π * ϵ) * (
-            (norm(x)^2 - dot(pos1, x)) / (norm(x - pos1)^3) -
-            (norm(x)^2 - dot(pos2, x)) / (norm(x - pos2)^3)
-        )
-    end
+    charge1 = HH3DMonopole(position=pos1, amplitude=q/(4*π*ϵ), wavenumber=0.0)
+    charge2 = HH3DMonopole(position=pos2, amplitude=-q/(4*π*ϵ), wavenumber=0.0)
 
-    function Efield(x)
-        return q / (4 * π * ϵ) *
-               ((x - pos1) / (norm(x - pos1)^3) - (x - pos2) / (norm(x - pos2)^3))
-    end
+    #Potential of point charges
+    Φ_inc(x) = charge1(x) + charge2(x)
 
-    gD0 = assemble(ScalarTrace(Φ_inc), X0)
-    gD1 = assemble(ScalarTrace(Φ_inc), X1)
-    gN = assemble(ScalarTrace(∂nΦ_inc), X1)
+    gD0 = assemble(DirichletTrace(charge1), X0) + assemble(DirichletTrace(charge2), X0)
+    gD1 = assemble(DirichletTrace(charge1), X1) + assemble(DirichletTrace(charge2), X1)
+    gN = assemble(∂n(charge1), X1) + assemble(BEAST.n ⋅ grad(charge2), X1)
 
     G = assemble(Identity(), X1, X1)
     o = ones(numfunctions(X1))
-
+    #Interior Dirichlet problem - compare Sauter & Schwab
     M_IDPSL = assemble(S, X0, X0)
     M_IDPDL = (-1 / 2 * assemble(Identity(), X1, X1) + assemble(D, X1, X1))
 
+    #Interior Neumann problem
     M_INPSL = (1 / 2 * assemble(Identity(), X1, X1) + assemble(Dt, X1, X1)) + G * o * o' * G
-    M_INPDL = -assemble(N, X1, X1) + G * o * o' * G
+    M_INPDL = assemble(N, X1, X1) + G * o * o' * G
 
     ρ_IDPSL = M_IDPSL \ (-gD0)
-    ρ_IDPDL = M_IDPDL \ (gD1)
+    ρ_IDPDL = M_IDPDL \ (-gD1)
     ρ_INPSL = M_INPSL \ (-gN)
-    ρ_INPDL = M_INPDL \ (-gN)
+    ρ_INPDL = M_INPDL \ (gN)
 
     pts = meshsphere(r * ir, r * ir * 0.6).vertices
 
@@ -81,42 +77,37 @@ for (i, h) in enumerate(hs)
     pot_INPSL = potential(HH3DSingleLayerNear(0.0), pts, ρ_INPSL, X1; type=ComplexF64)
     pot_INPDL = potential(HH3DDoubleLayerNear(0.0), pts, ρ_INPDL, X1; type=ComplexF64)
 
+    # Total potential inside should be zero
     err_IDPSL_pot[i] = norm(pot_IDPSL + Φ_inc.(pts)) ./ norm(Φ_inc.(pts))
     err_IDPDL_pot[i] = norm(pot_IDPDL + Φ_inc.(pts)) ./ norm(Φ_inc.(pts))
     err_INPSL_pot[i] = norm(pot_INPSL + Φ_inc.(pts)) ./ norm(Φ_inc.(pts))
     err_INPDL_pot[i] = norm(pot_INPDL + Φ_inc.(pts)) ./ norm(Φ_inc.(pts))
 
-    field_IDPSL = potential(HH3DDoubleLayerTransposedNear(0.0), pts, ρ_IDPSL, X0)
-    field_IDPDL = potential(HH3DHyperSingularNear(0.0), pts, ρ_IDPDL, X1)
-    field_INPSL = potential(HH3DDoubleLayerTransposedNear(0.0), pts, ρ_INPSL, X1)
-    field_INPDL = potential(HH3DHyperSingularNear(0.0), pts, ρ_INPDL, X1)
+    Efield(x) =  -grad(charge1)(x) + -grad(charge2)(x)
 
-    err_IDPSL_field[i] = norm(field_IDPSL - Efield.(pts)) / norm(Efield.(pts))
+    field_IDPSL = -potential(HH3DDoubleLayerTransposedNear(0.0), pts, ρ_IDPSL, X0)
+    field_IDPDL = -potential(HH3DHyperSingularNear(0.0), pts, ρ_IDPDL, X1)
+    field_INPSL = -potential(HH3DDoubleLayerTransposedNear(0.0), pts, ρ_INPSL, X1)
+    field_INPDL = -potential(HH3DHyperSingularNear(0.0), pts, ρ_INPDL, X1)
+
+    # Total field inside should be zero
+    err_IDPSL_field[i] = norm(field_IDPSL + Efield.(pts)) / norm(Efield.(pts))
     err_IDPDL_field[i] = norm(field_IDPDL + Efield.(pts)) / norm(Efield.(pts))
-    err_INPSL_field[i] = norm(field_INPSL - Efield.(pts)) / norm(Efield.(pts))
+    err_INPSL_field[i] = norm(field_INPSL + Efield.(pts)) / norm(Efield.(pts))
     err_INPDL_field[i] = norm(field_INPDL + Efield.(pts)) / norm(Efield.(pts))
+
+    # Exterior problem
+    # formulations from Sauter and Schwab, Boundary Element Methods(2011), Chapter 3.4.1.2
 
     pos1 = SVector(r * 0.5, 0.0, 0.0)
     pos2 = SVector(-r * 0.5, 0.0, 0.0)
 
-    # potential of point charges
-    Φ_inc(x) = q / (4 * π * ϵ) * (1 / (norm(x - pos1)) - 1 / (norm(x - pos2)))
-    function ∂nΦ_inc(x)
-        return -q / (r * 4 * π * ϵ) * (
-            (norm(x)^2 - dot(pos1, x)) / (norm(x - pos1)^3) -
-            (norm(x)^2 - dot(pos2, x)) / (norm(x - pos2)^3)
-        )
-    end
+    charge1 = HH3DMonopole(position=pos1, amplitude=q/(4*π*ϵ), wavenumber=0.0)
+    charge2 = HH3DMonopole(position=pos2, amplitude=-q/(4*π*ϵ), wavenumber=0.0)
 
-    # Efield(x) = -grad Φ_inc(x)
-    function Efield(x)
-        return q / (4 * π * ϵ) *
-               ((x - pos1) / (norm(x - pos1)^3) - (x - pos2) / (norm(x - pos2)^3))
-    end
-
-    gD0 = assemble(ScalarTrace(Φ_inc), X0)
-    gD1 = assemble(ScalarTrace(Φ_inc), X1)
-    gN = assemble(ScalarTrace(∂nΦ_inc), X1)
+    gD0 = assemble(DirichletTrace(charge1), X0) + assemble(DirichletTrace(charge2), X0)
+    gD1 = assemble(DirichletTrace(charge1), X1) + assemble(DirichletTrace(charge2), X1)
+    gN = assemble(∂n(charge1), X1) + assemble(∂n(charge2), X1)
 
     G = assemble(Identity(), X1, X1)
     o = ones(numfunctions(X1))
@@ -124,22 +115,19 @@ for (i, h) in enumerate(hs)
     M_EDPSL = assemble(S, X0, X0)
     M_EDPDL = (1 / 2 * assemble(Identity(), X1, X1) + assemble(D, X1, X1))
 
-    M_ENPSL =
-        (-1 / 2 * assemble(Identity(), X1, X1) + assemble(Dt, X1, X1)) + G * o * o' * G
-    M_ENPDL = -assemble(N, X1, X1) + G * o * o' * G
+    M_ENPSL = (-1 / 2 * assemble(Identity(), X1, X1) + assemble(Dt, X1, X1)) + G * o * o' * G
+    M_ENPDL = assemble(N, X1, X1) + G * o * o' * G
 
     ρ_EDPSL = M_EDPSL \ (-gD0)
-    ρ_EDPDL = M_EDPDL \ (gD1)
-
+    ρ_EDPDL = M_EDPDL \ (-gD1)
     ρ_ENPSL = M_ENPSL \ (-gN)
-    ρ_ENPDL = M_ENPDL \ (-gN)
+    ρ_ENPDL = M_ENPDL \ (gN)
 
     testsphere = meshsphere(r / ir, r / ir * 0.6)
     pts = testsphere.vertices[norm.(testsphere.vertices) .> r]
 
     pot_EDPSL = potential(HH3DSingleLayerNear(0.0), pts, ρ_EDPSL, X0; type=ComplexF64)
     pot_EDPDL = potential(HH3DDoubleLayerNear(0.0), pts, ρ_EDPDL, X1; type=ComplexF64)
-
     pot_ENPSL = potential(HH3DSingleLayerNear(0.0), pts, ρ_ENPSL, X1; type=ComplexF64)
     pot_ENPDL = potential(HH3DDoubleLayerNear(0.0), pts, ρ_ENPDL, X1; type=ComplexF64)
 
@@ -149,9 +137,9 @@ for (i, h) in enumerate(hs)
     err_ENPDL_pot[i] = norm(pot_ENPDL + Φ_inc.(pts)) ./ norm(Φ_inc.(pts))
 
     field_EDPSL = -potential(HH3DDoubleLayerTransposedNear(0.0), pts, ρ_EDPSL, X0)
-    field_EDPDL = potential(HH3DHyperSingularNear(0.0), pts, ρ_EDPDL, X1)
+    field_EDPDL = -potential(HH3DHyperSingularNear(0.0), pts, ρ_EDPDL, X1)
     field_ENPSL = -potential(HH3DDoubleLayerTransposedNear(0.0), pts, ρ_ENPSL, X1)
-    field_ENPDL = potential(HH3DHyperSingularNear(0.0), pts, ρ_ENPDL, X1)
+    field_ENPDL = -potential(HH3DHyperSingularNear(0.0), pts, ρ_ENPDL, X1)
 
     err_EDPSL_field[i] = norm(field_EDPSL + Efield.(pts)) / norm(Efield.(pts))
     err_EDPDL_field[i] = norm(field_EDPDL + Efield.(pts)) / norm(Efield.(pts))

@@ -40,18 +40,18 @@ using Test
     G = assemble(Identity(), X1, X1)
     o = ones(numfunctions(X1))
 
-    # Interior Dirichlet problem
+    # Interior Dirichlet problem - compare Sauter & Schwab eqs. 3.81
     M_IDPSL = assemble(S, X0, X0) # Single layer (SL)
     M_IDPDL = (-1 / 2 * assemble(Identity(), X1, X1) + assemble(D, X1, X1)) # Double layer (DL)
 
     # Interior Neumann problem
     # Neumann derivative from DL potential with deflected nullspace
-    M_INPDL = -assemble(N, X1, X1) + G * o * o' * G
+    M_INPDL = assemble(N, X1, X1) + G * o * o' * G
     # Neumann derivative from SL potential with deflected nullspace
     M_INPSL = (1 / 2 * assemble(Identity(), X1, X1) + assemble(Dt, X1, X1)) + G * o * o' * G 
 
     ρ_IDPSL = M_IDPSL \ (-gD0)
-    ρ_IDPDL = M_IDPDL \ (gD1)
+    ρ_IDPDL = M_IDPDL \ (-gD1)
 
     ρ_INPDL = M_INPDL \ (gN)
     ρ_INPSL = M_INPSL \ (-gN)
@@ -74,9 +74,9 @@ using Test
     Efield(x) =  -grad(charge1)(x) + -grad(charge2)(x)
 
     field_IDPSL = -potential(HH3DDoubleLayerTransposedNear(im * k), pts, ρ_IDPSL, X0)
-    field_IDPDL = potential(HH3DHyperSingularNear(im * k), pts, ρ_IDPDL, X1)
+    field_IDPDL = -potential(HH3DHyperSingularNear(im * k), pts, ρ_IDPDL, X1)
     field_INPSL = -potential(HH3DDoubleLayerTransposedNear(im * k), pts, ρ_INPSL, X1)
-    field_INPDL = potential(HH3DHyperSingularNear(im * k), pts, ρ_INPDL, X1)
+    field_INPDL = -potential(HH3DHyperSingularNear(im * k), pts, ρ_INPDL, X1)
 
     err_IDPSL_field = norm(field_IDPSL + Efield.(pts)) / norm(Efield.(pts))
     err_IDPDL_field = norm(field_IDPDL + Efield.(pts)) / norm(Efield.(pts))
@@ -102,11 +102,11 @@ using Test
     M_EDPSL = assemble(S, X0, X0)
     M_EDPDL = (1 / 2 * assemble(Identity(), X1, X1) + assemble(D, X1, X1))
 
-    M_ENPDL = -assemble(N, X1, X1) + G * o * o' * G
+    M_ENPDL = assemble(N, X1, X1) + G * o * o' * G
     M_ENPSL = -1 / 2 * assemble(Identity(), X1, X1) + assemble(Dt, X1, X1) + G * o * o' * G
 
     ρ_EDPSL = M_EDPSL \ (-gD0)
-    ρ_EDPDL = M_EDPDL \ (gD1)
+    ρ_EDPDL = M_EDPDL \ (-gD1)
 
     ρ_ENPDL = M_ENPDL \ gN
     ρ_ENPSL = M_ENPSL \ (-gN)
@@ -125,9 +125,9 @@ using Test
     err_ENPDL_pot = norm(pot_ENPDL + Φ_inc.(pts)) ./ norm(Φ_inc.(pts))
 
     field_EDPSL = -potential(HH3DDoubleLayerTransposedNear(im * k), pts, ρ_EDPSL, X0)
-    field_EDPDL = potential(HH3DHyperSingularNear(im * k), pts, ρ_EDPDL, X1)
+    field_EDPDL = -potential(HH3DHyperSingularNear(im * k), pts, ρ_EDPDL, X1)
     field_ENPSL = -potential(HH3DDoubleLayerTransposedNear(im * k), pts, ρ_ENPSL, X1)
-    field_ENPDL = potential(HH3DHyperSingularNear(im * k), pts, ρ_ENPDL, X1)
+    field_ENPDL = -potential(HH3DHyperSingularNear(im * k), pts, ρ_ENPDL, X1)
 
     err_EDPSL_field = norm(field_EDPSL + Efield.(pts)) / norm(Efield.(pts))
     err_EDPDL_field = norm(field_EDPDL + Efield.(pts)) / norm(Efield.(pts))
