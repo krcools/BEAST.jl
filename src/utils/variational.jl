@@ -205,7 +205,7 @@ macro hilbertspace(syms...)
 
         
         len = stop-start+1
-        if len == 1
+        if syms[s] isa Symbol
             sym = syms[s]
             push!(ex.args, :($(esc(sym)) = HilbertVector($k,$space,[])))
             k += 1
