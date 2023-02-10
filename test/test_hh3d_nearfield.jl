@@ -26,47 +26,32 @@ using Test
     pos1 = SVector(r * 1.5, 0.0, 0.0)  # positioning of point charges
     pos2 = SVector(-r * 1.5, 0.0, 0.0)
 
+    charge1 = HH3DMonopole(position=pos1, amplitude=q/(4*π*ϵ), wavenumber=k)
+    charge2 = HH3DMonopole(position=pos2, amplitude=-q/(4*π*ϵ), wavenumber=k)
+
     # Potential of point charges
-    function Φ_inc(x)
-        return q / (4 * π * ϵ) * (
-            exp(-im * k * norm(x - pos1)) / (norm(x - pos1)) -
-            exp(-im * k * norm(x - pos2)) / (norm(x - pos2))
-        )
-    end
 
-    function ∂nΦ_inc(x)
-        return -q / (4 * π * ϵ * r) * (
-            (dot(
-                x,
-                (x - pos1) * exp(-im * k * norm(x - pos1)) / (norm(x - pos1)^2) *
-                (im * k + 1 / (norm(x - pos1))),
-            )) - (dot(
-                x,
-                (x - pos2) * exp(-im * k * norm(x - pos2)) / (norm(x - pos2)^2) *
-                (im * k + 1 / (norm(x - pos2))),
-            ))
-        )
-    end
+    Φ_inc(x) = charge1(x) + charge2(x)
 
-    gD0 = assemble(ScalarTrace(Φ_inc), X0)
-    gD1 = assemble(ScalarTrace(Φ_inc), X1)
-    gN = assemble(ScalarTrace(∂nΦ_inc), X1)
+    gD0 = assemble(DirichletTrace(charge1), X0) + assemble(DirichletTrace(charge2), X0)
+    gD1 = assemble(DirichletTrace(charge1), X1) + assemble(DirichletTrace(charge2), X1)
+    gN = assemble(∂n(charge1), X1) + assemble(BEAST.n ⋅ grad(charge2), X1)
 
     G = assemble(Identity(), X1, X1)
     o = ones(numfunctions(X1))
 
-    # Interior Dirichlet problem
+    # Interior Dirichlet problem - compare Sauter & Schwab eqs. 3.81
     M_IDPSL = assemble(S, X0, X0) # Single layer (SL)
     M_IDPDL = (-1 / 2 * assemble(Identity(), X1, X1) + assemble(D, X1, X1)) # Double layer (DL)
 
     # Interior Neumann problem
     # Neumann derivative from DL potential with deflected nullspace
-    M_INPDL = -assemble(N, X1, X1) + G * o * o' * G
+    M_INPDL = assemble(N, X1, X1) + G * o * o' * G
     # Neumann derivative from SL potential with deflected nullspace
     M_INPSL = (1 / 2 * assemble(Identity(), X1, X1) + assemble(Dt, X1, X1)) + G * o * o' * G 
 
     ρ_IDPSL = M_IDPSL \ (-gD0)
-    ρ_IDPDL = M_IDPDL \ (gD1)
+    ρ_IDPDL = M_IDPDL \ (-gD1)
 
     ρ_INPDL = M_INPDL \ (gN)
     ρ_INPSL = M_INPSL \ (-gN)
@@ -86,22 +71,12 @@ using Test
     err_INPDL_pot = norm(pot_INPDL + Φ_inc.(pts)) / norm(Φ_inc.(pts))
 
     # Efield(x) = - grad Φ_inc(x)
-    function Efield(x)
-        return q / (4 * π * ϵ) * (
-            (
-                (x - pos1) * exp(-im * k * norm(x - pos1)) / (norm(x - pos1)^2) *
-                (im * k + 1 / (norm(x - pos1)))
-            ) - (
-                (x - pos2) * exp(-im * k * norm(x - pos2)) / (norm(x - pos2)^2) *
-                (im * k + 1 / (norm(x - pos2)))
-            )
-        )
-    end
+    Efield(x) =  -grad(charge1)(x) + -grad(charge2)(x)
 
     field_IDPSL = -potential(HH3DDoubleLayerTransposedNear(im * k), pts, ρ_IDPSL, X0)
-    field_IDPDL = potential(HH3DHyperSingularNear(im * k), pts, ρ_IDPDL, X1)
+    field_IDPDL = -potential(HH3DHyperSingularNear(im * k), pts, ρ_IDPDL, X1)
     field_INPSL = -potential(HH3DDoubleLayerTransposedNear(im * k), pts, ρ_INPSL, X1)
-    field_INPDL = potential(HH3DHyperSingularNear(im * k), pts, ρ_INPDL, X1)
+    field_INPDL = -potential(HH3DHyperSingularNear(im * k), pts, ρ_INPDL, X1)
 
     err_IDPSL_field = norm(field_IDPSL + Efield.(pts)) / norm(Efield.(pts))
     err_IDPDL_field = norm(field_IDPDL + Efield.(pts)) / norm(Efield.(pts))
@@ -114,9 +89,12 @@ using Test
     pos1 = SVector(r * 0.5, 0.0, 0.0)
     pos2 = SVector(-r * 0.5, 0.0, 0.0)
 
-    gD0 = assemble(ScalarTrace(Φ_inc), X0)
-    gD1 = assemble(ScalarTrace(Φ_inc), X1)
-    gN = assemble(ScalarTrace(∂nΦ_inc), X1)
+    charge1 = HH3DMonopole(position=pos1, amplitude=q/(4*π*ϵ), wavenumber=k)
+    charge2 = HH3DMonopole(position=pos2, amplitude=-q/(4*π*ϵ), wavenumber=k)
+
+    gD0 = assemble(DirichletTrace(charge1), X0) + assemble(DirichletTrace(charge2), X0)
+    gD1 = assemble(DirichletTrace(charge1), X1) + assemble(DirichletTrace(charge2), X1)
+    gN = assemble(∂n(charge1), X1) + assemble(∂n(charge2), X1)
 
     G = assemble(Identity(), X1, X1)
     o = ones(numfunctions(X1))
@@ -124,11 +102,11 @@ using Test
     M_EDPSL = assemble(S, X0, X0)
     M_EDPDL = (1 / 2 * assemble(Identity(), X1, X1) + assemble(D, X1, X1))
 
-    M_ENPDL = -assemble(N, X1, X1) + G * o * o' * G
+    M_ENPDL = assemble(N, X1, X1) + G * o * o' * G
     M_ENPSL = -1 / 2 * assemble(Identity(), X1, X1) + assemble(Dt, X1, X1) + G * o * o' * G
 
     ρ_EDPSL = M_EDPSL \ (-gD0)
-    ρ_EDPDL = M_EDPDL \ (gD1)
+    ρ_EDPDL = M_EDPDL \ (-gD1)
 
     ρ_ENPDL = M_ENPDL \ gN
     ρ_ENPSL = M_ENPSL \ (-gN)
@@ -147,9 +125,9 @@ using Test
     err_ENPDL_pot = norm(pot_ENPDL + Φ_inc.(pts)) ./ norm(Φ_inc.(pts))
 
     field_EDPSL = -potential(HH3DDoubleLayerTransposedNear(im * k), pts, ρ_EDPSL, X0)
-    field_EDPDL = potential(HH3DHyperSingularNear(im * k), pts, ρ_EDPDL, X1)
+    field_EDPDL = -potential(HH3DHyperSingularNear(im * k), pts, ρ_EDPDL, X1)
     field_ENPSL = -potential(HH3DDoubleLayerTransposedNear(im * k), pts, ρ_ENPSL, X1)
-    field_ENPDL = potential(HH3DHyperSingularNear(im * k), pts, ρ_ENPDL, X1)
+    field_ENPDL = -potential(HH3DHyperSingularNear(im * k), pts, ρ_ENPDL, X1)
 
     err_EDPSL_field = norm(field_EDPSL + Efield.(pts)) / norm(Efield.(pts))
     err_EDPDL_field = norm(field_EDPDL + Efield.(pts)) / norm(Efield.(pts))
