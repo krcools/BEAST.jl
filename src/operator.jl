@@ -280,3 +280,37 @@ function assemble!(op::BlockDiagonalOperator, U::DirectProductSpace, V::DirectPr
         k += 1
     end
 end
+
+
+struct BlockFullOperators <: AbstractOperator
+    op::AbstractOperator
+end
+
+blocks(op::AbstractOperator) = BlockFullOperators(op)
+
+scalartype(op::BlockFullOperators) = scalartype(op.op)
+defaultquadstrat(op::BlockFullOperators, U::DirectProductSpace, V::DirectProductSpace) = defaultquadstrat(op.op, U, V)
+
+
+function assemble!(op::BlockFullOperators, U::DirectProductSpace, V::DirectProductSpace,
+    store, threading=Threading{:multi};
+    quadstrat = defaultquadstrat(op, U, V))
+    
+    # @assert length(U.factors) == length(V.factors)
+    I = Int[0]; for u in U.factors push!(I, last(I) + numfunctions(u)) end
+    J = Int[0]; for v in V.factors push!(J, last(J) + numfunctions(v)) end
+
+    # k = 1
+    # for (u,v) in zip(U.factors, V.factors)
+    #     store1(v,m,n) = store(v, I[k] + m, J[k] + n)
+    #     assemble!(op.op, u, v, store1; quadstrat)
+    #     k += 1
+    # end
+
+    for (k,u) in enumerate(U.factors)
+        for (l,v) in enumerate(V.factors)
+            store1(x,m,n) = store(x, I[k]+m, J[l]+n)
+            assemble!(op.op, u, v, store1; quadstrat)
+        end
+    end
+end

@@ -316,6 +316,15 @@ function assemble(bilform::BilForm, test_space_dict, trial_space_dict;
 end
 
 
+function assemble(bf::BilForm, X::DirectProductSpace, Y::DirectProductSpace)
+
+    test_space_dict = Dict(enumerate(X.factors))
+    trial_space_dict = Dict(enumerate(Y.factors))
+
+    z = assemble(bf, test_space_dict, trial_space_dict)
+end
+
+
 
 # function td_assemble(bilform::BilForm, test_space_dict, trial_space_dict)
 
