@@ -292,6 +292,20 @@ function getindex(A::BEAST.BlockDiagonalOperator, V::Vector{HilbertVector}, U::V
     return BilForm(first(V).space, first(U).space, terms)
 end
 
+function getindex(A::BEAST.BlockFullOperators, V::Vector{HilbertVector}, U::Vector{HilbertVector})
+    op = A.op
+    terms = Vector{BilTerm}()
+    # @assert length(V) == length(U)
+    for v in V
+        for u in U
+            term = BilTerm(v.idx, u.idx, v.opstack, u.opstack, 1, op)
+            push!(terms, term)
+        end
+    end
+    return BilForm(first(V).space, first(U).space, terms)
+end
+
+
 function getindex(op::Any, V::Vector{HilbertVector}, U::Vector{HilbertVector})
     terms = Vector{BilTerm}()
     for v in V
