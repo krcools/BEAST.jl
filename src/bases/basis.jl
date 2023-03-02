@@ -2,6 +2,9 @@ abstract type RefSpace{T,D} end
 abstract type AbstractSpace end
 abstract type Space{T} <: AbstractSpace end
 
+Base.length(s::AbstractSpace) = numfunctions(s)
+Base.in(x, s::AbstractSpace) = (x => s)
+
 """
     scalartype(s)
 
@@ -53,8 +56,14 @@ geometry(s::Space) = s.geo
 basisfunction(s::Space, i) = s.fns[i]
 numfunctions(space::Space) = length(space.fns)
 
-mutable struct DirectProductSpace{T} <: AbstractSpace
-    factors::Vector{Space{T}}
+mutable struct DirectProductSpace{T,S<:AbstractSpace} <: AbstractSpace
+    factors::Vector{S}
+end
+
+function DirectProductSpace(factors::Vector{S}) where {S<:AbstractSpace}
+    @assert !isempty(factors)
+    T = scalartype(factors...)
+    return DirectProductSpace{T,S}(factors)
 end
 
 defaultquadstrat(op, tfs::DirectProductSpace, bfs::DirectProductSpace) = defaultquadstrat(op, tfs.factors[1], bfs.factors[1])
@@ -66,13 +75,25 @@ defaultquadstrat(op, tfs::DirectProductSpace, bfs::Space) = defaultquadstrat(op,
 # defaultquadstrat(op, tfs::DirectProductSpace, bfs::RefSpace) = defaultquadstrat(op, tfs.factors[1], bfs)
 # scalartype(sp::DirectProductSpace{T}) where {T} = T
 
-export cross, ×
+# export cross, ×
+export ×
 
-cross(a::Space{T}, b::Space{T}) where {T} = DirectProductSpace(Space{T}[a,b])
-cross(a::DirectProductSpace{T}, b::Space{T}) where {T} = DirectProductSpace(Space{T}[a.factors; b])
+function Base.:+(x::AbstractSpace...)
+    T = scalartype(x...)
+    return DirectProductSpace{T}([x...])
+end
+
+cross(a::Space{T}, b::Space{T}) where {T} = DirectProductSpace{T,Space{T}}(Space{T}[a,b])
+cross(a::DirectProductSpace{T}, b::Space{T}) where {T} = DirectProductSpace{T,Space{T}}([a.factors; b])
 numfunctions(S::DirectProductSpace) = sum([numfunctions(s) for s in S.factors])
 scalartype(s::DirectProductSpace{T}) where {T} = T
 geometry(x::DirectProductSpace) = weld(x.geo...)
+
+children(x::AbstractSpace) = ()
+children(x::DirectProductSpace) = x.factors
+
+Base.iterate(x::DirectProductSpace) = iterate(x.factors)
+Base.iterate(x::DirectProductSpace, state) = iterate(x.factors, state)
 
 struct Shape{T}
   cellid::Int
