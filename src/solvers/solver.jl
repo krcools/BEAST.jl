@@ -66,7 +66,6 @@ function discretise(lf::LinForm, space_mappings::Pair...)
     for sm in space_mappings
 
         found = false
-        # sm.first.space == bf.trial_space && (dict = trial_space_dict; found = true)
         sm.first.space == lf.test_space  && (dict = test_space_dict;  found = true)
         @assert found "Vector $(sm.first) not found in test space"
 
@@ -75,7 +74,6 @@ function discretise(lf::LinForm, space_mappings::Pair...)
     end
 
     # check that all symbols where mapped
-    # for p in eachindex(bf.trial_space) @assert haskey(trial_space_dict,p) end
     for p in eachindex(lf.test_space)  @assert haskey(test_space_dict, p) end
  
     DiscreteLinform(lf, test_space_dict)
@@ -136,13 +134,9 @@ assemble(dlf::DiscreteLinform) = assemble(dlf.linform, dlf.test_space_dict)
 function assemble(lform::LinForm, test_space_dict)
     T=ComplexF64
     terms = lform.terms
-    #T = Complex{typeof(terms[1].functional.field.wavenumber)}
-    #T = Complex{eltype(vertextype(test_space_dict[1].geo))}
-    # I = Int[1]
     blocksizes1 = Int[]
     for p in 1:length(lform.test_space)
         X = test_space_dict[p]
-        # push!(I, last(I) + numfunctions(X))
         push!(blocksizes1, numfunctions(X))
     end
 
@@ -190,7 +184,6 @@ function td_assemble(lform::LinForm, test_space_dict)
         T = scalartype(T,term.functional)
     end
     for kv in test_space_dict;  T = scalartype(T,kv[2]) end
-    # @show T
 
     I = [numfunctions(spatialbasis(test_space_dict[i])) for i in 1:length(lform.test_space)]
 
@@ -199,12 +192,6 @@ function td_assemble(lform::LinForm, test_space_dict)
 
     N = [numfunctions(temporalbasis(test_space_dict[1]))]
     B = BlockArray{T}(undef, M, N)
-
-    # row_axis = BlockArrays.blockedrange(M)
-    # col_axis = BlockArrays.blockedrange(N)
-
-    # BT = SpaceTimeData{T}
-    # B = BlockArray(undef_blocks, BT, I)
 
     for t in terms
 
@@ -228,165 +215,109 @@ function td_assemble(lform::LinForm, test_space_dict)
     return B
 end
 
-# function assemble_hide(bilform::BilForm, test_space_dict::Space{U}, trial_space_dict) where U
 
-#   lhterms = bilform.terms
-#   T = Complex{U} # TDOD: Fix this
+# function assemble(bilform::BilForm, test_space_dict, trial_space_dict;
+#     materialize=BEAST.assemble)
 
-#   blocksizes1 = Int[]
-#   for p in 1:length(bilform.test_space)
-#     X = test_space_dict[p]
-#     push!(blocksizes1, numfunctions(X))
-#   end
+#     @assert !isempty(bilform.terms)
 
-#   blocksizes2 = Int[]
-#   for q in 1:length(bilform.trial_space)
-#     Y = trial_space_dict[q]
-#     push!(blocksizes2, numfunctions(Y))
-#   end
+#     M = zeros(Int, length(test_space_dict))
+#     N = zeros(Int, length(trial_space_dict))
 
-#   # allocate the memory for the matrices
-#   A = zeros(T, sum(blocksizes1), sum(blocksizes2))
-#   Z = PseudoBlockArray{T}(A, blocksizes1, blocksizes2)
-#   # For each block, compute the interaction matrix
-#   for t in lhterms
+#     for (p,x) in test_space_dict M[p]=numfunctions(x) end
+#     for (p,x) in trial_space_dict N[p]=numfunctions(x) end
 
-#       α = t.coeff
-#       a = t.kernel
+#     U = BlockArrays.blockedrange(M)
+#     V = BlockArrays.blockedrange(N)
 
-#       m = t.test_id
-#       x = test_space_dict[m]
-#       for op in reverse(t.test_ops)
-#           x = op[end](op[1:end-1]..., x)
-#       end
+#     Z = ZeroMap{Float32}(U, V)
 
-#       n = t.trial_id
-#       y = trial_space_dict[n]
-#       for op in reverse(t.trial_ops)
-#           y = op[end](op[1:end-1]..., y)
-#       end
+#     for term in bilform.terms
+    
+#         x = test_space_dict[term.test_id]
+#         for op in reverse(term.test_ops)
+#             x = op[end](op[1:end-1]..., x)
+#         end
 
-#       z = assemble(a, x, y)
-#     #   @show m n norm(z)
-#       Z[Block(m,n)] += α * z
-#   end
+#         y = trial_space_dict[term.trial_id]
+#         for op in reverse(term.trial_ops)
+#             y = op[end](op[1:end-1]..., y)
+#         end
 
-#   return Z
+#         z = materialize(term.kernel, x, y)
+        
+#         I = Block(term.test_id)
+#         J = Block(term.trial_id)
+#         zlifted = LiftedMap(z,I,J,U,V)
+
+#         Z = Z + term.coeff * zlifted
+#     end
+
+#     return Z
 # end
-
 
 function assemble(bilform::BilForm, test_space_dict, trial_space_dict;
     materialize=BEAST.assemble)
 
-    @assert !isempty(bilform.terms)
+    xfactors = Vector{AbstractSpace}(undef, length(test_space_dict))
+    yfactors = Vector{AbstractSpace}(undef, length(trial_space_dict))
 
-    M = zeros(Int, length(test_space_dict))
-    N = zeros(Int, length(trial_space_dict))
+    for (p,x) in test_space_dict xfactors[p] = x end
+    for (q,y) in trial_space_dict yfactors[q] = y end
 
-    for (p,x) in test_space_dict M[p]=numfunctions(x) end
-    for (p,x) in trial_space_dict N[p]=numfunctions(x) end
+    X = DirectProductSpace(xfactors)
+    Y = DirectProductSpace(yfactors)
+
+    return assemble(bilform, X, Y; materialize)
+end
+
+function assemble(bf::BilForm, X::DirectProductSpace, Y::DirectProductSpace;
+    materialize=BEAST.assemble)
+
+    @assert !isempty(bf.terms)
+
+    M = length.(X.factors)
+    N = length.(Y.factors)
 
     U = BlockArrays.blockedrange(M)
     V = BlockArrays.blockedrange(N)
 
-    Z = ZeroMap{Float32}(U, V)
-
-    for term in bilform.terms
-    
-        x = test_space_dict[term.test_id]
+    Z = ZeroMap{Float32}(U,V)
+    for term in bf.terms
+        x = X.factors[term.test_id]
         for op in reverse(term.test_ops)
             x = op[end](op[1:end-1]..., x)
         end
 
-        y = trial_space_dict[term.trial_id]
+        y = Y.factors[term.trial_id]
         for op in reverse(term.trial_ops)
             y = op[end](op[1:end-1]..., y)
         end
 
         z = materialize(term.kernel, x, y)
-        
+
         I = Block(term.test_id)
         J = Block(term.trial_id)
-        zlifted = LiftedMap(z,I,J,U,V)
-
-        Z = Z + term.coeff * zlifted
+        Z = Z + term.coeff * LiftedMap(z, I, J, U, V)
     end
 
     return Z
 end
 
 
-function assemble(bf::BilForm, X::DirectProductSpace, Y::DirectProductSpace)
+# function assemble(bf::BilForm, X::DirectProductSpace, Y::DirectProductSpace)
 
-    test_space_dict = Dict(enumerate(X.factors))
-    trial_space_dict = Dict(enumerate(Y.factors))
+#     test_space_dict = Dict(enumerate(X.factors))
+#     trial_space_dict = Dict(enumerate(Y.factors))
 
-    z = assemble(bf, test_space_dict, trial_space_dict)
-end
-
-
-
-# function td_assemble(bilform::BilForm, test_space_dict, trial_space_dict)
-
-#     lhterms = bilform.terms
-
-#     T = Float32
-#     for term in bilform.terms
-#         T = scalartype(T,term.coeff)
-#         T = scalartype(T,term.kernel)
-#     end
-#     for kv in test_space_dict;  T = scalartype(T,kv[2]) end
-#     for kv in trial_space_dict; T = scalartype(T,kv[2]) end
-
-#     I = [numfunctions(spatialbasis(test_space_dict[i])) for i in 1:length(bilform.test_space)]
-#     J = [numfunctions(spatialbasis(trial_space_dict[i])) for i in 1:length(bilform.trial_space)]
-
-#     Z = BlockArray{Vector{T}}(zero_blocks, I, J)
-
-#     # For each block, compute the interaction matrix
-#     for t in lhterms
-
-#         @show (t.coeff,t.kernel)
-#         a = t.coeff * t.kernel
-
-#         m = t.test_id
-#         x = test_space_dict[m]
-#         for op in reverse(t.test_ops)
-#             x = op[end](op[1:end-1]..., x)
-#         end
-
-#         n = t.trial_id
-#         y = trial_space_dict[n]
-#         for op in reverse(t.trial_ops)
-#             y = op[end](op[1:end-1]..., y)
-#         end
-
-#         z = assemble(a, x, y)
-#         @warn "variation formulations where combinations of test and trial space recur multiple times are not supported!"
-#         Z[Block(m,n)] = ConvolutionOperators.ConvOpAsMatrix(z)
- 
-#     end
-#     return Z
+#     z = assemble(bf, test_space_dict, trial_space_dict)
 # end
+
 
 
 function td_assemble(bilform::BilForm, test_space_dict, trial_space_dict)
 
     lhterms = bilform.terms
-
-    # T = Float32
-    # for term in bilform.terms
-    #     T = scalartype(T,term.coeff)
-    #     T = scalartype(T,term.kernel)
-    # end
-    # for kv in test_space_dict;  T = scalartype(T,kv[2]) end
-    # for kv in trial_space_dict; T = scalartype(T,kv[2]) end
-
-    # I = [numfunctions(spatialbasis(test_space_dict[i])) for i in 1:length(bilform.test_space)]
-    # J = [numfunctions(spatialbasis(trial_space_dict[i])) for i in 1:length(bilform.trial_space)]
-
-    # rowaxis = BlockArrays.blockedrange([numfunctions(spatialbasis(test_space_dict[i])) for i in 1:length(test_space_dict)])
-    # colaxis = BlockArrays.blockedrange([numfunctions(spatialbasis(trial_space_dict[i])) for i in 1:length(trial_space_dict)])
 
     M = zeros(Int, length(test_space_dict))
     N = zeros(Int, length(trial_space_dict))
@@ -397,7 +328,6 @@ function td_assemble(bilform::BilForm, test_space_dict, trial_space_dict)
     row_axis = BlockArrays.blockedrange(M)
     col_axis = BlockArrays.blockedrange(N)
 
-    # Z = BlockArray{Vector{T}}(zero_blocks, row_axis, col_axis)
     Z = ConvolutionOperators.ZeroConvOp(row_axis, col_axis)
 
     for t in lhterms
@@ -418,8 +348,6 @@ function td_assemble(bilform::BilForm, test_space_dict, trial_space_dict)
 
         z = assemble(a, x, y)
         Z += ConvolutionOperators.LiftedConvOp(z, row_axis, col_axis, Block(m), Block(n))
-        # Z[Block(m,n)] = ConvolutionOperators.ConvOpAsMatrix(z)
- 
     end
     return Z
 end
