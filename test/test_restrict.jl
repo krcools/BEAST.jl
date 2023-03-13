@@ -67,4 +67,18 @@ for T in [Float32, Float64]
         0  1 0
         0 -1 2] // 4
     end
+
+    # Test restriction of Nedelec elements
+    ψ = BEAST.NDRefSpace{T}()
+    Q = restrict(ψ, p, p)
+    if T==Float64
+    @test Q == Matrix(LinearAlgebra.I, 3, 3)
+
+    q = simplex([T.(e0+e1), T.(2*e1), T.(e1+e2)], Val{2})
+    Q = restrict(ψ, p, q)
+    @test Q == [
+        2 -1 0
+        0  1 0
+        0 -1 2] // 4
+    end
 end
