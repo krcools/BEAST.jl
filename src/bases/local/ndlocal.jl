@@ -61,7 +61,7 @@ function restrict(ϕ::NDRefSpace{T}, dom1, dom2) where T
 
         for j in 1:K
             # Q[j,i] = dot(y[j][1], m) * l
-            Q[i,j] = dot(y[j][1], t)
+            Q[j,i] = dot(y[j][1], t)
         end
     end
 
