@@ -80,7 +80,7 @@ export ×
 
 function Base.:+(x::AbstractSpace...)
     T = scalartype(x...)
-    return DirectProductSpace{T}([x...])
+    return DirectProductSpace{T, AbstractSpace}([x...])
 end
 
 cross(a::Space{T}, b::Space{T}) where {T} = DirectProductSpace{T,Space{T}}(Space{T}[a,b])
