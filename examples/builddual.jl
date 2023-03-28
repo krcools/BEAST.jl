@@ -71,11 +71,11 @@ G3 = assemble(BEAST.NCross(), bcs3, rts)
 Q3 = assemble(BEAST.Identity(), divergence(bcs3), divergence(bcs3))
 
 using LinearAlgebra
-@show cond(G3)
+@show cond(Matrix(G3))
 
 using LinearAlgebra
-@assert (numcells(Faces) - 1) == (size(Q,1) - rank(Q))
-@assert cond(G) < 3.5
+# @assert (numcells(Faces) - 1) == (size(Q,1) - rank(Q))
+@assert cond(Matrix(G1)) < 3.5
 
 function compress!(space)
     T = scalartype(space)

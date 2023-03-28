@@ -89,8 +89,9 @@ numfunctions(S::DirectProductSpace) = sum([numfunctions(s) for s in S.factors])
 scalartype(s::DirectProductSpace{T}) where {T} = T
 geometry(x::DirectProductSpace) = weld(x.geo...)
 
-children(x::AbstractSpace) = ()
-children(x::DirectProductSpace) = x.factors
+
+AbstractTrees.children(x::AbstractSpace) = ()
+AbstractTrees.children(x::DirectProductSpace) = x.factors
 
 Base.iterate(x::DirectProductSpace) = iterate(x.factors)
 Base.iterate(x::DirectProductSpace, state) = iterate(x.factors, state)
@@ -196,7 +197,7 @@ function assemblydata(basis::Space; onlyactives=true)
         act_to_global = collect(1:num_cells)
     end
 
-    @assert num_active_cells != 0
+    num_active_cells == 0 && return nothing
     elements = instantiate_charts(geo, num_active_cells, active)
 
     max_celltonum = maximum(celltonum)

@@ -6,11 +6,11 @@ trias = CompScienceMeshes.meshrectangle(1.0,1.0,0.05)
 trias = CompScienceMeshes.meshcircle(1.0,0.5)
 tetrs = CompScienceMeshes.tetmeshcuboid(1,1,1,0.2)
 
-f = BEAST.ScalarTrace(x -> sin(pi*x[1]*x[2])*sin(pi*x[2]))
-f2 = BEAST.ScalarTrace(x -> (-x[2]*sin(2*pi*(x[1]^2+x[2]^2))*sin(atan(x[2],x[1])), x[1]*sin(2*pi*(x[1]^2+x[2]^2))*sin(atan(x[2],x[1])), 0) )
-g = BEAST.ScalarTrace(x -> (sin(pi*x[1])*cos(pi*x[2]), -cos(pi*x[1])*sin(pi*x[2]), 0 ))
-g = BEAST.ScalarTrace(x -> (sin(pi*x[1])*cos(pi*x[2]), sin(pi*x[2])*cos(pi*x[2]), sin(pi*x[3])*cos(pi*x[2])))
-g2 = BEAST.ScalarTrace(x -> ( sin(pi*x[1])*cos(pi*x[3]),  0, -cos(pi*x[1])*sin(pi*x[3])))
+f = BEAST.ScalarTrace{Float64}(x -> sin(pi*x[1]*x[2])*sin(pi*x[2]))
+f2 = BEAST.ScalarTrace{Float64}(x -> (-x[2]*sin(2*pi*(x[1]^2+x[2]^2))*sin(atan(x[2],x[1])), x[1]*sin(2*pi*(x[1]^2+x[2]^2))*sin(atan(x[2],x[1])), 0) )
+g = BEAST.ScalarTrace{Float64}(x -> (sin(pi*x[1])*cos(pi*x[2]), -cos(pi*x[1])*sin(pi*x[2]), 0 ))
+g = BEAST.ScalarTrace{Float64}(x -> (sin(pi*x[1])*cos(pi*x[2]), sin(pi*x[2])*cos(pi*x[2]), sin(pi*x[3])*cos(pi*x[2])))
+g2 = BEAST.ScalarTrace{Float64}(x -> ( sin(pi*x[1])*cos(pi*x[3]),  0, -cos(pi*x[1])*sin(pi*x[3])))
 
 
 N = 4
@@ -24,9 +24,9 @@ for n in 1:N
 
     h[n] = 0.5^(n)
 
-    trias2 = CompScienceMeshes.meshrectangle(1.0,1.0, h[n])
+    trias = CompScienceMeshes.meshrectangle(1.0,1.0, h[n])
     
-    trias = CompScienceMeshes.meshcircle(1.0, h[n], 3)
+    # trias = CompScienceMeshes.meshcircle(1.0, h[n], 3)
 
     Z = BEAST.lagrangec0d1(trias, dirichlet=false)
     Y = BEAST.brezzidouglasmarini(trias)
@@ -75,12 +75,21 @@ for i in 1:N
     bndry = boundary(tetrs)
     faces = skeleton(tetrs, 2)
 
-    bndry_faces = [sort(c) for c in cells(skeleton(bndry, 2))]
-    function is_interior(faces)
-        !(sort(faces) in bndry_faces)
-    end
+    # onbnd1 = CompScienceMeshes.in(bnd_edges)
+    # onbnd0 = CompScienceMeshes.in(bnd_verts)
 
-    interior_faces = submesh(is_interior, faces)
+    # interior_edges = submesh(!onbnd1, all_edges)
+    # interior_verts = submesh(!onbnd0, all_verts)
+
+    # bndry_faces = [sort(c) for c in cells(skeleton(bndry, 2))]
+    # function is_interior(faces)
+    #     !(sort(faces) in bndry_faces)
+    # end
+
+    onbnd = CompScienceMeshes.in(bndry)
+    interior_faces = submesh(!onbnd, faces)
+
+    # interior_faces = submesh(is_interior, faces)
 
     W = BEAST.brezzidouglasmarini3d(tetrs, interior_faces)
 
@@ -111,12 +120,15 @@ for i in 1:N
     bndry = boundary(tetrs)
     faces = skeleton(tetrs, 2)
 
-    bndry_faces = [sort(c) for c in cells(skeleton(bndry, 2))]
-    function is_interior(faces)
-        !(sort(faces) in bndry_faces)
-    end
+    # bndry_faces = [sort(c) for c in cells(skeleton(bndry, 2))]
+    # function is_interior(faces)
+    #     !(sort(faces) in bndry_faces)
+    # end
 
-    interior_faces = submesh(is_interior, faces)
+    # interior_faces = submesh(is_interior, faces)
+
+    onbnd = CompScienceMeshes.in(bndry)
+    interior_faces = submesh(!onbnd, faces)
 
     V = BEAST.nedelecd3d(tetrs, interior_faces)
     

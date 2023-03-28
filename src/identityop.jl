@@ -42,7 +42,7 @@ function quaddata(op::LocalOperator, g::subReferenceSpace, f::subReferenceSpace,
     return qd, A
 end
 
-const LinearRefSpaceTetr = Union{NDLCCRefSpace, NDLCDRefSpace}
+const LinearRefSpaceTetr = Union{NDLCCRefSpace, NDLCDRefSpace, BDM3DRefSpace}
 defaultquadstrat(::LocalOperator, ::LinearRefSpaceTetr, ::LinearRefSpaceTetr) = SingleNumQStrat(3)
 function quaddata(op::LocalOperator, g::LinearRefSpaceTetr, f::LinearRefSpaceTetr, tels, bels, qs::SingleNumQStrat)
 

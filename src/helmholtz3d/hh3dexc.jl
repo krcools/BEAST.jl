@@ -18,6 +18,8 @@ function (f::HH3DPlaneWave)(r)
     a * exp(-im*k*dot(d,r))
 end
 
+scalartype(f::HH3DPlaneWave{T}) where {T} = complex(T)
+
 """
     HH3DLinearPotential
 
@@ -75,6 +77,8 @@ struct HH3DMonopole{T,P}
     amplitude::T
 end
 
+scalartype(x::HH3DMonopole{T}) where {T} = complex(T)
+
 function HH3DMonopole(;position=SVector(0.0,0.0,0.0), wavenumber=0.0, amplitude=1.0)
     w, a = promote(wavenumber, amplitude)
     HH3DMonopole(position, w, a)
@@ -93,6 +97,8 @@ struct gradHH3DMonopole{T,P}
     wavenumber::T
     amplitude::T
 end
+
+scalartype(x::gradHH3DMonopole{T}) where {T} = complex(T)
 
 function gradHH3DMonopole(;position=SVector(0.0,0.0,0.0), wavenumber=0.0, amplitude=1.0)
     w, a = promote(wavenumber, amplitude)
@@ -130,14 +136,18 @@ end
 
 integrand(::DirichletTrace, test_vals, field_vals) = dot(test_vals[1], field_vals)
 
-struct NormalDerivative{F} <: Functional
+struct NormalDerivative{T,F} <: Functional
     field::F
 end
+
+NormalDerivative(f::F) where {F} = NormalDerivative{scalartype(f), F}(f)
+NormalDerivative{T}(f::F) where {T,F} = NormalDerivative{T,F}(f)
+scalartype(s::NormalDerivative{T}) where {T} = T
 
 const ∂n = Val{:normalderivative}
 (::Type{Val{:normalderivative}})(f) = NormalDerivative(f)
 
-function (f::NormalDerivative{T})(manipoint) where T<:HH3DPlaneWave
+function (f::NormalDerivative{T,F})(manipoint) where {T,F<:HH3DPlaneWave}
     d = f.field.direction
     k = f.field.wavenumber
     a = f.field.amplitude
@@ -146,13 +156,13 @@ function (f::NormalDerivative{T})(manipoint) where T<:HH3DPlaneWave
     -im*k*a * dot(d,n) * exp(-im*k*dot(d,r))
 end
 
-function (f::NormalDerivative{T})(manipoint) where T<:HH3DLinearPotential
+function (f::NormalDerivative{T,F})(manipoint) where {T,F<:HH3DLinearPotential}
     gradient = f.field.amplitude * f.field.direction
     n = normal(manipoint)
     return dot(n, gradient)
 end
 
-function (f::NormalDerivative{T})(manipoint) where T<:HH3DMonopole
+function (f::NormalDerivative{T,F})(manipoint) where {T,F<:HH3DMonopole}
     m = f.field
     grad_m = grad(m)
     n = normal(manipoint)

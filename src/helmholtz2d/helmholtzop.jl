@@ -122,19 +122,27 @@ mutable struct PlaneWaveDirichlet{T,P} <: Functional
     direction::P
 end
 
+scalartype(x::PlaneWaveDirichlet{T}) where {T} = complex(T)
+
 mutable struct PlaneWaveNeumann{T,P} <: Functional
     wavenumber::T
     direction::P
 end
 
-mutable struct ScalarTrace{F} <: Functional
+scalartype(x::PlaneWaveNeumann{T}) where {T} = complex(T)
+
+mutable struct ScalarTrace{T,F} <: Functional
     field::F
 end
+
+ScalarTrace(f::F) where {F} = ScalarTrace{scalartype(f), F}(f)
+ScalarTrace{T}(f::F) where {T,F} = ScalarTrace{T,F}(f)
 
 strace(f, mesh::Mesh) = ScalarTrace(f)
 
 (s::ScalarTrace)(x) = s.field(cartesian(x))
 integrand(s::ScalarTrace, tx, fx) = dot(tx.value, fx)
+scalartype(s::ScalarTrace{T}) where {T} = T
 
 shapevals(f::Functional, ϕ, ts) = shapevals(ValOnly(), ϕ, ts)
 

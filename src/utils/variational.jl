@@ -421,4 +421,55 @@ macro varform(x)
     esc(y)
 end
 
+
+struct DirectProductKernel
+    bilforms
+end
+
+function Base.getindex(A::DirectProductKernel, V::Vector{HilbertVector}, U::Vector{HilbertVector})
+    terms = Vector{BilTerm}()
+    @assert length(V) == length(U) == length(A.bilforms)
+
+    for (v,u,op) in zip(V,U, A.bilforms)
+        term = BilTerm(v.idx, u.idx, v.opstack, u.opstack, 1, op)
+        push!(terms, term)
+    end
+
+    return BilForm(first(V).space, first(U).space, terms)
+end
+
+struct BlockDiagKernel
+    bilform
+end
+
+function Base.getindex(A::BlockDiagKernel, V::Vector{HilbertVector}, U::Vector{HilbertVector})
+    terms = Vector{BilTerm}()
+    @assert length(V) == length(U)
+
+    op = A.bilform
+    for (v,u) in zip(V,U)
+        term = BilTerm(v.idx, u.idx, v.opstack, u.opstack, 1, op)
+        push!(terms, term)
+    end
+
+    return BilForm(first(V).space, first(U).space, terms)
+end
+
+
+struct OffDiagKernel
+    bilform
+end
+
+function getindex(op::OffDiagKernel, V::Vector{HilbertVector}, U::Vector{HilbertVector})
+    terms = Vector{BilTerm}()
+    for (i,v) in enumerate(V)
+        for (j,u) in enumerate(U)
+            i == j && continue
+            term = BilTerm(v.idx, u.idx, v.opstack, u.opstack, 1, op)
+            push!(terms, term)
+        end
+    end
+    return BilForm(first(V).space, first(U).space, terms)
+end
+
 end

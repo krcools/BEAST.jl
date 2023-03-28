@@ -104,7 +104,7 @@ A = A1 - A2
 
 using LinearAlgebra
 # f = BEAST.ScalarTrace(x -> point(1,0,0) * exp(-norm(x)^2/4))
-f = BEAST.ScalarTrace(x -> point(1,0,0))
+f = BEAST.ScalarTrace{typeof(x̂)}(x -> x̂)
 b = assemble(f, X)
 
 u = A \ b

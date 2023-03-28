@@ -99,7 +99,7 @@ function DofInterpolate(basis::BDMBasis, field)
 
         edge = simplex(basis.geo.vertices[[v1,v2]]...)
         t = tangents(center(edge),1)
-        tria = chart(basis.geo, cell)
+        tria = chart(basis.geo, cellid)
         
         n = normal(center(tria))
 

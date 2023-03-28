@@ -34,7 +34,7 @@ CompScienceMeshes.translate!(γ₁, point(0.0,0.0,d))
 
 # define the excitation
 V₀ = 1.0
-f = ScalarTrace(p -> V₀)
+f = ScalarTrace{typeof(V₀)}(p -> V₀)
 
 #define basis function
 RT = rt_ports(Γ,[γ₁,γ₀])

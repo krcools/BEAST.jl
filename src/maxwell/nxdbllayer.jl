@@ -71,10 +71,36 @@ end
 #     return g ⋅ (n × (∇G × f))
 # end
 
-function (igd::Integrand{<:DoubleLayerRotatedMW3D})(u,v)
+# function (igd::Integrand{<:DoubleLayerRotatedMW3D})(u,v)
 
-    x = neighborhood(igd.test_chart,u)
-    y = neighborhood(igd.trial_chart,v)
+#     x = neighborhood(igd.test_chart,u)
+#     y = neighborhood(igd.trial_chart,v)
+#     j = jacobian(x) * jacobian(y)
+#     nx = normal(x)
+
+#     r = cartesian(x) - cartesian(y)
+#     R = norm(r)
+#     iR = 1/R
+#     γ = igd.operator.gamma
+#     G = exp(-γ*R)/(4π*R)
+#     K = -(γ + iR) * G * (iR * r)
+
+#     f = igd.local_test_space(x)
+#     g = igd.local_trial_space(y)
+
+#     fvalue = getvalue(f)
+#     gvalue = getvalue(g)
+
+#     jKg = cross.(Ref(K), j*gvalue)
+#     jnxKg = cross.(Ref(nx), jKg)
+#     return _krondot(fvalue, jnxKg)
+# end
+
+
+function (igd::Integrand{<:DoubleLayerRotatedMW3D})(x,y,f,g)
+
+    # x = neighborhood(igd.test_chart,u)
+    # y = neighborhood(igd.trial_chart,v)
     j = jacobian(x) * jacobian(y)
     nx = normal(x)
 
@@ -85,8 +111,8 @@ function (igd::Integrand{<:DoubleLayerRotatedMW3D})(u,v)
     G = exp(-γ*R)/(4π*R)
     K = -(γ + iR) * G * (iR * r)
 
-    f = igd.local_test_space(x)
-    g = igd.local_trial_space(y)
+    # f = igd.local_test_space(x)
+    # g = igd.local_trial_space(y)
 
     fvalue = getvalue(f)
     gvalue = getvalue(g)

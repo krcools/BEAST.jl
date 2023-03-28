@@ -131,39 +131,85 @@ rhs(eq::DiscreteEquation) = assemble(eq.equation.rhs, eq.test_space_dict)
 assemble(dbf::DiscreteBilform; materialize=BEAST.assemble) = assemble(dbf.bilform, dbf.test_space_dict, dbf.trial_space_dict; materialize)
 assemble(dlf::DiscreteLinform) = assemble(dlf.linform, dlf.test_space_dict)
 
+
+function _spacedict_to_directproductspace(spacedict)
+    xfactors = Vector{AbstractSpace}(undef, length(spacedict))
+    for (p,x) in spacedict xfactors[p] = x end
+    X = DirectProductSpace(xfactors)
+end
+
 function assemble(lform::LinForm, test_space_dict)
-    T=ComplexF64
-    terms = lform.terms
-    blocksizes1 = Int[]
-    for p in 1:length(lform.test_space)
-        X = test_space_dict[p]
-        push!(blocksizes1, numfunctions(X))
-    end
 
-    Z = zeros(T, sum(blocksizes1))
-    B = PseudoBlockArray{T}(Z, blocksizes1)
+    # xfactors = Vector{AbstractSpace}(undef, length(test_space_dict))
+    # for (p,x) in test_space_dict xfactors[p] = x end
+    # X = DirectProductSpace(xfactors)
+    X = _spacedict_to_directproductspace(test_space_dict)
 
-    for t in terms
+    return assemble(lform, X)
+end
 
-        α = t.coeff
-        a = t.functional
+scalartype(lf::LinForm) = scalartype(lf.terms...)
+scalartype(lt::LinTerm) = scalartype(lt.coeff, lt.functional)
+
+function assemble(lform::LinForm, X::DirectProductSpace)
+
+    @assert !isempty(lform.terms)
+
+    M = length.(X.factors)
+    # U = BlockArrays.blockedrange(M)
+    U = NestedUnitRanges.nestedrange(X, 1, numfunctions)
+
+    T = scalartype(lform, X)
+    Z = zeros(T, numfunctions(X))
+    B = PseudoBlockArray{T}(Z, (U,))
+
+    for t in lform.terms
+
         m = t.test_id
-        X = test_space_dict[m]
-        o = t.test_ops
+        x = X.factors[m]
 
-        # act with the various ops on X
-        for op in reverse(o)
-            Y = X;
-            X = op[end](op[1:end-1]..., Y)
-        end
+        for op in reverse(t.test_ops) x = op[end](op[1:end-1]..., x) end
 
-        b = assemble(a, X)
-        # B[I[m] : I[m+1]-1] = α * b
-        B[Block(m)] = α * b
+        b = assemble(t.functional, x)
+        B[Block(m)] = t.coeff * b
     end
 
     return B
 end
+
+# function assemble(lform::LinForm, test_space_dict)
+#     T=ComplexF64
+#     terms = lform.terms
+#     blocksizes1 = Int[]
+#     for p in 1:length(lform.test_space)
+#         X = test_space_dict[p]
+#         push!(blocksizes1, numfunctions(X))
+#     end
+
+#     Z = zeros(T, sum(blocksizes1))
+#     B = PseudoBlockArray{T}(Z, blocksizes1)
+
+#     for t in terms
+
+#         α = t.coeff
+#         a = t.functional
+#         m = t.test_id
+#         X = test_space_dict[m]
+#         o = t.test_ops
+
+#         # act with the various ops on X
+#         for op in reverse(o)
+#             Y = X;
+#             X = op[end](op[1:end-1]..., Y)
+#         end
+
+#         b = assemble(a, X)
+#         # B[I[m] : I[m+1]-1] = α * b
+#         B[Block(m)] = α * b
+#     end
+
+#     return B
+# end
 
 
 struct SpaceTimeData{T} <: AbstractArray{Vector{T},1}
@@ -259,14 +305,17 @@ end
 function assemble(bilform::BilForm, test_space_dict, trial_space_dict;
     materialize=BEAST.assemble)
 
-    xfactors = Vector{AbstractSpace}(undef, length(test_space_dict))
-    yfactors = Vector{AbstractSpace}(undef, length(trial_space_dict))
+    # xfactors = Vector{AbstractSpace}(undef, length(test_space_dict))
+    # yfactors = Vector{AbstractSpace}(undef, length(trial_space_dict))
 
-    for (p,x) in test_space_dict xfactors[p] = x end
-    for (q,y) in trial_space_dict yfactors[q] = y end
+    # for (p,x) in test_space_dict xfactors[p] = x end
+    # for (q,y) in trial_space_dict yfactors[q] = y end
 
-    X = DirectProductSpace(xfactors)
-    Y = DirectProductSpace(yfactors)
+    # X = DirectProductSpace(xfactors)
+    # Y = DirectProductSpace(yfactors)
+
+    X = _spacedict_to_directproductspace(test_space_dict)
+    Y = _spacedict_to_directproductspace(trial_space_dict)
 
     return assemble(bilform, X, Y; materialize)
 end

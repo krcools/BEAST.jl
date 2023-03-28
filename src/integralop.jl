@@ -68,8 +68,14 @@ Computes the matrix of operator biop wrt the finite element spaces tfs and bfs
 function assemblechunk!(biop::IntegralOperator, tfs::Space, bfs::Space, store;
         quadstrat=defaultquadstrat(biop, tfs, bfs))
 
-    test_elements, tad, tcells = assemblydata(tfs)
-    bsis_elements, bad, bcells = assemblydata(bfs)
+    # test_elements, tad, tcells = assemblydata(tfs)
+    # bsis_elements, bad, bcells = assemblydata(bfs)
+
+    tr = assemblydata(tfs); tr == nothing && return
+    br = assemblydata(bfs); br == nothing && return
+
+    test_elements, tad, tcells = tr
+    bsis_elements, bad, bcells = br
 
     tshapes = refspace(tfs); num_tshapes = numfunctions(tshapes)
     bshapes = refspace(bfs); num_bshapes = numfunctions(bshapes)

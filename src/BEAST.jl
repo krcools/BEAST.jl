@@ -15,6 +15,9 @@ using FastGaussQuadrature
 using LinearMaps
 using LiftedMaps
 
+using AbstractTrees
+using NestedUnitRanges
+
 import LinearAlgebra: cross, dot
 import LinearAlgebra: ×, ⋅
 

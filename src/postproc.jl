@@ -100,12 +100,12 @@ function facecurrents(u, X1, Xs...)
     offset = 0
 
     n = numfunctions(X1)
-    fcrs = [ facecurrents(u[offset + (1:n)], X1)[1] ]
+    fcrs = [ facecurrents(u[offset .+ (1:n)], X1)[1] ]
     offset += n
 
     for i in 1:length(Xs)
         n = numfunctions(Xs[i])
-        push!(fcrs, facecurrents(u[offset + (1:n)], Xs[i])[1])
+        push!(fcrs, facecurrents(u[offset .+ (1:n)], Xs[i])[1])
         offset += n
     end
 
