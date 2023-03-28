@@ -173,18 +173,46 @@ function (f::LagrangeRefSpace{T,2,3})(t) where T
     j = jacobian(t)
     p = t.patch
 
-    # SVector(
-    #     (value=u, curl=(p[3]-p[2])/j),
-    #     (value=v, curl=(p[1]-p[3])/j),
-    #     (value=w, curl=(p[2]-p[1])/j)
-    # )
+    #curl=(p[3]-p[2])/j),
+     #   (value=v, curl=(p[1]-p[3])/j),
+      #  (value=w, curl=(p[2]-p[1])/j)
 
-    SVector(
-        (value=u*(2*u-1),),
-        (value=v*(2*v-1),),
-        (value=w*(2*w-1),),
-        (value=4*v*w,),
-        (value=4*w*u,),
-        (value=4*u*v,),
+     SVector(
+        (value=u*(2*u-1), curl=(p[3]-p[2])*(4u-1)/j),
+        (value=v*(2*v-1), curl=(p[1]-p[3])*(4v-1)/j),
+        (value=w*(2*w-1), curl=(p[2]-p[1])*(4w-1)/j),
+        (value=4*v*w, curl=4*(w*(p[1]-p[3])+v*(p[2]-p[1]))/j),
+        (value=4*w*u, curl=4*(w*(p[3]-p[2])+u*(p[2]-p[1]))/j),
+        (value=4*u*v, curl=4*(u*(p[1]-p[3])+v*(p[3]-p[2]))/j),
     )
+end
+
+function (f::LagrangeRefSpace{T,1,3})(t, ::Type{Val{:withcurl}}) where T
+    # Evaluete quadratic Lagrange elements on a triange, together with their curl
+    j = jacobian(t)
+    u,v,w, = barycentric(t)
+    p = t.patch
+    SVector(
+        (value=u*(2*u-1), curl=(p[3]-p[2])*(4u-1)/j),
+        (value=v*(2*v-1), curl=(p[1]-p[3])*(4v-1)/j),
+        (value=w*(2*w-1), curl=(p[2]-p[1])*(4w-1)/j),
+        (value=4*v*w, curl=4*(w*(p[1]-p[3])+v*(p[2]-p[1]))/j),
+        (value=4*w*u, curl=4*(w*(p[3]-p[2])+u*(p[2]-p[1]))/j),
+        (value=4*u*v, curl=4*(u*(p[1]-p[3])+v*(p[3]-p[2]))/j),
+    )
+end
+
+function curl(ref::LagrangeRefSpace, sh, el)
+    if sh.refid < 4
+        sh1 = Shape(sh.cellid, mod1(2*sh.refid+1,6), +sh.coeff)
+        sh2 = Shape(sh.cellid, mod1(2*sh.refid+2,6), -3*sh.coeff)
+        sh3 = Shape(sh.cellid, mod1(2*sh.refid+3,6), +3*sh.coeff)
+        sh4 = Shape(sh.cellid, mod1(2*sh.refid+4,6), -sh.coeff)
+    else
+        sh1 = Shape(sh.cellid, mod1(2*sh.refid+4,6), 0*sh.coeff)
+        sh2 = Shape(sh.cellid, mod1(2*sh.refid+5,6), -4*sh.coeff)
+        sh3 = Shape(sh.cellid, mod1(2*sh.refid+6,6), +4*sh.coeff)
+        sh4 = Shape(sh.cellid, mod1(2*sh.refid+7,6), 0*sh.coeff)
+    end
+    return [sh1, sh2, sh3, sh4]
 end
