@@ -203,16 +203,17 @@ function (f::LagrangeRefSpace{T,1,3})(t, ::Type{Val{:withcurl}}) where T
 end
 
 function curl(ref::LagrangeRefSpace, sh, el)
+    z=zero(typeof(sh.coeff))
     if sh.refid < 4
-        sh1 = Shape(sh.cellid, mod1(2*sh.refid+1,6), +sh.coeff)
-        sh2 = Shape(sh.cellid, mod1(2*sh.refid+2,6), -3*sh.coeff)
-        sh3 = Shape(sh.cellid, mod1(2*sh.refid+3,6), +3*sh.coeff)
-        sh4 = Shape(sh.cellid, mod1(2*sh.refid+4,6), -sh.coeff)
+        sh1 = Shape(sh.cellid, mod1(2*sh.refid+1,6), -sh.coeff)
+        sh2 = Shape(sh.cellid, mod1(2*sh.refid+2,6), +3*sh.coeff)
+        sh3 = Shape(sh.cellid, mod1(2*sh.refid+3,6), -3*sh.coeff)
+        sh4 = Shape(sh.cellid, mod1(2*sh.refid+4,6), +sh.coeff)
     else
-        sh1 = Shape(sh.cellid, mod1(2*sh.refid+4,6), 0*sh.coeff)
-        sh2 = Shape(sh.cellid, mod1(2*sh.refid+5,6), -4*sh.coeff)
-        sh3 = Shape(sh.cellid, mod1(2*sh.refid+6,6), +4*sh.coeff)
-        sh4 = Shape(sh.cellid, mod1(2*sh.refid+7,6), 0*sh.coeff)
+        sh1 = Shape(sh.cellid, mod1(2*sh.refid+4,6), z*sh.coeff)
+        sh2 = Shape(sh.cellid, mod1(2*sh.refid+5,6), +4*sh.coeff)
+        sh3 = Shape(sh.cellid, mod1(2*sh.refid+6,6), -4*sh.coeff)
+        sh4 = Shape(sh.cellid, mod1(2*sh.refid+7,6), z*sh.coeff)
     end
     return [sh1, sh2, sh3, sh4]
 end
