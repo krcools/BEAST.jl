@@ -108,6 +108,12 @@ end
 
 Base.Int(hv::HilbertVector) = hv.idx
 
+function hilbertspace(s::Symbol, numcomponents::Int)
+    syms = [Symbol(s,i) for i in 1:numcomponents]
+    return [HilbertVector(i,syms,[]) for i in 1:numcomponents]
+end
+
+
 Base.getindex(A::AbstractBlockArray, p::HilbertVector, q::HilbertVector) = A[Block(Int(p),Int(q))]
 Base.getindex(u::AbstractBlockArray, p::HilbertVector) = u[Block(Int(p))]
 
