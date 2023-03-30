@@ -6,6 +6,7 @@ mutable struct LagrangeRefSpace{T,Degree,Dim1,NF} <: RefSpace{T,NF} end
 numfunctions(s::LagrangeRefSpace{T,D,2}) where {T,D} = D+1
 numfunctions(s::LagrangeRefSpace{T,0,3}) where {T} = 1
 numfunctions(s::LagrangeRefSpace{T,1,3}) where {T} = 3
+numfunctions(s::LagrangeRefSpace{T,2,3}) where {T} = 6
 
 valuetype(ref::LagrangeRefSpace{T}, charttype) where {T} =
         SVector{numfunctions(ref), Tuple{T,T}}
@@ -65,7 +66,7 @@ function (f::LagrangeRefSpace{T,0,3})(t, ::Type{Val{:withcurl}}) where T
 end
 
 
-function curl(ref::LagrangeRefSpace, sh, el)
+function curl(ref::LagrangeRefSpace{T,1,3} where {T}, sh, el)
     sh1 = Shape(sh.cellid, mod1(sh.refid+1,3), -sh.coeff)
     sh2 = Shape(sh.cellid, mod1(sh.refid+2,3), +sh.coeff)
     return [sh1, sh2]
@@ -187,7 +188,7 @@ function (f::LagrangeRefSpace{T,2,3})(t) where T
     )
 end
 
-function (f::LagrangeRefSpace{T,1,3})(t, ::Type{Val{:withcurl}}) where T
+function (f::LagrangeRefSpace{T,2,3})(t, ::Type{Val{:withcurl}}) where T
     # Evaluete quadratic Lagrange elements on a triange, together with their curl
     j = jacobian(t)
     u,v,w, = barycentric(t)
@@ -202,17 +203,18 @@ function (f::LagrangeRefSpace{T,1,3})(t, ::Type{Val{:withcurl}}) where T
     )
 end
 
-function curl(ref::LagrangeRefSpace, sh, el)
+function curl(ref::LagrangeRefSpace{T,2,3} where {T}, sh, el)
+    #curl of lagc0d2 as combination of bdm functions 
     z=zero(typeof(sh.coeff))
     if sh.refid < 4
-        sh1 = Shape(sh.cellid, mod1(2*sh.refid+1,6), -sh.coeff)
-        sh2 = Shape(sh.cellid, mod1(2*sh.refid+2,6), +3*sh.coeff)
-        sh3 = Shape(sh.cellid, mod1(2*sh.refid+3,6), -3*sh.coeff)
-        sh4 = Shape(sh.cellid, mod1(2*sh.refid+4,6), +sh.coeff)
+        sh1 = Shape(sh.cellid, mod1(2*sh.refid+1,6), +sh.coeff)
+        sh2 = Shape(sh.cellid, mod1(2*sh.refid+2,6), -3*sh.coeff)
+        sh3 = Shape(sh.cellid, mod1(2*sh.refid+3,6), +3*sh.coeff)
+        sh4 = Shape(sh.cellid, mod1(2*sh.refid+4,6), -sh.coeff)
     else
         sh1 = Shape(sh.cellid, mod1(2*sh.refid+4,6), z*sh.coeff)
-        sh2 = Shape(sh.cellid, mod1(2*sh.refid+5,6), +4*sh.coeff)
-        sh3 = Shape(sh.cellid, mod1(2*sh.refid+6,6), -4*sh.coeff)
+        sh2 = Shape(sh.cellid, mod1(2*sh.refid+5,6), -4*sh.coeff)
+        sh3 = Shape(sh.cellid, mod1(2*sh.refid+6,6), +4*sh.coeff)
         sh4 = Shape(sh.cellid, mod1(2*sh.refid+7,6), z*sh.coeff)
     end
     return [sh1, sh2, sh3, sh4]
