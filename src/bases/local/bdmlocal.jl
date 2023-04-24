@@ -44,3 +44,4 @@ function dof_permutation(::BDMRefSpace, vert_permutation)
 end
 
 dimtype(::BDMRefSpace, ::CompScienceMeshes.Simplex{U,2}) where {U} = Val{6}
+
