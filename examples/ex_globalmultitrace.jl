@@ -10,7 +10,7 @@ import Plotly
 κ = [1.5κ₀, 2.5κ₀]
 
 # Description of the domain boundaries
-h = 0.08
+h = 0.125
 Γ1 = meshcuboid(0.5, 1.0, 1.0, h)
 Γ2 =  -Mesh([point(-x,y,z) for (x,y,z) in vertices(Γ1)], deepcopy(cells(Γ1)))
 Γ = [Γ1, Γ2]
@@ -73,17 +73,15 @@ function nearfield(um,Xm,uj,Xj,κ,η,points)
 
     Em = potential(K, points, um, Xm)
     Ej = potential(T, points, uj, Xj)
-    E = -Em + η * Ej
 
     Hm = potential(T, points, um, Xm)
     Hj = potential(K, points, uj, Xj)
-    H = 1/η*Hm + Hj
-
-    return E, H
+    
+    return -Em + η * Ej, 1/η*Hm + Hj
 end
 
-Xs = range(-1.5,1.5,length=300)
-Zs = range(-1.5,1.5,length=200)
+Xs = range(-2.0,2.0,length=150)
+Zs = range(-1.5,2.5,length=100)
 pts = [point(x,0.5,z) for z in Zs, x in Xs]
 
 EH0 = [nearfield(u[qᵢ][m], Xᵢ, u[qᵢ][j], Yᵢ, κ₀, 1.0, pts) for (qᵢ,Xᵢ,Yᵢ) ∈ zip(q,Xₕ,Yₕ)]

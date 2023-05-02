@@ -42,6 +42,8 @@ pmchwt = @discretise(
          (K+K′)[l,j] + (α*T+α′*T′)[l,m] == -e[k] - h[l],
     j∈X, m∈X, k∈X, l∈X)
 
+u = solve(pmchwt)
+
 Θ, Φ = range(0.0,stop=2π,length=100), 0.0
 ffpoints = [point(cos(ϕ)*sin(θ), sin(ϕ)*sin(θ), cos(θ)) for θ in Θ for ϕ in Φ]
 
