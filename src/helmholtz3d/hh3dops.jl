@@ -375,7 +375,7 @@ end
 
 function (igd::Integrand{<:HH3DHyperSingularFDBIO})(x,y,f,g)
     α = igd.operator.alpha
-    β = igd.operator.alpha
+    β = igd.operator.beta
     γ = igd.operator.gamma
 
     r = cartesian(x) - cartesian(y)
