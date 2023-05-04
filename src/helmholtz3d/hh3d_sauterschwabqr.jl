@@ -68,6 +68,71 @@ function pulled_back_integrand(op::HH3DHyperSingularFDBIO,
     end
 end
 
+function pulled_back_integrand(op::HH3DDoubleLayerFDBIO,
+    test_local_space::LagrangeRefSpace{<:Any,0},
+    trial_local_space::LagrangeRefSpace{<:Any,1},
+    test_chart, trial_chart)
+
+    (u,v) -> begin
+
+        x = neighborhood(test_chart,u)
+        y = neighborhood(trial_chart,v)
+
+        ny = normal(y)
+        f = test_local_space(x)
+        g = trial_local_space(y)
+
+        j = jacobian(x) * jacobian(y)
+
+        α = op.alpha
+        γ = op.gamma
+
+        r = cartesian(x) - cartesian(y)
+        R = norm(r)
+        G = exp(-γ*R)/(4*π*R)
+        inv_R = 1/R
+        ∇G = -(γ + inv_R) * G * inv_R * r
+        αnyj∇G = dot(ny,-α*∇G*j)
+
+        SMatrix{1,3}(
+            f[1].value * αnyj∇G * g[1].value,
+            f[1].value * αnyj∇G * g[2].value,
+            f[1].value * αnyj∇G * g[3].value)
+    end
+end
+
+function pulled_back_integrand(op::HH3DDoubleLayerTransposedFDBIO,
+    test_local_space::LagrangeRefSpace{<:Any,1},
+    trial_local_space::LagrangeRefSpace{<:Any,0},
+    test_chart, trial_chart)
+
+    (u,v) -> begin
+
+        x = neighborhood(test_chart,u)
+        y = neighborhood(trial_chart,v)
+
+        nx = normal(x)
+        f = test_local_space(x)
+        g = trial_local_space(y)
+
+        j = jacobian(x) * jacobian(y)
+
+        α = op.alpha
+        γ = op.gamma
+
+        r = cartesian(x) - cartesian(y)
+        R = norm(r)
+        G = exp(-γ*R)/(4*π*R)
+        inv_R = 1/R
+        ∇G = -(γ + inv_R) * G * inv_R * r
+        αnxj∇G = dot(nx,α*∇G*j)
+
+        SMatrix{3,1}(
+            f[1].value * αnxj∇G * g[1].value,
+            f[2].value * αnxj∇G * g[1].value,
+            f[3].value * αnxj∇G * g[1].value)
+    end
+end
 
 function momintegrals!(op::HH3DSingleLayerFDBIO,
     test_local_space::LagrangeRefSpace{<:Any,0}, trial_local_space::LagrangeRefSpace{<:Any,0},
@@ -125,6 +190,71 @@ function momintegrals!(op::HH3DHyperSingularFDBIO,
     G = SauterSchwabQuadrature.sauterschwab_parameterized(igd, strat)
     for j ∈ 1:3, i ∈ 1:3
         out[i,j] += G[K[i],L[j]] * σ 
+    end
+
+    nothing
+end
+
+function momintegrals!(op::Helmholtz3DOp,
+    test_local_space::LagrangeRefSpace{<:Any,0}, trial_local_space::LagrangeRefSpace{<:Any,1},
+    test_triangular_element, trial_triangular_element, out, strat::SauterSchwabStrategy)
+
+    I, J, K, L = SauterSchwabQuadrature.reorder(
+        test_triangular_element.vertices,
+        trial_triangular_element.vertices, strat)
+
+    test_triangular_element  = simplex(
+        test_triangular_element.vertices[I[1]],
+        test_triangular_element.vertices[I[2]],
+        test_triangular_element.vertices[I[3]])
+
+    trial_triangular_element = simplex(
+        trial_triangular_element.vertices[J[1]],
+        trial_triangular_element.vertices[J[2]],
+        trial_triangular_element.vertices[J[3]])
+
+    trial_sign = Combinatorics.levicivita(J)
+
+    σ = trial_sign
+
+    igd = pulled_back_integrand(op, test_local_space, trial_local_space,
+        test_triangular_element, trial_triangular_element)
+    G = SauterSchwabQuadrature.sauterschwab_parameterized(igd, strat)
+
+    for i ∈ 1:3
+        out[1,i] += G[L[i]] * σ
+    end
+
+    nothing
+end
+
+function momintegrals!(op::Helmholtz3DOp,
+    test_local_space::LagrangeRefSpace{<:Any,1}, trial_local_space::LagrangeRefSpace{<:Any,0},
+    test_triangular_element, trial_triangular_element, out, strat::SauterSchwabStrategy)
+
+    I, J, K, L = SauterSchwabQuadrature.reorder(
+        test_triangular_element.vertices,
+        trial_triangular_element.vertices, strat)
+
+    test_triangular_element  = simplex(
+        test_triangular_element.vertices[I[1]],
+        test_triangular_element.vertices[I[2]],
+        test_triangular_element.vertices[I[3]])
+
+    trial_triangular_element = simplex(
+        trial_triangular_element.vertices[J[1]],
+        trial_triangular_element.vertices[J[2]],
+        trial_triangular_element.vertices[J[3]])
+
+        test_sign = Combinatorics.levicivita(I)
+        σ = test_sign
+
+    igd = pulled_back_integrand(op, test_local_space, trial_local_space,
+        test_triangular_element, trial_triangular_element)
+    G = SauterSchwabQuadrature.sauterschwab_parameterized(igd, strat)
+
+    for i ∈ 1:3
+        out[i,1] += G[K[i]] * σ
     end
 
     nothing
