@@ -124,9 +124,13 @@ function quadrule(op::HH3DSingleLayerFDBIO,
 
 
     tol, hits = sqrt(eps(eltype(eltype(test_element.vertices)))), 0
+    dmin2 = floatmax(eltype(eltype(test_element.vertices)))
+
     for t in test_element.vertices
         for s in trial_element.vertices
-            norm(t-s) < tol && (hits +=1)
+            d2 = LinearAlgebra.norm_sqr(t-s)
+            dmin2 = min(dmin2, d2)
+            hits += (d2 < tol)
     end end
 
     hits == 3 && return SauterSchwabQuadrature.CommonFace(qd.gausslegendre[3])
@@ -135,12 +139,14 @@ function quadrule(op::HH3DSingleLayerFDBIO,
 
     test_quadpoints  = qd.test_qp
     trial_quadpoints = qd.bsis_qp
-
-    # hits != 0 && return WiltonSERule(
-    #     test_quadpoints[1,i],
-    #     DoubleQuadRule(
-    #         test_quadpoints[1,i],
-    #         trial_quadpoints[1,j]))
+    h2 = volume(trial_element)
+    xtol2 = 0.2 * 0.2
+    k2 = abs2(op.gamma)
+    max(dmin2*k2, dmin2/16h2) < xtol2 && return WiltonSERule(
+        test_quadpoints[1,i],
+        DoubleQuadRule(
+            test_quadpoints[1,i],
+            trial_quadpoints[1,j]))
 
     return DoubleQuadRule(
         qd.test_qp[1,i],
@@ -153,27 +159,6 @@ function quadrule(op::HH3DSingleLayerFDBIO,
         trial_refspace::LagrangeRefSpace{T,0} where T,
         i, test_element, j, trial_element, qd,
         qs::DoubleNumQStrat)
-
-
-    tol, hits = sqrt(eps(eltype(eltype(test_element.vertices)))), 0
-    for t in test_element.vertices
-        for s in trial_element.vertices
-            norm(t-s) < tol && (hits +=1)
-    end end
-
-
-    # hits == 3 && return SauterSchwabQuadrature.CommonFace(qd.gausslegendre[3])
-    # hits == 2 && return SauterSchwabQuadrature.CommonEdge(qd.gausslegendre[2])
-    # hits == 1 && return SauterSchwabQuadrature.CommonVertex(qd.gausslegendre[1])
-
-    test_quadpoints  = qd.test_qp
-    trial_quadpoints = qd.bsis_qp
-
-    hits != 0 && return WiltonSERule(
-        test_quadpoints[1,i],
-        DoubleQuadRule(
-            test_quadpoints[1,i],
-            trial_quadpoints[1,j]))
 
     return DoubleQuadRule(
         qd.test_qp[1,i],
