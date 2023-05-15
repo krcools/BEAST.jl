@@ -1,6 +1,6 @@
 struct NCrossBDMRefSpace{T} <: RefSpace{T,6} end
 
-function (f::NCrossBDMRefSpace)(p)
+function (f::NCrossBDMRefSpace{T})(p) where T
 
     u,v = parametric(p)
     n = normal(p)
