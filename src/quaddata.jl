@@ -32,34 +32,34 @@ points and weights, geometric quantities, etc.
 The type of the returned quadrature rule will help in deciding which method of
 `momintegrals` to dispatch to.
 """
-function quadrule(op::IntegralOperator, g::RefSpace, f::RefSpace, i, τ, j, σ, qd)
-    # defines coincidence of points
-    dtol = 1.0e3 * eps(eltype(eltype(τ.vertices)))
+# function quadrule(op::IntegralOperator, g::RefSpace, f::RefSpace, i, τ, j, σ, qd)
+#     # defines coincidence of points
+#     dtol = 1.0e3 * eps(eltype(eltype(τ.vertices)))
 
-    # decides on whether to use singularity extraction
-    xtol = 0.2
-    k = norm(op.gamma)
+#     # decides on whether to use singularity extraction
+#     xtol = 0.2
+#     k = norm(op.gamma)
 
-    hits = 0
-    xmin = xtol
-    for t in τ.vertices
-      for s in σ.vertices
-        d = norm(t-s)
-        xmin = min(xmin, k*d)
-        if d < dtol
-          hits +=1
-          break
-        end
-      end
-    end
+#     hits = 0
+#     xmin = xtol
+#     for t in τ.vertices
+#       for s in σ.vertices
+#         d = norm(t-s)
+#         xmin = min(xmin, k*d)
+#         if d < dtol
+#           hits +=1
+#           break
+#         end
+#       end
+#     end
 
-  hits == 3   && return SauterSchwabQuadrature.CommonFace(qd.gausslegendre[3])
-  hits == 2   && return SauterSchwabQuadrature.CommonEdge(qd.gausslegendre[2])
-  hits == 1   && return SauterSchwabQuadrature.CommonVertex(qd.gausslegendre[1])
-  xmin < xtol && return DoubleQuadRule(
-      qd.tpoints[2,i],
-      qd.bpoints[2,j],)
-  return DoubleQuadRule(
-    qd.tpoints[1,i],
-    qd.bpoints[1,j],)
-end
+#   hits == 3   && return SauterSchwabQuadrature.CommonFace(qd.gausslegendre[3])
+#   hits == 2   && return SauterSchwabQuadrature.CommonEdge(qd.gausslegendre[2])
+#   hits == 1   && return SauterSchwabQuadrature.CommonVertex(qd.gausslegendre[1])
+#   xmin < xtol && return DoubleQuadRule(
+#       qd.tpoints[2,i],
+#       qd.bpoints[2,j],)
+#   return DoubleQuadRule(
+#     qd.tpoints[1,i],
+#     qd.bpoints[1,j],)
+# end
