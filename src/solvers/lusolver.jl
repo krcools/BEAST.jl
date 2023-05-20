@@ -40,7 +40,7 @@ function solve(eq)
     Y = _spacedict_to_directproductspace(eq.trial_space_dict)
 
     b = assemble(rhs, X)
-    Z = assemble(lhs, X, X)
+    Z = assemble(lhs, X, Y)
     # b = assemble(rhs, test_space_dict)
     # Z = assemble(lhs, test_space_dict, trial_space_dict)
     # M = convert_to_dense(Z)

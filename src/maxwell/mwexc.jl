@@ -59,6 +59,8 @@ function DipoleMW(l,o,k)
     DipoleMW{T,P}(l,o,k)
 end
 
+scalartype(x::DipoleMW{T,P}) where {T,P} = promote_type(complex(T), eltype(P)) 
+
 mutable struct curlDipoleMW{T,P} <: Dipole
     location::P
     orientation::P
@@ -70,6 +72,8 @@ function curlDipoleMW(l,o,k)
     P = similar_type(typeof(l), T)
     curlDipoleMW{T,P}(l,o,k)
 end
+
+scalartype(x::curlDipoleMW{T,P}) where {T,P} = promote_type(complex(T), eltype(P)) 
 
 """
     dipolemw3d(;location, orientation, wavenumber)
