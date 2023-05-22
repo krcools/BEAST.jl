@@ -12,8 +12,8 @@ function (f::NCrossBDMRefSpace{T})(p) where T
 
     return @SVector[
         (value= n × (-v*tu+v*tv)/j, curl=d),
-        (value= n × (u+v-1)*tu/j,   curl=d),
-        (value= n × (u+v-1)*tv/j,   curl=d),
+        (value= n × ((u+v-1)*tu)/j,   curl=d),
+        (value= n × ((u+v-1)*tv) /j,   curl=d),
         (value= n × (u*tu-u*tv)/j,  curl=d),
         (value= n × (u*tu)/j,         curl=d),
         (value= n × (v*tv)/j,         curl=d),]

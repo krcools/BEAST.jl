@@ -19,7 +19,7 @@ function (f::BDMRefSpace)(p)
         (value=v*tv/j,         divergence=d),]
 end
 
-
+divergence(ref::BDMRefSpace, sh, el) = Shape(sh.cellid, 1, sh.coeff/(2*volume(el)))
 
 const _vert_perms_bdm = [
     (1,2,3),
@@ -45,3 +45,27 @@ end
 
 dimtype(::BDMRefSpace, ::CompScienceMeshes.Simplex{U,2}) where {U} = Val{6}
 
+#ncrossbdm
+
+struct NCrossBDMRefSpace{T} <: RefSpace{T,6} end
+
+function (f::NCrossBDMRefSpace{T})(p) where T
+
+    u,v = parametric(p)
+    n = normal(p)
+    tu = tangents(p,1)
+    tv = tangents(p,2)
+
+    j = jacobian(p)
+    d = 1/j
+
+    return @SVector[
+        (value= n × (-v*tu+v*tv)/j, curl=d),
+        (value= n × ((u+v-1)*tu)/j,   curl=d),
+        (value= n × ((u+v-1)*tv) /j,   curl=d),
+        (value= n × (u*tu-u*tv)/j,  curl=d),
+        (value= n × (u*tu)/j,         curl=d),
+        (value= n × (v*tv)/j,         curl=d),]
+end
+
+#dimtype(::NCrossBDMRefSpace, ::CompScienceMeshes.Simplex{U,2}) where {U} = Val{6}

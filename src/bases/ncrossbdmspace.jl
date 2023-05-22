@@ -4,7 +4,7 @@ struct NCrossBDMBasis{T,M,P} <: Space{T}
     pos::Vector{P}
 end
 
-NCrossBDMBasis(geo, fns) = BDMBasis(geo, fns, Vector{vertextype(geo)}(undef,length(fns))) 
+NCrossBDMBasis(geo, fns) = NCrossBDMBasis(geo, fns, Vector{vertextype(geo)}(undef,length(fns))) 
 
 refspace(s::NCrossBDMBasis{T}) where {T} = NCrossBDMRefSpace{T}()
 
