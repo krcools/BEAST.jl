@@ -145,8 +145,8 @@ function assemble!(op::LinearCombinationOfOperators, tfs::SpaceTimeBasis, bfs::S
     end
 end
 
-function assemble!(op::RetardedPotential, testST, trialST, store,
-    threading=Threading{:multi}; quadstrat=defaultquadstrat(op, testST, trialST))
+function assemble!(op::RetardedPotential, testST::Space, trialST::Space, store,
+    threading::Type{Threading{:multi}}=Threading{:multi}; quadstrat=defaultquadstrat(op, testST, trialST))
 
 	Y, S = spatialbasis(testST), temporalbasis(testST)
     X, R = spatialbasis(trialST), temporalbasis(trialST)
