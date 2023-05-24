@@ -245,6 +245,8 @@ include("solvers/solver.jl")
 include("solvers/lusolver.jl")
 include("solvers/itsolver.jl")
 
+include("utils/plotlyglue.jl")
+
 
 
 

@@ -296,3 +296,41 @@ function addf!(fn::Vector{<:Shape}, x::Vector, space::Space, idcs::Vector{Int})
         end
     end
 end
+
+function support(s::BEAST.AbstractSpace, index::Int)
+    geo = geometry(s)
+    s1 = subset(s,[index])
+    charts, ad, activecells = BEAST.assemblydata(s1)
+    return geo[activecells]
+end
+
+function functionvals(s::BEAST.Space, index::Int, n=3)
+
+    s1 = subset(s,[index])
+    charts, ad, a2g = BEAST.assemblydata(s1)
+    support = geometry(s)[a2g]
+    
+    vals = Any[]
+    ctrs = Any[]
+    refs = refspace(s)
+    for (p,ch) in enumerate(charts)
+        for i in 1:n-1
+            for j in 1:n-1
+                i+j < n || continue
+                val = zero(BEAST.valuetype(refs, typeof(ch)))
+                ct = CompScienceMeshes.neighborhood(ch, (i/n,j/n))
+                fx = refs(ct)
+                for r in eachindex(fx)
+                    for (m,a) in ad[p,r]
+                        @assert m == 1
+                        val += a * fx[r].value
+                    end
+                end
+                push!(ctrs, cartesian(ct))
+                push!(vals, val)
+            end
+        end
+    end
+
+    return ctrs, vals
+end
