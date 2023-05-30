@@ -20,6 +20,23 @@ function sign_upon_permutation(op::HH3DHyperSingularFDBIO, I, J)
     return Combinatorics.levicivita(I) * Combinatorics.levicivita(J)
 end
 
+struct HH3DHyperSingularReg{T,K} <: Helmholtz3DOpReg
+    "coefficient of the weakly singular term"
+    alpha::T
+    "coefficient of the hyper singular term"
+    beta::T
+    "`im*κ` with `κ` the wave number"
+    gamma::K
+end
+
+struct HH3DHyperSingularSng{T,K} <: Helmholtz3DOp
+    "coefficient of the weakly singular term"
+    alpha::T
+    "coefficient of the hyper singular term"
+    beta::T
+    "`im*κ` with `κ` the wave number"
+    gamma::K
+end
 HH3DHyperSingularFDBIO(gamma) = HH3DHyperSingularFDBIO(gamma^2, one(gamma), gamma)
 
 """
@@ -65,6 +82,17 @@ function sign_upon_permutation(op::HH3DDoubleLayerFDBIO, I, J)
 end
 
 struct HH3DDoubleLayerTransposedFDBIO{T,K} <: Helmholtz3DOp{T,K}
+struct HH3DDoubleLayerReg{T,K} <: Helmholtz3DOpReg
+    alpha::T
+    gamma::K
+end
+
+struct HH3DDoubleLayerSng{T,K} <: Helmholtz3DOp
+    alpha::T
+    gamma::K
+end
+
+struct HH3DDoubleLayerTransposedFDBIO{T,K} <: Helmholtz3DOp
     alpha::T
     gamma::K
 end
@@ -73,6 +101,15 @@ function sign_upon_permutation(op::HH3DDoubleLayerTransposedFDBIO, I, J)
     return Combinatorics.levicivita(I)
 end
 
+struct HH3DDoubleLayerTransposedReg{T,K} <: Helmholtz3DOpReg
+    alpha::T
+    gamma::K
+end
+
+struct HH3DDoubleLayerTransposedSng{T,K} <: Helmholtz3DOp
+    alpha::T
+    gamma::K
+end
 
 defaultquadstrat(::Helmholtz3DOp, ::LagrangeRefSpace, ::LagrangeRefSpace) = DoubleNumWiltonSauterQStrat(2,3,2,3,4,4,4,4)
 
@@ -189,6 +226,8 @@ function quadrule(op::HH3DSingleLayerFDBIO,
         qd.bsis_qp[1,j])
 end
 
+regularpart(op::HH3DHyperSingularFDBIO) = HH3DHyperSingularReg(op.alpha, op.beta, op.gamma)
+singularpart(op::HH3DHyperSingularFDBIO) = HH3DHyperSingularSng(op.alpha, op.beta, op.gamma)
 
 function quadrule(op::HH3DHyperSingularFDBIO,
     test_refspace::LagrangeRefSpace{T,1} where T,
@@ -474,15 +513,15 @@ end
 
 
 function integrand(op::Union{HH3DSingleLayerFDBIO,HH3DSingleLayerReg},
-        kernel, test_values, test_element, trial_values, trial_element)
+    kernel, test_values, test_element, trial_values, trial_element)
 
-    α = op.alpha
-    G = kernel.green
+α = op.alpha
+G = kernel.green
 
-    g = test_values.value
-    f = trial_values.value
+g = test_values.value
+f = trial_values.value
 
-    α*dot(g, G*f)
+α*dot(g, G*f)
 end
 
 
@@ -511,6 +550,8 @@ end
 
 HH3DDoubleLayerFDBIO(gamma) = HH3DDoubleLayerFDBIO(one(gamma), gamma)
 
+regularpart(op::HH3DDoubleLayerFDBIO) = HH3DDoubleLayerReg(op.alpha, op.gamma)
+singularpart(op::HH3DDoubleLayerFDBIO) = HH3DDoubleLayerSng(op.alpha, op.gamma)
 
 function (igd::Integrand{<:HH3DDoubleLayerFDBIO})(x,y,f,g)
     γ = gamma(igd.operator)
@@ -540,6 +581,9 @@ end
 
 
  HH3DDoubleLayerTransposedFDBIO(gamma) = HH3DDoubleLayerTransposedFDBIO(one(gamma), gamma)
+
+regularpart(op::HH3DDoubleLayerTransposedFDBIO) = HH3DDoubleLayerTransposedReg(op.alpha, op.gamma)
+singularpart(op::HH3DDoubleLayerTransposedFDBIO) = HH3DDoubleLayerTransposedSng(op.alpha, op.gamma)
 
 function (igd::Integrand{<:HH3DDoubleLayerTransposedFDBIO})(x,y,f,g)
     γ = gamma(igd.operator)
