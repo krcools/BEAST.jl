@@ -16,6 +16,23 @@ struct HH3DHyperSingularFDBIO{T,K} <: Helmholtz3DOp
     gamma::K
 end
 
+struct HH3DHyperSingularReg{T,K} <: Helmholtz3DOpReg
+    "coefficient of the weakly singular term"
+    alpha::T
+    "coefficient of the hyper singular term"
+    beta::T
+    "`im*κ` with `κ` the wave number"
+    gamma::K
+end
+
+struct HH3DHyperSingularSng{T,K} <: Helmholtz3DOp
+    "coefficient of the weakly singular term"
+    alpha::T
+    "coefficient of the hyper singular term"
+    beta::T
+    "`im*κ` with `κ` the wave number"
+    gamma::K
+end
 HH3DHyperSingularFDBIO(gamma) = HH3DHyperSingularFDBIO(gamma^2, one(gamma), gamma)
 scalartype(op::HH3DHyperSingularFDBIO) = promote_type(typeof(op.alpha), typeof(op.beta), typeof(op.gamma))
 
@@ -45,7 +62,27 @@ struct HH3DDoubleLayerFDBIO{T,K} <: Helmholtz3DOp
     gamma::K
 end
 
+struct HH3DDoubleLayerReg{T,K} <: Helmholtz3DOpReg
+    alpha::T
+    gamma::K
+end
+
+struct HH3DDoubleLayerSng{T,K} <: Helmholtz3DOp
+    alpha::T
+    gamma::K
+end
+
 struct HH3DDoubleLayerTransposedFDBIO{T,K} <: Helmholtz3DOp
+    alpha::T
+    gamma::K
+end
+
+struct HH3DDoubleLayerTransposedReg{T,K} <: Helmholtz3DOpReg
+    alpha::T
+    gamma::K
+end
+
+struct HH3DDoubleLayerTransposedSng{T,K} <: Helmholtz3DOp
     alpha::T
     gamma::K
 end
@@ -165,6 +202,8 @@ function quadrule(op::HH3DSingleLayerFDBIO,
         qd.bsis_qp[1,j])
 end
 
+regularpart(op::HH3DHyperSingularFDBIO) = HH3DHyperSingularReg(op.alpha, op.beta, op.gamma)
+singularpart(op::HH3DHyperSingularFDBIO) = HH3DHyperSingularSng(op.alpha, op.beta, op.gamma)
 
 function quadrule(op::HH3DHyperSingularFDBIO,
     test_refspace::LagrangeRefSpace{T,1} where T,
@@ -433,60 +472,23 @@ function (igd::Integrand{<:HH3DSingleLayerFDBIO})(x,y,f,g)
     end
 end
 
-function (igd::Integrand{<:HH3DSingleLayerReg})(x,y,f,g)
-    α = igd.operator.alpha
-    γ = igd.operator.gamma
-
-    r = cartesian(x) - cartesian(y)
-    R = norm(r)
-    iR = 1 / R
-    green = (expm1(-γ*R) + γ*R - 0.5*γ^2*R^2) / (4pi*R)
-    αG = α * green
-
-    _integrands(f,g) do fi, gi
-        dot(gi.value, αG*fi.value)
-    end
-end
-
-
 function integrand(op::Union{HH3DSingleLayerFDBIO,HH3DSingleLayerReg},
-        kernel, test_values, test_element, trial_values, trial_element)
+    kernel, test_values, test_element, trial_values, trial_element)
 
-    α = op.alpha
-    G = kernel.green
+α = op.alpha
+G = kernel.green
 
-    g = test_values.value
-    f = trial_values.value
+g = test_values.value
+f = trial_values.value
 
-    α*dot(g, G*f)
+α*dot(g, G*f)
 end
-
-
-function innerintegrals!(op::HH3DSingleLayerSng, test_neighborhood,
-        test_refspace::LagrangeRefSpace{T,0} where {T},
-        trial_refspace::LagrangeRefSpace{T,0} where {T},
-        test_elements, trial_element, zlocal, quadrature_rule::WiltonSERule, dx)
-
-    γ = op.gamma
-    α = op.alpha
-
-    s1, s2, s3 = trial_element.vertices
-
-    x = cartesian(test_neighborhood)
-    n = normalize((s1-s3)×(s2-s3))
-    ρ = x - dot(x - s1, n) * n
-
-    scal, vec = WiltonInts84.wiltonints(s1, s2, s3, x, Val{1})
-    ∫G = (scal[2] - γ*scal[3] + 0.5*γ^2*scal[4]) / (4π)
-
-    zlocal[1,1] += α * ∫G * dx
-    return nothing
-end
-
 
 
 HH3DDoubleLayerFDBIO(gamma) = HH3DDoubleLayerFDBIO(one(gamma), gamma)
 
+regularpart(op::HH3DDoubleLayerFDBIO) = HH3DDoubleLayerReg(op.alpha, op.gamma)
+singularpart(op::HH3DDoubleLayerFDBIO) = HH3DDoubleLayerSng(op.alpha, op.gamma)
 
 function (igd::Integrand{<:HH3DDoubleLayerFDBIO})(x,y,f,g)
     γ = igd.operator.gamma
@@ -514,6 +516,9 @@ end
 
 
  HH3DDoubleLayerTransposedFDBIO(gamma) = HH3DDoubleLayerTransposedFDBIO(one(gamma), gamma)
+
+regularpart(op::HH3DDoubleLayerTransposedFDBIO) = HH3DDoubleLayerTransposedReg(op.alpha, op.gamma)
+singularpart(op::HH3DDoubleLayerTransposedFDBIO) = HH3DDoubleLayerTransposedSng(op.alpha, op.gamma)
 
 function (igd::Integrand{<:HH3DDoubleLayerTransposedFDBIO})(x,y,f,g)
     γ = igd.operator.gamma
