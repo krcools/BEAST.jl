@@ -46,7 +46,7 @@ end
 dimtype(::BDMRefSpace, ::CompScienceMeshes.Simplex{U,2}) where {U} = Val{6}
 
 #ncrossbdm
-
+#=
 struct NCrossBDMRefSpace{T} <: RefSpace{T,6} end
 
 function (f::NCrossBDMRefSpace{T})(p) where T
@@ -66,6 +66,6 @@ function (f::NCrossBDMRefSpace{T})(p) where T
         (value= n × (u*tu-u*tv)/j,  curl=d),
         (value= n × (u*tu)/j,         curl=d),
         (value= n × (v*tv)/j,         curl=d),]
-end
+end=#
 
 #dimtype(::NCrossBDMRefSpace, ::CompScienceMeshes.Simplex{U,2}) where {U} = Val{6}

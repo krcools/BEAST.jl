@@ -58,7 +58,7 @@ end
 divergence(X::BDMBasis, geo, fns) = LagrangeBasis{0,-1,1}(geo, fns, deepcopy(positions(X)))
 
 #NCrossBDMBasis
-
+#=
 struct NCrossBDMBasis{T,M,P} <: Space{T}
     geo::M
     fns::Vector{Vector{Shape{T}}}
@@ -112,4 +112,4 @@ function ncrossbdm(mesh, cellpairs::Array{Int,2})
     end
 
     NCrossBDMBasis(mesh, fns, pos)
-end
+end=#
