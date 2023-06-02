@@ -189,6 +189,7 @@ include("quadrature/sauterschwabints.jl")
 
 include("postproc.jl")
 include("postproc/segcurrents.jl")
+include("postproc/farfield.jl")
 
 include("timedomain/tdintegralop.jl")
 include("timedomain/tdexcitation.jl")
