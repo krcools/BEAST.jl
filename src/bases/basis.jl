@@ -56,7 +56,7 @@ geometry(s::Space) = s.geo
 basisfunction(s::Space, i) = s.fns[i]
 numfunctions(space::Space) = length(space.fns)
 
-mutable struct DirectProductSpace{T,S<:AbstractSpace} <: AbstractSpace
+struct DirectProductSpace{T,S<:AbstractSpace} <: AbstractSpace
     factors::Vector{S}
 end
 
@@ -65,6 +65,8 @@ function DirectProductSpace(factors::Vector{S}) where {S<:AbstractSpace}
     T = scalartype(factors...)
     return DirectProductSpace{T,S}(factors)
 end
+
+Base.getindex(dps::DirectProductSpace, i) = dps.factors[i]
 
 defaultquadstrat(op, tfs::DirectProductSpace, bfs::DirectProductSpace) = defaultquadstrat(op, tfs.factors[1], bfs.factors[1])
 defaultquadstrat(op, tfs::Space, bfs::DirectProductSpace) = defaultquadstrat(op, tfs, bfs.factors[1])
