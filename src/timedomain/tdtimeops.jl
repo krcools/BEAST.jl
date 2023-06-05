@@ -164,7 +164,8 @@ function assemble!(operator::TensorOperator, testfns, trialfns, store,
             store(w*v,m,n,k)
         end
     end
-    assemble!(space_operator, space_testfns, space_trialfns, store1)
+    assemble!(space_operator, space_testfns, space_trialfns,
+        store1, threading)
 
 end
 

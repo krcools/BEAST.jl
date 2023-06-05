@@ -4,6 +4,7 @@ using CompScienceMeshes
 using BEAST
 using StaticArrays
 using LinearAlgebra
+using BlockArrays
 
 for U in [Float32,Float64]
 
@@ -103,11 +104,15 @@ for U in [Float32,Float64]
     @test norm(nf_H_EFIE - H.(pts))/norm(H.(pts)) ≈ 0 atol=0.01
     @test norm(ff_E_EFIE - E.(pts, isfarfield=true))/norm(E.(pts, isfarfield=true)) ≈ 0 atol=0.01
 
-    K_bc = Matrix(assemble(𝓚,Y,X))
-    G_nxbc_rt = Matrix(assemble(𝓝,Y,X))
-    h_bc = η*Vector(assemble(𝒉,Y))
-    M_bc = -U(0.5)*G_nxbc_rt + K_bc
-    j_BCMFIE = M_bc\h_bc
+    @hilbertspace s
+    @hilbertspace t
+
+    MFIE_discretebilform = @discretise(
+        -U(0.5)*𝓝[t, s] + 𝓚[t, s] == η*𝒉[t],
+        s∈X, t∈Y
+    )
+
+    j_BCMFIE = solve(MFIE_discretebilform)[Block(1)]
 
     nf_E_BCMFIE = potential(MWSingleLayerField3D(wavenumber=k), pts, j_BCMFIE, X)
     nf_H_BCMFIE = potential(BEAST.MWDoubleLayerField3D(wavenumber=k), pts, j_BCMFIE, X) ./ η

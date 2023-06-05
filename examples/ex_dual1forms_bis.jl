@@ -150,7 +150,7 @@ Faces = submesh(!in(Bnd), CompScienceMeshes.skeleton_fast(Tetrs,2))
 
 F = 396
 Face = cells(Faces)[F]
-pos = cartesian(center(chart(Faces, F)))
+pos = cartesian(CompScienceMeshes.center(chart(Faces, F)))
 
 idcs1 = v2t[Face[1],1:v2n[Face[1]]]
 idcs2 = v2t[Face[2],1:v2n[Face[2]]]
@@ -179,7 +179,7 @@ port_edges = submesh(in(boundary(supp12)), port_edges)
 # Step 1: set port flux and extend to dual faces
 x0 = ones(length(port_edges)) / length(port_edges)
 for (i,edge) in enumerate(port_edges)
-    tgt = tangents(center(chart(port_edges, edge)),1)
+    tgt = tangents(CompScienceMeshes.center(chart(port_edges, edge)),1)
     if dot(normal(chart(Faces, F)), tgt) < 0
         x0[i] *= -1
     end

@@ -26,7 +26,7 @@ h = 1/60    #size of meshes
 
 κ = 2pi / 100
 V₀ = 1.0
-f = ScalarTrace(p -> V₀)
+f = ScalarTrace{typeof(V₀)}(p -> V₀)
 
 edges_all = skeleton(Γ, 1)
 edges_int = submesh(!in(boundary(Γ)), edges_all)
@@ -77,6 +77,10 @@ efie = @discretise( @varform(
     x∈X, y0∈Y0, y1∈Y1, z∈Z)
 u = solve(efie)
 
+# assemble(efie.equation.rhs, efie.test_space_dict)
+# @enter assemble(efie.equation.rhs, X + Y0 + Y1 + Z)
+# assemble(efie.equation.lhs, efie.test_space_dict, efie.trial_space_dict)
+
 # You can access the current coefficients pertaining to subspaces
 # using the Hilbert space 'placeholder'
 @show length(u[x])
@@ -84,7 +88,7 @@ u = solve(efie)
 @show length(u[y1])
 @show length(u[z])
 
-S = X + Y0 + Y1 + Z
+S = (((X + Y0) + Y1) + Z)
 fcr, geo = facecurrents(u, S)
 Plotly.plot(patch(geo, norm.(fcr))) |> display
 

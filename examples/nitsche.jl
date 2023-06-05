@@ -40,7 +40,14 @@ X = X1 × X2 × X3
 α, β = 1/(im*κ), log(abs(h))/(im*κ)
 Eq = @varform T[k,j] + α*S[trc(k), dvg(j)] + α*St[dvg(k), trc(j)] + β*I[trc(k), trc(j)] == e[k]
 eq = @discretise Eq  j∈X k∈X
+
+# trcX = trc(X)
+# dvgX = dvg(X)
+# Q1 = assemble(Eq.lhs.terms[2].kernel, trcX, dvgX; threading=BEAST.Threading{:single})
+# Q2 = assemble(Eq.lhs.terms[3].kernel, dvgX, trcX; threading=BEAST.Threading{:single})
+
 u = solve(eq)
+
 
 Θ, Φ = range(0.0,stop=π,length=100), 0.0
 ffpoints = [point(cos(ϕ)*sin(θ), sin(ϕ)*sin(θ), cos(θ)) for θ in Θ for ϕ in Φ]

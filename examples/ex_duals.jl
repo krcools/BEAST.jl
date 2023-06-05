@@ -99,7 +99,7 @@ J = [Ipp Zpd; Zpd' Idd];
 # P = inv(2J - C) * (2J + C);
 # Q = (2J - C) * inv(2J + C);
 
-jg = assemble(BEAST.ScalarTrace(p -> point(1,0,0)), primal1)
+jg = assemble(BEAST.ScalarTrace{eltype(x̂)}(p -> x̂), primal1)
 mG = zeros(numfunctions(dual1))
 
 b = [jg; mG]

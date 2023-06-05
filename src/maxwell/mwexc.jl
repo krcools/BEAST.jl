@@ -11,6 +11,8 @@ function PlaneWaveMW(d,p,k,a = 1)
     PlaneWaveMW{T,P}(d,p,k,a)
 end
 
+scalartype(x::PlaneWaveMW{T,P}) where {T,P} = promote_type(complex(T), eltype(P)) 
+
 """
     planewavemw3d(;direction, polarization, wavenumber[, amplitude=1])
 
@@ -57,6 +59,8 @@ function DipoleMW(l,o,k)
     DipoleMW{T,P}(l,o,k)
 end
 
+scalartype(x::DipoleMW{T,P}) where {T,P} = promote_type(complex(T), eltype(P)) 
+
 mutable struct curlDipoleMW{T,P} <: Dipole
     location::P
     orientation::P
@@ -68,6 +72,8 @@ function curlDipoleMW(l,o,k)
     P = similar_type(typeof(l), T)
     curlDipoleMW{T,P}(l,o,k)
 end
+
+scalartype(x::curlDipoleMW{T,P}) where {T,P} = promote_type(complex(T), eltype(P)) 
 
 """
     dipolemw3d(;location, orientation, wavenumber)
@@ -128,9 +134,13 @@ mutable struct CrossTraceMW{F} <: Functional
   field::F
 end
 
+scalartype(x::CrossTraceMW) = scalartype(x.field)
+
 mutable struct TangTraceMW{F} <: Functional
   field::F
 end
+
+scalartype(t::TangTraceMW) = scalartype(t.field)
 
 cross(::NormalVector, p::Function) = CrossTraceMW(p)
 cross(::NormalVector, p::PlaneWaveMW) = CrossTraceMW(p)
@@ -154,9 +164,13 @@ end
 integrand(::TangTraceMW, gx, ϕx) = gx[1] ⋅ ϕx
 integrand(::CrossTraceMW, test_vals, field_val) = test_vals[1] ⋅ field_val
 
-struct NDotTrace{F} <: Functional
+struct NDotTrace{T,F} <: Functional
   field::F
 end
+
+NDotTrace(f::F) where {F} = NDotTrace{scalartype(f), F}(f)
+NDotTrace{T}(f::F) where {T,F} = NDotTrace{T,F}(f)
+scalartype(s::NDotTrace{T}) where {T} = T
 
 (ϕ::NDotTrace)(p) = dot(normal(p), ϕ.field(cartesian(p)))
 integrand(::NDotTrace, g, ϕ) = dot(g.value, ϕ)

@@ -36,7 +36,8 @@ N = BEAST.TemporalDifferentiation(NCross()⊗Identity())
 M = 0.5*N + 1.0*K
 Z_mfie = assemble(M, W, V, storage_policy = Val{:bandedstorage})
 b_mfie = assemble(H, W)
-dot_xmfie = marchonintime(inv(Z_mfie[:,:,1]), Z_mfie, b_mfie, Nt)
+# dot_xmfie = marchonintime(inv(Z_mfie[:,:,1]), Z_mfie, b_mfie, Nt)
+dot_xmfie = marchonintime(inv(BEAST.ConvolutionOperators.timeslice(Z_mfie,1)), Z_mfie, b_mfie, Nt)
 
 # Xmfie, Δω, ω0 = fouriertransform(xmfie, Δt, 0.0, 2)
 # ω = collect(ω0 .+ (0:Nt-1)*Δω)

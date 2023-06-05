@@ -26,7 +26,7 @@ function brezzidouglasmarini3d(mesh, faces)
     #println(cells(faces))
 
 
-    for (i,face) in enumerate(cells(faces))
+    for (i,face) in enumerate(faces)
 
         fns[3*(i-1)+1] = Vector{Shape{T}}()
         fns[3*(i-1)+2] = Vector{Shape{T}}()

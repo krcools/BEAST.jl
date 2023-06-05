@@ -22,6 +22,8 @@ for T in [Float32, Float64]
     gradlp = grad(lp)
     @test gradlp(point(T,1,1,0)) == point(T, 0, 2, 0)
 
+    γnlp = dot(BEAST.NormalVector(), gradlp)
+
     import BEAST.∂n
     p = ∂n(f)
 

@@ -33,8 +33,8 @@ dvg = divergence
 @hilbertspace k q
 
 κ = 1.0
-curlA = strace(((x,y,z),)->-exp(-im*κ*z)*ŷ, Γ)
-ndotA = dot(n, ((x,y,z),)->-x*exp(-im*κ*z)*ẑ)
+curlA = BEAST.ScalarTrace{ComplexF64}(((x,y,z),)->-exp(-im*κ*z)*ŷ)
+ndotA = BEAST.NDotTrace{ComplexF64}(((x,y,z),)->-x*exp(-im*κ*z)*ẑ)
 a = @varform s[k,j] + s[dvg(k),p] +
     s[q,dvg(j)] - κ^2*s[q,p] == curlA[k]+ndotA[q]
 
@@ -42,8 +42,16 @@ Eq = @discretise a k∈X q∈Y j∈X p∈Y
 
 u = solve(Eq)
 
-uj = u[1:numfunctions(X)]
-up = u[numfunctions(X)+1:end]
+# lform = Eq.equation.rhs
+# @which scalartype(lform.terms[2].functional.field)
+# @enter assemble(Eq.equation.rhs, Eq.test_space_dict)
+# assemble(Eq.equation.lhs, Eq.test_space_dict, Eq.trial_space_dict)
+
+# uj = u[1:numfunctions(X)]
+# up = u[numfunctions(X)+1:end]
+
+uj = u[j]
+up = u[p]
 
 xrange = range(-2.0, stop=2.0, length=40)
 # xrange = [0.0]

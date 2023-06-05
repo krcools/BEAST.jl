@@ -5,6 +5,8 @@ mutable struct PlaneWaveVIE{T,P} <: Functional
     amplitude::T
   end
 
+  scalartype(x::PlaneWaveVIE{T,P}) where {T,P} = Complex{T}
+
   function PlaneWaveVIE(d,p,k,a = 1)
     T = promote_type(eltype(d), eltype(p), typeof(k), typeof(a))
     P = similar_type(typeof(d), T)

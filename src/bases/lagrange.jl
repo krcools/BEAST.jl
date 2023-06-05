@@ -171,7 +171,8 @@ Build lagrangec0d1 elements, including (dirichlet=false) or excluding (dirichlet
 """
 function lagrangec0d1(mesh; dirichlet::Bool=true)
     if dirichlet == false
-        return lagrangec0d1(mesh, boundary(mesh))
+        # return lagrangec0d1(mesh, boundary(mesh))
+        return lagrangec0d1(mesh, skeleton(mesh,0))
     else
         return lagrangec0d1_dirichlet(mesh)
     end

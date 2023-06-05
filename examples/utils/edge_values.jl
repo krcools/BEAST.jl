@@ -12,7 +12,7 @@ function edge_values(space, m)
         for k in nzrange(Conn, tet_id)
             edg_id = rowvals(Conn)[k]
             edge = chart(edgs, edg_id)
-            ctr = center(edge)
+            ctr = CompScienceMeshes.center(edge)
             tgt = tangents(ctr,1)
             ctr1 = neighborhood(tet, carttobary(tet, cartesian(ctr)))
             vals = rs(ctr1)

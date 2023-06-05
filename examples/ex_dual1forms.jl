@@ -75,7 +75,7 @@ Faces = submesh(!in(bnd_Tetrs), skeleton(Tetrs,2))
 
 F = 396
 Face = cells(Faces)[F]
-pos = cartesian(center(chart(Faces, F)))
+pos = cartesian(CompScienceMeshes.center(chart(Faces, F)))
 
 supp1 = submesh((m,tet) -> Face[1] in CompScienceMeshes.indices(m,tet), tetrs.mesh)
 supp2 = submesh((m,tet) -> Face[2] in CompScienceMeshes.indices(m,tet), tetrs.mesh)
@@ -133,7 +133,7 @@ Nd_int = BEAST.nedelecc3d(supp, int_edges)
 
 x0 = ones(length(port)) / length(port)
 for (i,edge) in enumerate(port)
-    tgt = tangents(center(chart(port,edge)),1)
+    tgt = tangents(CompScienceMeshes.center(chart(port,edge)),1)
     if dot(normal(chart(Faces,F)), tgt) < 0
         x0[i] *= -1
     end
@@ -197,7 +197,7 @@ include(joinpath(@__DIR__, "utils/edge_values.jl"))
 EV = edge_values(Y1,1)
 check_edge_values(EV)
 
-error("stop")
+# error("stop")
 
 Dir = boundary(Tetrs)
 Y = BEAST.dual1forms(Tetrs, Faces, Dir)

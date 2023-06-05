@@ -15,6 +15,9 @@ using FastGaussQuadrature
 using LinearMaps
 using LiftedMaps
 
+using AbstractTrees
+using NestedUnitRanges
+
 import LinearAlgebra: cross, dot
 import LinearAlgebra: ×, ⋅
 
@@ -170,9 +173,6 @@ include("bases/tensorbasis.jl")
 include("operator.jl")
 
 include("quadrature/quadstrats.jl")
-include("quadrature/double_quadrature.jl")
-include("quadrature/singularity_extraction.jl")
-include("quadrature/sauterschwabints.jl")
 
 include("excitation.jl")
 include("localop.jl")
@@ -181,6 +181,14 @@ include("identityop.jl")
 include("integralop.jl")
 include("interpolation.jl")
 include("quaddata.jl")
+
+include("quadrature/quaddata.jl")
+include("quadrature/quadrule.jl")
+
+include("quadrature/double_quadrature.jl")
+include("quadrature/singularity_extraction.jl")
+include("quadrature/sauterschwabints.jl")
+
 include("postproc.jl")
 include("postproc/segcurrents.jl")
 
@@ -238,6 +246,8 @@ include("utils/variational.jl")
 include("solvers/solver.jl")
 include("solvers/lusolver.jl")
 include("solvers/itsolver.jl")
+
+include("utils/plotlyglue.jl")
 
 
 

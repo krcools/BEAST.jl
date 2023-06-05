@@ -99,43 +99,43 @@ plot!(Θ, norm.(near0));
 scatter!(Θ, norm.(near1))
 # scatter!(Θ, norm.(near2))
 
-error()
+# error()
 
-using LinearAlgebra
-using Plots
-plotly()
-w0 = eigvals(Matrix(Sxx))
-w1 = eigvals(Matrix(sys))
-w2 = eigvals(Matrix(P * sys))
-plot(exp.(2pi*im*range(0,1,length=200)))
-scatter!(w0)
-scatter!(w1)
-scatter!(w2)
-
-
-function makesim(d::Dict)
-    @unpack h, κ = d
-    u1, ch1, u2, ch2, near1, near2, X = runsim(;h, κ)
-    fulld = merge(d, Dict(
-        "u1" => u1,
-        "u2" => u2,
-        "ch1" => ch1,
-        "ch2" => ch2,
-        "near1" => near1,
-        "near2" => near2
-    ))
-end
-
-method = splitext(basename(@__FILE__))[1]
+# using LinearAlgebra
+# using Plots
+# plotly()
+# w0 = eigvals(Matrix(SLxx))
+# w1 = eigvals(Matrix(sys))
+# w2 = eigvals(Matrix(P * sys))
+# plot(exp.(2pi*im*range(0,1,length=200)))
+# scatter!(w0)
+# scatter!(w1)
+# scatter!(w2)
 
 
-params = @strdict h κ
-dicts = dict_list(params)
-for (i,d) in enumerate(dicts)
-    @show d
-    f = makesim(d)
-    @tagsave(datadir("simulations", method, savename(d,"jld2")), f)
-end
+# function makesim(d::Dict)
+#     @unpack h, κ = d
+#     u1, ch1, u2, ch2, near1, near2, X = runsim(;h, κ)
+#     fulld = merge(d, Dict(
+#         "u1" => u1,
+#         "u2" => u2,
+#         "ch1" => ch1,
+#         "ch2" => ch2,
+#         "near1" => near1,
+#         "near2" => near2
+#     ))
+# end
+
+# method = splitext(basename(@__FILE__))[1]
+
+
+# params = @strdict h κ
+# dicts = dict_list(params)
+# for (i,d) in enumerate(dicts)
+#     @show d
+#     f = makesim(d)
+#     @tagsave(datadir("simulations", method, savename(d,"jld2")), f)
+# end
 
 #' Visualise the spectrum
 
@@ -176,7 +176,7 @@ end
 
 # Q = HY * iN * HX
 
-using AlgebraicMultigrid
-A = poisson(100)
-b = rand(100);
-solve(A, b, RugeStubenAMG(), maxiter=1, abstol=1e-6)
+# using AlgebraicMultigrid
+# A = poisson(100)
+# b = rand(100);
+# solve(A, b, RugeStubenAMG(), maxiter=1, abstol=1e-6)

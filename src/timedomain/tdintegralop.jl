@@ -120,11 +120,17 @@ function allocatestorage(op::RetardedPotential, testST, basisST,
 	Z = ConvolutionOperators.ConvOp(data, K0, K1, tail, len)
 
     function store1(v,m,n,k)
-		if Z.k0[m,n] ≤ k ≤ Z.k1[m,n]
-			Z.data[k - Z.k0[m,n] + 1,m,n] += v
-		elseif k == Z.k1[m,n]+1
-			Z.tail[m,n] += v
-		end
+        k0 = Z.k0[m,n]
+        k < k0 && return
+        k1 = Z.k1[m,n]
+        k > k1 + 1 && return
+        k > k1 && (Z.tail[m,n] += v; return)
+        Z.data[k - k0 + 1, m,n] += v
+		# if Z.k0[m,n] ≤ k ≤ Z.k1[m,n]
+		# 	Z.data[k - Z.k0[m,n] + 1,m,n] += v
+		# elseif k == Z.k1[m,n]+1
+		# 	Z.tail[m,n] += v
+		# end
 	end
 
     return ()->Z, store1
@@ -139,14 +145,41 @@ function assemble!(op::LinearCombinationOfOperators, tfs::SpaceTimeBasis, bfs::S
     end
 end
 
-function assemble!(op::RetardedPotential, testST, trialST, store,
-    threading=Threading{:multi}; quadstrat=defaultquadstrat(op, testST, trialST))
+function assemble!(op::RetardedPotential, testST::Space, trialST::Space, store,
+    threading::Type{Threading{:multi}}=Threading{:multi}; quadstrat=defaultquadstrat(op, testST, trialST))
 
 	Y, S = spatialbasis(testST), temporalbasis(testST)
+    X, R = spatialbasis(trialST), temporalbasis(trialST)
 
-	P = Threads.nthreads()
-	@assert P >= 1
-	splits = [round(Int,s) for s in range(0, stop=numfunctions(Y), length=P+1)]
+    T = Threads.nthreads()
+    M = length(spatialbasis(testST))
+    N = length(spatialbasis(trialST))
+
+    P = max(1, floor(Int, sqrt(M*T/N)))
+    Q = max(1, floor(Int, sqrt(N*T/M)))
+
+    rowsplits = [round(Int,s) for s in range(0, stop=M, length=P+1)]
+    colsplits = [round(Int,s) for s in range(0, stop=N, length=Q+1)]
+
+    idcs = CartesianIndices((1:P, 1:Q))
+    Threads.@threads for idx in idcs
+        i = idx[1]
+        j = idx[2]
+
+		rlo, rhi = rowsplits[i]+1, rowsplits[i+1]
+		rlo <= rhi || continue
+        clo, chi = colsplits[j]+1, colsplits[j+1]
+        clo <= chi || continue
+
+		Y_p = subset(Y, rlo:rhi)
+        X_q = subset(X, clo:chi)
+
+		store1 = (v,m,n,k) -> store(v,rlo+m-1,clo+n-1,k)
+		assemble_chunk!(op, Y_p ⊗ S, X_q ⊗ R, store1)
+	end
+
+	# P = Threads.nthreads()
+	# splits = [round(Int,s) for s in range(0, stop=numfunctions(Y), length=P+1)]
 
 	# @info "Starting assembly with $P threads:"
 	# Threads.@threads for i in 1:P
@@ -157,7 +190,7 @@ function assemble!(op::RetardedPotential, testST, trialST, store,
 	# 	assemble_chunk!(op, Y_p ⊗ S, trialST, store1)
 	# end
 
-	assemble_chunk!(op, testST, trialST, store)
+	# assemble_chunk!(op, testST, trialST, store)
 end
 
 function assemble_chunk!(op::RetardedPotential, testST, trialST, store; 
@@ -216,9 +249,9 @@ function assemble_chunk!(op::RetardedPotential, testST, trialST, store;
                 momintegrals!(z, op, U, V, W, τ, σ, ι, qr)
 
 		        # assemble in the global matrix
-		        for i in 1 : udim
-		            for j in 1 : vdim
-		                for d in 1 : wdim
+                for d in 1 : wdim
+                    for j in 1 : vdim
+		                for i in 1 : udim
 
 		                    v = z[i,j,d]
 
@@ -232,9 +265,9 @@ function assemble_chunk!(op::RetardedPotential, testST, trialST, store;
 									end # next κ
 		                        end # next ν
 		                    end # next μ
-		                end # next d
-		            end # next j
-		        end #next i
+		                end
+		            end
+		        end
 		    end # next r
 		end # next q
 
