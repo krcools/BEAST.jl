@@ -1,22 +1,21 @@
-struct BDMBasis{T,M,P} <: Space{T}
+struct NCrossBDMBasis{T,M,P} <: Space{T}
     geo::M
     fns::Vector{Vector{Shape{T}}}
     pos::Vector{P}
 end
 
-BDMBasis(geo, fns) = BDMBasis(geo, fns, Vector{vertextype(geo)}(undef,length(fns))) 
+NCrossBDMBasis(geo, fns) = NCrossBDMBasis(geo, fns, Vector{vertextype(geo)}(undef,length(fns))) 
 
-refspace(s::BDMBasis{T}) where {T} = BDMRefSpace{T}()
-subset(s::BDMBasis,I) = BDMBasis(s.geo, s.fns[I], s.pos[I])
+refspace(s::NCrossBDMBasis{T}) where {T} = NCrossBDMRefSpace{T}()
 
-function brezzidouglasmarini(mesh)
+function ncrossbdm(mesh)
     edges = skeleton(mesh, 1)
     cps = cellpairs(mesh, edges, dropjunctionpair=true)
     ids = findall(x -> x>0, cps[2,:])
-    brezzidouglasmarini(mesh, cps[:,ids])
+    ncrossbdm(mesh, cps[:,ids])
 end
 
-function brezzidouglasmarini(mesh, cellpairs::Array{Int,2})
+function ncrossbdm(mesh, cellpairs::Array{Int,2})
 
     @warn "brezzidouglasmarini(mesh, cellpairs) assumes mesh is oriented"
 
@@ -50,10 +49,5 @@ function brezzidouglasmarini(mesh, cellpairs::Array{Int,2})
         pos[2*(i-1)+2] = cntr
     end
 
-    BDMBasis(mesh, fns, pos)
+    NCrossBDMBasis(mesh, fns, pos)
 end
-
-
-
-divergence(X::BDMBasis, geo, fns) = LagrangeBasis{0,-1,1}(geo, fns, deepcopy(positions(X)))
-
