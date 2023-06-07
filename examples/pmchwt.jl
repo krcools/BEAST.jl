@@ -1,6 +1,25 @@
 using CompScienceMeshes, BEAST
 using LinearAlgebra
 
+
+function nearfield(um,uj,Xm,Xj,κ,η,points,
+    Einc=(x->point(0,0,0)),
+    Hinc=(x->point(0,0,0)))
+
+    K = BEAST.MWDoubleLayerField3D(wavenumber=κ)
+    T = BEAST.MWSingleLayerField3D(wavenumber=κ)
+
+    Em = potential(K, points, um, Xm)
+    Ej = potential(T, points, uj, Xj)
+    E = -Em + η * Ej + Einc.(points)
+
+    Hm = potential(T, points, um, Xm)
+    Hj = potential(K, points, uj, Xj)
+    H = 1/η*Hm + Hj + Hinc.(points)
+
+    return E, H
+end
+
 ϵ0 = 8.854e-12
 μ0 = 4π*1e-7
 c = 1/√(ϵ0*μ0)
@@ -75,23 +94,7 @@ Plotly.plot(patch(Γ, norm.(fcrj)))
 Plotly.plot(patch(Γ, norm.(fcrm)))
 
 
-function nearfield(um,uj,Xm,Xj,κ,η,points,
-    Einc=(x->point(0,0,0)),
-    Hinc=(x->point(0,0,0)))
 
-    K = BEAST.MWDoubleLayerField3D(wavenumber=κ)
-    T = BEAST.MWSingleLayerField3D(wavenumber=κ)
-
-    Em = potential(K, points, um, Xm)
-    Ej = potential(T, points, uj, Xj)
-    E = -Em + η * Ej + Einc.(points)
-
-    Hm = potential(T, points, um, Xm)
-    Hj = potential(K, points, uj, Xj)
-    H = 1/η*Hm + Hj + Hinc.(points)
-
-    return E, H
-end
 
 
 Z = range(-6,6,length=200)
