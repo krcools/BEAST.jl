@@ -15,7 +15,7 @@ e = (n × E) × n
 @hilbertspace j
 @hilbertspace k
 efie = @discretise t[k,j]==e[k]  j∈X k∈X
-u = gmres(efie; restart=1500)
+u, ch = BEAST.gmres_ch(efie; restart=1500)
 
 include("utils/postproc.jl")
 include("utils/plotresults.jl")

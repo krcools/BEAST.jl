@@ -68,7 +68,8 @@ LinearAlgebra.adjoint(A::GMRESSolver) = GMRESSolver(adjoint(A.linear_operator), 
 LinearAlgebra.transpose(A::GMRESSolver) = GMRESSolver(transpose(A.linear_operator), A.maxiter, A.restart, A.tol, A.verbose)
 
 
-function gmres(eq::DiscreteEquation; maxiter=0, restart=0, tol=0)
+
+function gmres_ch(eq::DiscreteEquation; maxiter=0, restart=0, tol=0)
 
     lhs = eq.equation.lhs
     rhs = eq.equation.rhs
@@ -84,8 +85,11 @@ function gmres(eq::DiscreteEquation; maxiter=0, restart=0, tol=0)
     else
         invZ = GMRESSolver(Z, maxiter=maxiter, restart=restart, tol=tol)
     end
-    x = invZ * b
+    x, ch = solve(invZ, b)
+    # x = invZ * b
 
     ax = nestedrange(Y, 1, numfunctions)
-    return PseudoBlockVector(x, (ax,))
+    return PseudoBlockVector(x, (ax,)), ch
 end
+
+gmres(eq::DiscreteEquation; maxiter=0, restart=0, tol=0) = gmres_ch(eq; maxiter, restart, tol)[1]
