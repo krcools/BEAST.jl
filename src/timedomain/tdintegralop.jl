@@ -82,6 +82,7 @@ function allocatestorage(op::RetardedPotential, testST, basisST,
     ::Type{LongDelays{:compress}})
     
     @info "Allocating mem for RP op compressing the static tail..."
+    blocksize = 256
 
 	T = eltype(op)
 
@@ -97,6 +98,21 @@ function allocatestorage(op::RetardedPotential, testST, basisST,
     M = numfunctions(tfs)
     N = numfunctions(bfs)
 
+    numrowblocks = div(M, blocksize)
+    numcolblocks = div(N, blocksize)
+
+    rowblocksizes = blocksize * ones(Int, numrowblocks)
+    colblocksizes = blocksize * ones(Int, numcolblocks)
+
+    rem(M, blocksize) == 0 || push!(rowblocksizes, rem(M, blocksize))
+    rem(N, blocksize) == 0 || push!(colblocksizes, rem(N, blocksize))
+
+    # K0 = BlockArray{Int}(undef, rowblocksizes, colblocksizes)
+    # K1 = BlockArray{Int}(undef, rowblocksizes, colblocksizes)
+
+    # fill!(K0, typemax(Int))
+    # fill!(K1, 0)
+
     K0 = fill(typemax(Int), M, N)
     K1 = zeros(Int, M, N)
 
@@ -109,14 +125,16 @@ function allocatestorage(op::RetardedPotential, testST, basisST,
 	tbf_trunc = truncatetail(tbf)
 	δ = timebasisdelta(Δt, Nt)
     print("Allocating memory for convolution operator: ")
-    assemble!(op_alloc, tfs⊗δ, bfs⊗tbf_trunc, store_alloc)
+    assemble_chunk!(op_alloc, tfs⊗δ, bfs⊗tbf_trunc, store_alloc)
     println("\nAllocated memory for convolution operator.")
+
+    len = has_tail ? Nt : maximum(K1)
+
+    # Z = ConvolutionOperators.BlockBandedConvOp{T}(undef, K0, K1, len, blocksize)
 
 	bandwidth = maximum(K1 .- K0 .+ 1)
 	data = zeros(T, bandwidth, M, N)
     tail = zeros(T, M, N)
-    # kmax = maximum(K1)
-    len = has_tail ? Nt : maximum(K1)
 	Z = ConvolutionOperators.ConvOp(data, K0, K1, tail, len)
 
     function store1(v,m,n,k)
@@ -126,11 +144,7 @@ function allocatestorage(op::RetardedPotential, testST, basisST,
         k > k1 + 1 && return
         k > k1 && (Z.tail[m,n] += v; return)
         Z.data[k - k0 + 1, m,n] += v
-		# if Z.k0[m,n] ≤ k ≤ Z.k1[m,n]
-		# 	Z.data[k - Z.k0[m,n] + 1,m,n] += v
-		# elseif k == Z.k1[m,n]+1
-		# 	Z.tail[m,n] += v
-		# end
+        return
 	end
 
     return ()->Z, store1
@@ -148,21 +162,42 @@ end
 function assemble!(op::RetardedPotential, testST, trialST, store,
     threading=Threading{:multi}; quadstrat=defaultquadstrat(op, testST, trialST))
 
+    blocksize = 1024
+
 	Y, S = spatialbasis(testST), temporalbasis(testST)
     X, R = spatialbasis(trialST), temporalbasis(trialST)
 
-    T = Threads.nthreads()
+    # T = Threads.nthreads()
     M = length(spatialbasis(testST))
     N = length(spatialbasis(trialST))
 
-    P = max(1, floor(Int, sqrt(M*T/N)))
-    Q = max(1, floor(Int, sqrt(N*T/M)))
+    # P = max(1, floor(Int, sqrt(M*T/N)))
+    # Q = max(1, floor(Int, sqrt(N*T/M)))
 
-    rowsplits = [round(Int,s) for s in range(0, stop=M, length=P+1)]
-    colsplits = [round(Int,s) for s in range(0, stop=N, length=Q+1)]
+    # rowsplits = [round(Int,s) for s in range(0, stop=M, length=P+1)]
+    # colsplits = [round(Int,s) for s in range(0, stop=N, length=Q+1)]
+    numrowblocks = div(M, blocksize)
+    numcolblocks = div(N, blocksize)
+
+    rowblocksizes = blocksize * ones(Int, numrowblocks)
+    colblocksizes = blocksize * ones(Int, numcolblocks)
+
+    rem(M, blocksize) == 0 || push!(rowblocksizes, rem(M, blocksize))
+    rem(N, blocksize) == 0 || push!(colblocksizes, rem(N, blocksize))
+
+    rowsplits = pushfirst!(cumsum(rowblocksizes), 0)
+    colsplits = pushfirst!(cumsum(colblocksizes), 0)
+
+    P = length(rowsplits)-1
+    Q = length(colsplits)-1
 
     idcs = CartesianIndices((1:P, 1:Q))
-    Threads.@threads for idx in idcs
+    @info "Assembling TD convolution operator in $(length(idcs)) blocks."
+    Z = store.Z
+    T = eltype(Z)
+    bandwidth = size(Z.data,1)
+    # Threads.@threads for idx in idcs
+    for idx in idcs
         i = idx[1]
         j = idx[2]
 
@@ -174,8 +209,33 @@ function assemble!(op::RetardedPotential, testST, trialST, store,
 		Y_p = subset(Y, rlo:rhi)
         X_q = subset(X, clo:chi)
 
-		store1 = (v,m,n,k) -> store(v,rlo+m-1,clo+n-1,k)
-		assemble_chunk!(op, Y_p ⊗ S, X_q ⊗ R, store1)
+        # Zij = Z[Block(i,j)]
+
+        rowidcs = rlo:rhi
+        colidcs = clo:chi
+
+        K0ij = Z.k0[rowidcs, colidcs]
+        K1ij = Z.k1[rowidcs, colidcs]
+
+        dataij = zeros(T, bandwidth, length(rowidcs), length(colidcs))
+        tailij = zeros(T, length(rowidcs), length(colidcs))
+
+        storeij = (v,m,n,k) -> begin
+            k0 = K0ij[m,n]
+            k < k0 && return
+            k1 = K1ij[m,n]
+            k > k1 + 1 && return
+            k > k1 && (tailij[m,n] += v; return)
+            dataij[k - k0 + 1, m,n] += v
+            return
+        end
+
+		# store1 = (v,m,n,k) -> store(v,rlo+m-1,clo+n-1,k)
+		assemble_chunk!(op, Y_p ⊗ S, X_q ⊗ R, storeij)
+
+        # transfer the results for this chunk to the global store
+        Z.data[:,rowidcs, colidcs] .+= dataij
+        Z.tail[rowidcs, colidcs] .+= tailij
 	end
 
 	# P = Threads.nthreads()
@@ -279,7 +339,7 @@ function assemble_chunk!(op::RetardedPotential, testST, trialST, store;
         end
     end # next p
 
-    println("")
+    myid == 1 && println("")
 end
 
 
