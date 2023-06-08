@@ -220,6 +220,8 @@ Base.eltype(x::SpaceTimeData{T}) where {T} = Vector{T}
 Base.size(x::SpaceTimeData) = (size(x.data)[1],)
 Base.getindex(x::SpaceTimeData, i::Int) = x.data[i,:]
 
+td_assemble(dlf::DiscreteLinform) = td_assemble(dlf.linform, dlf.test_space_dict)
+
 function td_assemble(lform::LinForm, test_space_dict)
 
     terms = lform.terms
@@ -362,17 +364,27 @@ end
 #     z = assemble(bf, test_space_dict, trial_space_dict)
 # end
 
+td_assemble(dbf::DiscreteBilform; materialize=BEAST.assemble) =
+    td_assemble(dbf.bilform, dbf.test_space_dict, dbf.trial_space_dict; materialize)
 
 
-function td_assemble(bilform::BilForm, test_space_dict, trial_space_dict)
+function td_assemble(bilform::BilForm, test_space_dict, trial_space_dict;
+    materialize=BEAST.assemble)
+
+    X = _spacedict_to_directproductspace(test_space_dict)
+    Y = _spacedict_to_directproductspace(trial_space_dict)
+
+    return td_assemble(bilform, X, Y)
+end
+
+function td_assemble(bilform::BilForm,
+    test_space_dict::DirectProductSpace,
+    trial_space_dict::DirectProductSpace)
 
     lhterms = bilform.terms
 
-    M = zeros(Int, length(test_space_dict))
-    N = zeros(Int, length(trial_space_dict))
-
-    for (p,x) in test_space_dict M[p]=numfunctions(spatialbasis(x)) end
-    for (p,x) in trial_space_dict N[p]=numfunctions(spatialbasis(x)) end
+    M = [length(fct.space) for fct in test_space_dict.factors]
+    N = [length(fct.space) for fct in trial_space_dict.factors]
 
     row_axis = BlockArrays.blockedrange(M)
     col_axis = BlockArrays.blockedrange(N)
@@ -384,13 +396,15 @@ function td_assemble(bilform::BilForm, test_space_dict, trial_space_dict)
         a = t.coeff * t.kernel
 
         m = t.test_id
-        x = test_space_dict[m]
+        # x = test_space_dict[m]
+        x = test_space_dict.factors[m]
         for op in reverse(t.test_ops)
             x = op[end](op[1:end-1]..., x)
         end
 
         n = t.trial_id
-        y = trial_space_dict[n]
+        # y = trial_space_dict[n]
+        y = trial_space_dict.factors[n]
         for op in reverse(t.trial_ops)
             y = op[end](op[1:end-1]..., y)
         end

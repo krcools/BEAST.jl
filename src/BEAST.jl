@@ -146,6 +146,7 @@ include("bases/local/laglocal.jl")
 include("bases/local/rtlocal.jl")
 include("bases/local/ndlocal.jl")
 include("bases/local/bdmlocal.jl")
+include("bases/local/ncrossbdmlocal.jl")
 include("bases/local/ndlcclocal.jl")
 include("bases/local/ndlcdlocal.jl")
 include("bases/local/bdm3dlocal.jl")
@@ -156,6 +157,7 @@ include("bases/rtxspace.jl")
 include("bases/bcspace.jl")
 include("bases/ndspace.jl")
 include("bases/bdmdiv.jl")
+include("bases/ncrossbdmspace.jl")
 include("bases/ndlccspace.jl")
 include("bases/ndlcdspace.jl")
 include("bases/dual3d.jl")
@@ -171,9 +173,6 @@ include("bases/tensorbasis.jl")
 include("operator.jl")
 
 include("quadrature/quadstrats.jl")
-include("quadrature/double_quadrature.jl")
-include("quadrature/singularity_extraction.jl")
-include("quadrature/sauterschwabints.jl")
 
 include("excitation.jl")
 include("localop.jl")
@@ -182,8 +181,17 @@ include("identityop.jl")
 include("integralop.jl")
 include("interpolation.jl")
 include("quaddata.jl")
+
+include("quadrature/quaddata.jl")
+include("quadrature/quadrule.jl")
+
+include("quadrature/double_quadrature.jl")
+include("quadrature/singularity_extraction.jl")
+include("quadrature/sauterschwabints.jl")
+
 include("postproc.jl")
 include("postproc/segcurrents.jl")
+include("postproc/farfield.jl")
 
 include("timedomain/tdintegralop.jl")
 include("timedomain/tdexcitation.jl")
@@ -239,6 +247,8 @@ include("utils/variational.jl")
 include("solvers/solver.jl")
 include("solvers/lusolver.jl")
 include("solvers/itsolver.jl")
+
+include("utils/plotlyglue.jl")
 
 
 

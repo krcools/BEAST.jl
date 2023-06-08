@@ -82,8 +82,10 @@ end
 MWDoubleLayerField3D(op::MWDoubleLayer3D) = MWDoubleLayerField3D(op.gamma)
 
 const MWField3D = Union{MWSingleLayerField3D,MWDoubleLayerField3D}
-quaddata(op::MWField3D,rs,els) = quadpoints(rs,els,(2,))
-quadrule(op::MWField3D,refspace,p,y,q,el,qdata) = qdata[1,q]
+defaultquadstrat(op::MWField3D, basis) = SingleNumQStrat(2)
+quaddata(op::MWField3D,rs,els,qs::SingleNumQStrat) = quadpoints(rs,els,(qs.quad_rule,))
+quadrule(op::MWField3D,refspace,p,y,q,el,qdata,qs::SingleNumQStrat) = qdata[1,q]
+
 function kernelvals(op::MWField3D,y,p)
 
         γ = op.gamma

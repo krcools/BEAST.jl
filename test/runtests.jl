@@ -66,6 +66,7 @@ include("test_compressed_storage.jl")
 
 include("test_tdop_scaling.jl")
 include("test_tdrhs_scaling.jl")
+include("test_td_tensoroperator.jl")
 
 include("test_variational.jl")
 

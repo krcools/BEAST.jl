@@ -41,6 +41,8 @@ function (f::HH3DLinearPotential)(r)
     return a * dot(d, r)
 end
 
+scalartype(f::HH3DLinearPotential{T}) where {T} = complex(T)
+
 struct gradHH3DLinearPotential{T,P}
     direction::P
     amplitude::T
@@ -124,9 +126,13 @@ end
 
 dot(::NormalVector, m::gradHH3DMonopole) = NormalDerivative(HH3DMonopole(m.position, m.wavenumber, m.amplitude))
 
-mutable struct DirichletTrace{F} <: Functional
+mutable struct DirichletTrace{T,F} <: Functional
     field::F
 end
+
+DirichletTrace(f::F) where {F} = DirichletTrace{scalartype(f), F}(f)
+DirichletTrace{T}(f::F) where {T,F} = DirichletTrace{T,F}(f)
+scalartype(s::DirichletTrace{T}) where {T} = T
 
 function (ϕ::DirichletTrace)(p)
     F = ϕ.field

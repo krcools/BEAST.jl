@@ -16,7 +16,7 @@ for T in [Float32, Float64]
         oref1 = BEAST.BDMRefSpace{T}()
         ishp1 = [BEAST.Shape{T}(1, j, 1.0), BEAST.Shape{T}(1, mod1(j+1,3)+3, 0.5), BEAST.Shape{T}(1, mod1(j+2,3)+3, 0.5)]
 
-        # we use the property that a nodal lagc0d2 function plus 1/2 times and the two adiacent edge lagc0d2 functions is equal to the nodal lagc0d1 function at the same nodes, and the same must be true for their surfcurl
+        # we use the property that a nodal lagc0d2 function plus 1/2 times the two adiacent edge lagc0d2 functions is equal to the nodal lagc0d1 function at the same nodes, and the same must be true for their surfcurl
         
         outputbdm = [BEAST.curl(iref1, ishp1[1], triang), BEAST.curl(iref1, ishp1[2], triang), BEAST.curl(iref1, ishp1[3], triang)]
 

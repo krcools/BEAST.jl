@@ -48,9 +48,9 @@ function HH3DDoubleLayerTransposedNear(;wavenumber=error("wavenumber is a requir
 end
 
 HH3DNear = Union{HH3DSingleLayerNear, HH3DDoubleLayerNear, HH3DDoubleLayerTransposedNear, HH3DHyperSingularNear}
-
-quaddata(op::HH3DNear,rs,els) = quadpoints(rs,els,(3,))
-quadrule(op::HH3DNear,refspace,p,y,q,el,qdata) = qdata[1,q]
+defaultquadstrat(op::HH3DNear, basis) = SingleNumQStrat(3)
+quaddata(op::HH3DNear,rs,els,qs::SingleNumQStrat) = quadpoints(rs,els,(qs.quad_rule,))
+quadrule(op::HH3DNear,refspace,p,y,q,el,qdata,qs::SingleNumQStrat) = qdata[1,q]
 
 function kernelvals(op::HH3DNear,y,p)
 

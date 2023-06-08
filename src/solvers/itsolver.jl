@@ -30,18 +30,18 @@ end
 operator(solver::GMRESSolver) = solver.linear_operator
 
 
-function solve(solver::GMRESSolver, b)
+function solve(solver::GMRESSolver, b; abstol=zero(real(eltype(b))), reltol=solver.tol)
     T = promote_type(eltype(solver), eltype(b))
     x = similar(Array{T}, axes(solver)[2])
     fill!(x,0)
-    x, ch = solve!(x, solver, b)
+    x, ch = solve!(x, solver, b; abstol, reltol)
 end
 
 
-function solve!(x, solver::GMRESSolver, b)
+function solve!(x, solver::GMRESSolver, b; abstol=zero(real(eltype(b))), reltol=solver.tol)
     op = operator(solver)
     x, ch = IterativeSolvers.gmres!(x, op, b, log=true,  maxiter=solver.maxiter,
-        restart=solver.restart, reltol=solver.tol, verbose=solver.verbose)
+        restart=solver.restart, reltol=reltol, abstol=abstol, verbose=solver.verbose)
     return x, ch
 end
 
