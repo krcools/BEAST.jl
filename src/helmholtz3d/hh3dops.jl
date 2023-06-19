@@ -153,9 +153,9 @@ end
 
 
 
-function quadrule(op::HH3DSingleLayerFDBIO,
-        test_refspace::LagrangeRefSpace{T,0} where T,
-        trial_refspace::LagrangeRefSpace{T,0} where T,
+function quadrule(op::Helmholtz3DOp,
+        test_refspace::LagrangeRefSpace,
+        trial_refspace::LagrangeRefSpace,
         i, test_element, j, trial_element, qd,
         qs::DoubleNumWiltonSauterQStrat)
 
@@ -205,9 +205,9 @@ end
 regularpart(op::HH3DHyperSingularFDBIO) = HH3DHyperSingularReg(op.alpha, op.beta, op.gamma)
 singularpart(op::HH3DHyperSingularFDBIO) = HH3DHyperSingularSng(op.alpha, op.beta, op.gamma)
 
-function quadrule(op::HH3DHyperSingularFDBIO,
-    test_refspace::LagrangeRefSpace{T,1} where T,
-    trial_refspace::LagrangeRefSpace{T,1} where T,
+#= function quadrule(op::HH3DHyperSingularFDBIO,
+    test_refspace::LagrangeRefSpace,
+    trial_refspace::LagrangeRefSpace,
     i, test_element, j, trial_element, qd,
     qs::DoubleNumWiltonSauterQStrat)
 
@@ -221,19 +221,21 @@ function quadrule(op::HH3DHyperSingularFDBIO,
     hits == 2 && return SauterSchwabQuadrature.CommonEdge(qd.gausslegendre[2])
     hits == 1 && return SauterSchwabQuadrature.CommonVertex(qd.gausslegendre[1])
 
-    # test_quadpoints  = qd.test_qp
-    # trial_quadpoints = qd.bsis_qp
-
-    # hits != 0 && return WiltonSERule(
-    #     test_quadpoints[1,i],
-    #     DoubleQuadRule(
-    #         test_quadpoints[1,i],
-    #         trial_quadpoints[1,j]))
+    test_quadpoints  = qd.test_qp
+    trial_quadpoints = qd.bsis_qp
+    h2 = volume(trial_element)
+    xtol2 = 0.2 * 0.2
+    k2 = abs2(op.gamma)
+    max(dmin2*k2, dmin2/16h2) < xtol2 && return WiltonSERule(
+        test_quadpoints[1,i],
+        DoubleQuadRule(
+            test_quadpoints[1,i],
+            trial_quadpoints[1,j]))
 
     return DoubleQuadRule(
         qd.test_qp[1,i],
         qd.bsis_qp[1,j])
-end
+end =#
 
 
 function quadrule(op::HH3DHyperSingularFDBIO,
@@ -310,7 +312,7 @@ function quadrule(op::Helmholtz3DOp,
         quadrature_data[2][1,j])
 end
 
-function quadrule(op::HH3DDoubleLayerTransposedFDBIO,
+#= function quadrule(op::HH3DDoubleLayerTransposedFDBIO,
     test_refspace::LagrangeRefSpace{T,1} where T,
     trial_refspace::LagrangeRefSpace{T,0} where T,
     i, test_element, j, trial_element, quadrature_data,
@@ -334,7 +336,7 @@ function quadrule(op::HH3DDoubleLayerTransposedFDBIO,
     trial_quadpoints = quadrature_data[2]
     test_quadpoints  = quadrature_data.test_qp
     trial_quadpoints = quadrature_data.bsis_qp
-#=     h2 = volume(trial_element)
+    h2 = volume(trial_element)
     xtol2 = 0.2 * 0.2
     k2 = abs2(op.gamma)
 
@@ -342,13 +344,14 @@ function quadrule(op::HH3DDoubleLayerTransposedFDBIO,
         test_quadpoints[1,i],
         DoubleQuadRule(
             test_quadpoints[1,i],
-            trial_quadpoints[1,j])) =#
+            trial_quadpoints[1,j]))
+
     return DoubleQuadRule(
         quadrature_data[1][1,i],
         quadrature_data[2][1,j])
-end
+end =#
 
-function quadrule(op::HH3DDoubleLayerFDBIO,
+#= function quadrule(op::HH3DDoubleLayerFDBIO,
     test_refspace::LagrangeRefSpace{T,0} where T,
     trial_refspace::LagrangeRefSpace{T,1} where T,
     i, test_element, j, trial_element, quadrature_data,
@@ -384,7 +387,7 @@ function quadrule(op::HH3DDoubleLayerFDBIO,
     return DoubleQuadRule(
         quadrature_data[1][1,i],
         quadrature_data[2][1,j])
-end
+end =#
 
 
 function quadrule(op::Helmholtz3DOp,

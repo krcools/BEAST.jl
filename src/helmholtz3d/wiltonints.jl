@@ -6,7 +6,7 @@ function (igd::Integrand{<:HH3DSingleLayerReg})(x,y,f,g)
     r = cartesian(x) - cartesian(y)
     R = norm(r)
     iR = 1 / R
-    green = (expm1(-γ*R) #= + γ*R =# - 0.5*γ^2*R^2) / (4pi*R)
+    green = (expm1(-γ*R) - 0.5*γ^2*R^2) / (4pi*R)
     αG = α * green
 
     _integrands(f,g) do fi, gi
@@ -29,13 +29,95 @@ n = normalize((s1-s3)×(s2-s3))
 ρ = x - dot(x - s1, n) * n
 
 scal, vec = WiltonInts84.wiltonints(s1, s2, s3, x, Val{1})
-∫G = (scal[2]#=  - γ*scal[3] =# + 0.5*γ^2*scal[4]) / (4π)
+∫G = (scal[2] + 0.5*γ^2*scal[4]) / (4π)
 
 zlocal[1,1] += α * ∫G * dx
 return nothing
 end
 
+# single layer with patch basis and pyramid testing
+function innerintegrals!(op::HH3DSingleLayerSng, test_neighborhood,
+    test_refspace::LagrangeRefSpace{T,1} where {T},
+    trial_refspace::LagrangeRefSpace{T,0} where {T},
+    test_elements, trial_element, zlocal, quadrature_rule::WiltonSERule, dx)
 
+γ = op.gamma
+α = op.alpha
+
+s1, s2, s3 = trial_element.vertices
+t1, t2, t3 = test_elements.vertices
+
+
+x = cartesian(test_neighborhood)
+n = normalize((s1-s3)×(s2-s3))
+ρ = x - dot(x - s1, n) * n
+
+scal, vec = WiltonInts84.wiltonints(s1, s2, s3, x, Val{1})
+∫G = (scal[2] + 0.5*γ^2*scal[4]) / (4π)
+Atot = 1/2*norm(cross(t3-t1,t3-t2))
+for i in 1:numfunctions(test_refspace)
+    Ai = 1/2*norm(cross(test_elements.vertices[mod1(i-1,3)]-x,test_elements.vertices[mod1(i+1,3)]-x))
+    g = Ai/Atot
+    for j in 1:numfunctions(trial_refspace)
+        zlocal[i,j] += α * ∫G * g * dx
+    end
+end
+return nothing
+end
+
+# single layer with pyramid basis and patch testing
+function innerintegrals!(op::HH3DSingleLayerSng, test_neighborhood,
+    test_refspace::LagrangeRefSpace{T,0} where {T},
+    trial_refspace::LagrangeRefSpace{T,1} where {T},
+    test_elements, trial_element, zlocal, quadrature_rule::WiltonSERule, dx)
+
+γ = op.gamma
+α = op.alpha
+
+s1, s2, s3 = trial_element.vertices
+
+x = cartesian(test_neighborhood)
+n = normalize((s1-s3)×(s2-s3))
+ρ = x - dot(x - s1, n) * n
+
+∫Rⁿ, ∫RⁿN = WiltonInts84.higherorder(s1,s2,s3,x,3)
+∫G = (∫RⁿN[2] + 0.5*γ^2*∫RⁿN[3]) / (4π)
+
+for i in 1:numfunctions(trial_refspace)
+zlocal[1,i] += α * ∫G[i] * dx
+end
+return nothing
+end
+
+#single layer with pyramid basis and pyramid testing
+function innerintegrals!(op::HH3DSingleLayerSng, test_neighborhood,
+    test_refspace::LagrangeRefSpace{T,1} where {T},
+    trial_refspace::LagrangeRefSpace{T,1} where {T},
+    test_elements, trial_element, zlocal, quadrature_rule::WiltonSERule, dx)
+
+γ = op.gamma
+α = op.alpha
+
+s1, s2, s3 = trial_element.vertices
+t1, t2, t3 = test_elements.vertices
+
+x = cartesian(test_neighborhood)
+n = normalize((s1-s3)×(s2-s3))
+ρ = x - dot(x - s1, n) * n
+
+∫Rⁿ, ∫RⁿN = WiltonInts84.higherorder(s1,s2,s3,x,3)
+∫G = (∫RⁿN[2] + 0.5*γ^2*∫RⁿN[3]) / (4π)
+
+Atot = 1/2*norm(cross(t3-t1,t3-t2))
+for i in 1:numfunctions(test_refspace)
+    Ai = 1/2*norm(cross(test_elements.vertices[mod1(i-1,3)]-x,test_elements.vertices[mod1(i+1,3)]-x))
+    g = Ai/Atot
+    for j in 1:numfunctions(trial_refspace)
+        zlocal[i,j] += α * ∫G[j] * g * dx
+    end
+end
+return nothing
+end
 
 # double layer transposed
 function (igd::Integrand{<:HH3DDoubleLayerTransposedReg})(x,y,f,g)
@@ -56,6 +138,33 @@ function (igd::Integrand{<:HH3DDoubleLayerTransposedReg})(x,y,f,g)
     return _krondot(fvalue,gvalue) * dot(n, gradgreen)
 end
 
+#double layer transposed with patch basis and pyramid testing
+function innerintegrals!(op::HH3DDoubleLayerTransposedSng, test_neighborhood,
+    test_refspace::LagrangeRefSpace{T,0,3,1} where {T},
+    trial_refspace::LagrangeRefSpace{T,0,3,1} where {T},
+    test_elements, trial_element, zlocal, quadrature_rule::WiltonSERule, dx)
+    γ = op.gamma
+    α = op.alpha
+
+    s1, s2, s3 = trial_element.vertices
+    t1, t2, t3 = test_elements.vertices
+    x = cartesian(test_neighborhood)
+    n = normalize((t1-t3)×(t2-t3))
+    ρ = x - dot(x - s1, n) * n
+
+    scal, vec, grad = WiltonInts84.wiltonints(s1, s2, s3, x, Val{1})
+
+    ∫∇G = -(grad[1]+0.5*γ^2*grad[3])/(4π)
+    ∫n∇G = dot(n,∫∇G)
+    for i in 1:numfunctions(test_refspace)
+        for j in 1:numfunctions(trial_refspace)
+            zlocal[i,j] += α * ∫n∇G * dx
+        end
+    end
+
+    return nothing
+end
+#double layer transposed with patch basis and pyramid testing
 function innerintegrals!(op::HH3DDoubleLayerTransposedSng, test_neighborhood,
     test_refspace::LagrangeRefSpace{T,1,3,3} where {T},
     trial_refspace::LagrangeRefSpace{T,0,3,1} where {T},
@@ -84,7 +193,62 @@ function innerintegrals!(op::HH3DDoubleLayerTransposedSng, test_neighborhood,
 
     return nothing
 end
+#double layer transposed with pyramid basis and patch testing
+function innerintegrals!(op::HH3DDoubleLayerTransposedSng, test_neighborhood,
+    test_refspace::LagrangeRefSpace{T,0,3,1} where {T},
+    trial_refspace::LagrangeRefSpace{T,1,3,3} where {T},
+    test_elements, trial_element, zlocal, quadrature_rule::WiltonSERule, dx)
+    γ = op.gamma
+    α = op.alpha
 
+    s1, s2, s3 = trial_element.vertices
+    t1, t2, t3 = test_elements.vertices
+    x = cartesian(test_neighborhood)
+    n = normalize((t1-t3)×(t2-t3))
+    ρ = x - dot(x - s1, n) * n
+
+    _, _, _, grad = WiltonInts84.higherorder(s1,s2,s3,x,3)
+
+    ∫∇G = -(grad[1] + 0.5*γ^2*grad[2]) / (4π)
+    for i in 1:numfunctions(test_refspace)
+        for j in 1:numfunctions(trial_refspace)
+            ∫n∇G = dot(n,∫∇G[j])
+            zlocal[i,j] += α * ∫n∇G  * dx
+        end
+    end
+
+    return nothing
+end
+#double layer transposed with pyramid basis and pyramid testing
+function innerintegrals!(op::HH3DDoubleLayerTransposedSng, test_neighborhood,
+    test_refspace::LagrangeRefSpace{T,1,3,3} where {T},
+    trial_refspace::LagrangeRefSpace{T,1,3,3} where {T},
+    test_elements, trial_element, zlocal, quadrature_rule::WiltonSERule, dx)
+    γ = op.gamma
+    α = op.alpha
+
+    s1, s2, s3 = trial_element.vertices
+    t1, t2, t3 = test_elements.vertices
+    x = cartesian(test_neighborhood)
+    n = normalize((t1-t3)×(t2-t3))
+    ρ = x - dot(x - s1, n) * n
+
+    _, _, _, grad = WiltonInts84.higherorder(s1,s2,s3,x,3)
+
+    ∫∇G = -(grad[1] + 0.5*γ^2*grad[2]) / (4π)
+
+    Atot = 1/2*norm(cross(t3-t1,t3-t2))
+    for i in 1:numfunctions(test_refspace)
+        Ai = 1/2*norm(cross(test_elements.vertices[mod1(i-1,3)]-x,test_elements.vertices[mod1(i+1,3)]-x))
+        g = Ai/Atot
+        for j in 1:numfunctions(trial_refspace)
+            ∫n∇G = dot(n,∫∇G[j])
+            zlocal[i,j] += α * ∫n∇G * g * dx
+        end
+    end
+
+    return nothing
+end
 # double layer
 function (igd::Integrand{<:HH3DDoubleLayerReg})(x,y,f,g)
     γ = igd.operator.gamma
@@ -104,7 +268,93 @@ function (igd::Integrand{<:HH3DDoubleLayerReg})(x,y,f,g)
     return _krondot(fvalue,gvalue) * dot(n, -gradgreen)
 
 end
+#double layer with pyramid basis and pyramid testing
+function innerintegrals!(op::HH3DDoubleLayerSng, p,
+    g::LagrangeRefSpace{T,1} where {T},
+    f::LagrangeRefSpace{T,1} where {T},
+    t, s, z, quadrature_rule::WiltonSERule, dx)
+    γ = op.gamma
+    α = op.alpha
 
+    s1, s2, s3 = s.vertices
+    t1, t2, t3 = t.vertices
+
+    x = cartesian(p)
+    n = normalize((s1-s3)×(s2-s3))
+    ρ = x - dot(x - s1, n) * n
+
+    _, _, _, grad = WiltonInts84.higherorder(s1,s2,s3,x,3)
+
+    ∫∇G = -(grad[1] + 0.5*γ^2*grad[2]) / (4π)
+
+    Atot = 1/2*norm(cross(t3-t1,t3-t2))
+    for i in 1:numfunctions(g)
+        Ai = 1/2*norm(cross(t.vertices[mod1(i-1,3)]-x,t.vertices[mod1(i+1,3)]-x))
+        g = Ai/Atot
+        for j in 1:numfunctions(f)     
+        z[i,j] += α * dot(n,-∫∇G[j]) * g * dx
+        end
+    end
+
+    return nothing
+end
+#double layer with patch basis and pyramid testing
+function innerintegrals!(op::HH3DDoubleLayerSng, p,
+    g::LagrangeRefSpace{T,0} where {T},
+    f::LagrangeRefSpace{T,0} where {T},
+    t, s, z, quadrature_rule::WiltonSERule, dx)
+    γ = op.gamma
+    α = op.alpha
+
+    s1, s2, s3 = s.vertices
+    t1, t2, t3 = t.vertices
+
+    x = cartesian(p)
+    n = normalize((s1-s3)×(s2-s3))
+    ρ = x - dot(x - s1, n) * n
+
+    scal, vec, grad = WiltonInts84.wiltonints(s1, s2, s3, x, Val{1})
+
+    ∫∇G = -(grad[1]+0.5*γ^2*grad[3])/(4π)
+
+    for i in 1:numfunctions(g)
+        for j in 1:numfunctions(f)
+            z[i,j] += α * dot(n,-∫∇G) * dx #why the minus?
+        end
+    end
+    return nothing
+end
+#double layer with patch basis and pyramid testing
+function innerintegrals!(op::HH3DDoubleLayerSng, p,
+    g::LagrangeRefSpace{T,1} where {T},
+    f::LagrangeRefSpace{T,0} where {T},
+    t, s, z, quadrature_rule::WiltonSERule, dx)
+    γ = op.gamma
+    α = op.alpha
+
+    s1, s2, s3 = s.vertices
+    t1, t2, t3 = t.vertices
+
+    x = cartesian(p)
+    n = normalize((s1-s3)×(s2-s3))
+    ρ = x - dot(x - s1, n) * n
+
+    scal, vec, grad = WiltonInts84.wiltonints(s1, s2, s3, x, Val{1})
+
+    ∫∇G = -(grad[1]+0.5*γ^2*grad[3])/(4π)
+
+    Atot = 1/2*norm(cross(t3-t1,t3-t2))
+for i in 1:numfunctions(g)
+    Ai = 1/2*norm(cross(t.vertices[mod1(i-1,3)]-x,t.vertices[mod1(i+1,3)]-x))
+    g = Ai/Atot
+    for j in 1:numfunctions(f)
+       z[i,j] += α * dot(n,-∫∇G) * g * dx
+    end
+end
+    return nothing
+end
+
+#double layer with pyramid basis and patch testing
 function innerintegrals!(op::HH3DDoubleLayerSng, p,
     g::LagrangeRefSpace{T,0} where {T},
     f::LagrangeRefSpace{T,1} where {T},
@@ -120,12 +370,12 @@ function innerintegrals!(op::HH3DDoubleLayerSng, p,
 
     _, _, _, grad = WiltonInts84.higherorder(s1,s2,s3,x,3)
 
-    ∫∇G = (-grad[1] - 0.5*γ^2*grad[2]) / (4π)
+    ∫∇G = -(grad[1] + 0.5*γ^2*grad[2]) / (4π)
 
   
 for i in 1:numfunctions(g)
-    for j in 1:numfunctions(f)     
-       z[i,j] += α * dot(n,∫∇G[j]) * dx
+    for j in 1:numfunctions(f)
+       z[i,j] += α * dot(n,-∫∇G[j]) * dx
     end
 end
 
