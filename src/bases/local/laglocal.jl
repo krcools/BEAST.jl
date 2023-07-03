@@ -42,7 +42,7 @@ end
 
 valuetype(ref::LagrangeRefSpace{T,1,3}, charttype) where {T} = 
       SVector{1,T}
-
+#=
 # Evaluate quadratic lagrange elements on a triangle
 function (f::LagrangeRefSpace{T,2,3})(t) where T
     u,v,w, = barycentric(t)
@@ -58,7 +58,7 @@ end
 
 valuetype(ref::LagrangeRefSpace{T,2,3}, charttype) where {T} = 
       SVector{1, T}
-    
+=#    
 
 """
     f(tangent_space, Val{:withcurl})
@@ -77,7 +77,6 @@ function (f::LagrangeRefSpace{T,1,3})(t, ::Type{Val{:withcurl}}) where T
     )
 end
 
-
 # Evaluate constant Lagrange elements on a triangle, with their curls
 function (f::LagrangeRefSpace{T,0,3})(t, ::Type{Val{:withcurl}}) where T
     i = one(T)
@@ -92,6 +91,7 @@ function curl(ref::LagrangeRefSpace{T,1,3} where {T}, sh, el)
     return [sh1, sh2]
 end
 
+#=
 function curl(ref::LagrangeRefSpace{T,2,3}, sh, el) where T
 
     j = 1.0 #volume(el) * factorial(dimension(el))
@@ -111,6 +111,7 @@ function curl(ref::LagrangeRefSpace{T,2,3}, sh, el) where T
     end 
 
 end
+=#
 
 function gradient(ref::LagrangeRefSpace{T,1,4}, sh, tet) where {T}
     this_vert = tet.vertices[sh.refid]
