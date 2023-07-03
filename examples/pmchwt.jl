@@ -160,7 +160,12 @@ Plots.heatmap(Z, Y, imag.(getindex.(H_tot,2)))
 Plots.plot(real.(getindex.(E_tot[:,51],1)))
 Plots.plot!(real.(getindex.(H_tot[:,51],2)))
 
-
+#=
+# Compare the far field and the field far
+ffradius = 100.0
+E_far, H_far = nearfield(u[m],u[j],X,X,κ,η, ffradius .* ffpoints)
+nxE_far = cross.(ffpoints, E_far) * (4π*ffradius) / exp(-im*κ*ffradius)
+Et_far = -cross.(ffpoints, nxE_far)
 
 plot()
 plot!(Θ, norm.(ff),label="far field")

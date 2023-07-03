@@ -133,6 +133,7 @@ function momintegrals!(op::VIEOperator,
 end
 
 function momintegrals!(biop::VIEOperator, tshs, bshs, tcell, bcell, z, strat::DoubleQuadRule)
+    #@timeit to "regular" begin
     # memory allocation here is a result from the type instability on strat
     # which is on purpose, i.e. the momintegrals! method is chosen based
     # on dynamic polymorphism.
