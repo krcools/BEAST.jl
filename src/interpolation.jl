@@ -43,7 +43,7 @@ function DofInterpolate(basis::RTBasis, field)
 
         bfs = basis.fns[b]
 
-        shape = bfs[2]
+        shape = bfs[1]
 
         cellid = shape.cellid
         refid = shape.refid
@@ -70,7 +70,7 @@ function DofInterpolate(basis::RTBasis, field)
 
     end
 
-    return res
+    return [r for r in res]
 
 end
 

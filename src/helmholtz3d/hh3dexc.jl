@@ -153,6 +153,13 @@ scalartype(s::NormalDerivative{T}) where {T} = T
 const ∂n = Val{:normalderivative}
 (::Type{Val{:normalderivative}})(f) = NormalDerivative(f)
 
+function (f::NormalDerivative)(nbd)
+    x = cartesian(nbd)
+    g = gradient(f.field)(x)
+    n = normal(nbd)
+    return dot(n,g)
+end
+
 function (f::NormalDerivative{T,F})(manipoint) where {T,F<:HH3DPlaneWave}
     d = f.field.direction
     k = f.field.wavenumber

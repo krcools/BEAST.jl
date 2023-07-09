@@ -2,7 +2,6 @@ import IterativeSolvers
 
 
 
-
 struct GMRESSolver{L,T} <: LinearMap{T}
     linear_operator::L
     maxiter::Int
@@ -93,3 +92,68 @@ function gmres_ch(eq::DiscreteEquation; maxiter=0, restart=0, tol=0)
 end
 
 gmres(eq::DiscreteEquation; maxiter=0, restart=0, tol=0) = gmres_ch(eq; maxiter, restart, tol)[1]
+
+
+
+struct CGSolver{L,M,T} <: LinearMap{T}
+    A::L
+    Pl::M
+    abstol::T
+    reltol::T
+    maxiter::Int
+    verbose::Bool
+end
+
+
+Base.size(solver::CGSolver) = reverse(size(solver.A))
+Base.axes(solver::CGSolver) = reverse(axes(solver.A))
+operator(solver::CGSolver) = solver.A
+
+
+cg(A;
+    Pl = IterativeSolvers.Identity(),
+    abstol::Real = zero(real(eltype(A))),
+    reltol::Real = sqrt(eps(real(eltype(A)))),
+    maxiter::Int = size(A,2),
+    verbose::Bool = false) = CGSolver(A, Pl, abstol, reltol, maxiter, verbose)
+
+
+function solve(solver::CGSolver, b)
+    T = promote_type(eltype(solver), eltype(b))
+    x = similar(Vector{T}, size(solver)[2])
+    fill!(x,0)
+    x, ch = solve!(x, solver, b)
+    z = similar(Array{T}, axes(solver)[2])
+    copyto!(z,x)
+    return z, ch
+end
+
+
+function solve!(x, solver::CGSolver, b)
+    op = operator(solver)
+    x, ch = IterativeSolvers.cg!(x, op, b;
+        Pl = solver.Pl,
+        abstol = solver.abstol,
+        reltol = solver.reltol,
+        maxiter = solver.maxiter,
+        verbose = solver.verbose,
+        log = true)
+    return x, ch
+end
+
+function LinearAlgebra.mul!(y::AbstractVecOrMat, solver::CGSolver, x::AbstractVector)
+    fill!(y,0)
+    y, ch = solve!(y, solver, x)
+    return y
+end
+
+
+struct Preconditioner{L,T} <: LinearMap{T}
+    A::L
+end
+
+Preconditioner(A::L) where {L} = Preconditioner{L,eltype(A)}(A)
+
+function LinearAlgebra.ldiv!(y, P::Preconditioner, x)
+    mul!(y, P.A, x)
+end
