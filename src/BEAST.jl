@@ -135,6 +135,7 @@ include("utils/specialfns.jl")
 include("utils/combinatorics.jl")
 include("utils/linearspace.jl")
 include("utils/zeromap.jl")
+include("utils/rank1map.jl")
 
 include("bases/basis.jl")
 include("bases/lincomb.jl")
