@@ -101,7 +101,7 @@ function (igd::Integrand{<:DoubleLayerRotatedMW3D})(x,y,f,g)
 
     # x = neighborhood(igd.test_chart,u)
     # y = neighborhood(igd.trial_chart,v)
-    j = jacobian(x) * jacobian(y)
+   # j = jacobian(x) * jacobian(y)
     nx = normal(x)
 
     r = cartesian(x) - cartesian(y)
@@ -117,7 +117,8 @@ function (igd::Integrand{<:DoubleLayerRotatedMW3D})(x,y,f,g)
     fvalue = getvalue(f)
     gvalue = getvalue(g)
 
-    jKg = cross.(Ref(K), j*gvalue)
+    #jKg = cross.(Ref(K), j*gvalue)
+    jKg = cross.(Ref(K), gvalue)
     jnxKg = cross.(Ref(nx), jKg)
     return _krondot(fvalue, jnxKg)
 end
