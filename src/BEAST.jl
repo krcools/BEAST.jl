@@ -61,6 +61,8 @@ export DirichletTrace
 export HH3DMonopole, gradHH3DMonopole
 export HH3DLinearPotential
 
+export alpha, beta, gamma
+
 export HH3DSingleLayerNear
 export HH3DDoubleLayerNear
 export HH3DDoubleLayerTransposedNear
