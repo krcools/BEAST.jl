@@ -321,3 +321,19 @@ function assemble!(op::BlockFullOperators, U::DirectProductSpace, V::DirectProdu
         end
     end
 end
+
+function gamma_wavenumber_handler(gamma, wavenumber)
+    if (gamma !== nothing) && (wavenumber !== nothing)
+        error("Supply one of (not both) gamma or wavenumber")
+    end
+
+    if gamma === nothing && (wavenumber !== nothing)
+        if iszero(real(wavenumber))
+            gamma = -imag(wavenumber)
+        else
+            gamma = im*wavenumber
+        end
+    end
+
+    return gamma, wavenumber
+end
