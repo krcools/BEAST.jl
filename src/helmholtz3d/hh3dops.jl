@@ -18,9 +18,6 @@ end
 
 HH3DHyperSingularFDBIO(gamma) = HH3DHyperSingularFDBIO(gamma^2, one(gamma), gamma)
 
-alpha(op::Union{Helmholtz3DOp{T,K},Helmholtz3DOpReg{T,K}}) where {T, K} = op.alpha
-beta(op::HH3DHyperSingularFDBIO{T,K}) where {T, K} = op.beta
-
 """
 ```math
 a(u,v) = α ∬_{Γ×Γ} u(x) G_{γ}(|x-y|) v(y)
@@ -376,8 +373,8 @@ end
 
 
 function (igd::Integrand{<:HH3DHyperSingularFDBIO})(x,y,f,g)
-    α = alpha(igd.operator)
-    β = beta(igd.operator)
+    α = igd.operator.alpha
+    β = igd.operator.beta
     γ = gamma(igd.operator)
 
     r = cartesian(x) - cartesian(y)
@@ -396,8 +393,8 @@ end
 function integrand(op::HH3DHyperSingularFDBIO,
         kernel, test_values, test_element, trial_values, trial_element)
 
-    α = alpha(op)
-    β = beta(op)
+    α = op.alpha
+    β = op.beta
 
     G = kernel.green
 
@@ -416,11 +413,11 @@ end
 
 HH3DSingleLayerFDBIO(gamma) = HH3DSingleLayerFDBIO(one(gamma), gamma)
 
-regularpart(op::HH3DSingleLayerFDBIO) = HH3DSingleLayerReg(alpha(op), gamma(op))
-singularpart(op::HH3DSingleLayerFDBIO) = HH3DSingleLayerSng(alpha(op), gamma(op))
+regularpart(op::HH3DSingleLayerFDBIO) = HH3DSingleLayerReg(op.alpha, gamma(op))
+singularpart(op::HH3DSingleLayerFDBIO) = HH3DSingleLayerSng(op.alpha, gamma(op))
 
 function (igd::Integrand{<:HH3DSingleLayerFDBIO})(x,y,f,g)
-    α = alpha(igd.operator)
+    α = igd.operator.alpha
     γ = gamma(igd.operator)
 
    r = cartesian(x) - cartesian(y)
@@ -436,7 +433,7 @@ function (igd::Integrand{<:HH3DSingleLayerFDBIO})(x,y,f,g)
 end
 
 function (igd::Integrand{<:HH3DSingleLayerReg})(x,y,f,g)
-    α = alpha(igd.operator)
+    α = igd.operator.alpha
     γ = gamma(igd.operator)
 
     r = cartesian(x) - cartesian(y)
@@ -454,7 +451,7 @@ end
 function integrand(op::Union{HH3DSingleLayerFDBIO,HH3DSingleLayerReg},
         kernel, test_values, test_element, trial_values, trial_element)
 
-    α = alpha(op)
+    α = op.alpha
     G = kernel.green
 
     g = test_values.value
@@ -470,7 +467,7 @@ function innerintegrals!(op::HH3DSingleLayerSng, test_neighborhood,
         test_elements, trial_element, zlocal, quadrature_rule::WiltonSERule, dx)
 
     γ = gamma(op)
-    α = alpha(op)
+    α = op.alpha
 
     s1, s2, s3 = trial_element.vertices
 
