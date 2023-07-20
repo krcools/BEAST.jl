@@ -1,6 +1,6 @@
 
-abstract type Helmholtz3DOp{T,K} <: MaxwellOperator3D end
-abstract type Helmholtz3DOpReg{T,K} <: MaxwellOperator3DReg end
+abstract type Helmholtz3DOp{T,K} <: MaxwellOperator3D{T,K} end
+abstract type Helmholtz3DOpReg{T,K} <: MaxwellOperator3DReg{T,K} end
 """
 ```
 ∫_Γ dx ∫_Γ dy \\left(α G g(x) n_x ⋅ n_y f(y) + β G \\mbox{curl} g(x) ⋅ \\mbox{curl} f(y) \\right)
@@ -18,13 +18,8 @@ end
 
 HH3DHyperSingularFDBIO(gamma) = HH3DHyperSingularFDBIO(gamma^2, one(gamma), gamma)
 
-scalartype(op::Helmholtz3DOp{T,K}) where {T, K <: Nothing} = T
-scalartype(op::Helmholtz3DOp{T,K}) where {T, K} = promote_type(T, K)
-
 alpha(op::Union{Helmholtz3DOp{T,K},Helmholtz3DOpReg{T,K}}) where {T, K} = op.alpha
 beta(op::HH3DHyperSingularFDBIO{T,K}) where {T, K} = op.beta
-gamma(op::Union{Helmholtz3DOp{T,K}, Helmholtz3DOpReg{T,K}}) where {T, K <: Nothing} = T(0)
-gamma(op::Union{Helmholtz3DOp{T,K}, Helmholtz3DOpReg{T,K}}) where {T, K} = op.gamma
 
 """
 ```math

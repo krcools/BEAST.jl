@@ -9,7 +9,7 @@ module Helmholtz3D
         wavenumber=nothing
     )
 
-        alpha, gamma = parameter_handler(alpha, gamma, wavenumber)
+        alpha, gamma = Mod.operator_parameter_handler(alpha, gamma, wavenumber)
 
         return Mod.HH3DSingleLayerFDBIO(alpha,gamma)
     end
@@ -20,7 +20,7 @@ module Helmholtz3D
         wavenumber=nothing
     )
 
-        alpha, gamma = parameter_handler(alpha, gamma, wavenumber)
+        alpha, gamma = Mod.operator_parameter_handler(alpha, gamma, wavenumber)
 
         return Mod.HH3DDoubleLayerFDBIO(alpha, gamma)
     end
@@ -31,7 +31,7 @@ module Helmholtz3D
         wavenumber=nothing
     )
 
-        alpha, gamma = parameter_handler(alpha, gamma, wavenumber)
+        alpha, gamma = Mod.operator_parameter_handler(alpha, gamma, wavenumber)
 
         return Mod.HH3DDoubleLayerTransposedFDBIO(alpha, gamma)
     end
@@ -114,21 +114,6 @@ module Helmholtz3D
         return Mod.gradHH3DMonopole(position, gamma, amplitude)
     end
 
-    function parameter_handler(alpha, gamma, wavenumber)
-
-        gamma, wavenumber = Mod.gamma_wavenumber_handler(gamma, wavenumber)
-
-        if alpha === nothing
-            if gamma !== nothing
-                alpha = one(real(typeof(gamma)))
-            else
-                # We are dealing with a static problem. Default to double precision.
-                alpha = 1.0
-            end
-        end
-
-        return alpha, gamma
-    end
 end
 
 export Helmholtz3D

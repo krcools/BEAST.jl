@@ -1,11 +1,12 @@
 
 
-mutable struct DoubleLayerRotatedMW3D{T} <: MaxwellOperator3D
+mutable struct DoubleLayerRotatedMW3D{T,K} <: MaxwellOperator3D{T,K}
     "im times the wavenumber"
-    gamma::T
+    alpha::T
+    gamma::K
 end
 
-LinearAlgebra.cross(::NormalVector, a::MWDoubleLayer3D) = DoubleLayerRotatedMW3D(a.gamma)
+LinearAlgebra.cross(::NormalVector, a::MWDoubleLayer3D) = DoubleLayerRotatedMW3D(a.alpha, a.gamma)
 
 # defaultquadstrat(::DoubleLayerRotatedMW3D, tfs, bfs) = DoubleNumQStrat(2,3)
 
@@ -55,7 +56,7 @@ function quadrule(op::DoubleLayerRotatedMW3D, g::RTRefSpace, f::RTRefSpace,  i, 
   
     h2 = volume(σ)
     xtol2 = 0.2 * 0.2
-    k2 = abs2(op.gamma)
+    k2 = abs2(gamma(op))
     return DoubleQuadRule(
         qd.tpoints[1,i],
         qd.bpoints[1,j],)
@@ -107,7 +108,7 @@ function (igd::Integrand{<:DoubleLayerRotatedMW3D})(x,y,f,g)
     r = cartesian(x) - cartesian(y)
     R = norm(r)
     iR = 1/R
-    γ = igd.operator.gamma
+    γ = gamma(igd.operator)
     G = exp(-γ*R)/(4π*R)
     K = -(γ + iR) * G * (iR * r)
 
