@@ -2,6 +2,7 @@ module Helmholtz3D
 
     using ..BEAST
     const Mod = BEAST
+    using LinearAlgebra
 
     function singlelayer(;
         alpha=nothing,

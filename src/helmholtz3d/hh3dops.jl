@@ -489,17 +489,19 @@ HH3DDoubleLayerFDBIO(gamma) = HH3DDoubleLayerFDBIO(one(gamma), gamma)
 
 function (igd::Integrand{<:HH3DDoubleLayerFDBIO})(x,y,f,g)
     γ = gamma(igd.operator)
+    α = igd.operator.alpha
 
     r = cartesian(x) - cartesian(y)
     R = norm(r)
     iR = 1/R
     green = exp(-γ*R)*(iR*i4pi)
     gradgreen = -(γ + iR) * green * (iR * r)
+    αgradgreen = α * gradgreen
     n = normal(y)
     fvalue = getvalue(f)
     gvalue = getvalue(g)
 
-    return _krondot(fvalue,gvalue) * dot(n, -gradgreen)
+    return _krondot(fvalue,gvalue) * dot(n, -αgradgreen)
 end
 
 
@@ -516,17 +518,19 @@ end
 
 function (igd::Integrand{<:HH3DDoubleLayerTransposedFDBIO})(x,y,f,g)
     γ = gamma(igd.operator)
+    α = igd.operator.alpha
 
     r = cartesian(x) - cartesian(y)
     R = norm(r)
     iR = 1/R
     green = exp(-γ*R)*(iR*i4pi)
     gradgreen = -(γ + iR) * green * (iR * r)
+    αgradgreen = α * gradgreen
     n = normal(x)
     fvalue = getvalue(f)
     gvalue = getvalue(g)
 
-    return _krondot(fvalue,gvalue) * dot(n, gradgreen)
+    return _krondot(fvalue,gvalue) * dot(n, αgradgreen)
 end
 
 function integrand(biop::HH3DDoubleLayerTransposedFDBIO,
