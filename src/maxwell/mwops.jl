@@ -104,7 +104,9 @@ end
 regularpart(op::MWDoubleLayer3D) = MWDoubleLayer3DReg(op.gamma)
 singularpart(op::MWDoubleLayer3D) = MWDoubleLayer3DSng(op.gamma)
 
-function quadrule(op::MaxwellOperator3D, g::RTRefSpace, f::RTRefSpace,  i, τ, j, σ, qd,
+const LinearRefSpaceTriangle = Union{RTRefSpace, NDRefSpace, BDMRefSpace, NCrossBDMRefSpace}
+
+function quadrule(op::MaxwellOperator3D, g::LinearRefSpaceTriangle, f::LinearRefSpaceTriangle,  i, τ, j, σ, qd,
       qs::DoubleNumWiltonSauterQStrat)
 
     T = eltype(eltype(τ.vertices))
@@ -193,6 +195,7 @@ function quadrule(op::MaxwellOperator3D, g::BDMRefSpace, f::BDMRefSpace,  i, τ,
       qd.tpoints[1,i],
       qd.bpoints[1,j],)
 end
+
 
 
 function qrib(op::MaxwellOperator3D, g::RTRefSpace, f::RTRefSpace, i, τ, j, σ, qd)
