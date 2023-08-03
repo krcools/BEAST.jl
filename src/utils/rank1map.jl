@@ -16,8 +16,8 @@ function LinearMaps._unsafe_mul!(y::AbstractVector, L::Rank1Map, x::AbstractVect
     y .+= α .* L.u .* dot(L.v, x)
 end
 
-function LinearMaps._unsafe_mul!(Y::AbstractMatrix, L::Rank1Map, c::Number, a::Number=true, b::Number=false)
-    rmul!(Y, b)
+function LinearMaps._unsafe_mul!(Y::AbstractMatrix, L::Rank1Map, c::Number, α::Number=true, β::Number=false)
+    rmul!(Y, β)
     Y .+= (L.u * L.v') .* c .* α
     return Y
 end

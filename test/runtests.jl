@@ -62,6 +62,7 @@ include("test_tdassembly.jl")
 include("test_tdhhdbl.jl")
 include("test_tdmwdbl.jl")
 include("test_compressed_storage.jl")
+include("test_dyadicop.jl")
 # include("test_matrixconv.jl")
 
 include("test_tdop_scaling.jl")

@@ -180,6 +180,7 @@ include("localop.jl")
 include("multiplicativeop.jl")
 include("identityop.jl")
 include("integralop.jl")
+include("dyadicop.jl")
 include("interpolation.jl")
 include("quaddata.jl")
 
