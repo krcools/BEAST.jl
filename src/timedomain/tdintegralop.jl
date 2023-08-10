@@ -139,9 +139,9 @@ end
 function assemble!(op::LinearCombinationOfOperators, tfs::SpaceTimeBasis, bfs::SpaceTimeBasis, store,
     threading=Threading{:multi}; quadstrat=defaultquadstrat(op, tfs, bfs))
 
-    for (a,A) in zip(op.coeffs, op.ops)
+    for (a,A,qs) in zip(op.coeffs, op.ops, quadstrat)
         store1(v,m,n,k) = store(a*v,m,n,k)
-        assemble!(A, tfs, bfs, store1)
+        assemble!(A, tfs, bfs, store1, threading; quadstrat=qs)
     end
 end
 
