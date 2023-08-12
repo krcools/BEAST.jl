@@ -333,7 +333,10 @@ function assemble(bf::BilForm, X::DirectProductSpace, Y::DirectProductSpace;
     U = BlockArrays.blockedrange(M)
     V = BlockArrays.blockedrange(N)
 
-    Z = ZeroMap{Float32}(U,V)
+    lincombv = LinearMap[]
+
+    T = Int32
+
     for term in bf.terms
         x = X.factors[term.test_id]
         for op in reverse(term.test_ops)
@@ -349,10 +352,15 @@ function assemble(bf::BilForm, X::DirectProductSpace, Y::DirectProductSpace;
 
         I = Block(term.test_id)
         J = Block(term.trial_id)
-        Z = Z + term.coeff * LiftedMap(z, I, J, U, V)
+
+        Smap = term.coeff * LiftedMap(z, I, J, U, V)
+
+        T = promote_type(T, eltype(Smap))
+
+        push!(lincombv, Smap)
     end
 
-    return Z
+    return LinearMaps.LinearCombination{T}(lincombv)
 end
 
 
