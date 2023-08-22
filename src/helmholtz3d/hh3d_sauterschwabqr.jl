@@ -14,7 +14,7 @@ function pulled_back_integrand(op::HH3DSingleLayerFDBIO,
         j = jacobian(x) * jacobian(y)
 
         α = op.alpha
-        γ = op.gamma
+        γ = gamma(op)
         R = norm(cartesian(x)-cartesian(y))
         G = exp(-γ*R)/(4*π*R)
 
@@ -45,7 +45,7 @@ function pulled_back_integrand(op::HH3DHyperSingularFDBIO,
 
         α = op.alpha
         β = op.beta
-        γ = op.gamma
+        γ = gamma(op)
         R = norm(cartesian(x)-cartesian(y))
         G = exp(-γ*R)/(4*π*R)
 
@@ -85,7 +85,7 @@ function pulled_back_integrand(op::HH3DDoubleLayerFDBIO,
         j = jacobian(x) * jacobian(y)
 
         α = op.alpha
-        γ = op.gamma
+        γ = gamma(op)
 
         r = cartesian(x) - cartesian(y)
         R = norm(r)
@@ -118,7 +118,7 @@ function pulled_back_integrand(op::HH3DDoubleLayerTransposedFDBIO,
         j = jacobian(x) * jacobian(y)
 
         α = op.alpha
-        γ = op.gamma
+        γ = gamma(op)
 
         r = cartesian(x) - cartesian(y)
         R = norm(r)

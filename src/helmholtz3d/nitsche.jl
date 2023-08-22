@@ -1,6 +1,6 @@
 
 
-mutable struct NitscheHH3{T} <: MaxwellOperator3D
+mutable struct NitscheHH3{T} <: MaxwellOperator3D{T,T}
     gamma::T
 end
 

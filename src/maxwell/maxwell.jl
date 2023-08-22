@@ -21,26 +21,13 @@ module Maxwell3D
             alpha=nothing,
             beta=nothing)
 
-        if (gamma == nothing) && (wavenumber == nothing)
-            error("Supply one of (not both) gamma or wavenumber")
-        end
+        
+        gamma, wavenumber = Mod.gamma_wavenumber_handler(gamma, wavenumber)
 
-        if (gamma != nothing) && (wavenumber != nothing)
-            error("Supply one of (not both) gamma or wavenumber")
-        end
+        @assert gamma !== nothing
 
-        if gamma == nothing
-            if iszero(real(wavenumber))
-                gamma = -imag(wavenumber)
-            else
-                gamma = im*wavenumber
-            end
-        end
-
-        @assert gamma != nothing
-
-        alpha == nothing && (alpha = -gamma)
-        beta  == nothing && (beta  = -1/gamma)
+        alpha === nothing && (alpha = -gamma)
+        beta  === nothing && (beta  = -1/gamma)
 
         Mod.MWSingleLayer3D(gamma, alpha, beta)
     end
@@ -55,32 +42,25 @@ module Maxwell3D
     Bilinear form given by:
 
     ```math
-        ∬_{Γ^2} k(x) ⋅ (∇G_γ(x-y) × j(y))
+        α ∬_{Γ^2} k(x) ⋅ (∇G_γ(x-y) × j(y))
     ```
 
     with ``G_γ = e^{-γ|x-y|} / 4π|x-y|``
     """
     function doublelayer(;
+            alpha=nothing,
             gamma=nothing,
             wavenumber=nothing)
 
-        if (gamma == nothing) && (wavenumber == nothing)
-            error("Supply one of (not both) gamma or wavenumber")
-        end
+        gamma, wavenumber = Mod.gamma_wavenumber_handler(gamma, wavenumber)
 
-        if (gamma != nothing) && (wavenumber != nothing)
-            error("Supply one of (not both) gamma or wavenumber")
-        end
-
-        if gamma == nothing
-            if iszero(real(wavenumber))
-                gamma = -imag(wavenumber)
+        if alpha === nothing
+            if gamma !== nothing
+                alpha = one(gamma)
             else
-                gamma = im*wavenumber
+                alpha = 1.0 # Default to double precision
             end
         end
-
-        @assert gamma != nothing
 
         Mod.MWDoubleLayer3D(gamma)
     end

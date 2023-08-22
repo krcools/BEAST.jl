@@ -1,13 +1,13 @@
 
-abstract type Helmholtz3DOp <: MaxwellOperator3D end
-abstract type Helmholtz3DOpReg <: MaxwellOperator3DReg end
+abstract type Helmholtz3DOp{T,K} <: MaxwellOperator3D{T,K} end
+abstract type Helmholtz3DOpReg{T,K} <: MaxwellOperator3DReg{T,K} end
 """
 ```
 ∫_Γ dx ∫_Γ dy \\left(α G g(x) n_x ⋅ n_y f(y) + β G \\mbox{curl} g(x) ⋅ \\mbox{curl} f(y) \\right)
 ```
 with ``G(x,y) = \\frac{e^{-γ |x-y|}}{4 π |x-y|}``
 """
-struct HH3DHyperSingularFDBIO{T,K} <: Helmholtz3DOp
+struct HH3DHyperSingularFDBIO{T,K} <: Helmholtz3DOp{T,K}
     "coefficient of the weakly singular term"
     alpha::T
     "coefficient of the hyper singular term"
@@ -21,7 +21,6 @@ function sign_upon_permutation(op::HH3DHyperSingularFDBIO, I, J)
 end
 
 HH3DHyperSingularFDBIO(gamma) = HH3DHyperSingularFDBIO(gamma^2, one(gamma), gamma)
-scalartype(op::HH3DHyperSingularFDBIO) = promote_type(typeof(op.alpha), typeof(op.beta), typeof(op.gamma))
 
 """
 ```math
@@ -29,17 +28,17 @@ a(u,v) = α ∬_{Γ×Γ} u(x) G_{γ}(|x-y|) v(y)
 ```
 with ``G_{γ}(r) = \\frac{e^{-γr}}{4πr}``.
 """
-struct HH3DSingleLayerFDBIO{T,K} <: Helmholtz3DOp
+struct HH3DSingleLayerFDBIO{T,K} <: Helmholtz3DOp{T,K}
     alpha::T
     gamma::K
 end
 
-struct HH3DSingleLayerReg{T,K} <: Helmholtz3DOpReg
+struct HH3DSingleLayerReg{T,K} <: Helmholtz3DOpReg{T,K}
     alpha::T
     gamma::K
 end
 
-struct HH3DSingleLayerSng{T,K} <: Helmholtz3DOp
+struct HH3DSingleLayerSng{T,K} <: Helmholtz3DOp{T,K}
     alpha::T
     gamma::K
 end
@@ -48,7 +47,11 @@ function sign_upon_permutation(op::HH3DSingleLayerFDBIO, I, J)
     return 1
 end
 
-struct HH3DDoubleLayerFDBIO{T,K} <: Helmholtz3DOp
+function sign_upon_permutation(op::HH3DSingleLayerFDBIO, I, J)
+    return 1
+end
+
+struct HH3DDoubleLayerFDBIO{T,K} <: Helmholtz3DOp{T,K}
     alpha::T
     gamma::K
 end
@@ -57,7 +60,11 @@ function sign_upon_permutation(op::HH3DDoubleLayerFDBIO, I, J)
     return Combinatorics.levicivita(J)
 end
 
-struct HH3DDoubleLayerTransposedFDBIO{T,K} <: Helmholtz3DOp
+function sign_upon_permutation(op::HH3DDoubleLayerFDBIO, I, J)
+    return Combinatorics.levicivita(J)
+end
+
+struct HH3DDoubleLayerTransposedFDBIO{T,K} <: Helmholtz3DOp{T,K}
     alpha::T
     gamma::K
 end
@@ -158,7 +165,7 @@ function quadrule(op::HH3DSingleLayerFDBIO,
     trial_quadpoints = qd.bsis_qp
     h2 = volume(trial_element)
     xtol2 = 0.2 * 0.2
-    k2 = abs2(op.gamma)
+    k2 = abs2(gamma(op))
     max(dmin2*k2, dmin2/16h2) < xtol2 && return WiltonSERule(
         test_quadpoints[1,i],
         DoubleQuadRule(
@@ -314,7 +321,7 @@ function quadrule(op::HH3DDoubleLayerTransposedFDBIO,
     trial_quadpoints = quadrature_data.bsis_qp
 #=     h2 = volume(trial_element)
     xtol2 = 0.2 * 0.2
-    k2 = abs2(op.gamma)
+    k2 = abs2(gamma(op))
 
     max(dmin2*k2, dmin2/16h2) < xtol2 && return WiltonSERule(
         test_quadpoints[1,i],
@@ -352,7 +359,7 @@ function quadrule(op::HH3DDoubleLayerFDBIO,
     trial_quadpoints = quadrature_data.bsis_qp
     h2 = volume(trial_element)
     xtol2 = 0.2 * 0.2
-    k2 = abs2(op.gamma)
+    k2 = abs2(gamma(op))
 
 #=     max(dmin2*k2, dmin2/16h2) < xtol2 && return WiltonSERule(
         test_quadpoints[1,i],
@@ -393,7 +400,7 @@ end
 function (igd::Integrand{<:HH3DHyperSingularFDBIO})(x,y,f,g)
     α = igd.operator.alpha
     β = igd.operator.beta
-    γ = igd.operator.gamma
+    γ = gamma(igd.operator)
 
     r = cartesian(x) - cartesian(y)
     R = norm(r)
@@ -431,12 +438,12 @@ end
 
 HH3DSingleLayerFDBIO(gamma) = HH3DSingleLayerFDBIO(one(gamma), gamma)
 
-regularpart(op::HH3DSingleLayerFDBIO) = HH3DSingleLayerReg(op.alpha, op.gamma)
-singularpart(op::HH3DSingleLayerFDBIO) = HH3DSingleLayerSng(op.alpha, op.gamma)
+regularpart(op::HH3DSingleLayerFDBIO) = HH3DSingleLayerReg(op.alpha, gamma(op))
+singularpart(op::HH3DSingleLayerFDBIO) = HH3DSingleLayerSng(op.alpha, gamma(op))
 
 function (igd::Integrand{<:HH3DSingleLayerFDBIO})(x,y,f,g)
     α = igd.operator.alpha
-    γ = igd.operator.gamma
+    γ = gamma(igd.operator)
 
    r = cartesian(x) - cartesian(y)
     R = norm(r)
@@ -452,7 +459,7 @@ end
 
 function (igd::Integrand{<:HH3DSingleLayerReg})(x,y,f,g)
     α = igd.operator.alpha
-    γ = igd.operator.gamma
+    γ = gamma(igd.operator)
 
     r = cartesian(x) - cartesian(y)
     R = norm(r)
@@ -484,7 +491,7 @@ function innerintegrals!(op::HH3DSingleLayerSng, test_neighborhood,
         trial_refspace::LagrangeRefSpace{T,0} where {T},
         test_elements, trial_element, zlocal, quadrature_rule::WiltonSERule, dx)
 
-    γ = op.gamma
+    γ = gamma(op)
     α = op.alpha
 
     s1, s2, s3 = trial_element.vertices
@@ -506,18 +513,20 @@ HH3DDoubleLayerFDBIO(gamma) = HH3DDoubleLayerFDBIO(one(gamma), gamma)
 
 
 function (igd::Integrand{<:HH3DDoubleLayerFDBIO})(x,y,f,g)
-    γ = igd.operator.gamma
+    γ = gamma(igd.operator)
+    α = igd.operator.alpha
 
     r = cartesian(x) - cartesian(y)
     R = norm(r)
     iR = 1/R
     green = exp(-γ*R)*(iR*i4pi)
     gradgreen = -(γ + iR) * green * (iR * r)
+    αgradgreen = α * gradgreen
     n = normal(y)
     fvalue = getvalue(f)
     gvalue = getvalue(g)
 
-    return _krondot(fvalue,gvalue) * dot(n, -gradgreen)
+    return _krondot(fvalue,gvalue) * dot(n, -αgradgreen)
 end
 
 
@@ -533,18 +542,20 @@ end
  HH3DDoubleLayerTransposedFDBIO(gamma) = HH3DDoubleLayerTransposedFDBIO(one(gamma), gamma)
 
 function (igd::Integrand{<:HH3DDoubleLayerTransposedFDBIO})(x,y,f,g)
-    γ = igd.operator.gamma
+    γ = gamma(igd.operator)
+    α = igd.operator.alpha
 
     r = cartesian(x) - cartesian(y)
     R = norm(r)
     iR = 1/R
     green = exp(-γ*R)*(iR*i4pi)
     gradgreen = -(γ + iR) * green * (iR * r)
+    αgradgreen = α * gradgreen
     n = normal(x)
     fvalue = getvalue(f)
     gvalue = getvalue(g)
 
-    return _krondot(fvalue,gvalue) * dot(n, gradgreen)
+    return _krondot(fvalue,gvalue) * dot(n, αgradgreen)
 end
 
 function integrand(biop::HH3DDoubleLayerTransposedFDBIO,
@@ -553,57 +564,3 @@ function integrand(biop::HH3DDoubleLayerTransposedFDBIO,
     np = normal(mp)
     fp[1] * dot(np, kernel.gradgreen) * fq[1]
 end
-
-
-module Helmholtz3D
-
-    using ..BEAST
-    const Mod = BEAST
-
-    function singlelayer(;
-        gamma=nothing,
-        wavenumber=nothing,
-        alpha=nothing)
-
-        if (gamma == nothing) && (wavenumber == nothing)
-            error("Supply one of (not both) gamma or wavenumber")
-        end
-
-        if (gamma != nothing) && (wavenumber != nothing)
-            error("Supply one of (not both) gamma or wavenumber")
-        end
-
-        if gamma == nothing
-            if iszero(real(wavenumber))
-                gamma = -imag(wavenumber)
-            else
-                gamma = im*wavenumber
-            end
-        end
-
-        @assert gamma != nothing
-        alpha == nothing && (alpha = one(real(typeof(gamma))))
-
-        Mod.HH3DSingleLayerFDBIO(alpha,gamma)
-    end
-
-    hypersingular(;
-            gamma=error("propagation constant is a required argument"),
-            alpha=gamma^2,
-            beta=one(gamma)) =
-        Mod.HH3DHyperSingularFDBIO(alpha, beta, gamma)
-
-    planewave(;
-            direction=error("direction is a required argument"),
-            wavenumber=error("wavenumber is a required arguement"),
-            amplitude=one(eltype(direction))) =
-        Mod.HH3DPlaneWave(direction, wavenumber)
-
-    doublelayer(;gamma=error("gamma missing"), alpha=one(gamma)) =
-        Mod.HH3DDoubleLayerFDBIO(alpha, gamma)
-
-    doublelayer_transposed(;gamma=error("gamma missing"), alpha=one(gamma)) =
-        Mod.HH3DDoubleLayerTransposedFDBIO(alpha, gamma)
-end
-
-export Helmholtz3D
