@@ -35,6 +35,9 @@ struct MWSingleLayer3D{T,U} <: MaxwellOperator3D
   β::U
 end
 
+scalartype(op::MWSingleLayer3D{T,U}) where {T,U} = promote_type(T,U)
+sign_upon_permutation(op::MWSingleLayer3D, I, J) = 1
+
 MWSingleLayer3D(gamma)  = MWSingleLayer3D(gamma, -gamma, -1/(gamma))
 MWWeaklySingular(gamma) = MWSingleLayer3D(gamma, 1, 0)
 MWHyperSingular(gamma)  = MWSingleLayer3D(gamma, 0, 1)
@@ -92,6 +95,8 @@ end
 struct MWDoubleLayer3D{T} <: MaxwellOperator3D
   gamma::T
 end
+
+sign_upon_permutation(op::MWDoubleLayer3D, I, J) = 1
 
 struct MWDoubleLayer3DSng{T} <: MaxwellOperator3D
     gamma::T

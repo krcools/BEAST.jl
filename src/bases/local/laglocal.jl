@@ -219,3 +219,40 @@ function curl(ref::LagrangeRefSpace{T,2,3} where {T}, sh, el)
     end
     return [sh1, sh2, sh3, sh4]
 end
+
+
+const _vert_perms_lag = [
+    (1,2,3),
+    (2,3,1),
+    (3,1,2),
+    (2,1,3),
+    (1,3,2),
+    (3,2,1),
+]
+
+const _dof_perms_lag0 = [
+    (1),
+    (1),
+    (1),
+    (1),
+    (1),
+    (1),
+]
+const _dof_perms_lag1 = [
+    (1,2,3),
+    (3,1,2),
+    (2,3,1),
+    (2,1,3),
+    (1,3,2),
+    (3,2,1),
+]
+
+function dof_permutation(::LagrangeRefSpace{<:Any,0}, vert_permutation)
+    i = findfirst(==(tuple(vert_permutation...)), _vert_perms_lag)
+    return _dof_perms_lag0[i]
+end
+
+function dof_permutation(::LagrangeRefSpace{<:Any,1}, vert_permutation)
+    i = findfirst(==(tuple(vert_permutation...)), _vert_perms_lag)
+    return _dof_perms_lag1[i]
+end

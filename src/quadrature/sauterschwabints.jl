@@ -82,6 +82,11 @@ function (igd::Integrand)(x,y,f,g)
 
 end
 
+
+# function sign_upon_permutation(op, I, J)
+#     return 1
+# end
+
 function momintegrals!(op::Operator,
     test_local_space::RefSpace, trial_local_space::RefSpace,
     test_chart, trial_chart, out, rule::SauterSchwabStrategy)
@@ -102,12 +107,13 @@ function momintegrals!(op::Operator,
 
     igd = Integrand(op, test_local_space, trial_local_space, test_chart, trial_chart)
     G = SauterSchwabQuadrature.sauterschwab_parameterized(igd, rule)
+    σ = sign_upon_permutation(op, I, J)
 
     K = dof_permutation(test_local_space, I)
     L = dof_permutation(trial_local_space, J)
     for i in 1:numfunctions(test_local_space)
         for j in 1:numfunctions(trial_local_space)
-            out[i,j] = G[K[i],L[j]]
+            out[i,j] = σ * G[K[i],L[j]]
     end end
 
     nothing

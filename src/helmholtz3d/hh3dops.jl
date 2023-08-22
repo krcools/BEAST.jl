@@ -16,6 +16,10 @@ struct HH3DHyperSingularFDBIO{T,K} <: Helmholtz3DOp
     gamma::K
 end
 
+function sign_upon_permutation(op::HH3DHyperSingularFDBIO, I, J)
+    return Combinatorics.levicivita(I) * Combinatorics.levicivita(J)
+end
+
 HH3DHyperSingularFDBIO(gamma) = HH3DHyperSingularFDBIO(gamma^2, one(gamma), gamma)
 scalartype(op::HH3DHyperSingularFDBIO) = promote_type(typeof(op.alpha), typeof(op.beta), typeof(op.gamma))
 
@@ -40,15 +44,28 @@ struct HH3DSingleLayerSng{T,K} <: Helmholtz3DOp
     gamma::K
 end
 
+function sign_upon_permutation(op::HH3DSingleLayerFDBIO, I, J)
+    return 1
+end
+
 struct HH3DDoubleLayerFDBIO{T,K} <: Helmholtz3DOp
     alpha::T
     gamma::K
+end
+
+function sign_upon_permutation(op::HH3DDoubleLayerFDBIO, I, J)
+    return Combinatorics.levicivita(J)
 end
 
 struct HH3DDoubleLayerTransposedFDBIO{T,K} <: Helmholtz3DOp
     alpha::T
     gamma::K
 end
+
+function sign_upon_permutation(op::HH3DDoubleLayerTransposedFDBIO, I, J)
+    return Combinatorics.levicivita(I)
+end
+
 
 defaultquadstrat(::Helmholtz3DOp, ::LagrangeRefSpace, ::LagrangeRefSpace) = DoubleNumWiltonSauterQStrat(2,3,2,3,4,4,4,4)
 
