@@ -1,4 +1,4 @@
-struct CurlSingleLayerDP3D{T,U} <: MaxwellOperator3D
+struct CurlSingleLayerDP3D{T,U} <: MaxwellOperator3D{U,T}
     gamma::T
     alpha::U
 end

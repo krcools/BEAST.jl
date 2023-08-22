@@ -1,5 +1,11 @@
-abstract type MaxwellOperator3D <: IntegralOperator end
-abstract type MaxwellOperator3DReg <: MaxwellOperator3D end
+abstract type MaxwellOperator3D{T,K} <: IntegralOperator end
+abstract type MaxwellOperator3DReg{T,K} <: MaxwellOperator3D{T,K} end
+
+scalartype(op::MaxwellOperator3D{T,K}) where {T, K <: Nothing} = T
+scalartype(op::MaxwellOperator3D{T,K}) where {T, K} = promote_type(T, K)
+
+gamma(op::MaxwellOperator3D{T,K}) where {T, K <: Nothing} = T(0)
+gamma(op::MaxwellOperator3D{T,K}) where {T, K} = op.gamma
 
 struct KernelValsMaxwell3D{T,U,P,Q}
     "gamma = im * wavenumber"
@@ -13,7 +19,7 @@ end
 const inv_4pi = 1/(4pi)
 function kernelvals(biop::MaxwellOperator3D, p, q)
 
-    γ = biop.gamma
+    γ = gamma(biop)
     r = cartesian(p) - cartesian(q)
     T = eltype(r)
     R = norm(r)
@@ -29,7 +35,7 @@ function kernelvals(biop::MaxwellOperator3D, p, q)
 end
 
 
-struct MWSingleLayer3D{T,U} <: MaxwellOperator3D
+struct MWSingleLayer3D{T,U} <: MaxwellOperator3D{T,U}
   gamma::T
   α::U
   β::U
@@ -43,19 +49,17 @@ MWHyperSingular(gamma)  = MWSingleLayer3D(gamma, 0, 1)
 
 export Maxwell3D
 
-struct MWSingleLayer3DReg{T,U} <: MaxwellOperator3DReg
+struct MWSingleLayer3DReg{T,U} <: MaxwellOperator3DReg{T,U}
     gamma::T
     α::U
     β::U
 end
 
-struct MWSingleLayer3DSng{T,U} <: MaxwellOperator3D
+struct MWSingleLayer3DSng{T,U} <: MaxwellOperator3D{T,U}
     gamma::T
     α::U
     β::U
 end
-
-scalartype(op::MaxwellOperator3D) = typeof(op.gamma)
 
 regularpart(op::MWSingleLayer3D) = MWSingleLayer3DReg(op.gamma, op.α, op.β)
 singularpart(op::MWSingleLayer3D) = MWSingleLayer3DSng(op.gamma, op.α, op.β)
@@ -89,20 +93,25 @@ function quaddata(op::MaxwellOperator3D,
     return (tpoints=tqd, bpoints=bqd, gausslegendre=leg)
 end
 
-struct MWDoubleLayer3D{T} <: MaxwellOperator3D
-  gamma::T
+struct MWDoubleLayer3D{T,K} <: MaxwellOperator3D{T,K}
+    alpha::T
+    gamma::K
 end
 
-struct MWDoubleLayer3DSng{T} <: MaxwellOperator3D
-    gamma::T
+struct MWDoubleLayer3DSng{T,K} <: MaxwellOperator3D{T,K}
+    alpha::T
+    gamma::K
 end
 
-struct MWDoubleLayer3DReg{T} <: MaxwellOperator3DReg
-    gamma::T
+struct MWDoubleLayer3DReg{T,K} <: MaxwellOperator3DReg{T,K}
+    alpha::T
+    gamma::K
 end
 
-regularpart(op::MWDoubleLayer3D) = MWDoubleLayer3DReg(op.gamma)
-singularpart(op::MWDoubleLayer3D) = MWDoubleLayer3DSng(op.gamma)
+MWDoubleLayer3D(gamma) = MWDoubleLayer3D(1.0, gamma) # For legacy purposes
+
+regularpart(op::MWDoubleLayer3D) = MWDoubleLayer3DReg(op.alpha, op.gamma)
+singularpart(op::MWDoubleLayer3D) = MWDoubleLayer3DSng(op.alpha, op.gamma)
 
 function quadrule(op::MaxwellOperator3D, g::RTRefSpace, f::RTRefSpace,  i, τ, j, σ, qd,
       qs::DoubleNumWiltonSauterQStrat)
@@ -125,7 +134,7 @@ function quadrule(op::MaxwellOperator3D, g::RTRefSpace, f::RTRefSpace,  i, τ, j
 
     h2 = volume(σ)
     xtol2 = 0.2 * 0.2
-    k2 = abs2(op.gamma)
+    k2 = abs2(gamma(op))
     max(dmin2*k2, dmin2/16h2) < xtol2 && return WiltonSERule(
         qd.tpoints[2,i],
         DoubleQuadRule(
@@ -156,7 +165,7 @@ function quadrule(op::MaxwellOperator3D, g::BDMRefSpace, f::BDMRefSpace,  i, τ,
 
   h2 = volume(σ)
   xtol2 = 0.2 * 0.2
-  k2 = abs2(op.gamma)
+  k2 = abs2(gamma(op))
   return DoubleQuadRule(
       qd.tpoints[1,i],
       qd.bpoints[1,j],)
@@ -168,7 +177,7 @@ function qrib(op::MaxwellOperator3D, g::RTRefSpace, f::RTRefSpace, i, τ, j, σ,
   dtol = 1.0e3 * eps(eltype(eltype(τ.vertices)))
   xtol = 0.2
 
-  k = norm(op.gamma)
+  k = norm(gamma(op))
 
   hits = 0
   xmin = xtol
@@ -209,7 +218,7 @@ function qrdf(op::MaxwellOperator3D, g::RTRefSpace, f::RTRefSpace, i, τ, j, σ,
   # decides on whether to use singularity extraction
   xtol = 0.2
 
-  k = norm(op.gamma)
+  k = norm(gamma(op))
 
   hits = 0
   xmin = xtol
@@ -318,4 +327,40 @@ function (igd::Integrand{<:MWDoubleLayer3DReg})(x,y,f,g)
     return _krondot(fvalue, G)
 end
 
+################################################################################
+#
+#  Handling of operator parameters (Helmholtz and Maxwell)
+#
+################################################################################
 
+function gamma_wavenumber_handler(gamma, wavenumber)
+  if (gamma !== nothing) && (wavenumber !== nothing)
+      error("Supply one of (not both) gamma or wavenumber")
+  end
+
+  if gamma === nothing && (wavenumber !== nothing)
+      if iszero(real(wavenumber))
+          gamma = -imag(wavenumber)
+      else
+          gamma = im*wavenumber
+      end
+  end
+
+  return gamma, wavenumber
+end
+
+function operator_parameter_handler(alpha, gamma, wavenumber)
+
+  gamma, wavenumber = gamma_wavenumber_handler(gamma, wavenumber)
+
+  if alpha === nothing
+      if gamma !== nothing
+          alpha = one(real(typeof(gamma)))
+      else
+          # We are dealing with a static problem. Default to double precision.
+          alpha = 1.0
+      end
+  end
+
+  return alpha, gamma
+end

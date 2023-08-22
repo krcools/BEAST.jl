@@ -26,8 +26,8 @@ using Test
     pos1 = SVector(r * 1.5, 0.0, 0.0)  # positioning of point charges
     pos2 = SVector(-r * 1.5, 0.0, 0.0)
 
-    charge1 = HH3DMonopole(position=pos1, amplitude=q/(4*π*ϵ), wavenumber=k)
-    charge2 = HH3DMonopole(position=pos2, amplitude=-q/(4*π*ϵ), wavenumber=k)
+    charge1 = Helmholtz3D.monopole(position=pos1, amplitude=q/(4*π*ϵ), wavenumber=k)
+    charge2 = Helmholtz3D.monopole(position=pos2, amplitude=-q/(4*π*ϵ), wavenumber=k)
 
     # Potential of point charges
 
@@ -89,8 +89,8 @@ using Test
     pos1 = SVector(r * 0.5, 0.0, 0.0)
     pos2 = SVector(-r * 0.5, 0.0, 0.0)
 
-    charge1 = HH3DMonopole(position=pos1, amplitude=q/(4*π*ϵ), wavenumber=k)
-    charge2 = HH3DMonopole(position=pos2, amplitude=-q/(4*π*ϵ), wavenumber=k)
+    charge1 = Helmholtz3D.monopole(position=pos1, amplitude=q/(4*π*ϵ), wavenumber=k)
+    charge2 = Helmholtz3D.monopole(position=pos2, amplitude=-q/(4*π*ϵ), wavenumber=k)
 
     gD0 = assemble(DirichletTrace(charge1), X0) + assemble(DirichletTrace(charge2), X0)
     gD1 = assemble(DirichletTrace(charge1), X1) + assemble(DirichletTrace(charge2), X1)
