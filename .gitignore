@@ -11,3 +11,5 @@ dev/
 profile/
 /Manifest.toml
 /envs/
+programs/
+results/
