@@ -20,7 +20,7 @@ function sign_upon_permutation(op::HH3DHyperSingularFDBIO, I, J)
     return Combinatorics.levicivita(I) * Combinatorics.levicivita(J)
 end
 
-struct HH3DHyperSingularReg{T,K} <: Helmholtz3DOpReg
+struct HH3DHyperSingularReg{T,K} <: Helmholtz3DOpReg{T,K}
     "coefficient of the weakly singular term"
     alpha::T
     "coefficient of the hyper singular term"
@@ -29,7 +29,7 @@ struct HH3DHyperSingularReg{T,K} <: Helmholtz3DOpReg
     gamma::K
 end
 
-struct HH3DHyperSingularSng{T,K} <: Helmholtz3DOp
+struct HH3DHyperSingularSng{T,K} <: Helmholtz3DOp{T,K}
     "coefficient of the weakly singular term"
     alpha::T
     "coefficient of the hyper singular term"
@@ -64,51 +64,41 @@ function sign_upon_permutation(op::HH3DSingleLayerFDBIO, I, J)
     return 1
 end
 
-function sign_upon_permutation(op::HH3DSingleLayerFDBIO, I, J)
-    return 1
-end
-
 struct HH3DDoubleLayerFDBIO{T,K} <: Helmholtz3DOp{T,K}
     alpha::T
     gamma::K
 end
 
-function sign_upon_permutation(op::HH3DDoubleLayerFDBIO, I, J)
-    return Combinatorics.levicivita(J)
+struct HH3DDoubleLayerReg{T,K} <: Helmholtz3DOpReg{T,K}
+    alpha::T
+    gamma::K
+end
+
+struct HH3DDoubleLayerSng{T,K} <: Helmholtz3DOp{T,K}
+    alpha::T
+    gamma::K
 end
 
 function sign_upon_permutation(op::HH3DDoubleLayerFDBIO, I, J)
     return Combinatorics.levicivita(J)
 end
-
 struct HH3DDoubleLayerTransposedFDBIO{T,K} <: Helmholtz3DOp{T,K}
-struct HH3DDoubleLayerReg{T,K} <: Helmholtz3DOpReg
     alpha::T
     gamma::K
 end
 
-struct HH3DDoubleLayerSng{T,K} <: Helmholtz3DOp
+struct HH3DDoubleLayerTransposedReg{T,K} <: Helmholtz3DOpReg{T,K}
     alpha::T
     gamma::K
 end
 
-struct HH3DDoubleLayerTransposedFDBIO{T,K} <: Helmholtz3DOp
+struct HH3DDoubleLayerTransposedSng{T,K} <: Helmholtz3DOp{T,K}
     alpha::T
     gamma::K
 end
 
 function sign_upon_permutation(op::HH3DDoubleLayerTransposedFDBIO, I, J)
     return Combinatorics.levicivita(I)
-end
-
-struct HH3DDoubleLayerTransposedReg{T,K} <: Helmholtz3DOpReg
-    alpha::T
-    gamma::K
-end
-
-struct HH3DDoubleLayerTransposedSng{T,K} <: Helmholtz3DOp
-    alpha::T
-    gamma::K
 end
 
 defaultquadstrat(::Helmholtz3DOp, ::LagrangeRefSpace, ::LagrangeRefSpace) = DoubleNumWiltonSauterQStrat(2,3,2,3,4,4,4,4)
@@ -499,21 +489,6 @@ function (igd::Integrand{<:HH3DSingleLayerFDBIO})(x,y,f,g)
     end
 end
 
-function (igd::Integrand{<:HH3DSingleLayerReg})(x,y,f,g)
-    α = igd.operator.alpha
-    γ = gamma(igd.operator)
-
-    r = cartesian(x) - cartesian(y)
-    R = norm(r)
-    iR = 1 / R
-    green = (expm1(-γ*R) + γ*R - 0.5*γ^2*R^2) / (4pi*R)
-    αG = α * green
-
-    _integrands(f,g) do fi, gi
-        dot(gi.value, αG*fi.value)
-    end
-end
-
 
 function integrand(op::Union{HH3DSingleLayerFDBIO,HH3DSingleLayerReg},
     kernel, test_values, test_element, trial_values, trial_element)
@@ -526,29 +501,6 @@ f = trial_values.value
 
 α*dot(g, G*f)
 end
-
-
-function innerintegrals!(op::HH3DSingleLayerSng, test_neighborhood,
-        test_refspace::LagrangeRefSpace{T,0} where {T},
-        trial_refspace::LagrangeRefSpace{T,0} where {T},
-        test_elements, trial_element, zlocal, quadrature_rule::WiltonSERule, dx)
-
-    γ = gamma(op)
-    α = op.alpha
-
-    s1, s2, s3 = trial_element.vertices
-
-    x = cartesian(test_neighborhood)
-    n = normalize((s1-s3)×(s2-s3))
-    ρ = x - dot(x - s1, n) * n
-
-    scal, vec = WiltonInts84.wiltonints(s1, s2, s3, x, Val{1})
-    ∫G = (scal[2] - γ*scal[3] + 0.5*γ^2*scal[4]) / (4π)
-
-    zlocal[1,1] += α * ∫G * dx
-    return nothing
-end
-
 
 
 HH3DDoubleLayerFDBIO(gamma) = HH3DDoubleLayerFDBIO(one(gamma), gamma)
