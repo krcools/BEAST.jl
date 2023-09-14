@@ -298,6 +298,8 @@ function (igd::Integrand{<:MWSingleLayer3D})(x,y,f,g)
         αG * dot(fi.value, gj.value) + βG * dot(fi.divergence, gj.divergence)
     end
 end
+ttrace(op::MWSingleLayer3D, mesh, or) = ZeroOperator(), SameBase()
+strace(op::MWSingleLayer3D, mesh, or) = ZeroOperator(), mesh
 
 function (igd::Integrand{<:MWSingleLayer3DReg})(x,y,f,g)
     α = igd.operator.α
@@ -334,7 +336,10 @@ function (igd::Integrand{<:MWDoubleLayer3D})(x,y,f,g)
     G = cross.(Ref(gradgreen), gvalue)
     return _krondot(fvalue, G)
 end
-
+ttrace(op::MWDoubleLayer3D, mesh, orientation::Inside) = 1/2*NCross(), SameBase()
+strace(op::MWDoubleLayer3D, mesh, orientation::Inside) = 1/2*NCross(), SameBase()
+ttrace(op::MWDoubleLayer3D, mesh, orientation::Outside) = -1/2*NCross(), SameBase()
+strace(op::MWDoubleLayer3D, mesh, orientation::Outside) = -1/2*NCross(), SameBase()
 
 function (igd::Integrand{<:MWnDoubleLayer3D})(x,y,f,g)
     
@@ -352,6 +357,9 @@ function (igd::Integrand{<:MWnDoubleLayer3D})(x,y,f,g)
   G = cross.(Ref(gradgreen), t1)
   return _krondot(fvalue, G)
 end
+
+ttrace(op::MWnDoubleLayer3D, mesh, or) = ZeroOperator(), SameBase()
+strace(op::MWnDoubleLayer3D, mesh, or) = ZeroOperator(), mesh
 
 function (igd::Integrand{<:MWDoubleLayer3DReg})(x,y,f,g)
     
@@ -389,6 +397,11 @@ function (igd::{Integrand{<:MWngreenint}})(x,y,f,g)
     return _krondot(fvalue,t2)
 end
 
+ttrace(op::MWngreenint, mesh, or) = ZeroOperator(), SameBase()
+strace(op::MWngreenint, mesh, or) = ZeroOperator(), mesh
+
+
+
 function (igd::{Integrand{<:MWgreenint}})(x,y,f,g)
   γ = igd.operator.gamma
 
@@ -405,6 +418,9 @@ function (igd::{Integrand{<:MWgreenint}})(x,y,f,g)
   t2 = green*gvalue
   return _krondot(fvalue,t2)
 end
+
+ttrace(op::MWgreenint, mesh, or) = ZeroOperator(), SameBase()
+strace(op::MWgreenint, mesh, or) = ZeroOperator(), mesh
 
 function (igd::{Integrand{<:MWgradgreenint}})(x,y,f,g)
   γ = igd.operator.gamma
@@ -424,7 +440,10 @@ function (igd::{Integrand{<:MWgradgreenint}})(x,y,f,g)
 
   return _krondot(fvalue,t2)
 end
-function (igd::{Integrand{<:MWgradgreenint}})(x,y,f,g)
+
+
+
+function (igd::{Integrand{<:MWngradgreenint}})(x,y,f,g)
   γ = igd.operator.gamma
 
   r = cartesian(x) - cartesian(y)
