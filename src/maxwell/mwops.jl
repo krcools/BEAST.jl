@@ -41,12 +41,23 @@ struct MWSingleLayer3D{T,U} <: MaxwellOperator3D{T,U}
   β::U
 end
 
-struct MWncrossn{T,U} <: MaxwellOperator3D{T,U}
+struct MWngreenint{T,U} <: MaxwellOperator3D{T,U}
   gamma::T
   α::U
 end
 
-
+struct MWgreenint{T,U} <: MaxwellOperator3D{T,U}
+  gamma::T
+  α::U
+end
+struct MWgradgreenint{T,U} <: MaxwellOperator3D{T,U}
+  gamma::T
+  α::U
+end
+struct MWngradgreenint{T,U} <: MaxwellOperator3D{T,U}
+  gamma::T
+  α::U
+end
 scalartype(op::MWSingleLayer3D{T,U}) where {T,U} = promote_type(T,U)
 sign_upon_permutation(op::MWSingleLayer3D, I, J) = 1
 
@@ -105,6 +116,11 @@ end
 struct MWDoubleLayer3D{T,K} <: MaxwellOperator3D{T,K}
     alpha::T
     gamma::K
+end
+
+struct MWnDoubleLayer3D{T,K} <: MaxwellOperator3D{T,K}
+  alpha::T
+  gamma::K
 end
 
 sign_upon_permutation(op::MWDoubleLayer3D, I, J) = 1
@@ -320,6 +336,23 @@ function (igd::Integrand{<:MWDoubleLayer3D})(x,y,f,g)
 end
 
 
+function (igd::Integrand{<:MWnDoubleLayer3D})(x,y,f,g)
+    
+  γ = igd.operator.gamma
+
+  r = cartesian(x) - cartesian(y)
+  R = norm(r)
+  iR = 1/R
+  green = exp(-γ*R)*(iR*i4pi)
+  gradgreen = -(γ + iR) * green * (iR * r)
+  n' = normal(y)
+  fvalue = getvalue(f)
+  gvalue = getvalue(g)
+  t1 = Ref(n').*gvalue
+  G = cross.(Ref(gradgreen), t1)
+  return _krondot(fvalue, G)
+end
+
 function (igd::Integrand{<:MWDoubleLayer3DReg})(x,y,f,g)
     
     γ = igd.operator.gamma
@@ -338,7 +371,7 @@ function (igd::Integrand{<:MWDoubleLayer3DReg})(x,y,f,g)
     return _krondot(fvalue, G)
 end
 
-function (igd::{Integrand{<:MWncrossn}})(x,y,f,g)
+function (igd::{Integrand{<:MWngreenint}})(x,y,f,g)
     γ = igd.operator.gamma
 
     r = cartesian(x) - cartesian(y)
@@ -347,13 +380,68 @@ function (igd::{Integrand{<:MWncrossn}})(x,y,f,g)
     iR = 1/R
     expo = exp(-γR)
     green = (expo - 1 + γR - 0.5*γR^2) * (i4pi*iR)
-    n = normal(x)
+    
     n' = normal(y)
     fvalue = getvalue(f)
     gvalue = getvalue(g)
-    t = cross(n,n')*green
+    t = n'*green
     t2 = Ref(t).*gvalue
     return _krondot(fvalue,t2)
+end
+
+function (igd::{Integrand{<:MWgreenint}})(x,y,f,g)
+  γ = igd.operator.gamma
+
+  r = cartesian(x) - cartesian(y)
+  R = norm(r)
+  γR = γ*R
+  iR = 1/R
+  expo = exp(-γR)
+  green = (expo - 1 + γR - 0.5*γR^2) * (i4pi*iR)
+
+  fvalue = getvalue(f)
+  gvalue = getvalue(g)
+
+  t2 = green*gvalue
+  return _krondot(fvalue,t2)
+end
+
+function (igd::{Integrand{<:MWgradgreenint}})(x,y,f,g)
+  γ = igd.operator.gamma
+
+  r = cartesian(x) - cartesian(y)
+  R = norm(r)
+  γR = γ*R
+  iR = 1/R
+  expo = exp(-γR)
+  green = (expo - 1 + γR - 0.5*γR^2) * (i4pi*iR)
+  gradgreen = ( -(γR + 1)*expo + (1 - 0.5*γR^2) ) * (i4pi*iR^3) * r
+  
+  fvalue = getvalue(f)
+  gvalue = getvalue(g)
+
+  t2 = dot.(gvalue,Ref(gradgreen))
+
+  return _krondot(fvalue,t2)
+end
+function (igd::{Integrand{<:MWgradgreenint}})(x,y,f,g)
+  γ = igd.operator.gamma
+
+  r = cartesian(x) - cartesian(y)
+  R = norm(r)
+  γR = γ*R
+  iR = 1/R
+  expo = exp(-γR)
+  green = (expo - 1 + γR - 0.5*γR^2) * (i4pi*iR)
+  gradgreen = ( -(γR + 1)*expo + (1 - 0.5*γR^2) ) * (i4pi*iR^3) * r
+  
+  fvalue = getvalue(f)
+  gvalue = getvalue(g)
+  n' = normal(y)
+  t1 = Ref(n').*gvalue
+  t2 = dot.(t1,Ref(gradgreen))
+
+  return _krondot(fvalue,t2)
 end
 ################################################################################
 #
