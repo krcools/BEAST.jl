@@ -41,6 +41,12 @@ struct MWSingleLayer3D{T,U} <: MaxwellOperator3D{T,U}
   β::U
 end
 
+struct MWncrossn{T,U} <: MaxwellOperator3D{T,U}
+  gamma::T
+  α::U
+end
+
+
 scalartype(op::MWSingleLayer3D{T,U}) where {T,U} = promote_type(T,U)
 sign_upon_permutation(op::MWSingleLayer3D, I, J) = 1
 
@@ -332,6 +338,23 @@ function (igd::Integrand{<:MWDoubleLayer3DReg})(x,y,f,g)
     return _krondot(fvalue, G)
 end
 
+function (igd::{Integrand{<:MWncrossn}})(x,y,f,g)
+    γ = igd.operator.gamma
+
+    r = cartesian(x) - cartesian(y)
+    R = norm(r)
+    γR = γ*R
+    iR = 1/R
+    expo = exp(-γR)
+    green = (expo - 1 + γR - 0.5*γR^2) * (i4pi*iR)
+    n = normal(x)
+    n' = normal(y)
+    fvalue = getvalue(f)
+    gvalue = getvalue(g)
+    t = cross(n,n')*green
+    t2 = Ref(t).*gvalue
+    return _krondot(fvalue,t2)
+end
 ################################################################################
 #
 #  Handling of operator parameters (Helmholtz and Maxwell)

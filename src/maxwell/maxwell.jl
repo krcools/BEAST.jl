@@ -75,4 +75,9 @@ module Maxwell3D
     farfield(;
         wavenumber = error("missing argument: `wavenumber`")) =
             Mod.MWFarField3D(wavenumber=wavenumber)
+    
+    function ncrossn()
+        Mod.MWncrossn()
+    end
+    
 end
