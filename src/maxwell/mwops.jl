@@ -421,6 +421,7 @@ end
 
 ttrace(op::MWgreenint, mesh, or) = ZeroOperator(), SameBase()
 strace(op::MWgreenint, mesh, or) = ZeroOperator(), mesh
+ntrace(op::MWgreenint, mesh, or) = ZeroOperator(), mesh
 
 function (igd::{Integrand{<:MWgradgreenint}})(x,y,f,g)
   γ = igd.operator.gamma
@@ -440,8 +441,9 @@ function (igd::{Integrand{<:MWgradgreenint}})(x,y,f,g)
 
   return _krondot(fvalue,t2)
 end
-
-
+ttrace(op::MWgradgreenint, mesh, or) = ZeroOperator(), SameBase()
+strace(op::MWgradgreenint, mesh, or) = ZeroOperator(), mesh
+ntrace(op::MWgradgreenint, mesh, or) = 1/2*Identity(), mesh
 
 function (igd::{Integrand{<:MWngradgreenint}})(x,y,f,g)
   γ = igd.operator.gamma
@@ -462,6 +464,8 @@ function (igd::{Integrand{<:MWngradgreenint}})(x,y,f,g)
 
   return _krondot(fvalue,t2)
 end
+
+scallartrace(op::MWngradgreenint, mesh, or) = 1/2*Identity(), SameBase()
 ################################################################################
 #
 #  Handling of operator parameters (Helmholtz and Maxwell)
