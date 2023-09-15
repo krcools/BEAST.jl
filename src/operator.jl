@@ -354,6 +354,9 @@ ttrace(op::Operator,minfo,orientation) = Ttrace(op,minfo,orientation)
 struct ZeroOperator <: AbstractOperator end
 struct Inside end
 struct Outside end
+inside() = Inside()
+outside() = Outside()
+
 
 Base.zero(op::AbstractOperator) = ZeroOperator()
 +(a::AbstractOperator,b::ZeroOperator) = a
