@@ -2,6 +2,20 @@ using .LinearSpace
 
 struct LongDelays{T} end
 struct Threading{T} end
+abstract type TraceOperator <: Operator end
+
+struct Strace <: TraceOperator
+    op
+    MeshInformation
+    orientation
+end
+
+struct Ttrace <: TraceOperator
+    op
+    MeshInformation
+    orientation
+end
+
 
 import Base: transpose, +, -, *, zero
 
@@ -334,19 +348,6 @@ function assemble!(op::BlockFullOperators, U::DirectProductSpace, V::DirectProdu
     end
 end
 
-abstract type TraceOperator <: Operator end
-
-struct Strace <: TraceOperator
-    op
-    MeshInformation
-    orientation
-end
-
-struct Ttrace <: TraceOperator
-    op
-    MeshInformation
-    orientation
-end
 
 strace(op::Operator,minof,orientation) = Strace(op,minfo,orientation)
 ttrace(op::Operator,minfo,orientation) = Ttrace(op,minfo,orientation)
