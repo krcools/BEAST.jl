@@ -16,19 +16,19 @@ abstract type AbstractOperator end
 """
 abstract type Operator <: AbstractOperator end
 
-abstract type TraceOperator <: Operator end
+# abstract type TraceOperator <: Operator end
 
-struct Strace <: TraceOperator
-    op
-    orientation
-end
+# struct Strace <: TraceOperator
+#     op
+#     orientation
+# end
 
-struct Ttrace <: TraceOperator
-    op
-    orientation
-end
+# struct Ttrace <: TraceOperator
+#     op
+#     orientation
+# end
 
-struct ZeroOperator <: AbstractOperator end
+# struct ZeroOperator <: AbstractOperator end
 abstract type Orientation end
 struct Inside <: Orientation end
 struct Outside <: Orientation end
@@ -242,15 +242,15 @@ function assemble!(op::LinearCombinationOfOperators, tfs::AbstractSpace, bfs::Ab
         assemble!(A, tfs, bfs, store1, threading; quadstrat=qs)
     end
 end
-function assemble(op::Ttrace, tfs::AbstractSpace, bfs::AbstractSpace)
-    pvterm, mesh = ttrace!(op.op,tfs.geo,op.orientation)
-    assemble(pvterm+op.op,ttrace(tfs,mesh),bfs)
-end
+# function assemble(op::Ttrace, tfs::AbstractSpace, bfs::AbstractSpace)
+#     pvterm, mesh = ttrace!(op.op,tfs.geo,op.orientation)
+#     assemble(pvterm+op.op,ttrace(tfs,mesh),bfs)
+# end
 
-function assemble(op::Strace, tfs::AbstractSpace, bfs::AbstractSpace)
-    pvterm, mesh = strace!(op.op,tfs.geo,op.orientation)
-    assemble(-pvterm-op.op,strace(tfs,mesh),bfs)
-end
+# function assemble(op::Strace, tfs::AbstractSpace, bfs::AbstractSpace)
+#     pvterm, mesh = strace!(op.op,tfs.geo,op.orientation)
+#     assemble(-pvterm-op.op,strace(tfs,mesh),bfs)
+# end
 
 # Support for direct product spaces
 function assemble!(op::AbstractOperator, tfs::DirectProductSpace, bfs::Space,
@@ -353,14 +353,14 @@ function assemble!(op::BlockFullOperators, U::DirectProductSpace, V::DirectProdu
 end
 
 
-strace(op::Operator,orientation::Orientation) = Strace(op,orientation)
-ttrace(op::Operator,orientation::Orientation) = Ttrace(op,orientation)
+# strace(op::Operator,orientation::Orientation) = Strace(op,orientation)
+# ttrace(op::Operator,orientation::Orientation) = Ttrace(op,orientation)
 
 
 
-Base.zero(op::AbstractOperator) = ZeroOperator()
-+(a::AbstractOperator,b::ZeroOperator) = a
-+(a::ZeroOperator,b::ZeroOperator) = a
-+(a::ZeroOperator,b::AbstractOperator) = b+a
-*(a::Number,b::ZeroOperator) = b
+# Base.zero(op::AbstractOperator) = ZeroOperator()
+# +(a::AbstractOperator,b::ZeroOperator) = a
+# +(a::ZeroOperator,b::ZeroOperator) = a
+# +(a::ZeroOperator,b::AbstractOperator) = b+a
+# *(a::Number,b::ZeroOperator) = b
 

@@ -39,65 +39,80 @@ struct MWDoubleLayer3D{T,K} <: MaxwellOperator3D{T,K}
   alpha::T
   gamma::K
 end
+trace(op::MWDoubleLayer3D, or::Inside) = op+1/2*NCross()
+trace(op::MWDoubleLayer3D, or::Outside) = op-1/2*Ncross()
 
 struct MWSingleLayer3D{T,U} <: MaxwellOperator3D{T,U}
   gamma::T
   α::U
   β::U
 end
+trace(op::MWSingleLayer3D,or::Orientation) = op
 
 # struct TdGdn_ydj{T,U} <: MaxwellOperator3D{T,U}
 #   gamma::T
 #   α::U
 # end
 
+# TODO generalize traces for different normal combinations (see trace nXdoublelayer)
+# TODO what if base and trial functions are not tangential
+
 struct MWgreenint{T,U} <: MaxwellOperator3D{T,U}#check
   gamma::T
   α::U
 end
+trace(op::MWgreenint,or::Orientation) = op
 struct MWgradgreendot{T,U} <: MaxwellOperator3D{T,U}#check
   gamma::T
   α::U
 end
-
+trace(op::MWgradgreendot,or::Orientation) = op
 struct nXMWgreenint{T,U} <: MaxwellOperator3D{T,U}#check
   gamma::T
   α::U
 end
-
+trace(op::nXMWgreenint,or::Orientation) = op
 struct nXdoublelayer{T,U} <: MaxwellOperator3D{T,U}#check
   gamma::T
   α::U
 end
-
+trace(op::nXdoublelayer,or::Orientation) = op-1/2*Identity()
 struct MWgreenintdotn{T,U}<: MaxwellOperator3D{T,U}#check
   gamma::T
   α::U
 end
+trace(op::MWgreenintdotn,or::Orientation) = op
 struct nXMWgreenintdotn{T,U}<: MaxwellOperator3D{T,U}#check
   gamma::T
   α::U
 end
+trace(op::nXMWgreenintdotn,or::Orientation) = op
 struct nXMWgradgreendot{T,U}<: MaxwellOperator3D{T,U}#check
   gamma::T
   α::U
 end
+trace(op::nXMWgradgreendot,or::Orientation) = op
 struct MWgradgreendotn{T,U}<: MaxwellOperator3D{T,U}#check
   gamma::T
   α::U
 end
+trace(op::MWgradgreendotn, or::Inside) = op+1/2*Identity()
+trace(op::MWgradgreendotn, or::Outside) = op-1/2*Identity()
 struct MWdoublelayerXn{T,U}<: MaxwellOperator3D{T,U}#check
   gamma::T
   α::U
 end
+trace(op::MWdoublelayerXn,or::Orientation) = op
 struct nXMWdoublelayerXn{T,U}<: MaxwellOperator3D{T,U}#check haakjes rechts
   gamma::T
   α::U
 end
+trace(op::nXMWdoublelayerXn,or::Orientation) = op
 struct ndotMWdoublelayer{T,U}<: MaxwellOperator3D{T,U}#check
   gamma::T
   α::U
 end
+trace(op::ndotMWdoublelayer,or::Orientation) = op
 struct ndotMWgreenint{T,U}<: MaxwellOperator3D{T,U}#cehck
   gamma::T
   α::U
@@ -106,10 +121,12 @@ struct ndotMWgreenintdotn{T,U}<: MaxwellOperator3D{T,U}#check
   gamma::T
   α::U
 end
+trace(op::ndotMWgreenintdotn,or::Orientation) = op
 struct ndotMWgradgreen{T,U}<: MaxwellOperator3D{T,U}#check
   gamma::T
   α::U
 end
+trace(op::ndotMWgradgreen,or::Orientation) = op+1/2*Identity()
 
 ×(n::NormalVector,op::MWgreenint) = nXMWgreenint(op.gamma,op.α)
 ×(n::NormalVector,op::MWDoubleLayer3D) = nXdoublelayer(op.gamma,op.α)
