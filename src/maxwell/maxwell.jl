@@ -1,5 +1,4 @@
 module Maxwell3D
-
     using ..BEAST
     Mod = BEAST
 
@@ -64,35 +63,35 @@ module Maxwell3D
 
         Mod.MWDoubleLayer3D(gamma)
     end
-    """
-        ndoublelayer(;gamma)
-        ndoublelaher(;wavenumber)
+    # """
+    #     ndoublelayer(;gamma)
+    #     ndoublelaher(;wavenumber)
 
-    Bilinear form given by:
+    # Bilinear form given by:
 
-    ```math
-        α ∬_{Γ^2} k(x) ⋅ (∇G_γ(x-y) × n_y j(y))
-    ```
+    # ```math
+    #     α ∬_{Γ^2} k(x) ⋅ (∇G_γ(x-y) × n_y j(y))
+    # ```
 
-    with ``G_γ = e^{-γ|x-y|} / 4π|x-y|``
-    """
-    function ndoublelayer(;
-            alpha=nothing,
-            gamma=nothing,
-            wavenumber=nothing)
+    # with ``G_γ = e^{-γ|x-y|} / 4π|x-y|``
+    # """
+    # function td∇GXn_ydb(;
+    #         alpha=nothing,
+    #         gamma=nothing,
+    #         wavenumber=nothing)
 
-        gamma, wavenumber = Mod.gamma_wavenumber_handler(gamma, wavenumber)
+    #     gamma, wavenumber = Mod.gamma_wavenumber_handler(gamma, wavenumber)
 
-        if alpha === nothing
-            if gamma !== nothing
-                alpha = one(gamma)
-            else
-                alpha = 1.0 # Default to double precision
-            end
-        end
+    #     if alpha === nothing
+    #         if gamma !== nothing
+    #             alpha = one(gamma)
+    #         else
+    #             alpha = 1.0 # Default to double precision
+    #         end
+    #     end
 
-        Mod.MWnDoubleLayer3D(gamma)
-    end
+    #     Mod.Td∇GXn_ydb(gamma)
+    # end
     planewave(;
             direction    = error("missing arguement `direction`"),
             polarization = error("missing arguement `polarization`"),
@@ -105,34 +104,63 @@ module Maxwell3D
             Mod.MWFarField3D(wavenumber=wavenumber)
     
 
-    """
-        ngreenint(;gamma)
-        ngreenint(;wavenumber)
+    # """
+    #     ngreenint(;gamma)
+    #     ngreenint(;wavenumber)
 
-    Bilinear form given by:
+    # Bilinear form given by:
 
-    ```math
-        α ∬_{Γ^2} k(x) ⋅ n_y (G_γ(x-y)j(y))
-    ```
+    # ```math
+    #     α ∬_{Γ^2} k(x) ⋅ n_y (G_γ(x-y)j(y))
+    # ```
 
-    with ``G_γ = e^{-γ|x-y|} / 4π|x-y|``
-    """
-    function ngreenint(;
-            alpha=nothing,
-            gamma=nothing,
-            wavenumber=nothing)
+    # with ``G_γ = e^{-γ|x-y|} / 4π|x-y|``
+    # """
+    # function tdGdn_ydj(;
+    #         alpha=nothing,
+    #         gamma=nothing,
+    #         wavenumber=nothing)
 
-        gamma, wavenumber = Mod.gamma_wavenumber_handler(gamma, wavenumber)
+    #     gamma, wavenumber = Mod.gamma_wavenumber_handler(gamma, wavenumber)
 
-        if alpha === nothing
-            if gamma !== nothing
-                alpha = one(gamma)
-            else
-                alpha = 1.0 # Default to double precision
-            end
-        end
-        Mod.MWngreenint(gamma,alpha)
-    end
+    #     if alpha === nothing
+    #         if gamma !== nothing
+    #             alpha = one(gamma)
+    #         else
+    #             alpha = 1.0 # Default to double precision
+    #         end
+    #     end
+    #     Mod.TdGdn_ydj(gamma,alpha)
+    # end
+
+    # """
+    # greenint(;gamma)
+    # greenint(;wavenumber)
+
+    # Bilinear form given by:
+
+    # ```math
+    #     α ∬_{Γ^2} k(x) ⋅ G_γ(x-y) j(y)
+    # ```
+
+    # with ``G_γ = e^{-γ|x-y|} / 4π|x-y|``
+    # """
+    # function greenint(;
+    #         alpha=nothing,
+    #         gamma=nothing,
+    #         wavenumber=nothing)
+
+    #     gamma, wavenumber = Mod.gamma_wavenumber_handler(gamma, wavenumber)
+
+    #     if alpha === nothing
+    #         if gamma !== nothing
+    #             alpha = one(gamma)
+    #         else
+    #             alpha = 1.0 # Default to double precision
+    #         end
+    #     end
+    #     Mod.MWgreenint(gamma,alpha)
+    # end
 
     """
     greenint(;gamma)
@@ -162,92 +190,80 @@ module Maxwell3D
         end
         Mod.MWgreenint(gamma,alpha)
     end
+    # """
+    # gradgreenint(;gamma)
+    # gradgreenint(;wavenumber)
 
-    """
-    greenint(;gamma)
-    greenint(;wavenumber)
+    # Bilinear form given by:
 
-    Bilinear form given by:
+    # ```math
+    #     α ∬_{Γ^2} k(x) ⋅∇G_γ(x-y) j(y)
+    # ```
+    # or
+    # ```math
+    # α ∬_{Γ^2} k(x) ∇G_γ(x-y) ⋅ j(y)
+    # ```
+    # with ``G_γ = e^{-γ|x-y|} / 4π|x-y|``
+    # """
+    # function gradgreenint(;
+    #         alpha=nothing,
+    #         gamma=nothing,
+    #         wavenumber=nothing)
 
-    ```math
-        α ∬_{Γ^2} k(x) ⋅ G_γ(x-y) j(y)
-    ```
+    #     gamma, wavenumber = Mod.gamma_wavenumber_handler(gamma, wavenumber)
 
-    with ``G_γ = e^{-γ|x-y|} / 4π|x-y|``
-    """
-    function greenint(;
-            alpha=nothing,
-            gamma=nothing,
-            wavenumber=nothing)
+    #     if alpha === nothing
+    #         if gamma !== nothing
+    #             alpha = one(gamma)
+    #         else
+    #             alpha = 1.0 # Default to double precision
+    #         end
+    #     end
+    #     Mod.MWgradgreenint(gamma,alpha)
+    # end
+    # """
+    # ngradgreenint(;gamma)
+    # ngradgreenint(;wavenumber)
 
-        gamma, wavenumber = Mod.gamma_wavenumber_handler(gamma, wavenumber)
+    # Bilinear form given by:
 
-        if alpha === nothing
-            if gamma !== nothing
-                alpha = one(gamma)
-            else
-                alpha = 1.0 # Default to double precision
-            end
+    # ```math
+    #     α ∬_{Γ^2} k(x) ⋅∇G_γ(x-y)n_y j(y)
+    # ```
+    # with ``G_γ = e^{-γ|x-y|} / 4π|x-y|``
+    # """
+    # function ngradgreenint(;
+    #         alpha=nothing,
+    #         gamma=nothing,
+    #         wavenumber=nothing)
+
+    #     gamma, wavenumber = Mod.gamma_wavenumber_handler(gamma, wavenumber)
+
+    #     if alpha === nothing
+    #         if gamma !== nothing
+    #             alpha = one(gamma)
+    #         else
+    #             alpha = 1.0 # Default to double precision
+    #         end
+    #     end
+    #     Mod.MWngradgreenint(gamma,alpha)
+    # end
+
+    function gradgreendot(;
+        alpha=nothing,
+        gamma=nothing,
+        wavenumber=nothing)
+
+    gamma, wavenumber = Mod.gamma_wavenumber_handler(gamma, wavenumber)
+
+    if alpha === nothing
+        if gamma !== nothing
+            alpha = one(gamma)
+        else
+            alpha = 1.0 # Default to double precision
         end
-        Mod.MWgreenint(gamma,alpha)
     end
-    """
-    gradgreenint(;gamma)
-    gradgreenint(;wavenumber)
-
-    Bilinear form given by:
-
-    ```math
-        α ∬_{Γ^2} k(x) ⋅∇G_γ(x-y) j(y)
-    ```
-    or
-    ```math
-    α ∬_{Γ^2} k(x) ∇G_γ(x-y) ⋅ j(y)
-    ```
-    with ``G_γ = e^{-γ|x-y|} / 4π|x-y|``
-    """
-    function gradgreenint(;
-            alpha=nothing,
-            gamma=nothing,
-            wavenumber=nothing)
-
-        gamma, wavenumber = Mod.gamma_wavenumber_handler(gamma, wavenumber)
-
-        if alpha === nothing
-            if gamma !== nothing
-                alpha = one(gamma)
-            else
-                alpha = 1.0 # Default to double precision
-            end
-        end
-        Mod.MWgradgreenint(gamma,alpha)
-    end
-    """
-    ngradgreenint(;gamma)
-    ngradgreenint(;wavenumber)
-
-    Bilinear form given by:
-
-    ```math
-        α ∬_{Γ^2} k(x) ⋅∇G_γ(x-y)n_y j(y)
-    ```
-    with ``G_γ = e^{-γ|x-y|} / 4π|x-y|``
-    """
-    function ngradgreenint(;
-            alpha=nothing,
-            gamma=nothing,
-            wavenumber=nothing)
-
-        gamma, wavenumber = Mod.gamma_wavenumber_handler(gamma, wavenumber)
-
-        if alpha === nothing
-            if gamma !== nothing
-                alpha = one(gamma)
-            else
-                alpha = 1.0 # Default to double precision
-            end
-        end
-        Mod.MWngradgreenint(gamma,alpha)
-    end
+    Mod.MWgradgreendot(gamma,alpha)
+end
         
 end
