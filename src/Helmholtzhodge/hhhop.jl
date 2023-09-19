@@ -3,140 +3,83 @@ abstract type HHHOperator{T,K} <: IntegralOperator end
 abstract type HHHtestOperator{T,K} <: HHHOperator{T,K} end
 abstract type HHHbasisOperator{T,K} <: HHHOperator{T,K} end
 abstract type HHHkernelOperator{T,K} <: HHHOperator{T,K} end
-scalartype(op::HHHOperator3D{T,K}) where {T, K <: Nothing} = T
-scalartype(op::HHHOperator3D{T,K}) where {T, K} = promote_type(T, K)
+# scalartype(op::HHHOperator{T,K}) where {T, K <: Nothing} = T
+# scalartype(op::HHHOperator{T,K}) where {T, K} = promote_type(T, K)
+scalartype(op::HHHOperator{T,K}) where {T, K <: Nothing} = Complex
+scalartype(op::HHHOperator{T,K}) where {T, K} = Complex
+
 
 const i4pi = 1 / (4pi)
-struct HHHgreen{T,K} <: HHHkernelOperator{T,K}
+mutable struct HHHgreen{T,K} <: HHHkernelOperator{T,K}
     α::K
     γ::T
     op::HHHOperator
 end
 
-struct HHHgradgreen{T,K} <: HHHkernelOperator{T,K}
+mutable struct HHHgradgreen{T,K} <: HHHkernelOperator{T,K}
     α::K
     γ::T
     op::HHHOperator
 end
 
-struct HHHgradgreenCross{T,K} <: HHHkernelOperator{T,K}
+mutable struct HHHgradgreenCross{T,K} <: HHHkernelOperator{T,K}
     α::K
     γ::T
     op::HHHOperator
 end
 
-# struct HHHgreenNproj{T,K} <: HHHOperator{T,K}
-#     α::K
-#     γ::T
-# end
-
-# struct HHHgradgreenCrossNproj{T,K} <: HHHOperator{T,K}
-#     α::K
-#     γ::T
-# end
-
-# struct HHHgradgreenNproj{T,K} <: HHHOperator{T,K}
-#     α::K
-#     γ::T
-# end
-
-# struct StraceHHHgreen{T,K} <: HHHOperator{T,K}
-#     α::K
-#     γ::T
-# end
-
-# struct NtraceHHHgreen{T,K} <: HHHOperator{T,K}
-#     α::K
-#     γ::T
-# end
-
-# struct StraceHHHgradgreen{T,K} <: HHHOperator{T,K}
-#     α::K
-#     γ::T
-# end
-
-# struct NtraceHHHgradgreen{T,K} <: HHHOperator{T,K}
-#     α::K
-#     γ::T
-# end
-
-# struct StraceHHHgradgreenCross{T,K} <: HHHOperator{T,K}
-#     α::K
-#     γ::T
-# end
-
-# struct NtraceHHHgradgreenCross{T,K} <: HHHOperator{T,K}
-#     α::K
-#     γ::T
-# end
-
-# struct StraceHHHgreenNproj{T,K} <: HHHOperator{T,K}
-#     α::K
-#     γ::T
-# end
-
-# struct NtraceHHHgreenNproj{T,K} <: HHHOperator{T,K}
-#     α::K
-#     γ::T
-# end
-
-# struct StraceHHHgradgreenCrossNproj{T,K} <: HHHOperator{T,K}
-#     α::K
-#     γ::T
-# end
-
-# struct NtraceHHHgradgreenCrossNproj{T,K} <: HHHOperator{T,K}
-#     α::K
-#     γ::T
-# end
 abstract type HHHdata end
 struct HHHvector <:HHHdata end
 struct HHHscalar <:HHHdata end
+
+
+mutable struct HHHNtestCross{T,K} <: HHHtestOperator{T,K}
+    op::HHHOperator{T,K}
+end
+
+
+mutable struct HHHNbasisCross{T,K} <: HHHbasisOperator{T,K}
+    op::HHHOperator{T,K}
+end
+
+mutable struct HHHNtestDot{T,K} <: HHHtestOperator{T,K}
+    op::HHHOperator{T,K}
+end
+
+mutable struct HHHNbasisnormal{T,K} <: HHHbasisOperator{T,K}
+    op::HHHOperator{T,K}
+end
+
+mutable struct HHHIdentity{T,K} <: HHHbasisOperator{T,K}
+end
+hhhidentity() = HHHIdentity{Complex,Complex}()
+export HHH
+struct BasisFunction end
+basisfunction() = BasisFunction()
+export basisfunction
 VectorToVector = Union{HHHNtestCross,HHHNbasisCross,HHHgradgreenCross,HHHgreen}
 ScalarToVector = Union{HHHNbasisnormal,HHHgradgreen}
 VectorToScalar = Union{HHHNtestDot,HHHgradgreen}
 ScalarToScalar = Union{HHHgreen}
-
-struct HHHNtestCross{T,K} <: HHHtestOperator{T,K}
-    op::HHHOperator{T,K}
-end
-inversemap(op::VectorToVector,::HHHVector) = inversemap(op.op,HHHvector())
+inversemap(op::VectorToVector,::HHHvector) = inversemap(op.op,HHHvector())
 inversemap(op::ScalarToVector,::HHHvector) = inversemap(op.op,HHHscalar())
 inversemap(op::VectorToScalar,::HHHscalar) = inversemap(op.op,HHHvector())
 inversemap(op::ScalarToScalar,::HHHscalar) = HHHscalar()
 inversemap(::HHHOperator,::HHHdata) = @error "trying to convert scalar to vector or vector to scalar"
 inversemap(::HHHIdentity,data::HHHdata) = data
-
-struct HHHNbasisCross <: HHHbasisOperator{T,K}
-    op::HHHOperator{T,K}
-end
-
-struct HHHNtestDot{T,K} <: HHHtestOperator{T,K}
-    op::HHHOperator{T,K}
-end
-
-struct HHHNbasisnormal{T,K} <: HHHbasisOperator{T,K}
-    op::HHHOperator{T,K}
-end
-
-struct HHHIdentity{T,K} <: HHHbasisOperator{T,K}
-end
-
-struct BasisFunction end
-basisfunction() = BasisFunction()
-export basisfunction
-
 ##### Operator building
 
 strace(op::Union{HHHkernelOperator,HHHtestOperator}) = HHHNtestCross(op)
 ntrace(op::Union{HHHkernelOperator,HHHtestOperator}) = HHHNtestDot(op)
 ×(op::HHHgradgreen,::Nothing) = HHHgradgreenCross(op.α,op.γ,op.op)
-×(op::HHHgradgreen,::NormalVector) = HHHgradgreenCross(op.α,op.γ,op.op)(HHHNbasisnormal(HHHIdentity))
+×(op::HHHgradgreen,::NormalVector) = HHHgradgreenCross(op.α,op.γ,op.op)(HHHNbasisnormal(hhhidentity()))
 ×(::NormalVector,op::Union{HHHkernelOperator,HHHtestOperator}) = strace(op)
 ⋅(::NormalVector,op::Union{HHHkernelOperator,HHHtestOperator}) = ntrace(op)
-*(::NormalVector,::BasisFunction) = HHHNbasisnormal(HHHIdentity())
-×(::NormalVector,::BasisFunction) = HHHNbasisCross(HHHIdentity())
-(op::HHHkernelOperator)(Basisop::HHHbasisOperator) = op.op=Basisop
+*(::NormalVector,::BasisFunction) = HHHNbasisnormal(hhhidentity())
+×(::NormalVector,::BasisFunction) = HHHNbasisCross(hhhidentity())
+function (op::HHHkernelOperator)(Basisop::HHHbasisOperator) 
+    return typeof(op)(op.α,op.γ,Basisop)
+end
 
 
 
@@ -176,25 +119,25 @@ function (op::HHHgreen)(x,y,g)
     r = cartesian(x) - cartesian(y)
     R = norm(r)
     iR = 1/R
-    green = exp(-op.γ*R)*(iR*i4pi)
+    green =  op.α * exp(-op.γ*R)*(iR*i4pi)
     green*op.op(x,y,g)
 end
-mydot.(a::Vector{Vector},b::Base.RefValue) = dot.(a,b)
-mydot.(a::Vector,b::Base.RefValue) = a.*b
+mydot(a::Vector{Vector},b::Base.RefValue) = dot.(a,b)
+mydot(a::Vector,b::Base.RefValue) = a.*b
 function (op::HHHgradgreen)(x,y,g)
     r = cartesian(x) - cartesian(y)
     R = norm(r)
     iR = 1/R
-    green = exp(-op.γ*R)*(iR*i4pi)
+    green =  op.α * exp(-op.γ*R)*(iR*i4pi)
     gradgreen = -(op.γ + iR) * green * (iR * r)
-    mydot.(op.op(x,y,g),Ref(gradgreen))
+    mydot(op.op(x,y,g),Ref(gradgreen))
 end
 
 function (op::HHHgradgreenCross)(x,y,g)
     r = cartesian(x) - cartesian(y)
     R = norm(r)
     iR = 1/R
-    green = exp(-op.γ*R)*(iR*i4pi)
+    green = op.α * exp(-op.γ*R)*(iR*i4pi)
     gradgreen = -(op.γ + iR) * green * (iR * r)
     cross.(Ref(gradgreen),op.op(x,y,g))
 end
@@ -207,4 +150,10 @@ function defaultquadstrat(op::HHHOperator,testspace::Space,basisspace::Space)
 @assert identify(basisspace) == inversemap(op,identify(testspace))
 defaultquadstrat(op,identify(testspace),identify(basisspace))
 end
-defaultquadstrat(op::HHHOperator,::HHHdata,::HHHdata) = DoubleNumSauterQstrat(2,2,2,2,2,2) #TODO implement strategy that is stronger for nearby triangles
+defaultquadstrat(op::HHHOperator,::HHHdata,::HHHdata) = DoubleNumSauterQstrat(6,7,5,5,4,3) #TODO implement strategy that is stronger for nearby triangles
+
+
+sign_upon_permutation(op::HHHIdentity,I,J) = 1
+sign_upon_permutation(op::HHHkernelOperator,I,J) = sign_upon_permutation(op.op,I,J) 
+sign_upon_permutation(op::Union{HHHNtestCross,HHHNtestDot},I,J) = Combinatorics.levicivita(I)*sign_upon_permutation(op.op,I,J)
+sign_upon_permutation(op::Union{HHHNbasisnormal,HHHNbasisCross},I,J) = Combinatorics.levicivita(J)*sign_upon_permutation(op.op,I,J)

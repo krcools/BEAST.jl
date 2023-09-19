@@ -1,21 +1,7 @@
-module Maxwell3D
+module HHH
     using ..BEAST
     Mod = BEAST
 
-
-
-    """
-    green(;gamma)
-    green(;wavenumber)
-
-    Bilinear form given by:
-
-    ```math
-        α ∬_{Γ^2} k(x) ⋅ G_γ(x-y) j(y)
-    ```
-
-    with ``G_γ = e^{-γ|x-y|} / 4π|x-y|``
-    """
     function green(;
             alpha=nothing,
             gamma=nothing,
@@ -30,7 +16,7 @@ module Maxwell3D
                 alpha = 1.0 # Default to double precision
             end
         end
-        Mod.HHHgreen(gamma,alpha)
+        Mod.HHHgreen(alpha,gamma,Mod.hhhidentity())
     end
  
     function gradgreen(;
@@ -47,7 +33,7 @@ module Maxwell3D
             alpha = 1.0 # Default to double precision
         end
     end
-    Mod.HHHgradgreen(gamma,alpha)
+    Mod.HHHgradgreen(alpha,gamma,Mod.hhhidentity())
 end
         
 end

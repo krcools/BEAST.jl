@@ -257,6 +257,11 @@ include("solvers/itsolver.jl")
 
 include("utils/plotlyglue.jl")
 
+#suport for helmholtzhodge equation
+include("Helmholtzhodge/hhhop.jl")
+include("Helmholtzhodge/helmholtzhodge.jl")
+
+
 
 
 
