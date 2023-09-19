@@ -1,7 +1,15 @@
 abstract type RefSpace{T,D} end
 abstract type AbstractSpace end
 abstract type Space{T} <: AbstractSpace end
+abstract type ScalarSpace{T} <: Space{T} end
+abstract type VectorSpace{T} <: Space{T} end
+abstract type ScalarSurfaceSpace{T} <: ScalarSpace{T} end
+abstract type ScalarVolumeSpace{T} <: ScalarSpace{T} end
+abstract type VectorSurfaceSpace{T} <: VectorSpace{T} end
+abstract type VectorVolumeSpace{T} <: VectorSpace{T} end
 
+VolumeSpace = Union{ScalarVolumeSpace,VectorVolumeSpace}
+SurfaceSpace = Union{ScalarSurfaceSpace,VectorSurfaceSpace}
 
 Base.length(s::AbstractSpace) = numfunctions(s)
 Base.in(x, s::AbstractSpace) = (x => s)

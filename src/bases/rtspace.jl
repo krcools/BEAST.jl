@@ -1,6 +1,6 @@
 
 
-mutable struct RTBasis{T,M,P} <: Space{T}
+mutable struct RTBasis{T,M,P} <: VectorSurfaceSpace{T}
   geo::M
   fns::Vector{Vector{Shape{T}}}
   pos::Vector{P}
