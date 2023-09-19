@@ -1,7 +1,7 @@
 abstract type MaxwellOperator3D{T,K} <: IntegralOperator end
 abstract type MaxwellOperator3DReg{T,K} <: MaxwellOperator3D{T,K} end
 
-import base: ×, ⋅
+
 
 scalartype(op::MaxwellOperator3D{T,K}) where {T, K <: Nothing} = T
 scalartype(op::MaxwellOperator3D{T,K}) where {T, K} = promote_type(T, K)
@@ -40,7 +40,7 @@ struct MWDoubleLayer3D{T,K} <: MaxwellOperator3D{T,K}
   gamma::K
 end
 trace(op::MWDoubleLayer3D, or::Inside) = op+1/2*NCross()
-trace(op::MWDoubleLayer3D, or::Outside) = op-1/2*Ncross()
+trace(op::MWDoubleLayer3D, or::Outside) = op-1/2*(-1)*NCross() #extra -1 because of normal is chosen with respect to test function in localop.jl fix this.
 
 struct MWSingleLayer3D{T,U} <: MaxwellOperator3D{T,U}
   gamma::T
@@ -61,87 +61,129 @@ struct MWgreenint{T,U} <: MaxwellOperator3D{T,U}#check
   gamma::T
   α::U
 end
+
 trace(op::MWgreenint,or::Orientation) = op
+sign_upon_permutation(op::MWgreenint, I, J) = 1
+
 struct MWgradgreendot{T,U} <: MaxwellOperator3D{T,U}#check
   gamma::T
   α::U
 end
 trace(op::MWgradgreendot,or::Orientation) = op
+sign_upon_permutation(op::MWgradgreendot, I, J) = 1
+
+
 struct nXMWgreenint{T,U} <: MaxwellOperator3D{T,U}#check
   gamma::T
   α::U
 end
+sign_upon_permutation(op::nXMWgreenint, I, J) = Combinatorics.levicivita(I)
 trace(op::nXMWgreenint,or::Orientation) = op
+
+
 struct nXdoublelayer{T,U} <: MaxwellOperator3D{T,U}#check
   gamma::T
   α::U
 end
+sign_upon_permutation(op::nXdoublelayer, I, J) = Combinatorics.levicivita(I)
 trace(op::nXdoublelayer,or::Orientation) = op-1/2*Identity()
+
+
+
 struct MWgreenintdotn{T,U}<: MaxwellOperator3D{T,U}#check
   gamma::T
   α::U
 end
+sign_upon_permutation(op::MWgreenintdotn, I, J) = Combinatorics.levicivita(J)
 trace(op::MWgreenintdotn,or::Orientation) = op
+
+
 struct nXMWgreenintdotn{T,U}<: MaxwellOperator3D{T,U}#check
   gamma::T
   α::U
 end
+sign_upon_permutation(op::nXMWgreenintdotn, I, J) = Combinatorics.levicivita(J)*Combinatorics.levicivita(I)
 trace(op::nXMWgreenintdotn,or::Orientation) = op
+
+
 struct nXMWgradgreendot{T,U}<: MaxwellOperator3D{T,U}#check
   gamma::T
   α::U
 end
+sign_upon_permutation(op::nXMWgradgreendot, I, J) = Combinatorics.levicivita(I)
 trace(op::nXMWgradgreendot,or::Orientation) = op
+
+
 struct MWgradgreendotn{T,U}<: MaxwellOperator3D{T,U}#check
   gamma::T
   α::U
 end
+sign_upon_permutation(op::MWgradgreendotn, I, J) = Combinatorics.levicivita(J)
 trace(op::MWgradgreendotn, or::Inside) = op+1/2*Identity()
 trace(op::MWgradgreendotn, or::Outside) = op-1/2*Identity()
+
+
 struct MWdoublelayerXn{T,U}<: MaxwellOperator3D{T,U}#check
   gamma::T
   α::U
 end
+sign_upon_permutation(op::MWdoublelayerXn, I, J) = Combinatorics.levicivita(J)
 trace(op::MWdoublelayerXn,or::Orientation) = op
+
+
 struct nXMWdoublelayerXn{T,U}<: MaxwellOperator3D{T,U}#check haakjes rechts
   gamma::T
   α::U
 end
+sign_upon_permutation(op::nXMWdoublelayerXn, I, J) = Combinatorics.levicivita(I)*Combinatorics.levicivita(J)
 trace(op::nXMWdoublelayerXn,or::Orientation) = op
+
+
 struct ndotMWdoublelayer{T,U}<: MaxwellOperator3D{T,U}#check
   gamma::T
   α::U
 end
+sign_upon_permutation(op::ndotMWdoublelayer, I, J) = Combinatorics.levicivita(I)
 trace(op::ndotMWdoublelayer,or::Orientation) = op
+
+
 struct ndotMWgreenint{T,U}<: MaxwellOperator3D{T,U}#cehck
   gamma::T
   α::U
 end
+sign_upon_permutation(op::ndotMWgreenint, I, J) = Combinatorics.levicivita(I)
+trace(op::ndotMWgreenint,or::Orientation) = op
+
 struct ndotMWgreenintdotn{T,U}<: MaxwellOperator3D{T,U}#check
   gamma::T
   α::U
 end
+sign_upon_permutation(op::ndotMWgreenintdotn, I, J) = Combinatorics.levicivita(J)*Combinatorics.levicivita(I)
 trace(op::ndotMWgreenintdotn,or::Orientation) = op
+
+
 struct ndotMWgradgreen{T,U}<: MaxwellOperator3D{T,U}#check
   gamma::T
   α::U
 end
+sign_upon_permutation(op::ndotMWgradgreen, I, J) = Combinatorics.levicivita(I)
 trace(op::ndotMWgradgreen,or::Orientation) = op+1/2*Identity()
 
 ×(n::NormalVector,op::MWgreenint) = nXMWgreenint(op.gamma,op.α)
-×(n::NormalVector,op::MWDoubleLayer3D) = nXdoublelayer(op.gamma,op.α)
+×(n::NormalVector,op::MWDoubleLayer3D) = nXdoublelayer(op.gamma,op.alpha)
 ⋅(op::MWgreenint,n::NormalVector) = MWgreenintdotn(op.gamma,op.α)
 ⋅(op::nXMWgreenint,n::NormalVector) = nXMWgreenintdotn(op.gamma,op.α)
 ×(n::NormalVector,op::MWgreenintdotn) = nXMWgreenintdotn(op.gamma,op.α)
 ×(n::NormalVector,op::MWgradgreendot) = nXMWgradgreendot(op.gamma,op.α)
 ⋅(op::MWgradgreendot,n::NormalVector) = MWgradgreendotn(op.gamma,op.α)
-×(op::MWDoubleLayer3D,n::NormalVector) = MWdoublelayerXn(op.gamma,op.α)
+×(op::MWgradgreendot,n::NormalVector) = MWdoublelayerXn(op.gamma,op.α)
+×(op::MWDoubleLayer3D,n::NormalVector) = MWdoublelayerXn(op.gamma,op.alpha)
 ×(n::NormalVector,op::MWdoublelayerXn) = nXMWdoublelayerXn(op.gamma,op.α)
-⋅(n::NormalVector,op::MWDoubleLayer3D) = ndotMWdoublelayer(op.gamma,op.α)
+⋅(n::NormalVector,op::MWDoubleLayer3D) = ndotMWdoublelayer(op.gamma,op.alpha)
 ⋅(n::NormalVector,op::MWgreenint) = ndotMWgreenint(op.gamma,op.α)
 ⋅(n::NormalVector,op::MWgreenintdotn) = ndotMWgreenintdotn(op.gamma,op.α)
 ⋅(op::ndotMWgreenint,n::NormalVector)= ndotMWgreenintdotn(op.gamma,op.α)
-⋅(n::NormalVector,op::MWgradgreen) = ndotMWgradgreen(op.gamma,op.α)
+⋅(n::NormalVector,op::MWgradgreendot) = ndotMWgradgreen(op.gamma,op.α)
 
 # struct MWgradgreenint{T,U} <: MaxwellOperator3D{T,U}
 #   gamma::T
@@ -185,8 +227,8 @@ function _legendre(n,a,b)
     collect(zip(x,w))
 end
 
-defaultquadstrat(op::MaxwellOperator3D, tfs::Space, bfs::Space) = DoubleNumWiltonSauterQStrat(2,3,6,7,5,5,4,3)
-defaultquadstrat(op::MaxwellOperator3D, tfs::RefSpace, bfs::RefSpace) = DoubleNumWiltonSauterQStrat(2,3,6,7,5,5,4,3)
+# defaultquadstrat(op::MaxwellOperator3D, tfs::Space, bfs::Space) = DoubleNumWiltonSauterQStrat(2,3,6,7,5,5,4,3)
+# defaultquadstrat(op::MaxwellOperator3D, tfs::RefSpace, bfs::RefSpace) = DoubleNumWiltonSauterQStrat(2,3,6,7,5,5,4,3)
 
 
 function quaddata(op::MaxwellOperator3D,
@@ -390,8 +432,8 @@ function (igd::Integrand{<:MWSingleLayer3D})(x,y,f,g)
         αG * dot(fi.value, gj.value) + βG * dot(fi.divergence, gj.divergence)
     end
 end
-ttrace!(op::MWSingleLayer3D, mesh, or) = ZeroOperator(), SameBase()
-strace!(op::MWSingleLayer3D, mesh, or) = ZeroOperator(), mesh
+# ttrace!(op::MWSingleLayer3D, mesh, or) = ZeroOperator(), SameBase()
+# strace!(op::MWSingleLayer3D, mesh, or) = ZeroOperator(), mesh
 
 function (igd::Integrand{<:MWSingleLayer3DReg})(x,y,f,g)
     α = igd.operator.α

@@ -2,6 +2,7 @@ abstract type RefSpace{T,D} end
 abstract type AbstractSpace end
 abstract type Space{T} <: AbstractSpace end
 
+
 Base.length(s::AbstractSpace) = numfunctions(s)
 Base.in(x, s::AbstractSpace) = (x => s)
 
