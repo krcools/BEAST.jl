@@ -115,7 +115,6 @@ function assemblechunk_body!(biop,
     todo, done, pctg = length(test_elements), 0, 0
     for (p,tcell) in enumerate(test_elements)
         for (q,bcell) in enumerate(trial_elements)
-
         fill!(zlocal, 0)
         qrule = quadrule(biop, test_shapes, trial_shapes, p, tcell, q, bcell, qd, quadstrat)
         momintegrals!(biop, test_shapes, trial_shapes, tcell, bcell, zlocal, qrule)

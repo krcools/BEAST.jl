@@ -1,16 +1,4 @@
 module Maxwell3D
-    """
-    naming of operators:
-    ∇
-    n_x normal test function
-    n_y normal basis function
-    G greens function
-    X cross product
-    d inner product/scallar product
-    t test function
-    b basis function
-
-    """
     using ..BEAST
     Mod = BEAST
 
@@ -275,7 +263,7 @@ module Maxwell3D
             alpha = 1.0 # Default to double precision
         end
     end
-    Mod.MWngradgreendot(gamma,alpha)
+    Mod.MWgradgreendot(gamma,alpha)
 end
         
 end

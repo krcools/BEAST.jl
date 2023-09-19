@@ -25,6 +25,9 @@ import SharedArrays: sdata
 
 export dot
 
+export ⋅
+export trace
+export MWgradgreendot, MWgreenint
 export planewave
 export inside, outside
 export RefSpace, numfunctions, coordtype, scalartype, assemblydata, geometry, refspace, valuetype

@@ -6,7 +6,7 @@ mutable struct DoubleLayerRotatedMW3D{T,K} <: MaxwellOperator3D{T,K}
     gamma::K
 end
 
-LinearAlgebra.cross(::NormalVector, a::MWDoubleLayer3D) = DoubleLayerRotatedMW3D(a.alpha, a.gamma)
+#LinearAlgebra.cross(::NormalVector, a::MWDoubleLayer3D) = DoubleLayerRotatedMW3D(a.alpha, a.gamma)
 
 # defaultquadstrat(::DoubleLayerRotatedMW3D, tfs, bfs) = DoubleNumQStrat(2,3)
 
