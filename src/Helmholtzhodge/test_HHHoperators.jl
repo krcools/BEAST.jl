@@ -21,6 +21,7 @@ n×gradgreen(n×b)
 
 X1 = raviartthomas(Γ1)
 X2 = raviartthomas(Γ2)
+X3 = lagrangec0d1(Γ1) 
 
-display(assemble(gradgreen×nothing,X1,X2))
+display(assemble((gradgreen)(n×b),X3,X2))
 display(assemble(Maxwell3D.doublelayer(wavenumber=k),X1,X2))

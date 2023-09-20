@@ -49,7 +49,9 @@ end
 mutable struct HHHNbasisnormal{T,K} <: HHHbasisOperator{T,K}
     op::HHHOperator{T,K}
 end
-
+mutable struct HHHNbasisdot{T,K} <: HHHbasisOperator{T,K}
+    op::HHHOperator{T,K}
+end
 mutable struct HHHIdentity{T,K} <: HHHbasisOperator{T,K}
 end
 hhhidentity() = HHHIdentity{Complex,Complex}()
@@ -59,7 +61,7 @@ basisfunction() = BasisFunction()
 export basisfunction
 VectorToVector = Union{HHHNtestCross,HHHNbasisCross,HHHgradgreenCross,HHHgreen}
 ScalarToVector = Union{HHHNbasisnormal,HHHgradgreen}
-VectorToScalar = Union{HHHNtestDot,HHHgradgreen}
+VectorToScalar = Union{HHHNtestDot,HHHgradgreen,HHHNbasisdot}
 ScalarToScalar = Union{HHHgreen}
 inversemap(op::VectorToVector,::HHHvector) = inversemap(op.op,HHHvector())
 inversemap(op::ScalarToVector,::HHHvector) = inversemap(op.op,HHHscalar())
@@ -76,7 +78,12 @@ ntrace(op::Union{HHHkernelOperator,HHHtestOperator}) = HHHNtestDot(op)
 ×(::NormalVector,op::Union{HHHkernelOperator,HHHtestOperator}) = strace(op)
 ⋅(::NormalVector,op::Union{HHHkernelOperator,HHHtestOperator}) = ntrace(op)
 *(::NormalVector,::BasisFunction) = HHHNbasisnormal(hhhidentity())
+⋅(::NormalVector,::BasisFunction) = HHHNbasisdot(hhhidentity())
 ×(::NormalVector,::BasisFunction) = HHHNbasisCross(hhhidentity())
+×(::NormalVector,op::HHHbasisOperator) = HHHNbasisCross(op)
+⋅(::NormalVector,op::HHHbasisOperator) = HHHNbasisdot(op)
+
+
 function (op::HHHkernelOperator)(Basisop::HHHbasisOperator) 
     return typeof(op)(op.α,op.γ,Basisop)
 end
@@ -105,7 +112,11 @@ function (op::HHHNtestDot)(x,y,g)
 end
 function (op::HHHNbasisnormal)(x,y,g)
     ny = normal(y)
-    Ref(ny).*op.op(x.y.g)
+    Ref(ny).*op.op(x,y,g)
+end
+function (op::HHHNbasisdot)(x,y,g)
+    ny = normal(y)
+    dot.(Ref(ny),op.op(x,y,g))
 end
 function (op::HHHNbasisCross)(x,y,g)
     ny = normal(y)
@@ -122,8 +133,11 @@ function (op::HHHgreen)(x,y,g)
     green =  op.α * exp(-op.γ*R)*(iR*i4pi)
     green*op.op(x,y,g)
 end
-mydot(a::Vector{Vector},b::Base.RefValue) = dot.(a,b)
-mydot(a::Vector,b::Base.RefValue) = a.*b
+mydot(a::SVector{N,<:SVector},b::Base.RefValue) where {N} = dot.(a,b)
+function mydot(a::SVector,b::Base.RefValue) 
+    println("aaaa")
+    a.*b
+end
 function (op::HHHgradgreen)(x,y,g)
     r = cartesian(x) - cartesian(y)
     R = norm(r)
@@ -156,4 +170,5 @@ defaultquadstrat(op::HHHOperator,::HHHdata,::HHHdata) = DoubleNumSauterQstrat(6,
 sign_upon_permutation(op::HHHIdentity,I,J) = 1
 sign_upon_permutation(op::HHHkernelOperator,I,J) = sign_upon_permutation(op.op,I,J) 
 sign_upon_permutation(op::Union{HHHNtestCross,HHHNtestDot},I,J) = Combinatorics.levicivita(I)*sign_upon_permutation(op.op,I,J)
-sign_upon_permutation(op::Union{HHHNbasisnormal,HHHNbasisCross},I,J) = Combinatorics.levicivita(J)*sign_upon_permutation(op.op,I,J)
+sign_upon_permutation(op::Union{HHHNbasisnormal,HHHNbasisCross,HHHNbasisdot},I,J) = Combinatorics.levicivita(J)*sign_upon_permutation(op.op,I,J)
+
