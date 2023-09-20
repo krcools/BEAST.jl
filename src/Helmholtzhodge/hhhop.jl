@@ -135,7 +135,6 @@ function (op::HHHgreen)(x,y,g)
 end
 mydot(a::SVector{N,<:SVector},b::Base.RefValue) where {N} = dot.(a,b)
 function mydot(a::SVector,b::Base.RefValue) 
-    println("aaaa")
     a.*b
 end
 function (op::HHHgradgreen)(x,y,g)
