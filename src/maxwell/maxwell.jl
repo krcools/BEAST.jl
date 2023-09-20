@@ -1,5 +1,4 @@
 module Maxwell3D
-
     using ..BEAST
     Mod = BEAST
 
@@ -75,4 +74,6 @@ module Maxwell3D
     farfield(;
         wavenumber = error("missing argument: `wavenumber`")) =
             Mod.MWFarField3D(wavenumber=wavenumber)
+    
+   
 end

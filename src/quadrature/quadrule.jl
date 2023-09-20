@@ -1,7 +1,7 @@
 # This file contains kernel independent implementations of quadrule for
 # the various quadrature strategies defined in quadstrats.jl
 
-function quadrule(op::IntegralOperator, g::RTRefSpace, f::RTRefSpace,  i, τ, j, σ, qd,
+function quadrule(op::IntegralOperator, g::RefSpace, f::RefSpace,  i, τ, j, σ, qd,
     qs::DoubleNumSauterQstrat)
 
     T = eltype(eltype(τ.vertices))
