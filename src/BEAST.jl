@@ -262,7 +262,8 @@ include("Helmholtzhodge/hhhop.jl")
 include("Helmholtzhodge/helmholtzhodge.jl")
 
 
-
+#suport for multi-trace
+include("multi-trace/configuration.jl")
 
 
 const x̂ = point(1,0,0)
