@@ -70,7 +70,7 @@ include("test_tdrhs_scaling.jl")
 include("test_td_tensoroperator.jl")
 
 include("test_variational.jl")
-
+include("test_HHHoperators.jl")
 
 try
     Pkg.installed("BogaertInts10")
