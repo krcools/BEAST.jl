@@ -3,11 +3,13 @@ abstract type Domain end
 abstract type PhysicalInformation end #depends on the strategy
 abstract type DomainData end
 
-struct HomogeneousDomain <: DomainData
+mutable struct HomogeneousDomain <: DomainData
 ϵr
 μr
 testbasises
 trialbasises
+testindex = []
+trialindex = []
 end
 
 struct BackgroundDomain <: DomainData
@@ -15,22 +17,29 @@ struct BackgroundDomain <: DomainData
     μ0
 end
 
-struct SubDomain <: Domain
+mutable struct SubDomain{T<:DomainData} <: Domain
     id::Int
     children::Vector{Domain}
     parent::Domain
-    data::DomainData
+    data::T
 end
-struct RootDomain <: Domain
+mutable struct RootDomain{T<:DomainData} <: Domain
     id::Int
     children::Vector{Domain}
-    data::DomainData
+    data::T
 end
 
-struct Configuration #TODO add dict contining all subbasis info af touching objects
+mutable struct Configuration #TODO add dict contining all subbasis info af touching objects
     domains::Dict{Int,Domain}
     root::RootDomain
     touching::Dict{Tuple{Int,Int},<:Vector}
+    testdirectproductspace 
+    testcounter 
+    trialcounter 
+    trialdirectproductspace 
+end
+function Configuration(dom,root,touching)
+Configuration(dom,root,touching,nothing,0,0,nothing)
 end
 
 function _adddomain(config::Configuration, newdom::Domain)
@@ -38,6 +47,16 @@ function _adddomain(config::Configuration, newdom::Domain)
     @assert !(id in keys(config.domains))
     dom = newdom.parent
     config.domains[id] = newdom
+    for space in newdom.data.testbasises
+        config.testcounter += 1
+        push!(newdom.data.testindex,config.testcounter)
+        config.testdirectproductspace = space × config.test_direct_productspace
+    end
+    for space in newdom.data.trialbasises
+        config.trialcounter += 1
+        push!(newdom.data.trialindex,config.trialcounter)
+        config.trialdirectproductspace = space × config.trial_direct_productspace
+    end
     push!(dom.children,newdom)
 end
 
@@ -55,7 +74,16 @@ function createdomain(config::Configuration,id::Int,parent::Union{Int,Domain},va
     _adddomain(config,_createdomain(config,id,parent,values))
 
 end
+"""
+a child of b
+"""
+function is_child_of(a,b)
+    return a∈b
+end
 
+function brothers(a,b)
+return is_child_of(a,b.parent)
+end
 function createconfiguration(data::BackgroundDomain)
     r = RootDomain(0,Domain[],data)
     Configuration(Dict{Int,Domain}(0=>r),r,Dict{Tuple{Int,Int},Any}()) # typle of the indices, returns the spaces: [test1,trial1,test2,trial2]
@@ -85,4 +113,63 @@ function alltouching(config::Configuration)
     end
 end
 
+function (dom::Domain)(n::NormalVector,dom2::Domain)
+    if dom==dom2
+        return 1.0
+    elseif dom2 ∈ dom.children
+        return -1.0
+    else
+        @error "domain is not in children of parent domain"
+    end
 
+end
+
+function generate_configuration(typelist,id_of_parentlist,background)
+    conf = createconfiguration(background)
+    l = length(typelist)
+    for (index,t,parent_id) in zip(index,typelist,id_of_parentlist)
+        createdomain(conf,index,parent_id,t)
+    end
+    return conf
+end
+function _create_bilform(operator_matrix,test_direct_productspace,trial_direct_productspace)
+#TODO create the bilform 
+
+end
+
+function generate_problem(config::Configuration)
+    @assert length(config.testdirectproductspace.factors)==length(config.trialdirectproductspace.factors)
+    N = length(config.testdirectproductspace.factors)
+    OperatorMatrix = fill!(Array{AbstractOperator}(undef,N,N),ZeroOperator())
+    for (id,Ω) in config.domains
+        if id != 0
+            inter = Interaction(config,Ω,Ω,Ω)
+            OperatorMatrix[Ω.data.testindex[1]:last(Ω.data.testindex),Ω.data.trialindex[1]:last(Ω.data.trialindex)] += inter()
+            for child in Ω.children
+                inter = Interaction(config,Ω,child,Ω)
+                OperatorMatrix[Ω.data.testindex[1]:last(Ω.data.testindex),child.data.trialindex[1]:last(child.data.trialindex)] += inter()
+                inter = Interaction(config,child,Ω,Ω)
+                OperatorMatrix[child.data.testindex[1]:last(child.data.testindex),Ω.data.trialindex[1]:last(Ω.data.trialindex)] += inter()
+            end
+
+        end
+        for Ω1 in Ω.children
+            for Ω2 in Ω.children
+                if Ω1===Ω2
+                    inter = Interaction(config,Ω1,Ω2,Ω)
+                    OperatorMatrix[Ω1.data.testindex[1]:last(Ω1.data.testindex),Ω2.data.trialindex[1]:last(Ω2.data.trialindex)] += inter()
+                else
+                    inter = Interaction(config,Ω1,Ω2,Ω)
+                    OperatorMatrix[Ω1.data.testindex[1]:last(Ω1.data.testindex),Ω2.data.trialindex[1]:last(Ω2.data.trialindex)] += inter()
+                    inter = Interaction(config,Ω2,Ω1,Ω)
+                    OperatorMatrix[Ω2.data.testindex[1]:last(Ω2.data.testindex),Ω1.data.trialindex[1]:last(Ω1.data.trialindex)] += inter()
+
+                end
+
+            end
+        end
+    end
+
+#TODO the right hand side
+
+end

@@ -171,3 +171,13 @@ sign_upon_permutation(op::HHHkernelOperator,I,J) = sign_upon_permutation(op.op,I
 sign_upon_permutation(op::Union{HHHNtestCross,HHHNtestDot},I,J) = Combinatorics.levicivita(I)*sign_upon_permutation(op.op,I,J)
 sign_upon_permutation(op::Union{HHHNbasisnormal,HHHNbasisCross,HHHNbasisdot},I,J) = Combinatorics.levicivita(J)*sign_upon_permutation(op.op,I,J)
 
+"""
+(number of test normals,number of trial normals)
+"""
+function number_of_normals(op::HHHOperator) end 
+
+
+number_of_normals(op::Union{HHHNtestCross,HHHNtestDot}) = [1,0]+number_of_normals(op.op) 
+number_of_normals(op::HHHkernelOperator) = number_of_normals(op.op)
+number_of_normals(op::Union{HHHNbasisCross,HHHNbasisdot,HHHNbasisnormal}) = [0,1]+number_of_normals(op.op)
+number_of_normals(op::HHHIdentity) = [0,0]

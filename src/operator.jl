@@ -28,7 +28,7 @@ abstract type Operator <: AbstractOperator end
 #     orientation
 # end
 
-# struct ZeroOperator <: AbstractOperator end
+struct ZeroOperator <: AbstractOperator end
 abstract type Orientation end
 struct Inside <: Orientation end
 struct Outside <: Orientation end
@@ -82,6 +82,7 @@ end
 +(a::Number, b::AbstractOperator) = b + a
 
 *(a::Number, b::AbstractOperator) = LinearCombinationOfOperators([a], [b])
+*(a::AbstractOperator, b::Number) = b*a
 *(a::Number, b::LinearCombinationOfOperators) = LinearCombinationOfOperators(a * b.coeffs, b.ops)
 -(a::AbstractOperator, b::AbstractOperator) = a + (-1.0) * b
 -(a::AbstractOperator) = (-1.0) * a
@@ -358,9 +359,10 @@ end
 
 
 
-# Base.zero(op::AbstractOperator) = ZeroOperator()
-# +(a::AbstractOperator,b::ZeroOperator) = a
-# +(a::ZeroOperator,b::ZeroOperator) = a
-# +(a::ZeroOperator,b::AbstractOperator) = b+a
-# *(a::Number,b::ZeroOperator) = b
+Base.zero(op::AbstractOperator) = ZeroOperator()
++(a::AbstractOperator,b::ZeroOperator) = a
++(a::ZeroOperator,b::ZeroOperator) = a
++(a::ZeroOperator,b::AbstractOperator) = b+a
+-(a::ZeroOperator,b::AbstractOperator) = -b
+*(a::Number,b::ZeroOperator) = b
 
