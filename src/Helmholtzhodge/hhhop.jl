@@ -1,4 +1,5 @@
 import LinearAlgebra: ×, ⋅
+abstract type HHHLocalOperator <: LocalOperator end
 abstract type HHHOperator{T,K} <: IntegralOperator end
 abstract type HHHtestOperator{T,K} <: HHHOperator{T,K} end
 abstract type HHHbasisOperator{T,K} <: HHHOperator{T,K} end
@@ -7,9 +8,9 @@ abstract type HHHkernelOperator{T,K} <: HHHOperator{T,K} end
 # scalartype(op::HHHOperator{T,K}) where {T, K} = promote_type(T, K)
 scalartype(op::HHHOperator{T,K}) where {T, K <: Nothing} = Complex
 scalartype(op::HHHOperator{T,K}) where {T, K} = Complex
+scalartype(op::HHHLocalOperator) = Union{}
 
-
-const i4pi = 1 / (4pi)
+#const i4pi = 1 / (4pi)
 mutable struct HHHgreen{T,K} <: HHHkernelOperator{T,K}
     α::K
     γ::T
@@ -54,6 +55,30 @@ mutable struct HHHNbasisdot{T,K} <: HHHbasisOperator{T,K}
 end
 mutable struct HHHIdentity{T,K} <: HHHbasisOperator{T,K}
 end
+
+mutable struct HHHNtestCrossLocal{T,K} <: HHHtestOperator{T,K}
+    op::HHHOperator{T,K}
+end
+
+
+mutable struct HHHNbasisCrossLocal <: HHHLocalOperator
+    op::HHHLocalOperator
+end
+
+mutable struct HHHNtestDotLocal <: HHHLocalOperator
+    op::HHHLocalOperator
+end
+
+mutable struct HHHNbasisnormalLocal <: HHHLocalOperator
+    op::HHHLocalOperator
+end
+mutable struct HHHNbasisdotLocal <: HHHLocalOperator
+    op::HHHLocalOperator
+end
+mutable struct HHHIdentityLocal <: HHHLocalOperator
+end
+
+
 hhhidentity() = HHHIdentity{Complex,Complex}()
 export HHH
 struct BasisFunction end
@@ -177,7 +202,74 @@ sign_upon_permutation(op::Union{HHHNbasisnormal,HHHNbasisCross,HHHNbasisdot},I,J
 function number_of_normals(op::HHHOperator) end 
 
 
-number_of_normals(op::Union{HHHNtestCross,HHHNtestDot}) = [1,0]+number_of_normals(op.op) 
+number_of_normals(op::Union{HHHNtestCross,HHHNtestCrossLocal,HHHNtestDot,HHHNtestDotLocal}) = [1,0]+number_of_normals(op.op) 
 number_of_normals(op::HHHkernelOperator) = number_of_normals(op.op)
-number_of_normals(op::Union{HHHNbasisCross,HHHNbasisdot,HHHNbasisnormal}) = [0,1]+number_of_normals(op.op)
-number_of_normals(op::HHHIdentity) = [0,0]
+number_of_normals(op::Union{HHHNbasisCross,HHHNbasisCrossLocal,HHHNbasisdot,HHHNbasisdotLocal,HHHNbasisnormal,HHHNbasisnormalLocal}) = [0,1]+number_of_normals(op.op)
+number_of_normals(op::Union{HHHIdentity,HHHIdentityLocal}) = [0,0]
+
+
+
+#### trace definition
+
+
+
+alpha(op::HHHtestOperator) = alpha(op.op)
+alpha(op::HHHkernelOperator) = op.α
+
+hhhntestcrosslocal(op::ZeroOperator) = op
+hhhntestcrosslocal(op::HHHLocalOperator) = HHHNtestCrossLocal(op)
+hhhntestdotlocal(op::ZeroOperator) = op
+hhhntestdotlocal(op::HHHLocalOperator) = HHHNtestDotLocal(op)
+
+hhhnbasiscrosslocal(op::ZeroOperator) = op
+hhhnbasiscrosslocal(op::HHHLocalOperator) = HHHNbasisCrossLocal(op)
+
+hhhnbasisdotlocal(op::ZeroOperator) = op
+hhhnbasisdotlocal(op::HHHLocalOperator) = HHHNbasisdotLocal(op)
+
+hhhnbasisnormal(op::ZeroOperator) = op
+hhhnbasisnormal(op::HHHLocalOperator) = HHHNbasisnormalLocal(op)
+
+localoperator(op::HHHNtestCross) = hhhntestcrosslocal(localoperator(op.op))
+localoperator(op::HHHNtestDot) = hhhntestdotlocal(localoperator(op.op))
+localoperator(op::HHHNbasisCross) = hhhnbasiscrosslocal(localoperator(op.op))
+localoperator(op::HHHNbasisdot) = hhhnbasisdotlocal(localoperator(op.op))
+localoperator(op::HHHNbasisnormal) = hhhnbasisnormal(localoperator(op.op))
+localoperator(op::HHHIdentity) = HHHIdentityLocal()
+
+localoperator(op::HHHgreen) = ZeroOperator()
+localoperator(op::HHHgradgreen) = hhhnbasisdotlocal(op.op)
+localoperator(op::HHHgradgreenCross) = hhhnbasiscrosslocal(op.op)
+
+function trace(op::HHHOperator,sign)
+
+    localop = 1/2*sign*alpha(op)*localoperator(op)
+    
+    return op + localop
+end
+
+
+##### defining integrand of those local operators:
+
+function integrand(op::HHHLocalOperator,kernel,x,g,f)
+dot(g[1],op(x,f[1]))
+end
+
+function (op::HHHNtestCrossLocal)(x,f)
+    normals(x)[1]×op.op(x,f)
+end
+function (op::HHHNtestDotLocal)(x,f)
+    dot(normals(x)[1],op.op(x,f))
+end
+function (op::HHHNbasisCross)(x,f)
+    normals(x)[2]×op.op(x,f)
+end
+function (op::HHHNbasisdotLocal)(x,f)
+    dot(normals(x)[2],op.op(x,f))
+end
+function (op::HHHNbasisnormalLocal)(x,f)
+    normals(x)[2]*op.op(x,f)
+end
+function (op::HHHIdentityLocal)(x,f)
+    f
+end
