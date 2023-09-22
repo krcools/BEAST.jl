@@ -5,7 +5,15 @@ struct MeshPointNormals
     testnormal
     trialnormal
 end
-ReusePatterns.@forward (MeshPointNormals, :meshpoint) CompScienceMeshes.MeshPointNM
+#ReusePatterns.@forward (MeshPointNormals, :meshpoint) CompScienceMeshes.MeshPointNM
+
+code = forward((MeshPointNormals, :meshpoint),CompScienceMeshes.MeshPointNM)
+uit = [code[1]]
+for line in code[2:length(code)]
+    push!(uit,replace(line, " CompScienceMeshes " => " "))
+end
+eval.(Meta.parse.(uit))
+
 function neighborhood(p::CompScienceMeshes.Simplex, bary,nt,nb)
     MeshPointNormals(CompScienceMeshes.neighborhood(p,bary),nt,nb)
 end

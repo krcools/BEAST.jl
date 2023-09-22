@@ -95,7 +95,7 @@ function Base.:+(x::AbstractSpace...)
 end
 
 cross(a::Space{T}, b::Space{T}) where {T} = DirectProductSpace{T,Space{T}}(Space{T}[a,b])
-cross(a::Space{T}, b::nothing) where {T} = a
+cross(a::Space{T}, b::Nothing) where {T} = a
 cross(a::DirectProductSpace{T}, b::Space{T}) where {T} = DirectProductSpace{T,Space{T}}([a.factors; b])
 cross(a::DirectProductSpace{T}, b::DirectProductSpace{T}) where {T} = DirectProductSpace{T,Space{T}}([a.factors; b.factors])
 numfunctions(S::DirectProductSpace) = sum([numfunctions(s) for s in S.factors])
