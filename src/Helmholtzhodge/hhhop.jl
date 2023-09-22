@@ -247,7 +247,10 @@ function trace(op::HHHOperator,sign)
     
     return op + localop
 end
-
+function normalorient(op::Union{HHHOperator,HHHLocalOperator},signtest,signtrial)
+test,trial = number_of_normals(op)
+signtest^test*signtrial^trial*op
+end
 
 ##### defining integrand of those local operators:
 
@@ -271,5 +274,5 @@ function (op::HHHNbasisnormalLocal)(x,f)
     normals(x)[2]*op.op(x,f)
 end
 function (op::HHHIdentityLocal)(x,f)
-    f
+    return f
 end
