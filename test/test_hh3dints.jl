@@ -174,7 +174,7 @@ end
 
   @test z_cv_double ≈ z_cv_ss rtol = 1e-4
   @test z_cv_se ≈ z_cv_ss rtol=1e-4
-  @test norm(z_cv_ss-z_cv_se)/norm(z_cv_ss) < norm(z_cv_ss-z_cv_double)/norm(z_cv_ss) broken = true
+  @test_broken norm(z_cv_ss-z_cv_se)/norm(z_cv_ss) < norm(z_cv_ss-z_cv_double)/norm(z_cv_ss)
   #doublelayer
   z_cv_se = zeros(complex(T),1,1)
   z_cv_ss = zeros(complex(T),1,1)
@@ -222,7 +222,7 @@ end
 
   @test z_cv_double ≈ z_cv_ss rtol = 1e-4
   @test z_cv_se ≈ z_cv_double rtol=1e-4
-  @test norm(z_cv_ss-z_cv_se) < norm(z_cv_ss-z_cv_double) broken = true
+  @test_broken norm(z_cv_ss-z_cv_se) < norm(z_cv_ss-z_cv_double)
 
   #doublelayer 
   z_cv_se = zeros(complex(T),3,3)
@@ -261,7 +261,7 @@ end
 
   @test z_cv_double ≈ z_cv_ss rtol = 1e-4
   @test z_cv_se ≈ z_cv_ss rtol=1e-4
-  @test norm(z_cv_ss-z_cv_se) < norm(z_cv_ss-z_cv_double) broken = true
+  @test_broken norm(z_cv_ss-z_cv_se) < norm(z_cv_ss-z_cv_double)
 
 #pyramid test patch basis
   SE_strategy = BEAST.WiltonSERule(
@@ -287,7 +287,7 @@ end
 
   @test z_cv_double ≈ z_cv_ss rtol = 1e-4
   @test z_cv_se ≈ z_cv_ss rtol=1e-4
-  @test norm(z_cv_ss-z_cv_se) < norm(z_cv_ss-z_cv_double) broken = true
+  @test_broken norm(z_cv_ss-z_cv_se) < norm(z_cv_ss-z_cv_double)
 
   #doublelayer
   z_cv_se = zeros(complex(T),3,1)
@@ -339,7 +339,7 @@ end
 
   @test z_cv_double ≈ z_cv_ss rtol = 1e-4
   @test z_cv_se ≈ z_cv_ss rtol=1e-4
-  @test norm(z_cv_ss-z_cv_se) < norm(z_cv_ss-z_cv_double) broken = true
+  @test_broken norm(z_cv_ss-z_cv_se) < norm(z_cv_ss-z_cv_double)
 
   #double layer
   z_cv_se = zeros(complex(T),1,3)
