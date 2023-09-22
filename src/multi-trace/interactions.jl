@@ -28,23 +28,18 @@ cauchylimit needs to be applied before the normalorient function
 
 function cauchylimit(operator,Ω1,Ω2,Ω3)
 #check first if touching is non empty
-    if Ω1===Ω2===Ω3
-        sign = 1
-    elseif !Ω1===Ω3 && !Ω2===Ω3
+@assert is_child_of(Ω1,Ω3)||Ω1===Ω3
+@assert is_child_of(Ω2,Ω3)||Ω2===Ω3
+    if !Ω2===Ω3
         sign = -1
-    elseif Ω1===Ω3
-        sing = -1
     elseif Ω2===Ω3
         sign = 1
-    else
-        @error "cauchy called but possibly not neccesarry"
     end
     
-
-
-
+    trace(operator,sign)
 
 end #TODO define these
+
 
 function normalorient(operator,Ω1,Ω2,Ω3) end
 
