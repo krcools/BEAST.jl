@@ -1,5 +1,16 @@
+####### designing neighborhood object which can save 2 normals
+using ReusePatterns
+struct MeshPointNormals
+    meshpoint::CompScienceMeshes.MeshPointNM
+    testnormal
+    trialnormal
+end
+ReusePatterns.@forward (MeshPointNormals, :meshpoint) CompScienceMeshes.MeshPointNM
+function neighborhood(p::CompScienceMeshes.Simplex, bary,nt,nb)
+    MeshPointNormals(CompScienceMeshes.neighborhood(p,bary),nt,nb)
+end
 
-
+normals(m::MeshPointNormals) = (m.testnormal,m.trialnormal)
 using CollisionDetection
 
 
@@ -276,6 +287,8 @@ function assemble_local_mixed!(biop::LocalOperator, tfs::Space{T}, bfs::Space{T}
                 bcell = bels[q]
 
                 if overlap(tcell, bcell)
+                    nt = normal(tcell)
+                    nb = normal(bcell)
 
                     isct = intersection(tcell, bcell)
                     for cell in isct
@@ -284,7 +297,7 @@ function assemble_local_mixed!(biop::LocalOperator, tfs::Space{T}, bfs::Space{T}
                         P = restrict(brefs, bcell, cell)
                         Q = restrict(trefs, tcell, cell)
 
-                        qr = quadrule(biop, trefs, brefs, cell, qd, quadstrat)
+                        qr = quadrule(biop, trefs, brefs, cell, qd,nt,nb, quadstrat)
                         zlocal = cellinteractions(biop, trefs, brefs, cell, qr)
                         zlocal = Q * zlocal * P'
 
@@ -341,12 +354,13 @@ function cellinteractions_matched!(zlocal, biop, trefs, brefs, cell, qr)
     return zlocal
 end
 
-function cellinteractions(biop, trefs::U, brefs::V, cell, qr) where {U<:RefSpace{T},V<:RefSpace{T}} where {T}
-
+function cellinteractions(biop, trefs::U, brefs::V, cell) where {U<:RefSpace{T},V<:RefSpace{T}} where {T}
+    qr = qrtot
     num_tshs = length(qr[1][3])
     num_bshs = length(qr[1][4])
 
     zlocal = zeros(T, num_tshs, num_bshs)
+     
     for q in qr
 
         w, mp, tvals, bvals = q[1], q[2], q[3], q[4]
