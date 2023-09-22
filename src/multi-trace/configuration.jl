@@ -8,8 +8,9 @@ mutable struct HomogeneousDomain <: DomainData
 μr
 testbasises
 trialbasises
-testindex = []
-trialindex = []
+testindex 
+trialindex 
+HomogeneousDomain(a,b,c,d) = new(a,b,c,d,[],[])
 end
 
 struct BackgroundDomain <: DomainData
