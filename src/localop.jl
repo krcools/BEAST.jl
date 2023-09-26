@@ -1,25 +1,25 @@
 ####### designing neighborhood object which can save 2 normals
-using ReusePatterns
-using CompScienceMeshes
-struct MeshPointNormals
-    meshpoint::CompScienceMeshes.MeshPointNM
-    testnormal
-    trialnormal
-end
+# using ReusePatterns
+# using CompScienceMeshes
+# struct MeshPointNormals
+#     meshpoint::CompScienceMeshes.MeshPointNM
+#     testnormal
+#     trialnormal
+# end
 #ReusePatterns.@forward (MeshPointNormals, :meshpoint) CompScienceMeshes.MeshPointNM
 
-code = forward((MeshPointNormals, :meshpoint),CompScienceMeshes.MeshPointNM)
-uit = [code[1]]
-for line in code[2:length(code)]
-    push!(uit,replace(line, " CompScienceMeshes " => " "))
-end
-eval.(Meta.parse.(uit))
+# code = forward((MeshPointNormals, :meshpoint),CompScienceMeshes.MeshPointNM)
+# uit = [code[1]]
+# for line in code[2:length(code)]
+#     push!(uit,replace(line, " CompScienceMeshes " => " "))
+# end
+# eval.(Meta.parse.(uit))
 
-function extendedneighborhood(p::CompScienceMeshes.Simplex, bary,nt,nb)
-    MeshPointNormals(CompScienceMeshes.neighborhood(p,bary),nt,nb)
-end
+# function extendedneighborhood(p::CompScienceMeshes.Simplex, bary,nt,nb)
+#     MeshPointNormals(CompScienceMeshes.neighborhood(p,bary),nt,nb)
+# end
 
-normals(m::MeshPointNormals) = (m.testnormal,m.trialnormal)
+# normals(m::MeshPointNormals) = (m.testnormal,m.trialnormal)
 using CollisionDetection
 
 

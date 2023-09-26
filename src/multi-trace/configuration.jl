@@ -23,11 +23,13 @@ mutable struct SubDomain{T} <: Domain{T}
     children::Vector{Domain}
     parent::Domain
     data::T
+    excitation
 end
 mutable struct RootDomain{T} <: Domain{T}
     id::Int
     children::Vector{Domain}
     data::T
+    excitation
 end
 
 mutable struct Configuration #TODO add dict contining all subbasis info af touching objects
@@ -37,7 +39,8 @@ mutable struct Configuration #TODO add dict contining all subbasis info af touch
     testdirectproductspace 
     testcounter 
     trialcounter 
-    trialdirectproductspace 
+    trialdirectproductspace
+    
 end
 function Configuration(dom,root,touching)
 Configuration(dom,root,touching,nothing,0,0,nothing)
@@ -48,7 +51,7 @@ function _adddomain(config::Configuration, newdom::Domain)
     @assert !(id in keys(config.domains))
     dom = newdom.parent
     config.domains[id] = newdom
-    for space in newdom.data.testbasises
+    for (i,space) in enumerate(newdom.data.testbasises)
         config.testcounter += 1
         push!(newdom.data.testindex,config.testcounter)
         config.testdirectproductspace = space × config.test_direct_productspace
@@ -61,18 +64,18 @@ function _adddomain(config::Configuration, newdom::Domain)
     push!(dom.children,newdom)
 end
 
-function _createdomain(config::Configuration,id::Int,parentid::Int,values)
-    dom = SubDomain(id,Domain[],config.domains[parentid],values::DomainData)
+function _createdomain(config::Configuration,id::Int,parentid::Int,values;excitation)
+    dom = SubDomain(id,Domain[],config.domains[parentid],values::DomainData,excitation)
 
    # push!(config.domains[parentid].children,dom)
     return dom
 end
-function _createdomain(config::Configuration,id::Int,parentdom::Domain,values)
-    _createdomain(config,id,parentdom.id,values)
+function _createdomain(config::Configuration,id::Int,parentdom::Domain,values;excitation)
+    _createdomain(config,id,parentdom.id,values;excitation)
 end
 
-function createdomain(config::Configuration,id::Int,parent::Union{Int,Domain},values::DomainData)
-    _adddomain(config,_createdomain(config,id,parent,values))
+function createdomain(config::Configuration,id::Int,parent::Union{Int,Domain},values::DomainData;excitation=Dict())
+    _adddomain(config,_createdomain(config,id,parent,values;excitation))
 
 end
 """
@@ -85,8 +88,8 @@ end
 function brothers(a,b)
 return is_child_of(a,b.parent)
 end
-function createconfiguration(data::BackgroundDomain)
-    r = RootDomain(0,Domain[],data)
+function createconfiguration(data::BackgroundDomain,excitation=Dict())
+    r = RootDomain(0,Domain[],data,excitation)
     Configuration(Dict{Int,Domain}(0=>r),r,Dict{Tuple{Int,Int},Any}()) # typle of the indices, returns the spaces: [test1,trial1,test2,trial2]
 end
 
@@ -133,12 +136,12 @@ function generate_configuration(typelist,id_of_parentlist,background)
     end
     return conf
 end
-function _create_bilform(operator_matrix,test_direct_productspace,trial_direct_productspace)
-#TODO create the bilform 
+# function _create_bilform(operator_matrix,test_direct_productspace,trial_direct_productspace)
+# #TODO create the bilform 
 
-end
+# end
 
-function generate_problem(config::Configuration)
+function generate_problem_lhs(config::Configuration)
     @assert length(config.testdirectproductspace.factors)==length(config.trialdirectproductspace.factors)
     N = length(config.testdirectproductspace.factors)
     OperatorMatrix = fill!(Array{AbstractOperator}(undef,N,N),ZeroOperator())
@@ -182,9 +185,7 @@ function generate_problem(config::Configuration)
     #     end
     # end
     # rhs.terms=terms
-
-    lhs = 
-    eq = rhs==lhs
+    return assemble(dot(config.testdirectproductspace,OperatorMatrix,config.trialdirectproductspace),config.testdirectproductspace,config.trialdirectproductspace)
     # space_mappings = [test[i]=>config.testdirectproductspace.factors[i],trial[i]=>config.trialdirectproductspace.factors[i] for i in 1:N]
     # discreteequation = discretise(eq,space_mappings)
     # return discreteequation
@@ -194,6 +195,21 @@ function generate_problem(config::Configuration)
 
 end
 
+function generate_problem_rhs(config::Configuration)
+    linterms = Vector{LinTerm}()
+    @warn "only excitations in root domain implemented, check first if same aproach for others is appropriate"
+    for (id,Ω) in config.domains end
+
+    for (key,func) in config.root.excitation
+        for child in config.root.children
+
+
+            push!(linterms,LinTerm(child.data.testindex[key],[],1,func))
+        end
+    end
+
+    return assemble(LinForm([],linterms),config.testdirectproductspace)
+end
 
 function map_solution_to_volumes(solution,config)
 

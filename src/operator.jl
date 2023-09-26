@@ -27,6 +27,17 @@ abstract type Operator <: AbstractOperator end
 #     op
 #     orientation
 # end
+struct BasisOperatorLeft <: AbstractOperator 
+operator
+left_function
+end
+struct BasisOperatorRight <: AbstractOperator 
+    operator
+    right_function
+end
+*(f::Function,op::AbstractOperator) = BasisOperatorLeft(op,f)
+*(op::AbstractOperator,f::Function) = BasisOperatorRight(op,f)
+    
 
 struct ZeroOperator <: AbstractOperator end
 abstract type Orientation end
@@ -222,6 +233,8 @@ function assemble!(operator::Operator, test_functions::Space, trial_functions::S
 
     assemblechunk!(operator, test_functions, trial_functions, store; quadstrat)
 end
+defaultquadstrat(op::BasisOperatorLeft,tfs,bfs) = defaultquadstrat(op.operator,op.left_function(tfs),bfs)
+defaultquadstrat(op::BasisOperatorRight,tfs,bfs) = defaultquadstrat(op.operator,tfs,op.right_function(bfs))
 
 
 
@@ -231,6 +244,17 @@ function assemble!(op::TransposedOperator, tfs::Space, bfs::Space,
 
     store1(v,m,n) = store(v,n,m)
     assemble!(op.op, bfs, tfs, store1, threading; quadstrat)
+end
+function assemble!(op::BasisOperatorLeft, tfs::Space, bfs::Space, store,threading = Threading{:multi};
+    quadstrat=defaultquadstrat(op, tfs, bfs))
+    #quadstrat = defaultquadstrat(op.operator,op.left_function(tfs),bfs)
+    assemble!(op.operator,op.left_function(tfs),bfs,store,threading;quadstrat)
+end
+
+function assemble!(op::BasisOperatorRight, tfs::Space, bfs::Space, store,threading = Threading{:multi};
+    quadstrat=defaultquadstrat(op, tfs, bfs))
+    #quadstrat = defaultquadstrat(op.operator,tfs,op.right_function(bfs))
+    assemble!(op.operator,tfs,op.right_function(bfs),store,threading;quadstrat)
 end
 
 
