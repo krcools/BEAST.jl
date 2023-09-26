@@ -58,6 +58,7 @@ end
 mutable struct HHHDivergence{T,K} <: HHHbasisOperator{T,K}
 end
 
+
 mutable struct HHHNtestCrossLocal{T,K} <: HHHtestOperator{T,K}
     op::HHHOperator{T,K}
 end
@@ -82,6 +83,8 @@ end
 mutable struct HHHDivergenceLocal <: HHHLocalOperator end
 
 hhhidentity() = HHHIdentity{Complex,Complex}()
+hhhdivergence() = HHHDivergence{Complex,Complex}()
+
 export HHH
 struct BasisFunction end
 struct DivBasisFunction end
@@ -107,8 +110,8 @@ ntrace(op::Union{HHHkernelOperator,HHHtestOperator}) = HHHNtestDot(op)
 ×(::NormalVector,op::Union{HHHkernelOperator,HHHtestOperator}) = strace(op)
 ⋅(::NormalVector,op::Union{HHHkernelOperator,HHHtestOperator}) = ntrace(op)
 *(::NormalVector,::BasisFunction) = HHHNbasisnormal(hhhidentity())
-⋅(::Nabla,::BasisFunction) = HHHDivergence()
-*(::NormalVector,::DivBasisFunction) = HHHNbasisnormal(HHHDivergence())
+⋅(::Nabla,::BasisFunction) = hhhdivergence()
+*(::NormalVector,::DivBasisFunction) = HHHNbasisnormal(hhhdivergence())
 ⋅(::NormalVector,::BasisFunction) = HHHNbasisdot(hhhidentity())
 ×(::NormalVector,::BasisFunction) = HHHNbasisCross(hhhidentity())
 ×(::NormalVector,op::HHHbasisOperator) = HHHNbasisCross(op)
