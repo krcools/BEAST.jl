@@ -126,6 +126,7 @@ export PlaneWaveDirichlet
 export PlaneWaveNeumann
 
 struct NormalVector end
+struct Nabla end
 
 using CompScienceMeshes
 using Combinatorics
@@ -273,5 +274,8 @@ export x̂, ŷ, ẑ
 
 const n = NormalVector()
 export n
+
+const ∇ = Nabla()
+export ∇
 
 end # module

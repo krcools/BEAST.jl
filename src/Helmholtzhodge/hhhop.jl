@@ -55,6 +55,8 @@ mutable struct HHHNbasisdot{T,K} <: HHHbasisOperator{T,K}
 end
 mutable struct HHHIdentity{T,K} <: HHHbasisOperator{T,K}
 end
+mutable struct HHHDivergence{T,K} <: HHHbasisOperator{T,K}
+end
 
 mutable struct HHHNtestCrossLocal{T,K} <: HHHtestOperator{T,K}
     op::HHHOperator{T,K}
@@ -77,11 +79,12 @@ mutable struct HHHNbasisdotLocal <: HHHLocalOperator
 end
 mutable struct HHHIdentityLocal <: HHHLocalOperator
 end
-
+mutable struct HHHDivergenceLocal <: HHHLocalOperator end
 
 hhhidentity() = HHHIdentity{Complex,Complex}()
 export HHH
 struct BasisFunction end
+struct DivBasisFunction end
 basisfunction() = BasisFunction()
 export basisfunction
 VectorToVector = Union{HHHNtestCross,HHHNbasisCross,HHHgradgreenCross,HHHgreen}
@@ -94,6 +97,7 @@ inversemap(op::VectorToScalar,::HHHscalar) = inversemap(op.op,HHHvector())
 inversemap(op::ScalarToScalar,::HHHscalar) = HHHscalar()
 inversemap(::HHHOperator,::HHHdata) = @error "trying to convert scalar to vector or vector to scalar"
 inversemap(::HHHIdentity,data::HHHdata) = data
+inversemap(::HHHDivergence,::HHHscalar) = HHHvector()
 ##### Operator building
 
 strace(op::Union{HHHkernelOperator,HHHtestOperator}) = HHHNtestCross(op)
@@ -103,6 +107,8 @@ ntrace(op::Union{HHHkernelOperator,HHHtestOperator}) = HHHNtestDot(op)
 ×(::NormalVector,op::Union{HHHkernelOperator,HHHtestOperator}) = strace(op)
 ⋅(::NormalVector,op::Union{HHHkernelOperator,HHHtestOperator}) = ntrace(op)
 *(::NormalVector,::BasisFunction) = HHHNbasisnormal(hhhidentity())
+⋅(::Nabla,::BasisFunction) = HHHDivergence()
+*(::NormalVector,::DivBasisFunction) = HHHNbasisnormal(HHHDivergence())
 ⋅(::NormalVector,::BasisFunction) = HHHNbasisdot(hhhidentity())
 ×(::NormalVector,::BasisFunction) = HHHNbasisCross(hhhidentity())
 ×(::NormalVector,op::HHHbasisOperator) = HHHNbasisCross(op)
@@ -150,6 +156,9 @@ end
 function (op::HHHIdentity)(x,y,g)
     getvalue(g)
 end
+function (op::HHHDivergence)(x,y,g)
+    getdivergence(g)
+end
 function (op::HHHgreen)(x,y,g)
     
     r = cartesian(x) - cartesian(y)
@@ -191,7 +200,7 @@ end
 defaultquadstrat(op::HHHOperator,::HHHdata,::HHHdata) = DoubleNumSauterQstrat(6,7,5,5,4,3) #TODO implement strategy that is stronger for nearby triangles
 
 
-sign_upon_permutation(op::HHHIdentity,I,J) = 1
+sign_upon_permutation(op::Union{HHHIdentity,HHHDivergence},I,J) = 1
 sign_upon_permutation(op::HHHkernelOperator,I,J) = sign_upon_permutation(op.op,I,J) 
 sign_upon_permutation(op::Union{HHHNtestCross,HHHNtestDot},I,J) = Combinatorics.levicivita(I)*sign_upon_permutation(op.op,I,J)
 sign_upon_permutation(op::Union{HHHNbasisnormal,HHHNbasisCross,HHHNbasisdot},I,J) = Combinatorics.levicivita(J)*sign_upon_permutation(op.op,I,J)
@@ -205,7 +214,7 @@ function number_of_normals(op::HHHOperator) end
 number_of_normals(op::Union{HHHNtestCross,HHHNtestCrossLocal,HHHNtestDot,HHHNtestDotLocal}) = [1,0]+number_of_normals(op.op) 
 number_of_normals(op::HHHkernelOperator) = number_of_normals(op.op)
 number_of_normals(op::Union{HHHNbasisCross,HHHNbasisCrossLocal,HHHNbasisdot,HHHNbasisdotLocal,HHHNbasisnormal,HHHNbasisnormalLocal}) = [0,1]+number_of_normals(op.op)
-number_of_normals(op::Union{HHHIdentity,HHHIdentityLocal}) = [0,0]
+number_of_normals(op::Union{HHHIdentity,HHHIdentityLocal,HHHDivergence,HHHDivergenceLocal}) = [0,0]
 
 
 
@@ -236,6 +245,7 @@ localoperator(op::HHHNbasisCross) = hhhnbasiscrosslocal(localoperator(op.op))
 localoperator(op::HHHNbasisdot) = hhhnbasisdotlocal(localoperator(op.op))
 localoperator(op::HHHNbasisnormal) = hhhnbasisnormal(localoperator(op.op))
 localoperator(op::HHHIdentity) = HHHIdentityLocal()
+localoperator(op::HHHDivergence) = HHHDivergenceLocal()
 
 localoperator(op::HHHgreen) = ZeroOperator()
 localoperator(op::HHHgradgreen) = hhhnbasisdotlocal(op.op)
@@ -275,6 +285,9 @@ function (op::HHHNbasisnormalLocal)(x,f,nt,nb)
 end
 function (op::HHHIdentityLocal)(x,f,nt,nb)
     return f
+end
+function (op::HHHDivergenceLocal)(x,f,nt,nb)
+    return f.divergence
 end
 
 function cellinteractions(biop::HHHLocalOperator, trefs::U, brefs::V, cell,tcell,bcell) where {U<:RefSpace{T},V<:RefSpace{T}} where {T}
