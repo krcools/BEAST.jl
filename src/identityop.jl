@@ -87,11 +87,20 @@ function quaddata(op::LocalOperator, g::LagrangeRefSpace{T,Deg,4} where {T,Deg},
 end
 
 
-function quadrule(op::LocalOperator, ψ::RefSpace, ϕ::RefSpace, τ, (qd,A),nt,nb, qs::SingleNumQStrat)
+function quadrule(op::LocalOperator, ψ::RefSpace, ϕ::RefSpace, τ, (qd,A), qs::SingleNumQStrat)
     for i in eachindex(qd)
         q = qd[i]
-        w, p = q[1], neighborhood(τ,q[2],nt,nb)
+        w, p = q[1], neighborhood(τ,q[2])
         A[i] = (w, p, ψ(p), ϕ(p))
     end
-    return (A,nt,nb)
+    return A
 end
+
+# function quadrule(op::HHHLocalOperator, ψ::RefSpace, ϕ::RefSpace, τ, (qd,A),nt,nb, qs::SingleNumQStrat)
+#     for i in eachindex(qd)
+#         q = qd[i]
+#         w, p = q[1], extendedneighborhood(τ,q[2],nt,nb)
+#         A[i] = (w, p, ψ(p), ϕ(p))
+#     end
+#     return A
+# end

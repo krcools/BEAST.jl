@@ -284,7 +284,7 @@ function quadrule(op::MaxwellOperator3D, g::RTRefSpace, f::RTRefSpace,  i, τ, j
     h2 = volume(σ)
     xtol2 = 0.2 * 0.2 
     k2 = abs2(gamma(op))
-    println(max(dmin2*k2, dmin2/16h2) < xtol2)
+  
     max(dmin2*k2, dmin2/16h2) < xtol2 && return WiltonSERule(
         qd.tpoints[2,i],
         DoubleQuadRule(

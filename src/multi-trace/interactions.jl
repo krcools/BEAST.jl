@@ -11,7 +11,7 @@ end
 """
 Write for each type of interaction this type of function.
 """
-function (int::Interaction)() 
+function (int::Interaction{<:Domain{BackgroundDomain},})() 
     i = [] #interaction matrix
     normalorient.(i,Ω1,Ω2,Ω3) # example 
 

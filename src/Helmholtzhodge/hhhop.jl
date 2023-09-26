@@ -254,25 +254,82 @@ end
 
 ##### defining integrand of those local operators:
 
-function integrand(op::HHHLocalOperator,kernel,x,g,f)
-dot(g[1],op(x,f[1]))
+function integrand(op::HHHLocalOperator,kernel,x,g,f,nt,nb)
+dot(g[1],op(x,f[1],nt,nb))
 end
 
-function (op::HHHNtestCrossLocal)(x,f)
-    normals(x)[1]×op.op(x,f)
+function (op::HHHNtestCrossLocal)(x,f,nt,nb)
+    nt×op.op(x,f,nt,nb)
 end
-function (op::HHHNtestDotLocal)(x,f)
-    dot(normals(x)[1],op.op(x,f))
+function (op::HHHNtestDotLocal)(x,f,nt,nb)
+    dot(nt,op.op(x,f,nt,nb))
 end
-function (op::HHHNbasisCross)(x,f)
-    normals(x)[2]×op.op(x,f)
+function (op::HHHNbasisCross)(x,f,nt,nb)
+    nb×op.op(x,f,nt,nb)
 end
-function (op::HHHNbasisdotLocal)(x,f)
-    dot(normals(x)[2],op.op(x,f))
+function (op::HHHNbasisdotLocal)(x,f,nt,nb)
+    dot(nb,op.op(x,f,nt,nb))
 end
-function (op::HHHNbasisnormalLocal)(x,f)
-    normals(x)[2]*op.op(x,f)
+function (op::HHHNbasisnormalLocal)(x,f,nt,nb)
+    nb*op.op(x,f,nt,nb)
 end
-function (op::HHHIdentityLocal)(x,f)
+function (op::HHHIdentityLocal)(x,f,nt,nb)
     return f
+end
+
+function cellinteractions(biop::HHHLocalOperator, trefs::U, brefs::V, cell,tcell,bcell) where {U<:RefSpace{T},V<:RefSpace{T}} where {T}
+    qr = qrtot
+    num_tshs = length(qr[1][3])
+    num_bshs = length(qr[1][4])
+
+    zlocal = zeros(T, num_tshs, num_bshs)
+    nt = normal(tcell)
+    nb = normal(bcell)
+    for q in qr
+
+        w, mp, tvals, bvals = q[1], q[2], q[3], q[4]
+        j = w * jacobian(mp)
+        kernel = kernelvals(biop, mp)
+
+        for m in 1 : num_tshs
+            tval = tvals[m]
+
+            for n in 1 : num_bshs
+                bval = bvals[n]
+
+                igd = integrand(biop, kernel, mp, tval, bval,nt,nb)
+                zlocal[m,n] += j * igd
+
+            end
+        end
+    end
+
+    return zlocal
+end
+function cellinteractions_matched!(zlocal, biop::HHHLocalOperator, trefs, brefs, cell, qr,tcell=nothing,bcell=nothing)
+
+    num_tshs = length(qr[1][3])
+    num_bshs = length(qr[1][4])
+    nt = normal(tcell)
+    nb = normal(bcell)
+    # zlocal = zeros(Float64, num_tshs, num_bshs)
+    for q in qr
+
+        w, mp, tvals, bvals = q[1], q[2], q[3], q[4]
+        j = w * jacobian(mp)
+        kernel = kernelvals(biop, mp)
+            nt = normal(tcell)
+    nb = normal(bcell)
+        for n in 1 : num_bshs
+            bval = bvals[n]
+            for m in 1 : num_tshs
+                tval = tvals[m]
+
+                igd = integrand(biop, kernel, mp, tval, bval,nt,nb)
+                zlocal[m,n] += j * igd
+            end
+        end
+    end
+
+    return zlocal
 end

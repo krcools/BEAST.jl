@@ -1,5 +1,6 @@
 ####### designing neighborhood object which can save 2 normals
 using ReusePatterns
+using CompScienceMeshes
 struct MeshPointNormals
     meshpoint::CompScienceMeshes.MeshPointNM
     testnormal
@@ -14,7 +15,7 @@ for line in code[2:length(code)]
 end
 eval.(Meta.parse.(uit))
 
-function neighborhood(p::CompScienceMeshes.Simplex, bary,nt,nb)
+function extendedneighborhood(p::CompScienceMeshes.Simplex, bary,nt,nb)
     MeshPointNormals(CompScienceMeshes.neighborhood(p,bary),nt,nb)
 end
 
@@ -81,6 +82,7 @@ function assemble!(biop::LocalOperator, tfs::Space, bfs::Space, store,
         quadstrat=defaultquadstrat(biop, tfs, bfs))
 
     if geometry(tfs) == geometry(bfs)
+        @warn "Function cannot be used for infinitely thin surfaces!!!"
         return assemble_local_matched!(biop, tfs, bfs, store; quadstrat)
     end
 
@@ -96,6 +98,7 @@ function assemble!(biop::LocalOperator, tfs::Space, bfs::Space, store,
     quadstrat=defaultquadstrat(biop, tfs, bfs))
 
     if geometry(tfs) == geometry(bfs)
+        @warn "Function cannot be used for infinitely thin surfaces!!!"
         return assemble_local_matched!(biop, tfs, bfs, store; quadstrat)
     end
 
@@ -131,7 +134,7 @@ function assemble_local_matched!(biop::LocalOperator, tfs::Space, bfs::Space, st
 
         qr = quadrule(biop, trefs, brefs, cell, qd, quadstrat)
         fill!(locmat, 0)
-        cellinteractions_matched!(locmat, biop, trefs, brefs, cell, qr)
+        cellinteractions_matched!(locmat, biop, trefs, brefs, cell, qr, cell,cell)
 
         for i in 1 : size(locmat, 1), j in 1 : size(locmat, 2)
             for (m,a) in tad[p,i], (n,b) in bad[q,j]
@@ -183,7 +186,7 @@ function assemble_local_refines!(biop::LocalOperator, tfs::Space, bfs::Space, st
             Q = restrict(trefs, tcell, cell)
 
             qr = quadrule(biop, trefs, brefs, cell, qd, quadstrat)
-            zlocal = cellinteractions(biop, trefs, brefs, cell, qr)
+            zlocal = cellinteractions(biop, trefs, brefs, cell, qr,tcell,bcell)
             zlocal = Q * zlocal * P'
 
             for i in 1 : numfunctions(trefs)
@@ -223,7 +226,7 @@ function assemble_local_matched!(biop::LocalOperator, tfs::subdBasis, bfs::subdB
     for (p,cell) in enumerate(tels)
 
         qr = quadrule(biop, trefs, brefs, cell, qd, quadstrat)
-        locmat = cellinteractions(biop, trefs, brefs, cell, qr)
+        locmat = cellinteractions(biop, trefs, brefs, cell, qr, tcell,bcell)
 
         for i in 1 : size(locmat, 1), j in 1 : size(locmat, 2)
             for (m,a) in tad[p][i], (n,b) in bad[p][j]
@@ -295,8 +298,7 @@ function assemble_local_mixed!(biop::LocalOperator, tfs::Space{T}, bfs::Space{T}
                 bcell = bels[q]
 
                 if overlap(tcell, bcell)
-                    nt = normal(tcell)
-                    nb = normal(bcell)
+
 
                     isct = intersection(tcell, bcell)
                     for cell in isct
@@ -305,8 +307,8 @@ function assemble_local_mixed!(biop::LocalOperator, tfs::Space{T}, bfs::Space{T}
                         P = restrict(brefs, bcell, cell)
                         Q = restrict(trefs, tcell, cell)
 
-                        qr = quadrule(biop, trefs, brefs, cell, qd,nt,nb, quadstrat)
-                        zlocal = cellinteractions(biop, trefs, brefs, cell, qr)
+                        qr = quadrule(biop, trefs, brefs, cell, qd, quadstrat)
+                        zlocal = cellinteractions(biop, trefs, brefs, cell, qr,tcell,bcell)
                         zlocal = Q * zlocal * P'
 
                         for i in 1 : numfunctions(trefs)
@@ -336,7 +338,7 @@ function assemble_local_mixed!(biop::LocalOperator, tfs::Space{T}, bfs::Space{T}
 end
 
 
-function cellinteractions_matched!(zlocal, biop, trefs, brefs, cell, qr)
+function cellinteractions_matched!(zlocal, biop, trefs, brefs, cell, qr,tcell=nothing,bcell=nothing)
 
     num_tshs = length(qr[1][3])
     num_bshs = length(qr[1][4])
@@ -362,8 +364,8 @@ function cellinteractions_matched!(zlocal, biop, trefs, brefs, cell, qr)
     return zlocal
 end
 
-function cellinteractions(biop, trefs::U, brefs::V, cell) where {U<:RefSpace{T},V<:RefSpace{T}} where {T}
-    qr = qrtot
+function cellinteractions(biop, trefs::U, brefs::V, cell,qr,tcell=nothing,bcell=nothing) where {U<:RefSpace{T},V<:RefSpace{T}} where {T}
+    
     num_tshs = length(qr[1][3])
     num_bshs = length(qr[1][4])
 
@@ -390,3 +392,6 @@ function cellinteractions(biop, trefs::U, brefs::V, cell) where {U<:RefSpace{T},
 
     return zlocal
 end
+
+
+

@@ -1,7 +1,7 @@
-abstract type Domain end
+abstract type DomainData end
+abstract type Domain{T<:DomainData} end
 
 abstract type PhysicalInformation end #depends on the strategy
-abstract type DomainData end
 
 mutable struct HomogeneousDomain <: DomainData
 ϵr
@@ -18,13 +18,13 @@ struct BackgroundDomain <: DomainData
     μ0
 end
 
-mutable struct SubDomain{T<:DomainData} <: Domain
+mutable struct SubDomain{T} <: Domain{T}
     id::Int
     children::Vector{Domain}
     parent::Domain
     data::T
 end
-mutable struct RootDomain{T<:DomainData} <: Domain
+mutable struct RootDomain{T} <: Domain{T}
     id::Int
     children::Vector{Domain}
     data::T
@@ -169,8 +169,33 @@ function generate_problem(config::Configuration)
 
             end
         end
-    end
 
+    end
+    # @hilbertspace test[1:N]
+    # @hilbertspace trial[1:N]
+
+    # rhs = test'*OperatorMatrix*trial
+    # terms = []
+    # for term in rhs.terms
+    #     if typeof(term.kernel)!=ZeroOperator
+    #         push!(terms,term)
+    #     end
+    # end
+    # rhs.terms=terms
+
+    lhs = 
+    eq = rhs==lhs
+    # space_mappings = [test[i]=>config.testdirectproductspace.factors[i],trial[i]=>config.trialdirectproductspace.factors[i] for i in 1:N]
+    # discreteequation = discretise(eq,space_mappings)
+    # return discreteequation
+#TODO assembly of the system
 #TODO the right hand side
+#TODO solving system
+
+end
+
+
+function map_solution_to_volumes(solution,config)
+
 
 end
