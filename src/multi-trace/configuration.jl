@@ -1,8 +1,22 @@
 abstract type DomainData end
 abstract type Domain{T<:DomainData} end
-
+"""
+A is the type of the test structure, B is the type of the trial structure, C the type of ths structure embedding
+"""
+struct Interaction{A,B,C}# wordt gecrieerd bij de itteratie over alle volumes.
+    config
+    testvol::A
+    trialvol::B
+    embedvol::C
+end
 abstract type PhysicalInformation end #depends on the strategy
+"""
+subtypes of the NumericalStrategy type descirbe the followed strategy. for example a preconditioning strategy for a vector potential based problem,
+ a vector potential based problem, a fields based problem,...
+"""
+abstract type NumericalStrategy end
 
+export NumericalStrategy
 mutable struct HomogeneousDomain <: DomainData
 ϵr
 μr
@@ -35,7 +49,7 @@ end
 mutable struct Configuration #TODO add dict contining all subbasis info af touching objects
     domains::Dict{Int,Domain}
     root::RootDomain
-    touching::Dict{Tuple{Int,Int},<:Vector}
+    touching::Dict{Tuple{Int,Int},Vector}
     testdirectproductspace 
     testcounter 
     trialcounter 
@@ -54,12 +68,12 @@ function _adddomain(config::Configuration, newdom::Domain)
     for (i,space) in enumerate(newdom.data.testbasises)
         config.testcounter += 1
         push!(newdom.data.testindex,config.testcounter)
-        config.testdirectproductspace = space × config.test_direct_productspace
+        config.testdirectproductspace = config.testdirectproductspace × space
     end
     for space in newdom.data.trialbasises
         config.trialcounter += 1
         push!(newdom.data.trialindex,config.trialcounter)
-        config.trialdirectproductspace = space × config.trial_direct_productspace
+        config.trialdirectproductspace = config.trialdirectproductspace × space
     end
     push!(dom.children,newdom)
 end
@@ -128,11 +142,11 @@ function (dom::Domain)(n::NormalVector,dom2::Domain)
 
 end
 
-function generate_configuration(typelist,id_of_parentlist,background)
-    conf = createconfiguration(background)
+function generate_configuration(typelist,id_of_parentlist,background,backgroundexcitation=Dict())
+    conf = createconfiguration(background,backgroundexcitation)
     l = length(typelist)
-    for (index,t,parent_id) in zip(index,typelist,id_of_parentlist)
-        createdomain(conf,index,parent_id,t)
+    for (ind,t,parent_id) in zip(1:l,typelist,id_of_parentlist)
+        createdomain(conf,ind,parent_id,t)
     end
     return conf
 end
@@ -141,19 +155,19 @@ end
 
 # end
 
-function generate_problem_lhs(config::Configuration)
+function generate_problem_lhs(config::Configuration,strat::NumericalStrategy)
     @assert length(config.testdirectproductspace.factors)==length(config.trialdirectproductspace.factors)
     N = length(config.testdirectproductspace.factors)
     OperatorMatrix = fill!(Array{AbstractOperator}(undef,N,N),ZeroOperator())
     for (id,Ω) in config.domains
         if id != 0
             inter = Interaction(config,Ω,Ω,Ω)
-            OperatorMatrix[Ω.data.testindex[1]:last(Ω.data.testindex),Ω.data.trialindex[1]:last(Ω.data.trialindex)] += inter()
+            OperatorMatrix[Ω.data.testindex[1]:last(Ω.data.testindex),Ω.data.trialindex[1]:last(Ω.data.trialindex)] += inter(strat)
             for child in Ω.children
                 inter = Interaction(config,Ω,child,Ω)
-                OperatorMatrix[Ω.data.testindex[1]:last(Ω.data.testindex),child.data.trialindex[1]:last(child.data.trialindex)] += inter()
+                OperatorMatrix[Ω.data.testindex[1]:last(Ω.data.testindex),child.data.trialindex[1]:last(child.data.trialindex)] += inter(strat)
                 inter = Interaction(config,child,Ω,Ω)
-                OperatorMatrix[child.data.testindex[1]:last(child.data.testindex),Ω.data.trialindex[1]:last(Ω.data.trialindex)] += inter()
+                OperatorMatrix[child.data.testindex[1]:last(child.data.testindex),Ω.data.trialindex[1]:last(Ω.data.trialindex)] += inter(strat)
             end
 
         end
@@ -161,12 +175,12 @@ function generate_problem_lhs(config::Configuration)
             for Ω2 in Ω.children
                 if Ω1===Ω2
                     inter = Interaction(config,Ω1,Ω2,Ω)
-                    OperatorMatrix[Ω1.data.testindex[1]:last(Ω1.data.testindex),Ω2.data.trialindex[1]:last(Ω2.data.trialindex)] += inter()
+                    OperatorMatrix[Ω1.data.testindex[1]:last(Ω1.data.testindex),Ω2.data.trialindex[1]:last(Ω2.data.trialindex)] += inter(strat)
                 else
                     inter = Interaction(config,Ω1,Ω2,Ω)
-                    OperatorMatrix[Ω1.data.testindex[1]:last(Ω1.data.testindex),Ω2.data.trialindex[1]:last(Ω2.data.trialindex)] += inter()
+                    OperatorMatrix[Ω1.data.testindex[1]:last(Ω1.data.testindex),Ω2.data.trialindex[1]:last(Ω2.data.trialindex)] += inter(strat)
                     inter = Interaction(config,Ω2,Ω1,Ω)
-                    OperatorMatrix[Ω2.data.testindex[1]:last(Ω2.data.testindex),Ω1.data.trialindex[1]:last(Ω1.data.trialindex)] += inter()
+                    OperatorMatrix[Ω2.data.testindex[1]:last(Ω2.data.testindex),Ω1.data.trialindex[1]:last(Ω1.data.trialindex)] += inter(strat)
 
                 end
 

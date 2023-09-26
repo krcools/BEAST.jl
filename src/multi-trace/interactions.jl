@@ -1,13 +1,5 @@
 
-"""
-A is the type of the test structure, B is the type of the trial structure, C the type of ths structure embedding
-"""
-struct Interaction{A,B,C}# wordt gecrieerd bij de itteratie over alle volumes.
-    config
-    testvol::A
-    trialvol::B
-    embedvol::C
-end
+
 """
 Write for each type of interaction this type of function.
 """
