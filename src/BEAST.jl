@@ -265,6 +265,7 @@ include("Helmholtzhodge/helmholtzhodge.jl")
 
 #suport for multi-trace
 include("multi-trace/configuration.jl")
+include("multi-trace/interactions.jl")
 
 
 const x̂ = point(1,0,0)
@@ -277,5 +278,12 @@ export n
 
 const ∇ = Nabla()
 export ∇
+
+
+export Interaction
+export Domain
+export HomogeneousDomain
+export RootDomain
+export SubDomain
 
 end # module

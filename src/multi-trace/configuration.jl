@@ -96,7 +96,7 @@ end
 a child of b
 """
 function is_child_of(a,b)
-    return a∈b
+    return a∈b.children
 end
 
 function brothers(a,b)
@@ -114,16 +114,16 @@ all objects in a domain touch each other, not with subdomains, well with the bou
 
 """
 function alltouching(config::Configuration)
-    for i in keys(config)
+    for i in keys(config.domains)
         #config.touching[(i,i)] = [config.domains[i].data.testbasises,config.domains[i].data.trialbasises,config.domains[i].data.testbasises,config.domains[i].data.trialbasises]
         for child in config.domains[i].children
-            j = child.index
-            if typeof(config.domains[i]) <: Subdomain
+            j = child.id
+            if typeof(config.domains[i]) <: SubDomain
             config.touching[(i,j)] = [config.domains[i].data.testbasises,config.domains[i].data.trialbasises,child.data.testbasises,child.data.trialbasises]
             config.touching[(j,i)] = [config.touching[(i,j)][3],config.touching[(i,j)][4],config.touching[(i,j)][1],config.touching[(i,j)][2]]
             end
             for child2 in config.domains[i].children
-                k = child2.index
+                k = child2.id
                 config.touching[(j,k)] = [child.data.testbasises,child.data.trialbasises,child2.data.testbasises,child2.data.trialbasises]
                 config.touching[(k,j)] = [child2.data.testbasises,child2.data.trialbasises,child.data.testbasises,child.data.trialbasises]
             end

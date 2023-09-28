@@ -111,7 +111,7 @@ function assemblechunk_body!(biop,
         qd, zlocal, store; quadstrat)
 
     myid = Threads.threadid()
-    myid == 1 && print("dots out of 10: ")
+    myid == 1 && print(string(typeof(biop))*" dots out of 10: ")
     todo, done, pctg = length(test_elements), 0, 0
     for (p,tcell) in enumerate(test_elements)
         for (q,bcell) in enumerate(trial_elements)
@@ -147,7 +147,7 @@ function assemblechunk_body_test_refines_trial!(biop,
     trial_shapes = refspace(trial_functions)
 
     myid = Threads.threadid()
-    myid == 1 && print("dots out of 10: ")
+    myid == 1 && print(string(typeof(biop))*" dots out of 10: ")
     todo, done, pctg = length(test_charts), 0, 0
     for (p,(tcell,tchart)) in enumerate(zip(test_cells, test_charts))
         for (q,(bcell,bchart)) in enumerate(zip(trial_cells, trial_charts))
@@ -188,7 +188,7 @@ function assemblechunk_body_trial_refines_test!(biop,
     trial_shapes = refspace(trial_functions)
 
     myid = Threads.threadid()
-    myid == 1 && print("dots out of 10: ")
+    myid == 1 && print(string(typeof(biop))*" dots out of 10: ")
     todo, done, pctg = length(test_charts), 0, 0
     for (p,(tcell,tchart)) in enumerate(zip(test_cells, test_charts))
         for (q,(bcell,bchart)) in enumerate(zip(trial_cells, trial_charts))

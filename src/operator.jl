@@ -108,7 +108,8 @@ end
 
 transpose(op::TransposedOperator) = op.op
 transpose(op::Operator) = TransposedOperator(op)
-
+defaultquadstrat(op::ZeroOperator,tfs,bfs) = nothing
+scalartype(op::ZeroOperator) = Union{}
 defaultquadstrat(lc::LinearCombinationOfOperators, tfs, bfs) =
     [defaultquadstrat(op,tfs,bfs) for op in lc.ops]
 
@@ -245,6 +246,11 @@ function assemble!(op::TransposedOperator, tfs::Space, bfs::Space,
     store1(v,m,n) = store(v,n,m)
     assemble!(op.op, bfs, tfs, store1, threading; quadstrat)
 end
+function assemble!(op::ZeroOperator, tfs::Space, bfs::Space, 
+    store, threading = Threading{:multi};
+    quadstrat=nothing)
+end
+
 function assemble!(op::BasisOperatorLeft, tfs::Space, bfs::Space, store,threading = Threading{:multi};
     quadstrat=defaultquadstrat(op, tfs, bfs))
     #quadstrat = defaultquadstrat(op.operator,op.left_function(tfs),bfs)
@@ -386,7 +392,9 @@ end
 Base.zero(op::AbstractOperator) = ZeroOperator()
 +(a::AbstractOperator,b::ZeroOperator) = a
 +(a::ZeroOperator,b::ZeroOperator) = a
-+(a::ZeroOperator,b::AbstractOperator) = b+a
++(a::ZeroOperator,b::AbstractOperator) = b
++(a::ZeroOperator,b::LinearCombinationOfOperators) = b
++(b::LinearCombinationOfOperators,a::ZeroOperator) = b
 -(a::ZeroOperator,b::AbstractOperator) = -b
 *(a::Number,b::ZeroOperator) = b
 

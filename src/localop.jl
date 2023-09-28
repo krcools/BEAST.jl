@@ -124,7 +124,7 @@ function assemble_local_matched!(biop::LocalOperator, tfs::Space, bfs::Space, st
     qd = quaddata(biop, trefs, brefs, tels, bels, quadstrat)
 
     verbose = length(tels) > 10_000
-    verbose && print("dots out of 20: ")
+    verbose && print(string(typeof(biop))*" dots out of 20: ")
     todo, done, pctg = length(tels), 0, 0
     locmat = zeros(scalartype(biop, trefs, brefs), numfunctions(trefs), numfunctions(brefs))
     for (p,cell) in enumerate(tels)
@@ -168,7 +168,7 @@ function assemble_local_refines!(biop::LocalOperator, tfs::Space, bfs::Space, st
 
     qd = quaddata(biop, trefs, brefs, tels, bels, quadstrat)
 
-    print("dots out of 10: ")
+    print(string(typeof(biop))*" dots out of 10: ")
     todo, done, pctg = length(tels), 0, 0
     for (p,tcell) in enumerate(tels)
 
@@ -286,7 +286,7 @@ function assemble_local_mixed!(biop::LocalOperator, tfs::Space{T}, bfs::Space{T}
     # store the bcells in an octree
     tree = elementstree(bels)
 
-    print("dots out of 10: ")
+    print(string(typeof(biop))*" dots out of 10: ")
     todo, done, pctg = length(tels), 0, 0
     for (p,tcell) in enumerate(tels)
 
