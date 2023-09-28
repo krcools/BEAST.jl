@@ -19,18 +19,20 @@ abstract type NumericalStrategy end
 
 export NumericalStrategy
 mutable struct HomogeneousDomain <: DomainData
-ϵr
-μr
+ϵ
+μ
+ω
 testbasises
 trialbasises
 testindex 
 trialindex 
-HomogeneousDomain(a,b,c,d) = new(a,b,c,d,[],[])
+HomogeneousDomain(a,b,c,d,e) = new(a,b,c,d,e,[],[])
 end
 
 struct BackgroundDomain <: DomainData
-    ϵ0
-    μ0
+    ϵ
+    μ
+    ω
 end
 
 mutable struct SubDomain{T} <: Domain{T}
@@ -155,6 +157,7 @@ end
 # #TODO create the bilform 
 
 # end
+#function convert_inside_to_outside_basis(Ωchild,Ωparent,strat) end
 
 function generate_problem_lhs(config::Configuration,strat::NumericalStrategy)
     @assert length(config.testdirectproductspace.factors)==length(config.trialdirectproductspace.factors)
@@ -166,25 +169,22 @@ function generate_problem_lhs(config::Configuration,strat::NumericalStrategy)
             OperatorMatrix[Ω.data.testindex[1]:last(Ω.data.testindex),Ω.data.trialindex[1]:last(Ω.data.trialindex)] += inter(strat)
             for child in Ω.children
                 inter = Interaction(config,Ω,child,Ω)
-                OperatorMatrix[Ω.data.testindex[1]:last(Ω.data.testindex),child.data.trialindex[1]:last(child.data.trialindex)] += inter(strat)
+                OperatorMatrix[Ω.data.testindex[1]:last(Ω.data.testindex),child.data.trialindex[1]:last(child.data.trialindex)] += inter(strat)*convert_inside_to_outside_basis(child,Ω,strat)
                 inter = Interaction(config,child,Ω,Ω)
-                OperatorMatrix[child.data.testindex[1]:last(child.data.testindex),Ω.data.trialindex[1]:last(Ω.data.trialindex)] += inter(strat)
+                OperatorMatrix[child.data.testindex[1]:last(child.data.testindex),Ω.data.trialindex[1]:last(Ω.data.trialindex)] += convert_inside_to_outside_basis(child,Ω,strat)*inter(strat)
             end
 
         end
         for Ω1 in Ω.children
+
+            inter = Interaction(config,Ω1,Ω1,Ω)
+            OperatorMatrix[Ω1.data.testindex[1]:last(Ω1.data.testindex),Ω1.data.trialindex[1]:last(Ω1.data.trialindex)] += convert_inside_to_outside_basis(Ω1,Ω,strat)*inter(strat)*convert_inside_to_outside_basis(Ω1,Ω,strat)
+
             for Ω2 in Ω.children
-                if Ω1===Ω2
+                if Ω1!==Ω2
                     inter = Interaction(config,Ω1,Ω2,Ω)
-                    OperatorMatrix[Ω1.data.testindex[1]:last(Ω1.data.testindex),Ω2.data.trialindex[1]:last(Ω2.data.trialindex)] += inter(strat)
-                else
-                    inter = Interaction(config,Ω1,Ω2,Ω)
-                    OperatorMatrix[Ω1.data.testindex[1]:last(Ω1.data.testindex),Ω2.data.trialindex[1]:last(Ω2.data.trialindex)] += inter(strat)
-                    inter = Interaction(config,Ω2,Ω1,Ω)
-                    OperatorMatrix[Ω2.data.testindex[1]:last(Ω2.data.testindex),Ω1.data.trialindex[1]:last(Ω1.data.trialindex)] += inter(strat)
-
+                    OperatorMatrix[Ω1.data.testindex[1]:last(Ω1.data.testindex),Ω2.data.trialindex[1]:last(Ω2.data.trialindex)] += convert_inside_to_outside_basis(Ω1,Ω,strat)*inter(strat)*convert_inside_to_outside_basis(Ω2,Ω,strat)
                 end
-
             end
         end
 

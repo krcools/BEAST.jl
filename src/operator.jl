@@ -92,9 +92,19 @@ end
 +(a::AbstractOperator, b::Number) = a + (b * Identity())
 +(a::Number, b::AbstractOperator) = b + a
 
-*(a::Number, b::AbstractOperator) = LinearCombinationOfOperators([a], [b])
+function *(a::Number, b::AbstractOperator) 
+    if abs(a) ≈ 0
+        return ZeroOperator()
+    end
+    LinearCombinationOfOperators([a], [b])
+end
 *(a::AbstractOperator, b::Number) = b*a
-*(a::Number, b::LinearCombinationOfOperators) = LinearCombinationOfOperators(a * b.coeffs, b.ops)
+function *(a::Number, b::LinearCombinationOfOperators) 
+    if abs(a) ≈ 0
+        return ZeroOperator()
+    end
+    LinearCombinationOfOperators(a * b.coeffs, b.ops)
+end
 -(a::AbstractOperator, b::AbstractOperator) = a + (-1.0) * b
 -(a::AbstractOperator) = (-1.0) * a
 

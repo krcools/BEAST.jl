@@ -12,7 +12,7 @@ function Base.print(io::IO,op::LinearCombinationOfOperators)
             if ind == 1 && coef < 0
                 print(io," -")
             end
-            if ind > 1 && coef >0
+            if ind > 1 && coef >=0
                 print(io, " + ")
             end
             if ind > 1 && coef < 0
