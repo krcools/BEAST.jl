@@ -40,11 +40,11 @@ end
     
 
 struct ZeroOperator <: AbstractOperator end
-abstract type Orientation end
-struct Inside <: Orientation end
-struct Outside <: Orientation end
-inside() = Inside()
-outside() = Outside()
+# abstract type Orientation end
+# struct Inside <: Orientation end
+# struct Outside <: Orientation end
+# inside() = Inside()
+# outside() = Outside()
 
 
 mutable struct TransposedOperator <: AbstractOperator

@@ -267,6 +267,8 @@ include("Helmholtzhodge/helmholtzhodge.jl")
 include("multi-trace/configuration.jl")
 include("multi-trace/interactions.jl")
 
+#suport for displaying operators
+include("display.jl")
 
 const x̂ = point(1,0,0)
 const ŷ = point(0,1,0)

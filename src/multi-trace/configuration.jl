@@ -1,5 +1,6 @@
 abstract type DomainData end
 abstract type Domain{T<:DomainData} end
+using PrettyTables
 """
 A is the type of the test structure, B is the type of the trial structure, C the type of ths structure embedding
 """
@@ -199,6 +200,7 @@ function generate_problem_lhs(config::Configuration,strat::NumericalStrategy)
     #     end
     # end
     # rhs.terms=terms
+    pretty_table(OperatorMatrix, noheader=true)
     return assemble(dot(config.testdirectproductspace,OperatorMatrix,config.trialdirectproductspace),config.testdirectproductspace,config.trialdirectproductspace)
     # space_mappings = [test[i]=>config.testdirectproductspace.factors[i],trial[i]=>config.trialdirectproductspace.factors[i] for i in 1:N]
     # discreteequation = discretise(eq,space_mappings)
