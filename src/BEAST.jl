@@ -261,6 +261,7 @@ include("utils/plotlyglue.jl")
 #suport for helmholtzhodge equation
 include("Helmholtzhodge/hhhop.jl")
 include("Helmholtzhodge/helmholtzhodge.jl")
+include("Helmholtzhodge/hhhexc.jl")
 
 
 #suport for multi-trace
