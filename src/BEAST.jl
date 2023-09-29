@@ -201,6 +201,7 @@ include("timedomain/motlu.jl")
 include("timedomain/tdtimeops.jl")
 include("timedomain/rkcq.jl")
 include("timedomain/zdomain.jl")
+include("timedomain/td_symmetric_quadstrat.jl")
 
 
 # Support for Maxwell equations
