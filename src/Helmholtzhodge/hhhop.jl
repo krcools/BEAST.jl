@@ -29,11 +29,20 @@ struct HHHgradgreen{T,K,U} <: HHHkernelOperator{T,K,U}
     op::U
 end
 
+struct HHHgradgreenDot{T,K,U} <: HHHkernelOperator{T,K,U}
+    α::K
+    γ::T
+    op::U
+end
+
+
 struct HHHgradgreenCross{T,K,U} <: HHHkernelOperator{T,K,U}
     α::K
     γ::T
     op::U
 end
+
+
 
 abstract type HHHdata end
 struct HHHvector <:HHHdata end
@@ -98,7 +107,7 @@ basisfunction() = BasisFunction()
 export basisfunction
 VectorToVector = Union{HHHNtestCross,HHHNbasisCross,HHHgradgreenCross,HHHgreen}
 ScalarToVector = Union{HHHNbasisnormal,HHHgradgreen}
-VectorToScalar = Union{HHHNtestDot,HHHgradgreen,HHHNbasisdot}
+VectorToScalar = Union{HHHNtestDot,HHHgradgreenDot,HHHNbasisdot}
 ScalarToScalar = Union{HHHgreen}
 inversemap(op::VectorToVector,::HHHvector) = inversemap(op.op,HHHvector())
 inversemap(op::ScalarToVector,::HHHvector) = inversemap(op.op,HHHscalar())
@@ -112,6 +121,7 @@ inversemap(::HHHDivergence,::HHHscalar) = HHHvector()
 strace(op::Union{HHHkernelOperator,HHHtestOperator}) = HHHNtestCross(op)
 ntrace(op::Union{HHHkernelOperator,HHHtestOperator}) = HHHNtestDot(op)
 ×(op::HHHgradgreen,::Nothing) = HHHgradgreenCross(op.α,op.γ,op.op)
+⋅(op::HHHgradgreen,::Nothing) = HHHgradgreenDot(op.α,op.γ,op.op)
 #×(op::HHHgradgreen,::NormalVector) = HHHgradgreenCross(op.α,op.γ,op.op)(HHHNbasisnormal(hhhidentity()))
 ×(::NormalVector,op::Union{HHHkernelOperator,HHHtestOperator}) = strace(op)
 ⋅(::NormalVector,op::Union{HHHkernelOperator,HHHtestOperator}) = ntrace(op)
@@ -200,10 +210,10 @@ function (op::HHHgreen)(x,y,g)
     green =  op.α * exp(-op.γ*R)*(iR*i4pi)
     green*op.op(x,y,g)
 end
-mydot(a::SVector{N,<:SVector},b::Base.RefValue) where {N} = dot.(a,b)
-function mydot(a::SVector,b::Base.RefValue) 
-    a.*b
-end
+# mydot(a::SVector{N,<:SVector},b::Base.RefValue) where {N} = dot.(a,b)
+# function mydot(a::SVector,b::Base.RefValue) 
+#     a.*b
+# end
 function (op::HHHgradgreen)(x,y,g)
    
     r = cartesian(x) - cartesian(y)
@@ -212,9 +222,18 @@ function (op::HHHgradgreen)(x,y,g)
     green =  op.α * exp(-op.γ*R)*(iR*i4pi)
     gradgreen = -(op.γ + iR) * green * (iR * r)
     
-    mydot(op.op(x,y,g),Ref(gradgreen))
+    op.op(x,y,g).*Ref(gradgreen)
 end
-
+function (op::HHHgradgreenDot)(x,y,g)
+   
+    r = cartesian(x) - cartesian(y)
+    R = norm(r)
+    iR = 1/R
+    green =  op.α * exp(-op.γ*R)*(iR*i4pi)
+    gradgreen = -(op.γ + iR) * green * (iR * r)
+    
+    dot(op.op(x,y,g),Ref(gradgreen))
+end
 function (op::HHHgradgreenCross)(x,y,g)
   
     r = cartesian(x) - cartesian(y)
@@ -270,7 +289,7 @@ hhhntestcrosslocal(op::Union{HHHNbasisnormalLocal}) = ZeroOperator()
 hhhntestdotlocal(op::ZeroOperator) = op
 hhhntestdotlocal(op::HHHLocalOperator) = HHHNtestDotLocal(op)
 hhhntestdotlocal(op::Union{HHHNtestCrossLocal,HHHNbasisCrossLocal}) = ZeroOperator()
-hhhntestdotlocal(op::HHHNbasisnormalLocal) = localoperator(op.op)
+#hhhntestdotlocal(op::HHHNbasisnormalLocal) = localoperator(op.op)
 
 hhhnbasiscrosslocal(op::ZeroOperator) = op
 hhhnbasiscrosslocal(op::HHHLocalOperator) = HHHNbasisCrossLocal(op)
@@ -299,7 +318,8 @@ localoperator(op::HHHIdentity) = HHHIdentityLocal()
 localoperator(op::HHHDivergence) = HHHDivergenceLocal()
 
 localoperator(op::HHHgreen) = ZeroOperator()
-localoperator(op::HHHgradgreen) = hhhnbasisdotlocal(localoperator(op.op))
+localoperator(op::HHHgradgreen) = hhhnbasisnormal(localoperator(op.op))
+localoperator(op::HHHgradgreenDot) = hhhnbasisdotlocal(localoperator(op.op))
 localoperator(op::HHHgradgreenCross) = hhhnbasiscrosslocal(localoperator(op.op))
 
 function trace(op::HHHOperator,sign)

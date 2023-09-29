@@ -22,11 +22,13 @@ function cauchylimit(operator::AbstractOperator;Ω1,Ω2,Ω3)
 #check first if touching is non empty
 @assert is_child_of(Ω1,Ω3)||Ω1===Ω3
 @assert is_child_of(Ω2,Ω3)||Ω2===Ω3
-    if Ω2!==Ω3
-        sign = -1
-    elseif Ω2===Ω3
-        sign = 1
-    end
+    # if Ω2!==Ω3
+    #     sign = -1
+    # elseif Ω2===Ω3
+    #     sign = 1
+    # end
+    @warn "correct sign for inside is 1?"
+    sign = 1
     
     trace(operator,sign)
 
@@ -95,11 +97,17 @@ function (int::Interaction{<: Domain{HomogeneousDomain},<: Domain{HomogeneousDom
     green = HHH.green(wavenumber=k)
     gradgreen = HHH.gradgreen(wavenumber=k)
     b = basisfunction()
-
-    a = [n×(gradgreen×nothing)          n×(green(n*b))        -(n×green)                n×gradgreen
-        BEAST.ZeroOperator()                   -gradgreen(n*b)     gradgreen               -(-k^2*green)
+    @warn "check if extra - in front of a is correct, describtion of As from paper asumes n outward so inward in outer domain?"
+    a = -[n×(gradgreen×nothing)          n×(green(n*b))        -(n×green)                n×gradgreen
+        BEAST.ZeroOperator()                   -(gradgreen⋅nothing)(n*b)     (gradgreen⋅nothing)               -(-k^2*green)
         -(n×(gradgreen(∇⋅b)))-k^2*(n×green)    -(n×((gradgreen×nothing)(n*b)))    n×(gradgreen×nothing)   BEAST.ZeroOperator()
         -(n⋅(gradgreen×nothing))              -(n⋅green(n*b))         n⋅green -(n⋅gradgreen)]
+    id = [Identity() ZeroOperator() ZeroOperator() ZeroOperator()
+        ZeroOperator() Identity() ZeroOperator() ZeroOperator()
+        ZeroOperator() ZeroOperator() Identity() ZeroOperator()
+        ZeroOperator() ZeroOperator() ZeroOperator() Identity()]
+    a = id - a
+    
     if (int.testvol.id,int.trialvol.id) in keys(int.config.touching) 
         println("cauchy limit taken")
         a = BEAST.cauchylimit.(a;Ω1=int.testvol,Ω2=int.trialvol,Ω3=int.embedvol)
@@ -115,15 +123,21 @@ function (int::Interaction{<: Domain{HomogeneousDomain},<: Domain{HomogeneousDom
     gradgreen = HHH.gradgreen(wavenumber=k)
     b = basisfunction()
 
-    a = [n×(gradgreen×nothing)          n×(green(n*b))        -(n×green)                n×gradgreen
-        BEAST.ZeroOperator()                   -gradgreen(n*b)     gradgreen               -(-k^2*green)
+    a = -[n×(gradgreen×nothing)          n×(green(n*b))        -(n×green)                n×gradgreen
+        BEAST.ZeroOperator()                   -(gradgreen⋅nothing)(n*b)     (gradgreen⋅nothing)               -(-k^2*green)
         -(n×(gradgreen(∇⋅b)))-k^2*(n×green)    -(n×((gradgreen×nothing)(n*b)))    n×(gradgreen×nothing)   BEAST.ZeroOperator()
-        -(n⋅(gradgreen×nothing))              -(n⋅green(n*b))         n⋅green                   -(n⋅gradgreen)]
+        -(n⋅(gradgreen×nothing))              -(n⋅green(n*b))         n⋅green -(n⋅gradgreen)]
+        id = [Identity() ZeroOperator() ZeroOperator() ZeroOperator()
+        ZeroOperator() Identity() ZeroOperator() ZeroOperator()
+        ZeroOperator() ZeroOperator() Identity() ZeroOperator()
+        ZeroOperator() ZeroOperator() ZeroOperator() Identity()]
+    a = id - a
+    
     if (int.testvol.id,int.trialvol.id) in keys(int.config.touching) 
         println("cauchy limit taken")
         a = BEAST.cauchylimit.(a;Ω1=int.testvol,Ω2=int.trialvol,Ω3=int.embedvol)
     end
-    a = BEAST.normalorient.(a;Ω1=int.testvol,Ω2=int.trialvol,Ω3=int.embedvol)
+   a = BEAST.normalorient.(a;Ω1=int.testvol,Ω2=int.trialvol,Ω3=int.embedvol)
     return a
 
 end

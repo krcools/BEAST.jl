@@ -262,7 +262,7 @@ include("utils/plotlyglue.jl")
 include("Helmholtzhodge/hhhop.jl")
 include("Helmholtzhodge/helmholtzhodge.jl")
 include("Helmholtzhodge/hhhexc.jl")
-
+include("Helmholtzhodge/hhhnearfield.jl")
 
 #suport for multi-trace
 include("multi-trace/configuration.jl")
@@ -288,5 +288,9 @@ export Domain
 export HomogeneousDomain
 export RootDomain
 export SubDomain
+
+export FunctionExcitation
+export NdotExcitation
+export NcrossExcitation
 
 end # module

@@ -43,6 +43,7 @@ mutable struct SubDomain{T} <: Domain{T}
     parent::Domain
     data::T
     excitation
+    results
 end
 mutable struct RootDomain{T} <: Domain{T}
     id::Int
@@ -84,7 +85,7 @@ function _adddomain(config::Configuration, newdom::Domain)
 end
 
 function _createdomain(config::Configuration,id::Int,parentid::Int,values;excitation)
-    dom = SubDomain(id,Domain[],config.domains[parentid],values::DomainData,excitation)
+    dom = SubDomain(id,Domain[],config.domains[parentid],values::DomainData,excitation,[])
 
    # push!(config.domains[parentid].children,dom)
     return dom
@@ -192,25 +193,9 @@ function generate_problem_lhs(config::Configuration,strat::NumericalStrategy)
         end
 
     end
-    # @hilbertspace test[1:N]
-    # @hilbertspace trial[1:N]
 
-    # rhs = test'*OperatorMatrix*trial
-    # terms = []
-    # for term in rhs.terms
-    #     if typeof(term.kernel)!=ZeroOperator
-    #         push!(terms,term)
-    #     end
-    # end
-    # rhs.terms=terms
-    pretty_table(OperatorMatrix, noheader=true)
+    pretty_table(OperatorMatrix, noheader=true, backend=Val(:latex))
     return assemble(dot(config.testdirectproductspace,OperatorMatrix,config.trialdirectproductspace),config.testdirectproductspace,config.trialdirectproductspace)
-    # space_mappings = [test[i]=>config.testdirectproductspace.factors[i],trial[i]=>config.trialdirectproductspace.factors[i] for i in 1:N]
-    # discreteequation = discretise(eq,space_mappings)
-    # return discreteequation
-#TODO assembly of the system
-#TODO the right hand side
-#TODO solving system
 
 end
 
@@ -231,6 +216,13 @@ function generate_problem_rhs(config::Configuration)
 end
 
 function map_solution_to_volumes(solution,config)
-
+for (id,dom) in config.domains
+    id == 0 && continue
+    for i in dom.data.trialindex
+        config.trial_direct_productspace.factors[i]
+    end
+end
 
 end
+
+

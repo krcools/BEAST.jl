@@ -90,7 +90,19 @@ function gmres_ch(eq::DiscreteEquation; maxiter=0, restart=0, tol=0)
     ax = nestedrange(Y, 1, numfunctions)
     return PseudoBlockVector(x, (ax,)), ch
 end
+function gmres_ch(b,Z,trial_direct_product_space; maxiter=0, restart=0, tol=0)
 
+    if tol == 0
+        invZ = GMRESSolver(Z, maxiter=maxiter, restart=restart)
+    else
+        invZ = GMRESSolver(Z, maxiter=maxiter, restart=restart, tol=tol)
+    end
+    x, ch = solve(invZ, b)
+    # x = invZ * b
+
+    ax = nestedrange(trial_direct_product_space, 1, numfunctions)
+    return PseudoBlockVector(x, (ax,)), ch
+end
 gmres(eq::DiscreteEquation; maxiter=0, restart=0, tol=0) = gmres_ch(eq; maxiter, restart, tol)[1]
 
 

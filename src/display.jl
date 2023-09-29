@@ -63,11 +63,18 @@ function Base.print(io::IO, op::HHHgradgreen)
     print(io,"∇S[$(abs(op.γ))]")
     print(io,op.op)
 end
+function Base.print(io::IO, op::HHHgradgreenDot)
+    if !(op.α ≈ 1.0)
+        @warn "alpha is not 1 and not printed"
+    end
+    print(io,"∇S⋅[$(abs(op.γ))]")
+    print(io,op.op)
+end
 function Base.print(io::IO, op::HHHgradgreenCross)
     if !(op.α ≈ 1.0)
         @warn "alpha is not 1 and not printed"
     end
-    print(io,"S[$(abs(op.γ))]×")
+    print(io,"∇S×[$(abs(op.γ))]×")
     print(io,op.op)
 end
 function Base.print(io::IO, op::Union{HHHNtestCross,HHHNtestCrossLocal})
