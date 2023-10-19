@@ -23,17 +23,17 @@ end
 ϵ0 = 8.854e-12
 μ0 = 4π*1e-7
 c = 1/√(ϵ0*μ0)
-
+radius = 1.0
 λ = 2.9979563769321627
 ω = 2π*c/λ
 
-Ω = CompScienceMeshes.tetmeshsphere(λ,0.1*λ)
+Ω = CompScienceMeshes.tetmeshsphere(radius,0.4*radius)
 Γ = boundary(Ω)
 X = raviartthomas(Γ)
 @show numfunctions(X)
 
-ϵr = 2.0
-μr = 1.0
+ϵr = 2.0*0+5.0
+μr = 10.0
 
 κ, η = ω/c, √(μ0/ϵ0)
 κ′, η′ = κ*√(ϵr*μr), η*√(μr/ϵr)
@@ -46,7 +46,7 @@ T′ = Maxwell3D.singlelayer(wavenumber=κ′)
 K  = Maxwell3D.doublelayer(wavenumber=κ)
 K′ = Maxwell3D.doublelayer(wavenumber=κ′)
 
-E = Maxwell3D.planewave(direction=ẑ, polarization=x̂, wavenumber=κ)
+E = Maxwell3D.planewave(direction=ẑ, polarization=x̂, wavenumber=im*κ)
 H = -1/(im*κ*η)*curl(E)
 
 e = (n × E) × n
@@ -116,8 +116,8 @@ Plots.contour(real.(getindex.(H_tot,2)))
 
 Plots.heatmap(Z, Y, clamp.(real.(getindex.(E_tot,1)),-1.5,1.5))
 Plots.heatmap(Z, Y, clamp.(imag.(getindex.(E_tot,1)),-1.5,1.5))
-Plots.heatmap(Z, Y, real.(getindex.(H_tot,2)))
-Plots.heatmap(Z, Y, imag.(getindex.(H_tot,2)))
+display(Plots.heatmap(Z, Y, real.(getindex.(H_tot,2))))
+display(Plots.heatmap(Z, Y, imag.(getindex.(H_tot,2))))
 
 Plots.plot(real.(getindex.(E_tot[:,51],1)))
 Plots.plot(real.(getindex.(H_tot[:,51],2)))

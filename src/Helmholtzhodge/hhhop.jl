@@ -1,92 +1,113 @@
 import LinearAlgebra: ×, ⋅
 abstract type HHHLocalOperator <: LocalOperator end
-abstract type HHHOperator{T,K} <: IntegralOperator end
-abstract type HHHtestOperator{T,K} <: HHHOperator{T,K} end
-abstract type HHHbasisOperator{T,K} <: HHHOperator{T,K} end
-abstract type HHHkernelOperator{T,K} <: HHHOperator{T,K} end
+abstract type HHHOperator <: IntegralOperator end
+abstract type HHHtestOperator{U} <: HHHOperator end
+abstract type HHHbasisOperator <: HHHOperator end
+abstract type HHHkernelOperator{T,K,U} <: HHHOperator end
 # scalartype(op::HHHOperator{T,K}) where {T, K <: Nothing} = T
 # scalartype(op::HHHOperator{T,K}) where {T, K} = promote_type(T, K)
-scalartype(op::HHHOperator{T,K}) where {T, K <: Nothing} = Complex
-scalartype(op::HHHOperator{T,K}) where {T, K} = Complex
+# scalartype(op::HHHOperator{T,K}) where {T, K <: Nothing} = T
+# scalartype(op::HHHOperator) = ComplexF64
 scalartype(op::HHHLocalOperator) = Union{}
 
+scalartype(op::HHHkernelOperator{T,K,U}) where {T, K,U} = promote_type(T, K)
+scalartype(op::HHHtestOperator{U}) where {U} = scalartype(U)
+
+scalartype(op::Type{<: HHHtestOperator{U}}) where {U} =scalartype(U)
+
+scalartype(op::Type{<: HHHkernelOperator{T,K,U}}) where {T,K,U} = promote_type(T, K)
 #const i4pi = 1 / (4pi)
-mutable struct HHHgreen{T,K} <: HHHkernelOperator{T,K}
+struct HHHgreen{T,K,U} <: HHHkernelOperator{T,K,U}
     α::K
     γ::T
-    op::HHHOperator
+    op::U
 end
 
-mutable struct HHHgradgreen{T,K} <: HHHkernelOperator{T,K}
+struct HHHgradgreen{T,K,U} <: HHHkernelOperator{T,K,U}
     α::K
     γ::T
-    op::HHHOperator
+    op::U
 end
 
-mutable struct HHHgradgreenCross{T,K} <: HHHkernelOperator{T,K}
+struct HHHgradgreenDot{T,K,U} <: HHHkernelOperator{T,K,U}
     α::K
     γ::T
-    op::HHHOperator
+    op::U
 end
+
+
+struct HHHgradgreenCross{T,K,U} <: HHHkernelOperator{T,K,U}
+    α::K
+    γ::T
+    op::U
+end
+
+
 
 abstract type HHHdata end
 struct HHHvector <:HHHdata end
 struct HHHscalar <:HHHdata end
 
 
-mutable struct HHHNtestCross{T,K} <: HHHtestOperator{T,K}
-    op::HHHOperator{T,K}
+struct HHHNtestCross{U} <: HHHtestOperator{U}
+    op::U
 end
 
 
-mutable struct HHHNbasisCross{T,K} <: HHHbasisOperator{T,K}
-    op::HHHOperator{T,K}
+struct HHHNbasisCross{U} <: HHHbasisOperator
+    op::U
 end
 
-mutable struct HHHNtestDot{T,K} <: HHHtestOperator{T,K}
-    op::HHHOperator{T,K}
+struct HHHNtestDot{U} <: HHHtestOperator{U}
+    op::U
 end
 
-mutable struct HHHNbasisnormal{T,K} <: HHHbasisOperator{T,K}
-    op::HHHOperator{T,K}
+struct HHHNbasisnormal{U} <: HHHbasisOperator
+    op::U
 end
-mutable struct HHHNbasisdot{T,K} <: HHHbasisOperator{T,K}
-    op::HHHOperator{T,K}
+struct HHHNbasisdot{U} <: HHHbasisOperator
+    op::U
 end
-mutable struct HHHIdentity{T,K} <: HHHbasisOperator{T,K}
+struct HHHIdentity <: HHHbasisOperator
 end
-
-mutable struct HHHNtestCrossLocal{T,K} <: HHHtestOperator{T,K}
-    op::HHHOperator{T,K}
+struct HHHDivergence <: HHHbasisOperator
 end
 
 
-mutable struct HHHNbasisCrossLocal <: HHHLocalOperator
-    op::HHHLocalOperator
+mutable struct HHHNtestCrossLocal{U <: HHHLocalOperator} <: HHHLocalOperator
+    op::U
 end
 
-mutable struct HHHNtestDotLocal <: HHHLocalOperator
-    op::HHHLocalOperator
+
+mutable struct HHHNbasisCrossLocal{U <: HHHLocalOperator} <: HHHLocalOperator
+    op::U
 end
 
-mutable struct HHHNbasisnormalLocal <: HHHLocalOperator
-    op::HHHLocalOperator
+mutable struct HHHNtestDotLocal{U <: HHHLocalOperator} <: HHHLocalOperator
+    op::U
 end
-mutable struct HHHNbasisdotLocal <: HHHLocalOperator
-    op::HHHLocalOperator
+
+mutable struct HHHNbasisnormalLocal{U <: HHHLocalOperator} <: HHHLocalOperator
+    op::U
+end
+mutable struct HHHNbasisdotLocal{U <: HHHLocalOperator} <: HHHLocalOperator
+    op::U
 end
 mutable struct HHHIdentityLocal <: HHHLocalOperator
 end
+mutable struct HHHDivergenceLocal <: HHHLocalOperator end
 
+hhhidentity() = HHHIdentity()
+hhhdivergence() = HHHDivergence()
 
-hhhidentity() = HHHIdentity{Complex,Complex}()
 export HHH
 struct BasisFunction end
+struct DivBasisFunction end
 basisfunction() = BasisFunction()
 export basisfunction
 VectorToVector = Union{HHHNtestCross,HHHNbasisCross,HHHgradgreenCross,HHHgreen}
 ScalarToVector = Union{HHHNbasisnormal,HHHgradgreen}
-VectorToScalar = Union{HHHNtestDot,HHHgradgreen,HHHNbasisdot}
+VectorToScalar = Union{HHHNtestDot,HHHgradgreenDot,HHHNbasisdot}
 ScalarToScalar = Union{HHHgreen}
 inversemap(op::VectorToVector,::HHHvector) = inversemap(op.op,HHHvector())
 inversemap(op::ScalarToVector,::HHHvector) = inversemap(op.op,HHHscalar())
@@ -94,15 +115,19 @@ inversemap(op::VectorToScalar,::HHHscalar) = inversemap(op.op,HHHvector())
 inversemap(op::ScalarToScalar,::HHHscalar) = HHHscalar()
 inversemap(::HHHOperator,::HHHdata) = @error "trying to convert scalar to vector or vector to scalar"
 inversemap(::HHHIdentity,data::HHHdata) = data
+inversemap(::HHHDivergence,::HHHscalar) = HHHvector()
 ##### Operator building
 
 strace(op::Union{HHHkernelOperator,HHHtestOperator}) = HHHNtestCross(op)
 ntrace(op::Union{HHHkernelOperator,HHHtestOperator}) = HHHNtestDot(op)
 ×(op::HHHgradgreen,::Nothing) = HHHgradgreenCross(op.α,op.γ,op.op)
-×(op::HHHgradgreen,::NormalVector) = HHHgradgreenCross(op.α,op.γ,op.op)(HHHNbasisnormal(hhhidentity()))
+⋅(op::HHHgradgreen,::Nothing) = HHHgradgreenDot(op.α,op.γ,op.op)
+#×(op::HHHgradgreen,::NormalVector) = HHHgradgreenCross(op.α,op.γ,op.op)(HHHNbasisnormal(hhhidentity()))
 ×(::NormalVector,op::Union{HHHkernelOperator,HHHtestOperator}) = strace(op)
 ⋅(::NormalVector,op::Union{HHHkernelOperator,HHHtestOperator}) = ntrace(op)
 *(::NormalVector,::BasisFunction) = HHHNbasisnormal(hhhidentity())
+⋅(::Nabla,::BasisFunction) = hhhdivergence()
+*(::NormalVector,::DivBasisFunction) = HHHNbasisnormal(hhhdivergence())
 ⋅(::NormalVector,::BasisFunction) = HHHNbasisdot(hhhidentity())
 ×(::NormalVector,::BasisFunction) = HHHNbasisCross(hhhidentity())
 ×(::NormalVector,op::HHHbasisOperator) = HHHNbasisCross(op)
@@ -110,14 +135,36 @@ ntrace(op::Union{HHHkernelOperator,HHHtestOperator}) = HHHNtestDot(op)
 
 
 function (op::HHHkernelOperator)(Basisop::HHHbasisOperator) 
-    return typeof(op)(op.α,op.γ,Basisop)
+    return (Base.typename(typeof(op)).wrapper)(op.α,op.γ,Basisop)
 end
 
 
-
+### TODO make sure this function can be used, unpack everything and make new structure.
 function (op::HHHOperator)(BasisOperator::HHHbasisOperator)
     op.op = BasisOperator
 end
+
+# ##### to generate integrand
+# extract(a::Type{HHHNbasisCross{T}}) where {T} = [HHHNbasisCross;extract(T)]
+# extract(a::Type{HHHNbasisdot{T}}) where {T} = [HHHNbasisdot;extract(T)]
+# extract(a::Type{HHHNbasisnormal{T}}) where {T} = [HHHNbasisnormal;extract(T)]
+# extract(a::Type{HHHNtestCross{T}}) where {T} = [HHHNtestCross;extract(T)]
+# extract(a::Type{HHHNtestDot{T}}) where {T} = [HHHNtestDot;extract(T)]
+# extract(a::Type{HHHgradgreen{T}}) where {T} = [HHHgradgreen;extract(T)]
+# extract(a::Type{HHHgradgreenCross{T}}) where {T} = [HHHgradgreenCross;extract(T)]
+# extract(a::Type{HHHgreen{T}}) where {T} = [HHHgreen;extract(T)]
+# extract(a::Type{HHHIdentity}) = HHHIdentity
+# extract(a::Type{HHHDivergence}) = HHHDivergence
+
+
+# @generated function hhhintegrand(op,x,y,g)
+#     println("integrand generated")
+#     typelist = extract(typeof(op))
+
+
+
+# end
+
 
 
 ##### Integrand definitions
@@ -126,10 +173,12 @@ function (igd::Integrand{<:HHHOperator})(x,y,f,g)
 
 test = getvalue(f)
 _krondot(test,op(x,y,g))
+
 end
 function (op::HHHNtestCross)(x,y,g)
     nx = normal(x)
-    cross.(Ref(nx),op.op(x,y,g))
+    cross.(Ref(nx),op.op(x,y,g))  
+    
 end
 function (op::HHHNtestDot)(x,y,g)
     nx = normal(x)
@@ -150,6 +199,9 @@ end
 function (op::HHHIdentity)(x,y,g)
     getvalue(g)
 end
+function (op::HHHDivergence)(x,y,g)
+    getdivergence(g)
+end
 function (op::HHHgreen)(x,y,g)
     
     r = cartesian(x) - cartesian(y)
@@ -158,26 +210,40 @@ function (op::HHHgreen)(x,y,g)
     green =  op.α * exp(-op.γ*R)*(iR*i4pi)
     green*op.op(x,y,g)
 end
-mydot(a::SVector{N,<:SVector},b::Base.RefValue) where {N} = dot.(a,b)
-function mydot(a::SVector,b::Base.RefValue) 
-    a.*b
-end
+# mydot(a::SVector{N,<:SVector},b::Base.RefValue) where {N} = dot.(a,b)
+# function mydot(a::SVector,b::Base.RefValue) 
+#     a.*b
+# end
 function (op::HHHgradgreen)(x,y,g)
+   
     r = cartesian(x) - cartesian(y)
     R = norm(r)
     iR = 1/R
     green =  op.α * exp(-op.γ*R)*(iR*i4pi)
     gradgreen = -(op.γ + iR) * green * (iR * r)
-    mydot(op.op(x,y,g),Ref(gradgreen))
+    
+    op.op(x,y,g).*Ref(gradgreen)
 end
+function (op::HHHgradgreenDot)(x,y,g)
+   
+    r = cartesian(x) - cartesian(y)
+    R = norm(r)
+    iR = 1/R
+    green =  op.α * exp(-op.γ*R)*(iR*i4pi)
+    gradgreen = -(op.γ + iR) * green * (iR * r)
 
+    dot.(op.op(x,y,g),Ref(gradgreen))
+end
 function (op::HHHgradgreenCross)(x,y,g)
+  
     r = cartesian(x) - cartesian(y)
     R = norm(r)
     iR = 1/R
     green = op.α * exp(-op.γ*R)*(iR*i4pi)
     gradgreen = -(op.γ + iR) * green * (iR * r)
     cross.(Ref(gradgreen),op.op(x,y,g))
+    
+    
 end
 identify(::VectorSurfaceSpace) = HHHvector()
 identify(::ScalarSurfaceSpace) = HHHscalar()
@@ -191,7 +257,7 @@ end
 defaultquadstrat(op::HHHOperator,::HHHdata,::HHHdata) = DoubleNumSauterQstrat(6,7,5,5,4,3) #TODO implement strategy that is stronger for nearby triangles
 
 
-sign_upon_permutation(op::HHHIdentity,I,J) = 1
+sign_upon_permutation(op::Union{HHHIdentity,HHHDivergence},I,J) = 1
 sign_upon_permutation(op::HHHkernelOperator,I,J) = sign_upon_permutation(op.op,I,J) 
 sign_upon_permutation(op::Union{HHHNtestCross,HHHNtestDot},I,J) = Combinatorics.levicivita(I)*sign_upon_permutation(op.op,I,J)
 sign_upon_permutation(op::Union{HHHNbasisnormal,HHHNbasisCross,HHHNbasisdot},I,J) = Combinatorics.levicivita(J)*sign_upon_permutation(op.op,I,J)
@@ -205,7 +271,7 @@ function number_of_normals(op::HHHOperator) end
 number_of_normals(op::Union{HHHNtestCross,HHHNtestCrossLocal,HHHNtestDot,HHHNtestDotLocal}) = [1,0]+number_of_normals(op.op) 
 number_of_normals(op::HHHkernelOperator) = number_of_normals(op.op)
 number_of_normals(op::Union{HHHNbasisCross,HHHNbasisCrossLocal,HHHNbasisdot,HHHNbasisdotLocal,HHHNbasisnormal,HHHNbasisnormalLocal}) = [0,1]+number_of_normals(op.op)
-number_of_normals(op::Union{HHHIdentity,HHHIdentityLocal}) = [0,0]
+number_of_normals(op::Union{HHHIdentity,HHHIdentityLocal,HHHDivergence,HHHDivergenceLocal}) = [0,0]
 
 
 
@@ -218,14 +284,27 @@ alpha(op::HHHkernelOperator) = op.α
 
 hhhntestcrosslocal(op::ZeroOperator) = op
 hhhntestcrosslocal(op::HHHLocalOperator) = HHHNtestCrossLocal(op)
+hhhntestcrosslocal(op::Union{HHHNbasisnormalLocal}) = ZeroOperator()
+
 hhhntestdotlocal(op::ZeroOperator) = op
 hhhntestdotlocal(op::HHHLocalOperator) = HHHNtestDotLocal(op)
+hhhntestdotlocal(op::Union{HHHNtestCrossLocal,HHHNbasisCrossLocal}) = ZeroOperator()
+#hhhntestdotlocal(op::HHHNbasisnormalLocal) = localoperator(op.op)
 
 hhhnbasiscrosslocal(op::ZeroOperator) = op
 hhhnbasiscrosslocal(op::HHHLocalOperator) = HHHNbasisCrossLocal(op)
+hhhnbasiscrosslocal(op::Union{HHHNbasisnormalLocal}) = ZeroOperator()
 
 hhhnbasisdotlocal(op::ZeroOperator) = op
 hhhnbasisdotlocal(op::HHHLocalOperator) = HHHNbasisdotLocal(op)
+hhhnbasisdotlocal(op::HHHDivergenceLocal) = HHHNbasisnormalLocal(op)
+hhhnbasisdotlocal(op::Union{HHHNtestCrossLocal,HHHNbasisCrossLocal}) = ZeroOperator()
+function hhhnbasisdotlocal(op::HHHIdentityLocal)
+    @warn "assumed basisfunction is tangential to surface"
+ZeroOperator()
+end
+
+hhhnbasisdotlocal(op::HHHNbasisnormalLocal) = op.op
 
 hhhnbasisnormal(op::ZeroOperator) = op
 hhhnbasisnormal(op::HHHLocalOperator) = HHHNbasisnormalLocal(op)
@@ -236,12 +315,19 @@ localoperator(op::HHHNbasisCross) = hhhnbasiscrosslocal(localoperator(op.op))
 localoperator(op::HHHNbasisdot) = hhhnbasisdotlocal(localoperator(op.op))
 localoperator(op::HHHNbasisnormal) = hhhnbasisnormal(localoperator(op.op))
 localoperator(op::HHHIdentity) = HHHIdentityLocal()
+localoperator(op::HHHDivergence) = HHHDivergenceLocal()
 
 localoperator(op::HHHgreen) = ZeroOperator()
-localoperator(op::HHHgradgreen) = hhhnbasisdotlocal(op.op)
-localoperator(op::HHHgradgreenCross) = hhhnbasiscrosslocal(op.op)
+localoperator(op::HHHgradgreen) = hhhnbasisnormal(localoperator(op.op))
+localoperator(op::HHHgradgreenDot) = hhhnbasisdotlocal(localoperator(op.op))
+localoperator(op::HHHgradgreenCross) = hhhnbasiscrosslocal(localoperator(op.op))
 
 function trace(op::HHHOperator,sign)
+    l = localoperator(op)
+    if typeof(l) == HHHNbasisnormalLocal{HHHIdentityLocal} || typeof(l) == HHHNbasisnormalLocal{HHHDivergenceLocal}
+        @warn "assumed test function is tangential to surface"
+        l = ZeroOperator()
+    end   
 
     localop = 1/2*sign*alpha(op)*localoperator(op)
     
@@ -254,8 +340,10 @@ end
 
 ##### defining integrand of those local operators:
 
+
 function integrand(op::HHHLocalOperator,kernel,x,g,f,nt,nb)
-dot(g[1],op(x,f[1],nt,nb))
+  
+dot(g.value,op(x,f,nt,nb))
 end
 
 function (op::HHHNtestCrossLocal)(x,f,nt,nb)
@@ -264,7 +352,7 @@ end
 function (op::HHHNtestDotLocal)(x,f,nt,nb)
     dot(nt,op.op(x,f,nt,nb))
 end
-function (op::HHHNbasisCross)(x,f,nt,nb)
+function (op::HHHNbasisCrossLocal)(x,f,nt,nb)
     nb×op.op(x,f,nt,nb)
 end
 function (op::HHHNbasisdotLocal)(x,f,nt,nb)
@@ -274,11 +362,14 @@ function (op::HHHNbasisnormalLocal)(x,f,nt,nb)
     nb*op.op(x,f,nt,nb)
 end
 function (op::HHHIdentityLocal)(x,f,nt,nb)
-    return f
+    return f.value
+end
+function (op::HHHDivergenceLocal)(x,f,nt,nb)
+    return f.divergence
 end
 
-function cellinteractions(biop::HHHLocalOperator, trefs::U, brefs::V, cell,tcell,bcell) where {U<:RefSpace{T},V<:RefSpace{T}} where {T}
-    qr = qrtot
+function cellinteractions(biop::HHHLocalOperator, trefs::U, brefs::V, cell,qr,tcell,bcell) where {U<:RefSpace{T},V<:RefSpace{T}} where {T}
+    
     num_tshs = length(qr[1][3])
     num_bshs = length(qr[1][4])
 
@@ -289,8 +380,8 @@ function cellinteractions(biop::HHHLocalOperator, trefs::U, brefs::V, cell,tcell
 
         w, mp, tvals, bvals = q[1], q[2], q[3], q[4]
         j = w * jacobian(mp)
-        kernel = kernelvals(biop, mp)
-
+        # kernel = kernelvals(biop, mp)
+        kernel = nothing
         for m in 1 : num_tshs
             tval = tvals[m]
 
@@ -317,9 +408,10 @@ function cellinteractions_matched!(zlocal, biop::HHHLocalOperator, trefs, brefs,
 
         w, mp, tvals, bvals = q[1], q[2], q[3], q[4]
         j = w * jacobian(mp)
-        kernel = kernelvals(biop, mp)
-            nt = normal(tcell)
-    nb = normal(bcell)
+        #kernel = kernelvals(biop, mp)
+        kernel = nothing
+        nt = normal(tcell)
+        nb = normal(bcell)
         for n in 1 : num_bshs
             bval = bvals[n]
             for m in 1 : num_tshs

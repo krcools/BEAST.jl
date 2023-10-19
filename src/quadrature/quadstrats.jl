@@ -40,7 +40,7 @@ end
 
 
 function defaultquadstrat(op, tfs, bfs) 
-    @warn "made use of general defaultquadstrat routine which cals defaultquadstrat on refspaces"
+    @warn "made use of general defaultquadstrat routine which cals defaultquadstrat on refspaces "*string(typeof(op))
     defaultquadstrat(op, refspace(tfs), refspace(bfs))
 end
 macro defaultquadstrat(dop, body)

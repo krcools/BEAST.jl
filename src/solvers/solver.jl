@@ -430,8 +430,8 @@ end
 # end
 
 function LinearAlgebra.dot(test::DirectProductSpace,op::Matrix{AbstractOperator},trial::DirectProductSpace)
-test_length = length(test)
-trial_length = length(trial)
+test_length = length(test.factors)
+trial_length = length(trial.factors)
 @assert size(op)==(test_length,trial_length)
 terms = Vector{BilTerm}()
 test_space_dict = Dict()
