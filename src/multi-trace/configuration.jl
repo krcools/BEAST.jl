@@ -10,7 +10,7 @@ struct Interaction{A,B,C}# wordt gecrieerd bij de itteratie over alle volumes.
     trialvol::B
     embedvol::C
 end
-abstract type PhysicalInformation end #depends on the strategy
+# abstract type PhysicalInformation end #depends on the strategy
 """
 subtypes of the NumericalStrategy type descirbe the followed strategy. for example a preconditioning strategy for a vector potential based problem,
  a vector potential based problem, a fields based problem,...
@@ -19,23 +19,23 @@ abstract type NumericalStrategy end
 
 export NumericalStrategy
 mutable struct HomogeneousDomain <: DomainData
-ϵ
-μ
-ω
+physicalinformation
 testbasises
 trialbasises
 coeff
 testindex 
 trialindex 
-HomogeneousDomain(a,b,c,d,e,f) = new(a,b,c,d,e,f,[],[])
+HomogeneousDomain(a,b,c,d) = new(a,b,c,d,[],[])
 end
 
 struct BackgroundDomain <: DomainData
-    ϵ
-    μ
-    ω
+    physicalinformation
     coeff
 end
+physicalconstants(d::DomainData) = d.physicalinformation
+physicalconstants(d::Domain) = physicalconstants(d.data)
+testspace(d::DomainData) = d.testbasises
+trialspace(d::DomainData) = d.trialbasises
 
 mutable struct SubDomain{T} <: Domain{T}
     id::Int
@@ -57,37 +57,29 @@ mutable struct Configuration #TODO add dict contining all subbasis info af touch
     root::RootDomain
     touching::Dict{Tuple{Int,Int},Vector}
     testdirectproductspace 
-    testcounter 
-    trialcounter 
-    trialdirectproductspace
-    
+    trialdirectproductspace 
 end
-function Configuration(dom,root,touching)
-Configuration(dom,root,touching,nothing,0,0,nothing)
-end
+Configuration(dom,root,touching) = Configuration(dom,root,touching,nothing,nothing)
+
 
 function _adddomain(config::Configuration, newdom::Domain)
     id = newdom.id
     @assert !(id in keys(config.domains))
     dom = newdom.parent
     config.domains[id] = newdom
-    for (i,space) in enumerate(newdom.data.testbasises)
-        config.testcounter += 1
-        push!(newdom.data.testindex,config.testcounter)
+    for space in newdom.data.testbasises
         config.testdirectproductspace = config.testdirectproductspace × space
+        push!(newdom.data.testindex,length(config.testdirectproductspace.factors))
     end
     for space in newdom.data.trialbasises
-        config.trialcounter += 1
-        push!(newdom.data.trialindex,config.trialcounter)
         config.trialdirectproductspace = config.trialdirectproductspace × space
+        push!(newdom.data.trialindex,length(config.trialdirectproductspace.factors))
     end
     push!(dom.children,newdom)
 end
 
 function _createdomain(config::Configuration,id::Int,parentid::Int,values;excitation)
     dom = SubDomain(id,Domain[],config.domains[parentid],values::DomainData,excitation,[])
-
-   # push!(config.domains[parentid].children,dom)
     return dom
 end
 function _createdomain(config::Configuration,id::Int,parentdom::Domain,values;excitation)
@@ -96,7 +88,6 @@ end
 
 function createdomain(config::Configuration,id::Int,parent::Union{Int,Domain},values::DomainData;excitation=Dict())
     _adddomain(config,_createdomain(config,id,parent,values;excitation))
-
 end
 """
 a child of b
@@ -161,42 +152,92 @@ end
 
 # end
 #function convert_inside_to_outside_basis(Ωchild,Ωparent,strat) end
-
-function generate_problem_lhs(config::Configuration,strat::NumericalStrategy)
+function interaction_matrix(config::Configuration,id,strat::NumericalStrategy)
     @assert length(config.testdirectproductspace.factors)==length(config.trialdirectproductspace.factors)
     N = length(config.testdirectproductspace.factors)
     OperatorMatrix = fill!(Array{AbstractOperator}(undef,N,N),ZeroOperator())
-    for (id,Ω) in config.domains
-        c = Ω.data.coeff
-        if id != 0
-            inter = Interaction(config,Ω,Ω,Ω)
-            OperatorMatrix[Ω.data.testindex[1]:last(Ω.data.testindex),Ω.data.trialindex[1]:last(Ω.data.trialindex)] += c*inter(strat)
-            for child in Ω.children
-                inter = Interaction(config,Ω,child,Ω)
-                OperatorMatrix[Ω.data.testindex[1]:last(Ω.data.testindex),child.data.trialindex[1]:last(child.data.trialindex)] += c*inter(strat)*convert_inside_to_outside_basis(child,Ω,strat)
-                inter = Interaction(config,child,Ω,Ω)
-                OperatorMatrix[child.data.testindex[1]:last(child.data.testindex),Ω.data.trialindex[1]:last(Ω.data.trialindex)] += c*convert_inside_to_outside_basis(child,Ω,strat)*inter(strat)
-            end
-
-        end
-        for Ω1 in Ω.children
-
-            inter = Interaction(config,Ω1,Ω1,Ω)
-            OperatorMatrix[Ω1.data.testindex[1]:last(Ω1.data.testindex),Ω1.data.trialindex[1]:last(Ω1.data.trialindex)] += c*convert_inside_to_outside_basis(Ω1,Ω,strat)*inter(strat)*convert_inside_to_outside_basis(Ω1,Ω,strat)
-
-            for Ω2 in Ω.children
-                if Ω1!==Ω2
-                    inter = Interaction(config,Ω1,Ω2,Ω)
-                    OperatorMatrix[Ω1.data.testindex[1]:last(Ω1.data.testindex),Ω2.data.trialindex[1]:last(Ω2.data.trialindex)] += c*convert_inside_to_outside_basis(Ω1,Ω,strat)*inter(strat)*convert_inside_to_outside_basis(Ω2,Ω,strat)
-                end
-            end
+    indexen = []
+    Ω = config.domains[id]
+    if id != 0
+        indexen = [indexen; Ω.data.testindex]
+        inter = Interaction(config,Ω,Ω,Ω)
+        OperatorMatrix[Ω.data.testindex[1]:last(Ω.data.testindex),Ω.data.trialindex[1]:last(Ω.data.trialindex)] += inv(convert_outside_to_inside_basis(Ω,Ω.parent,strat))*inter(strat)*convert_outside_to_inside_basis(Ω,Ω.parent,strat)
+        for child in Ω.children
+            inter = Interaction(config,Ω,child,Ω)
+            OperatorMatrix[Ω.data.testindex[1]:last(Ω.data.testindex),child.data.trialindex[1]:last(child.data.trialindex)] += inv(convert_outside_to_inside_basis(Ω,Ω.parent,strat))*inter(strat)
+            inter = Interaction(config,child,Ω,Ω)
+            OperatorMatrix[child.data.testindex[1]:last(child.data.testindex),Ω.data.trialindex[1]:last(Ω.data.trialindex)] += inter(strat)*convert_outside_to_inside_basis(Ω,Ω.parent,strat)
         end
 
     end
+    for Ω1 in Ω.children
+        indexen = [indexen; Ω1.data.testindex]
+        inter = Interaction(config,Ω1,Ω1,Ω)
+        OperatorMatrix[Ω1.data.testindex[1]:last(Ω1.data.testindex),Ω1.data.trialindex[1]:last(Ω1.data.trialindex)] += inter(strat)
 
-    pretty_table(OperatorMatrix, noheader=true, backend=Val(:latex))
-    return assemble(dot(config.testdirectproductspace,OperatorMatrix,config.trialdirectproductspace),config.testdirectproductspace,config.trialdirectproductspace)
+        for Ω2 in Ω.children
+            if Ω1!==Ω2
+                inter = Interaction(config,Ω1,Ω2,Ω)
+                OperatorMatrix[Ω1.data.testindex[1]:last(Ω1.data.testindex),Ω2.data.trialindex[1]:last(Ω2.data.trialindex)] += inter(strat)
+            end
+        end
+    end
 
+    
+    id = fill!(Array{AbstractOperator}(undef,N,N),ZeroOperator())
+    for i in 1:N
+        i∈indexen && (id[i,i] = Identity())
+    end
+    pretty_table(id-OperatorMatrix, noheader=true, backend=Val(:latex))
+    return assemble(dot(config.testdirectproductspace,id-OperatorMatrix,config.trialdirectproductspace),config.testdirectproductspace,config.trialdirectproductspace)
+end
+
+# function generate_problem_lhs(config::Configuration,strat::NumericalStrategy)#Make more correct by assambling for eacht domain an add with coeffeicient, add idetity at that place
+#     @assert length(config.testdirectproductspace.factors)==length(config.trialdirectproductspace.factors)
+#     N = length(config.testdirectproductspace.factors)
+#     OperatorMatrix = fill!(Array{AbstractOperator}(undef,N,N),ZeroOperator())
+#     for (id,Ω) in config.domains
+#         c = Ω.data.coeff
+#         if id != 0
+#             inter = Interaction(config,Ω,Ω,Ω)
+#             OperatorMatrix[Ω.data.testindex[1]:last(Ω.data.testindex),Ω.data.trialindex[1]:last(Ω.data.trialindex)] += c*inv(convert_outside_to_inside_basis(Ω,Ω.parent,strat))*inter(strat)*convert_outside_to_inside_basis(Ω,Ω.parent,strat)
+#             for child in Ω.children
+#                 inter = Interaction(config,Ω,child,Ω)
+#                 OperatorMatrix[Ω.data.testindex[1]:last(Ω.data.testindex),child.data.trialindex[1]:last(child.data.trialindex)] += c*inv(convert_outside_to_inside_basis(Ω,Ω.parent,strat))*inter(strat)
+#                 inter = Interaction(config,child,Ω,Ω)
+#                 OperatorMatrix[child.data.testindex[1]:last(child.data.testindex),Ω.data.trialindex[1]:last(Ω.data.trialindex)] += c*inter(strat)*convert_outside_to_inside_basis(Ω,Ω.parent,strat)
+#             end
+
+#         end
+#         for Ω1 in Ω.children
+
+#             inter = Interaction(config,Ω1,Ω1,Ω)
+#             OperatorMatrix[Ω1.data.testindex[1]:last(Ω1.data.testindex),Ω1.data.trialindex[1]:last(Ω1.data.trialindex)] += c*inter(strat)
+
+#             for Ω2 in Ω.children
+#                 if Ω1!==Ω2
+#                     inter = Interaction(config,Ω1,Ω2,Ω)
+#                     OperatorMatrix[Ω1.data.testindex[1]:last(Ω1.data.testindex),Ω2.data.trialindex[1]:last(Ω2.data.trialindex)] += c*inter(strat)
+#                 end
+#             end
+#         end
+
+#     end
+#     id = fill!(Array{AbstractOperator}(undef,N,N),ZeroOperator())
+#     for i in 1:N
+#         id[i,i] = 2*Identity()
+#     end
+#     pretty_table(id-OperatorMatrix, noheader=true, backend=Val(:latex))
+#     return assemble(dot(config.testdirectproductspace,id-OperatorMatrix,config.trialdirectproductspace),config.testdirectproductspace,config.trialdirectproductspace)
+
+# end
+function generate_problem_lhs(config::Configuration,strat::NumericalStrategy)
+    out = interaction_matrix(config,0,strat)
+    for (id,Ω) in config.domains
+        id==0 && continue
+        out += interaction_matrix(config,id,strat)
+    end
+    return out
 end
 
 function generate_problem_rhs(config::Configuration)
@@ -215,14 +256,17 @@ function generate_problem_rhs(config::Configuration)
     return assemble(LinForm([],linterms),config.testdirectproductspace)
 end
 
-function map_solution_to_volumes(solution,config)
-for (id,dom) in config.domains
-    id == 0 && continue
-    for i in dom.data.trialindex
-        config.trial_direct_productspace.factors[i]
+function map_solution_to_volumes!(config,solution)
+    for (id,dom) in config.domains
+        id==0 && continue
+        out = []
+        for i in dom.data.trialindex
+            push!(out,solution[Block(i)])
+        end
+        dom.results = out
     end
 end
 
-end
+
 
 

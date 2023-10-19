@@ -10,6 +10,10 @@ mutable struct HHHGradGreenCrossField{T,U}
     gamma::T
     op::U
 end
+mutable struct HHHGradGreenDotField{T,U}
+    gamma::T
+    op::U
+end
 
 mutable struct HHHBasisNtimesField{U}
     op::U
@@ -92,6 +96,31 @@ function HHHGradGreenCrossField(;
 
     HHHGradGreenCrossField(gamma,HHHIdentityField())
 end
+function HHHGradGreenDotField(;
+    gamma=nothing,
+    wavenumber=nothing
+) 
+
+    if (gamma === nothing) && (wavenumber === nothing)
+        error("Supply one of (not both) gamma or wavenumber")
+    end
+
+    if (gamma !== nothing) && (wavenumber !== nothing)
+        error("Supply one of (not both) gamma or wavenumber")
+    end
+
+    if gamma === nothing
+        if iszero(real(wavenumber))
+            gamma = -imag(wavenumber)
+        else
+            gamma = im*wavenumber
+        end
+    end
+
+    @assert gamma !== nothing
+
+    HHHGradGreenDotField(gamma,HHHIdentityField())
+end
 
 const HHHField = Union{HHHGreenField,HHHGradGreenField,HHHGradGreenCrossField}
 defaultquadstrat(op::HHHField, basis) = SingleNumQStrat(2)
@@ -125,8 +154,12 @@ integrand(op::HHHIdentityField, krn,y,fp,p) = fp.value
 integrand(op::HHHDivergenceField,krn,y,fp,p) = fp.divergence
 
 function integrand(op::HHHGradGreenField, krn, y, fp, p)
-    dot(integrand(op.op, krn,y,fp,p),krn.gradgreen)
+    integrand(op.op, krn,y,fp,p)*krn.gradgreen
 end
+
 function integrand(op::HHHGradGreenCrossField, krn, y, fp, p)
     cross(krn.gradgreen,integrand(op.op, krn,y,fp,p))
+end
+function integrand(op::HHHGradGreenDotField, krn, y, fp, p)
+    dot(integrand(op.op, krn,y,fp,p),krn.gradgreen)
 end

@@ -364,7 +364,7 @@ function cellinteractions_matched!(zlocal, biop, trefs, brefs, cell, qr,tcell=no
     return zlocal
 end
 
-function cellinteractions(biop, trefs::U, brefs::V, cell,qr,tcell=nothing,bcell=nothing) where {U<:RefSpace{T},V<:RefSpace{T}} where {T}
+function cellinteractions(biop, trefs::U, brefs::V, cell,qr,tcell,bcell) where {U<:RefSpace{T},V<:RefSpace{T}} where {T}
     
     num_tshs = length(qr[1][3])
     num_bshs = length(qr[1][4])
@@ -393,5 +393,32 @@ function cellinteractions(biop, trefs::U, brefs::V, cell,qr,tcell=nothing,bcell=
     return zlocal
 end
 
+function cellinteractions(biop, trefs::U, brefs::V, cell,qr) where {U<:RefSpace{T},V<:RefSpace{T}} where {T}
+    
+    num_tshs = length(qr[1][3])
+    num_bshs = length(qr[1][4])
 
+    zlocal = zeros(T, num_tshs, num_bshs)
+     
+    for q in qr
+
+        w, mp, tvals, bvals = q[1], q[2], q[3], q[4]
+        j = w * jacobian(mp)
+        kernel = kernelvals(biop, mp)
+
+        for m in 1 : num_tshs
+            tval = tvals[m]
+
+            for n in 1 : num_bshs
+                bval = bvals[n]
+
+                igd = integrand(biop, kernel, mp, tval, bval)
+                zlocal[m,n] += j * igd
+
+            end
+        end
+    end
+
+    return zlocal
+end
 

@@ -267,6 +267,7 @@ include("Helmholtzhodge/hhhnearfield.jl")
 #suport for multi-trace
 include("multi-trace/configuration.jl")
 include("multi-trace/interactions.jl")
+include("multi-trace/postprocessing.jl")
 
 #suport for displaying operators
 include("display.jl")

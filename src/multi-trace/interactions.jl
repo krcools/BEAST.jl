@@ -80,11 +80,13 @@ normalorient(op::ZeroOperator,a,b) = op
 ###### Interactions
 struct VectorStrat <: BEAST.NumericalStrategy end
 
-function convert_inside_to_outside_basis(child,parent,::VectorStrat)
+function convert_outside_to_inside_basis(child,parent,::VectorStrat)
+    p = physicalconstants(parent.data)
+    c = physicalconstants(child.data)
     a = [-1 0 0 0
       0 1 0 0
-      0 0 -parent.data.μ/child.data.μ 0
-      0 0 0 -child.data.ϵ/parent.data.ϵ]
+      0 0 -c.μ/p.μ 0
+      0 0 0 -p.ϵ/c.ϵ]
 
       return a
 end
@@ -93,7 +95,8 @@ end
 
 
 function (int::Interaction{<: Domain{HomogeneousDomain},<: Domain{HomogeneousDomain},<: RootDomain})(::VectorStrat)
-    k = sqrt(int.embedvol.data.ϵ*int.embedvol.data.μ)*int.embedvol.data.ω
+    p = physicalconstants(int.embedvol.data)
+    k = sqrt(p.ϵ*p.μ)*p.ω
     green = HHH.green(wavenumber=k)
     gradgreen = HHH.gradgreen(wavenumber=k)
     b = basisfunction()
@@ -106,7 +109,7 @@ function (int::Interaction{<: Domain{HomogeneousDomain},<: Domain{HomogeneousDom
         ZeroOperator() Identity() ZeroOperator() ZeroOperator()
         ZeroOperator() ZeroOperator() Identity() ZeroOperator()
         ZeroOperator() ZeroOperator() ZeroOperator() Identity()]
-    a = id - a
+    #a = id - a
     
     if (int.testvol.id,int.trialvol.id) in keys(int.config.touching) 
         println("cauchy limit taken")
@@ -118,7 +121,8 @@ function (int::Interaction{<: Domain{HomogeneousDomain},<: Domain{HomogeneousDom
 
 end
 function (int::Interaction{<: Domain{HomogeneousDomain},<: Domain{HomogeneousDomain},<: SubDomain})(::VectorStrat)
-    k = sqrt(int.embedvol.data.ϵ*int.embedvol.data.μ)*int.embedvol.data.ω #foute lijn, puur voor test!!!
+    p = physicalconstants(int.embedvol.data)
+    k = sqrt(p.ϵ*p.μ)*p.ω
     green = HHH.green(wavenumber=k)
     gradgreen = HHH.gradgreen(wavenumber=k)
     b = basisfunction()
@@ -131,7 +135,7 @@ function (int::Interaction{<: Domain{HomogeneousDomain},<: Domain{HomogeneousDom
         ZeroOperator() Identity() ZeroOperator() ZeroOperator()
         ZeroOperator() ZeroOperator() Identity() ZeroOperator()
         ZeroOperator() ZeroOperator() ZeroOperator() Identity()]
-    a = id - a
+    #a = id - a
     
     if (int.testvol.id,int.trialvol.id) in keys(int.config.touching) 
         println("cauchy limit taken")

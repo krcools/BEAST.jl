@@ -231,8 +231,8 @@ function (op::HHHgradgreenDot)(x,y,g)
     iR = 1/R
     green =  op.α * exp(-op.γ*R)*(iR*i4pi)
     gradgreen = -(op.γ + iR) * green * (iR * r)
-    
-    dot(op.op(x,y,g),Ref(gradgreen))
+
+    dot.(op.op(x,y,g),Ref(gradgreen))
 end
 function (op::HHHgradgreenCross)(x,y,g)
   
@@ -368,8 +368,8 @@ function (op::HHHDivergenceLocal)(x,f,nt,nb)
     return f.divergence
 end
 
-function cellinteractions(biop::HHHLocalOperator, trefs::U, brefs::V, cell,tcell,bcell) where {U<:RefSpace{T},V<:RefSpace{T}} where {T}
-    qr = qrtot
+function cellinteractions(biop::HHHLocalOperator, trefs::U, brefs::V, cell,qr,tcell,bcell) where {U<:RefSpace{T},V<:RefSpace{T}} where {T}
+    
     num_tshs = length(qr[1][3])
     num_bshs = length(qr[1][4])
 
