@@ -2,14 +2,14 @@ struct Identity <: LocalOperator
 end
 
 kernelvals(biop::Identity, x) = nothing
-integrand(op::Identity, kernel, x, g, f) = dot(f[1], g[1])
+integrand(op::Identity, kernel, x,y, g, f) = dot.(getvalue(f), getvalue(g))
 scalartype(op::Identity) = Union{}
 
 struct NCross <: LocalOperator
 end
 
 kernelvals(op::NCross, mp) = nothing
-integrand(op::NCross, kernel, x, g, f) = dot(g[1], normal(x) × f[1])
+integrand(op::NCross, kernel, x,y, g, f) = dot.(getvalue(g), Ref(normal(x)) .× getvalue(f))
 scalartype(op::NCross) = Union{}
 
 function _alloc_workspace(qd, g, f, tels, bels)
