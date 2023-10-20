@@ -141,6 +141,7 @@ include("utils/combinatorics.jl")
 include("utils/linearspace.jl")
 include("utils/zeromap.jl")
 include("utils/rank1map.jl")
+include("utils/geometrie.jl")
 
 include("bases/basis.jl")
 include("bases/lincomb.jl")
@@ -270,6 +271,7 @@ include("multi-trace/interactions.jl")
 include("multi-trace/postprocessing.jl")
 
 #suport for displaying operators
+include("composedoperator/composeoperator.jl")
 include("display.jl")
 
 const x̂ = point(1,0,0)
