@@ -364,34 +364,52 @@ function cellinteractions_matched!(zlocal, biop, trefs, brefs, cell, qr,tcell=no
     return zlocal
 end
 
-function cellinteractions(biop, trefs::U, brefs::V, cell,qr,tcell,bcell) where {U<:RefSpace{T},V<:RefSpace{T}} where {T}
-    
+function cellinteractions_matched!(zlocal, biop, trefs, brefs, cell, qr)
+
     num_tshs = length(qr[1][3])
     num_bshs = length(qr[1][4])
 
-    zlocal = zeros(T, num_tshs, num_bshs)
-     
+    # zlocal = zeros(Float64, num_tshs, num_bshs)
     for q in qr
 
-        w, mp, tvals, bvals = q[1], q[2], q[3], q[4]
-        j = w * jacobian(mp)
-        kernel = kernelvals(biop, mp)
-
-        for m in 1 : num_tshs
-            tval = tvals[m]
-
-            for n in 1 : num_bshs
-                bval = bvals[n]
-
-                igd = integrand(biop, kernel, mp, tval, bval)
-                zlocal[m,n] += j * igd
-
-            end
-        end
+        w, (tp,bp), tvals, bvals = q[1], q[2], q[3], q[4]
+        j = w * jacobian(tp)
+        kernel = kernelvals(biop, tp, bp)
+        
+        zlocal += j * integrand(biop, kernel, tp, bp, tvals, bvals)
     end
 
     return zlocal
 end
+
+# function cellinteractions(biop, trefs::U, brefs::V, cell,qr,tcell,bcell) where {U<:RefSpace{T},V<:RefSpace{T}} where {T}
+    
+#     num_tshs = length(qr[1][3])
+#     num_bshs = length(qr[1][4])
+
+#     zlocal = zeros(T, num_tshs, num_bshs)
+     
+#     for q in qr
+
+#         w, mp, tvals, bvals = q[1], q[2], q[3], q[4]
+#         j = w * jacobian(mp)
+#         kernel = kernelvals(biop, mp)
+
+#         for m in 1 : num_tshs
+#             tval = tvals[m]
+
+#             for n in 1 : num_bshs
+#                 bval = bvals[n]
+
+#                 igd = integrand(biop, kernel, mp, tval, bval)
+#                 zlocal[m,n] += j * igd
+
+#             end
+#         end
+#     end
+
+#     return zlocal
+# end
 
 function cellinteractions(biop, trefs::U, brefs::V, cell,qr) where {U<:RefSpace{T},V<:RefSpace{T}} where {T}
     
@@ -402,23 +420,42 @@ function cellinteractions(biop, trefs::U, brefs::V, cell,qr) where {U<:RefSpace{
      
     for q in qr
 
-        w, mp, tvals, bvals = q[1], q[2], q[3], q[4]
-        j = w * jacobian(mp)
-        kernel = kernelvals(biop, mp)
+        w, (tp,bp), tvals, bvals = q[1], q[2], q[3], q[4]
+        j = w * jacobian(tp)
+        kernel = kernelvals(biop, tp,bp)
 
-        for m in 1 : num_tshs
-            tval = tvals[m]
-
-            for n in 1 : num_bshs
-                bval = bvals[n]
-
-                igd = integrand(biop, kernel, mp, tval, bval)
-                zlocal[m,n] += j * igd
-
-            end
-        end
+        zlocal += j * integrand(biop, kernel, tp, bp, tvals, bvals)
     end
 
     return zlocal
 end
+
+# function cellinteractions(biop, trefs::U, brefs::V, cell,qr) where {U<:RefSpace{T},V<:RefSpace{T}} where {T}
+    
+#     num_tshs = length(qr[1][3])
+#     num_bshs = length(qr[1][4])
+
+#     zlocal = zeros(T, num_tshs, num_bshs)
+     
+#     for q in qr
+
+#         w, mp, tvals, bvals = q[1], q[2], q[3], q[4]
+#         j = w * jacobian(mp)
+#         kernel = kernelvals(biop, mp)
+
+#         for m in 1 : num_tshs
+#             tval = tvals[m]
+
+#             for n in 1 : num_bshs
+#                 bval = bvals[n]
+
+#                 igd = integrand(biop, kernel, mp, tval, bval)
+#                 zlocal[m,n] += j * igd
+
+#             end
+#         end
+#     end
+
+#     return zlocal
+# end
 
