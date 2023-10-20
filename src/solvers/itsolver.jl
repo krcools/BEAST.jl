@@ -174,10 +174,17 @@ function LinearAlgebra.ldiv!(y, P::Preconditioner, x)
 end
 
 function LinearAlgebra.ldiv!(P::Preconditioner, b)
-    c = copy(b)
+    c = deepcopy(b)
     mul!(b, P.A, c)
 end
 
 function Base.size(p::Preconditioner)
     reverse(size(p.A))
 end
+
+
+function solve(iA::AbstractMatrix, b)
+    ch = nothing
+    x = iA * b
+    return x, ch
+end 
