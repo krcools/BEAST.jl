@@ -254,7 +254,7 @@ include("solvers/lusolver.jl")
 include("solvers/itsolver.jl")
 
 include("utils/plotlyglue.jl")
-
+include("utils/extendedcharts.jl")
 
 
 

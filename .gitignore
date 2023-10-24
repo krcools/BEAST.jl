@@ -11,3 +11,11 @@ dev/
 profile/
 /Manifest.toml
 /envs/
+programs/vector_potential_globalmultitrace.jl
+programs/draft/create neighobrhood.jl
+programs/draft/test_strace_doublelayer.jl
+programs/draft/test_trace_operators_visual.jl
+programs/draft/test_ttrace_doublelayer.jl
+programs/draft/vector_potential_sphere.jl
+src/todo.txt
+
