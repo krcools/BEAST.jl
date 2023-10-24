@@ -9,20 +9,37 @@ abstract type ComposedOperatorIntegral <: IntegralOperator end
 struct BasisFunction end
 struct DivBasisFunction end
 
-struct TestFunctionLocal{T} <: ComposedOperatorLocal
+struct TestFunctionLocal{T <: ComposedOperatorLocal} <: ComposedOperatorLocal 
     inner::T
 end
-struct TestFunctionIntegral{T} <: ComposedOperatorIntegral
+struct TestFunctionIntegral{T <: ComposedOperatorIntegral} <: ComposedOperatorIntegral 
     inner::T
 end
 TestFunctionLocal(inner::ComposedOperatorIntegral) = TestFunctionIntegral(inner)
 
-struct DivTestFunctionLocal{T} <: ComposedOperatorLocal
+struct DivTestFunctionLocal{T <: ComposedOperatorLocal} <: ComposedOperatorLocal 
     inner::T
 end
-struct DivTestFunctionIntegral{T} <: ComposedOperatorIntegral
+struct DivTestFunctionIntegral{T <: ComposedOperatorIntegral} <: ComposedOperatorIntegral
     inner::T
 end
+
+function TestFunctionLocal(inner::LinearCombinationOfOperators)
+    out = ZeroOperator()
+    for op in inner.ops
+        out += TestFunctionLocal(op)
+    end
+    return out
+end
+
+function DivTestFunctionLocal(inner::LinearCombinationOfOperators)
+    out = ZeroOperator()
+    for op in inner.ops
+        out += DivTestFunctionLocal(op)
+    end
+    return out
+end
+
 
 struct CurlBasisFunction end
 
@@ -36,29 +53,44 @@ export b
 ⋅(::Nabla,::Type{TestFunctionLocal}) = DivTestFunctionLocal
 ⋅(::Nabla,::Type{TestFunctionIntegral}) = DivTestFunctionIntegral
 
-struct TestNormalLocal{T,O} <: ComposedOperatorLocal 
+struct TestNormalLocal{T,O,P} <: ComposedOperatorLocal 
 inner::T
 operation::O
+factor::P
 end
 
 
-struct TrialNormalLocal{T,O} <: ComposedOperatorLocal 
+struct TrialNormalLocal{T,O,P} <: ComposedOperatorLocal 
 inner::T
 operation::O
+factor::P
 end
 
-struct TestNormalIntegral{T,O} <: ComposedOperatorIntegral
+
+*(a::Number,b::TrialNormalLocal) = TrialNormalLocal(b.inner,b.operation,a*b.factor)
+*(a::Number,b::TestNormalLocal) = TestNormalLocal(b.inner,b.operation,a*b.factor)
+struct TestNormalIntegral{T,O,P} <: ComposedOperatorIntegral
     inner::T
     operation::O
+    factor::P
+    
 end
+
 TestNormalLocal(inner::ComposedOperatorIntegral,op) = TestNormalIntegral(inner,op)
 
-struct TrialNormalIntegral{T,O} <: ComposedOperatorIntegral
+struct TrialNormalIntegral{T,O,P} <: ComposedOperatorIntegral
     inner::T
     operation::O
+    factor::P
 end
+TrialNormalIntegral(a,b) = TrialNormalIntegral(a,b,1.0)
+TestNormalIntegral(a,b) = TestNormalIntegral(a,b,1.0)
+TestNormalLocal(a,b) = TestNormalLocal(a,b,1.0)
+TestNormalIntegral(a,b) = TestNormalIntegral(a,b,1.0)
 TrialNormalLocal(inner::ComposedOperatorIntegral,op) = TrialNormalIntegral(inner,op)
 
+*(a::Number,b::TrialNormalIntegral) = TrialNormalIntegral(b.inner,b.operation,a*b.factor)
+*(a::Number,b::TestNormalIntegral) = TestNormalIntegral(b.inner,b.operation,a*b.factor)
 const nt = TestNormalLocal
 const nb = TrialNormalLocal
 
@@ -77,10 +109,19 @@ end
 
 
 function (a::Type{<: ComposedOperatorLocal})(operation)
-return x->a(x,operation)
+return x->dist(a,x,operation)
 end
 
-
+function dist(a::Type{<: ComposedOperatorLocal},x::Union{ComposedOperatorIntegral,ComposedOperatorLocal},operation)
+    return a(x,operation)
+end
+function dist(a::Type{<: ComposedOperatorLocal},x::LinearCombinationOfOperators,operation)
+    out = ZeroOperator()
+    for op in x.ops
+        out += a(op,operation)
+    end
+    return out
+end
 
 struct HH3DGreen{T} <: Kern
     gamma::T
@@ -91,14 +132,26 @@ end
 function (::Nabla)(G::HH3DGreen)
     HH3DGradGreen(G.wavenumber)
 end
-function (G::Kernel{T,O,HH3DGreen{Q}})(testnb,trialnb) where {T,O,Q}
+function (G::Kernel{T,O,HH3DGreen{Q}})(testnb,trialnb,f,g) where {T,O,Q}
     green = 
-    return G.operation.(Ref(green),G.inner(testnb,trialnb))
+    return G.operation.(Ref(green),G.inner(testnb,trialnb,f,g))
 end
-function (G::Kernel{T,O,HH3DGradGreen{Q}})(testnb,trialnb) where {T,O,Q}
+function (G::Kernel{T,O,HH3DGradGreen{Q}})(testnb,trialnb,f,g) where {T,O,Q}
     gradgreen = 
     return G.operation.(Ref(gradgreen),G.inner(testnb,trialnb))
 end
+
+#define with respect to from inside omega.
+function traceterm(G::HH3DGreen)
+ZeroOperator()
+end
+
+function traceterm(G::HH3DGradGreen)
+1/2*nt(G.inner,G.operation)
+end
+
+
+
 
 function (igd::Integrand{<:ComposedOperatorIntegral})(x,y,f,g)
 op = igd.operator
@@ -121,7 +174,7 @@ function (op::Union{TestNormalIntegral,TestNormalLocal})(x,y,g)
 end
 
 function (op::Union{TrialNormalIntegral,TrialNormalLocal})(x,y,g)
-    op.operation(normal(y),op.inner(x,y,g))
+    op.factor*op.operation(normal(y),op.inner(x,y,g))
 end
 
 function (op::BasisFunction)(x,y,g)
@@ -134,3 +187,32 @@ function (op::CurlBasisFunction)(x,y,g)
     getcurl(g)
 end
 
+
+#### support for traces to find equivalent operator.
+"""
+inside positive, outside negative
+"""
+struct Trace
+direction
+end
+
+function (t::Trace)(operator)
+operator+t.direction*traceterm(operator)
+end
+
+
+
+
+
+const γₜᶜ = nt((x -> -x ∘ ×))∘ nt(×)∘Trace(-1)
+const γₜ = nt((x -> -x ∘ ×))∘ nt(×)∘Trace(1)
+
+const γₛ = nt(×)∘Trace(1)
+const γₛᶜ = nt(×)∘Trace(-1)
+const γₙ = nt(⋅)∘Trace(1)
+const γₙᶜ = nt(⋅)∘Trace(-1)
+
+export γₙ
+export γₙᶜ
+export γₜ
+export γₜᶜ

@@ -260,7 +260,7 @@ include("solvers/itsolver.jl")
 include("utils/plotlyglue.jl")
 
 #suport for helmholtzhodge equation
-include("Helmholtzhodge/hhhop.jl")
+#include("Helmholtzhodge/hhhop.jl")
 include("Helmholtzhodge/helmholtzhodge.jl")
 include("Helmholtzhodge/hhhexc.jl")
 include("Helmholtzhodge/hhhnearfield.jl")
@@ -271,7 +271,7 @@ include("multi-trace/interactions.jl")
 include("multi-trace/postprocessing.jl")
 
 #suport for displaying operators
-include("composedoperator/composeoperator.jl")
+include("composedoperator/composed2.jl")
 include("display.jl")
 
 const x̂ = point(1,0,0)

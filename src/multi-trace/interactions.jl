@@ -94,54 +94,93 @@ end
 
 
 
-function (int::Interaction{<: Domain{HomogeneousDomain},<: Domain{HomogeneousDomain},<: RootDomain})(::VectorStrat)
+# function (int::Interaction{<: Domain{HomogeneousDomain},<: Domain{HomogeneousDomain},<: RootDomain})(::VectorStrat)
+#     p = physicalconstants(int.embedvol.data)
+#     k = sqrt(p.ϵ*p.μ)*p.ω
+#     green = HHH.green(wavenumber=k)
+#     gradgreen = HHH.gradgreen(wavenumber=k)
+#     b = basisfunction()
+#     @warn "check if extra - in front of a is correct, describtion of As from paper asumes n outward so inward in outer domain?"
+#     a = -[n×(gradgreen×nothing)          n×(green(n*b))        -(n×green)                n×gradgreen
+#         BEAST.ZeroOperator()                   -(gradgreen⋅nothing)(n*b)     (gradgreen⋅nothing)               -(-k^2*green)
+#         -(n×(gradgreen(∇⋅b)))-k^2*(n×green)    -(n×((gradgreen×nothing)(n*b)))    n×(gradgreen×nothing)   BEAST.ZeroOperator()
+#         -(n⋅(gradgreen×nothing))              -(n⋅green(n*b))         n⋅green -(n⋅gradgreen)]
+#     id = [Identity() ZeroOperator() ZeroOperator() ZeroOperator()
+#         ZeroOperator() Identity() ZeroOperator() ZeroOperator()
+#         ZeroOperator() ZeroOperator() Identity() ZeroOperator()
+#         ZeroOperator() ZeroOperator() ZeroOperator() Identity()]
+#     #a = id - a
+    
+#     if (int.testvol.id,int.trialvol.id) in keys(int.config.touching) 
+#         println("cauchy limit taken")
+#         a = BEAST.cauchylimit.(a;Ω1=int.testvol,Ω2=int.trialvol,Ω3=int.embedvol)
+#     end
+#     a = BEAST.normalorient.(a;Ω1=int.testvol,Ω2=int.trialvol,Ω3=int.embedvol)
+    
+#     return a
+
+# end
+# function (int::Interaction{<: Domain{HomogeneousDomain},<: Domain{HomogeneousDomain},<: SubDomain})(::VectorStrat)
+#     p = physicalconstants(int.embedvol.data)
+#     k = sqrt(p.ϵ*p.μ)*p.ω
+#     green = HHH.green(wavenumber=k)
+#     gradgreen = HHH.gradgreen(wavenumber=k)
+#     b = basisfunction()
+
+#     a = -[n×(gradgreen×nothing)          n×(green(n*b))        -(n×green)                n×gradgreen
+#         BEAST.ZeroOperator()                   -(gradgreen⋅nothing)(n*b)     (gradgreen⋅nothing)               -(-k^2*green)
+#         -(n×(gradgreen(∇⋅b)))-k^2*(n×green)    -(n×((gradgreen×nothing)(n*b)))    n×(gradgreen×nothing)   BEAST.ZeroOperator()
+#         -(n⋅(gradgreen×nothing))              -(n⋅green(n*b))         n⋅green -(n⋅gradgreen)]
+#         id = [Identity() ZeroOperator() ZeroOperator() ZeroOperator()
+#         ZeroOperator() Identity() ZeroOperator() ZeroOperator()
+#         ZeroOperator() ZeroOperator() Identity() ZeroOperator()
+#         ZeroOperator() ZeroOperator() ZeroOperator() Identity()]
+#     #a = id - a
+    
+#     if (int.testvol.id,int.trialvol.id) in keys(int.config.touching) 
+#         println("cauchy limit taken")
+#         a = BEAST.cauchylimit.(a;Ω1=int.testvol,Ω2=int.trialvol,Ω3=int.embedvol)
+#     end
+#    a = BEAST.normalorient.(a;Ω1=int.testvol,Ω2=int.trialvol,Ω3=int.embedvol)
+#     return a
+
+# end
+
+
+function (int::Interaction{<: Domain{HomogeneousDomain},<: Domain{HomogeneousDomain},<:Union{RootDomain,SubDomain}})(::VectorStrat)
     p = physicalconstants(int.embedvol.data)
     k = sqrt(p.ϵ*p.μ)*p.ω
-    green = HHH.green(wavenumber=k)
-    gradgreen = HHH.gradgreen(wavenumber=k)
-    b = basisfunction()
-    @warn "check if extra - in front of a is correct, describtion of As from paper asumes n outward so inward in outer domain?"
-    a = -[n×(gradgreen×nothing)          n×(green(n*b))        -(n×green)                n×gradgreen
-        BEAST.ZeroOperator()                   -(gradgreen⋅nothing)(n*b)     (gradgreen⋅nothing)               -(-k^2*green)
-        -(n×(gradgreen(∇⋅b)))-k^2*(n×green)    -(n×((gradgreen×nothing)(n*b)))    n×(gradgreen×nothing)   BEAST.ZeroOperator()
-        -(n⋅(gradgreen×nothing))              -(n⋅green(n*b))         n⋅green -(n⋅gradgreen)]
-    id = [Identity() ZeroOperator() ZeroOperator() ZeroOperator()
-        ZeroOperator() Identity() ZeroOperator() ZeroOperator()
-        ZeroOperator() ZeroOperator() Identity() ZeroOperator()
-        ZeroOperator() ZeroOperator() ZeroOperator() Identity()]
-    #a = id - a
+    G = BEAST.greenhh3d(wavenumber=k)
+    ∇G = BEAST.∇(G)
+    Ω1=int.testvol
+    Ω2=int.trialvol
+    Ω3=int.embedvol
+    ∇Gx =  BEAST.build_potential(∇G×B,Ω2.data.trialbasises[1].geo)
+    Gn = BEAST.build_potential(G*n*B,Ω2.data.trialbasises[1].geo)
+    Gnx = BEAST.build_potential(G*n × B,Ω2.data.trialbasises[1].geo)
+    ∇G = BEAST.build_potential(∇G*B,Ω2.data.trialbasises[1].geo)
+    ∇Gdotn = BEAST.build_potential(∇G⋅n*B,Ω2.data.trialbasises[1].geo)
+    ∇Gdot = BEAST.build_potential(∇G⋅B,Ω2.data.trialbasises[1].geo)
     
-    if (int.testvol.id,int.trialvol.id) in keys(int.config.touching) 
-        println("cauchy limit taken")
-        a = BEAST.cauchylimit.(a;Ω1=int.testvol,Ω2=int.trialvol,Ω3=int.embedvol)
+    Gr = BEAST.build_potential(G*B,Ω2.data.trialbasises[1].geo)
+    ∇G∇B = BEAST.build_potential(∇G*∇(B),Ω2.data.trialbasises[1].geo)
+    ∇Gxn = BEAST.build_potential(∇G×n*B,Ω2.data.trialbasises[1].geo)
+    testsurf = Ω1.data.testbasises[1].geo
+    if Ω1==Ω2
+    a = -[γₛ(∇Gx,testsurf)         γₛ(Gn,testsurf)      -γₛ(Gnx,testsurf)           γₛ(∇G,testsurf)
+        BEAST.ZeroOperator()            -τ(∇Gdotn,testsurf)    τ(∇Gdot,testsurf)     k^2*τ(Gr,testsurf)
+        -γₛ(∇G∇B,testsurf)-k^2*γₛ(Gr,testsurf)   -γₛ(∇Gxn,testsurf)  γₛ(∇Gx,testsurf)  BEAST.ZeroOperator()
+         -γₙ(∇Gx,testsurf)         -γₙ(Gn,testsurf)     γₙ(Gr,testsurf)  -γₙ(∇G,testsurf)]
+    else
+        a = -[γₛᶜ(∇Gx,testsurf)         γₛᶜ(Gn,testsurf)      -γₛᶜ(Gnx,testsurf)           γₛᶜ(∇G,testsurf)
+        BEAST.ZeroOperator()            -τᶜ(∇Gdotn,testsurf)    τᶜ(∇Gdot,testsurf)     k^2*τᶜ(Gr,testsurf)
+        -γₛᶜ(∇G∇B,testsurf)-k^2*γₛᶜ(Gr,testsurf)   -γₛᶜ(∇Gxn,testsurf)  γₛᶜ(∇Gx,testsurf)  BEAST.ZeroOperator()
+         -γₙᶜ(∇Gx,testsurf)         -γₙᶜ(Gn,testsurf)     γₙᶜ(Gr,testsurf)  -γₙᶜ(∇G,testsurf)]
     end
+
+
     a = BEAST.normalorient.(a;Ω1=int.testvol,Ω2=int.trialvol,Ω3=int.embedvol)
     
-    return a
-
-end
-function (int::Interaction{<: Domain{HomogeneousDomain},<: Domain{HomogeneousDomain},<: SubDomain})(::VectorStrat)
-    p = physicalconstants(int.embedvol.data)
-    k = sqrt(p.ϵ*p.μ)*p.ω
-    green = HHH.green(wavenumber=k)
-    gradgreen = HHH.gradgreen(wavenumber=k)
-    b = basisfunction()
-
-    a = -[n×(gradgreen×nothing)          n×(green(n*b))        -(n×green)                n×gradgreen
-        BEAST.ZeroOperator()                   -(gradgreen⋅nothing)(n*b)     (gradgreen⋅nothing)               -(-k^2*green)
-        -(n×(gradgreen(∇⋅b)))-k^2*(n×green)    -(n×((gradgreen×nothing)(n*b)))    n×(gradgreen×nothing)   BEAST.ZeroOperator()
-        -(n⋅(gradgreen×nothing))              -(n⋅green(n*b))         n⋅green -(n⋅gradgreen)]
-        id = [Identity() ZeroOperator() ZeroOperator() ZeroOperator()
-        ZeroOperator() Identity() ZeroOperator() ZeroOperator()
-        ZeroOperator() ZeroOperator() Identity() ZeroOperator()
-        ZeroOperator() ZeroOperator() ZeroOperator() Identity()]
-    #a = id - a
-    
-    if (int.testvol.id,int.trialvol.id) in keys(int.config.touching) 
-        println("cauchy limit taken")
-        a = BEAST.cauchylimit.(a;Ω1=int.testvol,Ω2=int.trialvol,Ω3=int.embedvol)
-    end
-   a = BEAST.normalorient.(a;Ω1=int.testvol,Ω2=int.trialvol,Ω3=int.embedvol)
     return a
 
 end
