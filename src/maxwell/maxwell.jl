@@ -69,7 +69,7 @@ module Maxwell3D
             polarization = error("missing arguement `polarization`"),
             wavenumber   = error("missing arguement `wavenumber`"),
             amplitude    = one(real(typeof(wavenumber)))) =
-        Mod.PlaneWaveMW(direction, polarization, wavenumber, amplitude)
+        Mod.PlaneWaveMW(direction, polarization, wavenumber*im, amplitude)
 
     farfield(;
         wavenumber = error("missing argument: `wavenumber`")) =

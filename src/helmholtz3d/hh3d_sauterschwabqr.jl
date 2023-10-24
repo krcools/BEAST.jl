@@ -1,6 +1,6 @@
 function pulled_back_integrand(op::HH3DSingleLayerFDBIO,
-    test_local_space::LagrangeRefSpace{<:Any,0},
-    trial_local_space::LagrangeRefSpace{<:Any,0},
+    test_local_space::LagrangeRefSpace,
+    trial_local_space::LagrangeRefSpace,
     test_chart, trial_chart)
 
     (u,v) -> begin
@@ -20,14 +20,14 @@ function pulled_back_integrand(op::HH3DSingleLayerFDBIO,
 
         αjG = α*G*j
 
-        SA[f[1].value * αjG * g[1].value]
+        SMatrix{length(f),length(g)}((f[j].value * αjG * g[i].value for i in 1:length(g) for j in 1:length(f) )...)
     end
 end
 
 
 function pulled_back_integrand(op::HH3DHyperSingularFDBIO,
-    test_local_space::LagrangeRefSpace{<:Any,1},
-    trial_local_space::LagrangeRefSpace{<:Any,1},
+    test_local_space::LagrangeRefSpace,
+    trial_local_space::LagrangeRefSpace,
     test_chart, trial_chart)
 
     (u,v) -> begin
@@ -52,25 +52,16 @@ function pulled_back_integrand(op::HH3DHyperSingularFDBIO,
         αjG = ny*α*G*j
         βjG = β*G*j
 
-        A = SA[ αjG*g[1].value, αjG*g[2].value, αjG*g[3].value]
-        B = SA[ βjG*g[1].curl, βjG*g[2].curl, βjG*g[3].curl ] 
+        A = SA[(αjG*g[i].value for i in 1:length(g))...]
+        B = SA[(βjG*g[i].curl for i in 1:length(g))...]
 
-        SMatrix{3,3}((
-            dot(nx*f[1].value, A[1]) + dot(f[1].curl, B[1]),
-            dot(nx*f[2].value, A[1]) + dot(f[2].curl, B[1]),
-            dot(nx*f[3].value, A[1]) + dot(f[3].curl, B[1]),
-            dot(nx*f[1].value, A[2]) + dot(f[1].curl, B[2]),
-            dot(nx*f[2].value, A[2]) + dot(f[2].curl, B[2]),
-            dot(nx*f[3].value, A[2]) + dot(f[3].curl, B[2]),
-            dot(nx*f[1].value, A[3]) + dot(f[1].curl, B[3]),
-            dot(nx*f[2].value, A[3]) + dot(f[2].curl, B[3]),
-            dot(nx*f[3].value, A[3]) + dot(f[3].curl, B[3])))
+        SMatrix{length(f),length(g)}((((dot(nx*f[j].value,A[i])+dot(f[j].curl,B[i])) for i in 1:length(g) for j in 1:length(f))...))
     end
 end
 
 function pulled_back_integrand(op::HH3DDoubleLayerFDBIO,
-    test_local_space::LagrangeRefSpace{<:Any,0},
-    trial_local_space::LagrangeRefSpace{<:Any,1},
+    test_local_space::LagrangeRefSpace,
+    trial_local_space::LagrangeRefSpace,
     test_chart, trial_chart)
 
     (u,v) -> begin
@@ -94,16 +85,13 @@ function pulled_back_integrand(op::HH3DDoubleLayerFDBIO,
         ∇G = -(γ + inv_R) * G * inv_R * r
         αnyj∇G = dot(ny,-α*∇G*j)
 
-        SMatrix{1,3}(
-            f[1].value * αnyj∇G * g[1].value,
-            f[1].value * αnyj∇G * g[2].value,
-            f[1].value * αnyj∇G * g[3].value)
+        SMatrix{length(f),length(g)}((f[j].value * αnyj∇G * g[i].value  for i in 1:length(g) for j in 1:length(f))...)
     end
 end
 
 function pulled_back_integrand(op::HH3DDoubleLayerTransposedFDBIO,
-    test_local_space::LagrangeRefSpace{<:Any,1},
-    trial_local_space::LagrangeRefSpace{<:Any,0},
+    test_local_space::LagrangeRefSpace,
+    trial_local_space::LagrangeRefSpace,
     test_chart, trial_chart)
 
     (u,v) -> begin
@@ -127,44 +115,12 @@ function pulled_back_integrand(op::HH3DDoubleLayerTransposedFDBIO,
         ∇G = -(γ + inv_R) * G * inv_R * r
         αnxj∇G = dot(nx,α*∇G*j)
 
-        SMatrix{3,1}(
-            f[1].value * αnxj∇G * g[1].value,
-            f[2].value * αnxj∇G * g[1].value,
-            f[3].value * αnxj∇G * g[1].value)
+        SMatrix{length(f),length(g)}((f[j].value * αnxj∇G * g[i].value for i in 1:length(g) for j in 1:length(f))...)
     end
 end
 
-function momintegrals!(op::HH3DSingleLayerFDBIO,
+function momintegrals!(op::Helmholtz3DOp,
     test_local_space::LagrangeRefSpace{<:Any,0}, trial_local_space::LagrangeRefSpace{<:Any,0},
-    test_triangular_element, trial_triangular_element, out, strat::SauterSchwabStrategy)
-
-    I, J, K, L = SauterSchwabQuadrature.reorder(
-        test_triangular_element.vertices,
-        trial_triangular_element.vertices, strat)
-
-    test_triangular_element  = simplex(
-        test_triangular_element.vertices[I[1]],
-        test_triangular_element.vertices[I[2]],
-        test_triangular_element.vertices[I[3]])
-
-    trial_triangular_element = simplex(
-        trial_triangular_element.vertices[J[1]],
-        trial_triangular_element.vertices[J[2]],
-        trial_triangular_element.vertices[J[3]])
-
-    # igd = MWSL3DIntegrand(test_triangular_element, trial_triangular_element,
-    #     op, test_local_space, trial_local_space)
-    igd = pulled_back_integrand(op, test_local_space, trial_local_space,
-        test_triangular_element, trial_triangular_element)
-    G = SauterSchwabQuadrature.sauterschwab_parameterized(igd, strat)
-    out[1,1] += G[1,1]
-
-    nothing
-end
-
-
-function momintegrals!(op::HH3DHyperSingularFDBIO,
-    test_local_space::LagrangeRefSpace{<:Any,1}, trial_local_space::LagrangeRefSpace{<:Any,1},
     test_triangular_element, trial_triangular_element, out, strat::SauterSchwabStrategy)
 
     I, J, K, L = SauterSchwabQuadrature.reorder(
@@ -183,13 +139,45 @@ function momintegrals!(op::HH3DHyperSingularFDBIO,
 
     test_sign = Combinatorics.levicivita(I)
     trial_sign = Combinatorics.levicivita(J)
-    σ = test_sign * trial_sign
+    σ = momintegrals_sign(op, test_sign, trial_sign)
+
+    igd = pulled_back_integrand(op, test_local_space, trial_local_space,
+        test_triangular_element, trial_triangular_element)
+    G = SauterSchwabQuadrature.sauterschwab_parameterized(igd, strat)
+    out[1,1] += G[1,1] * σ
+
+    nothing
+end
+
+
+function momintegrals!(op::Helmholtz3DOp,
+    test_local_space::LagrangeRefSpace, trial_local_space::LagrangeRefSpace,
+    test_triangular_element, trial_triangular_element, out, strat::SauterSchwabStrategy)
+
+    I, J, K, L = SauterSchwabQuadrature.reorder(
+        test_triangular_element.vertices,
+        trial_triangular_element.vertices, strat)
+
+    test_triangular_element  = simplex(
+        test_triangular_element.vertices[I[1]],
+        test_triangular_element.vertices[I[2]],
+        test_triangular_element.vertices[I[3]])
+
+    trial_triangular_element = simplex(
+        trial_triangular_element.vertices[J[1]],
+        trial_triangular_element.vertices[J[2]],
+        trial_triangular_element.vertices[J[3]])
+
+    test_sign = Combinatorics.levicivita(I)
+    trial_sign = Combinatorics.levicivita(J)
+
+    σ = momintegrals_sign(op, test_sign, trial_sign)
 
     igd = pulled_back_integrand(op, test_local_space, trial_local_space,
         test_triangular_element, trial_triangular_element)
     G = SauterSchwabQuadrature.sauterschwab_parameterized(igd, strat)
     for j ∈ 1:3, i ∈ 1:3
-        out[i,j] += G[K[i],L[j]] * σ 
+        out[i,j] += G[K[i],L[j]] * σ
     end
 
     nothing
@@ -213,9 +201,10 @@ function momintegrals!(op::Helmholtz3DOp,
         trial_triangular_element.vertices[J[2]],
         trial_triangular_element.vertices[J[3]])
 
+    test_sign = Combinatorics.levicivita(I)
     trial_sign = Combinatorics.levicivita(J)
 
-    σ = trial_sign
+    σ = momintegrals_sign(op, test_sign, trial_sign)
 
     igd = pulled_back_integrand(op, test_local_space, trial_local_space,
         test_triangular_element, trial_triangular_element)
@@ -247,7 +236,9 @@ function momintegrals!(op::Helmholtz3DOp,
         trial_triangular_element.vertices[J[3]])
 
         test_sign = Combinatorics.levicivita(I)
-        σ = test_sign
+        trial_sign = Combinatorics.levicivita(J)
+
+        σ = momintegrals_sign(op, test_sign, trial_sign)
 
     igd = pulled_back_integrand(op, test_local_space, trial_local_space,
         test_triangular_element, trial_triangular_element)
@@ -258,4 +249,17 @@ function momintegrals!(op::Helmholtz3DOp,
     end
 
     nothing
+end
+
+function momintegrals_sign(op::HH3DSingleLayerFDBIO, test_sign, trial_sign)
+    return 1
+end
+function momintegrals_sign(op::HH3DDoubleLayerFDBIO, test_sign, trial_sign)
+    return trial_sign
+end
+function momintegrals_sign(op::HH3DDoubleLayerTransposedFDBIO, test_sign, trial_sign)
+    return test_sign
+end
+function momintegrals_sign(op::HH3DHyperSingularFDBIO, test_sign, trial_sign)
+    return test_sign * trial_sign
 end

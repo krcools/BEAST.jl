@@ -205,6 +205,7 @@ include("timedomain/motlu.jl")
 include("timedomain/tdtimeops.jl")
 include("timedomain/rkcq.jl")
 include("timedomain/zdomain.jl")
+include("timedomain/td_symmetric_quadstrat.jl")
 
 
 # Support for Maxwell equations
@@ -219,7 +220,7 @@ include("maxwell/spotential.jl")
 include("maxwell/maxwell.jl")
 include("maxwell/sourcefield.jl")
 
-# Support for the Helmholtz equatio
+# Support for the Helmholtz equation
 include("helmholtz2d/helmholtzop.jl")
 
 include("helmholtz3d/hh3dexc.jl")
@@ -229,6 +230,7 @@ include("helmholtz3d/hh3dnear.jl")
 include("helmholtz3d/hh3dfar.jl")
 include("helmholtz3d/hh3d_sauterschwabqr.jl")
 include("helmholtz3d/helmholtz3d.jl")
+include("helmholtz3d/wiltonints.jl")
 
 #suport for Volume Integral equation
 include("volumeintegral/vie.jl")
