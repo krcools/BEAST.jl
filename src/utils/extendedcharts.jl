@@ -24,16 +24,16 @@
 
 # normalchart(chart::CompScienceMeshes.Simplex,normals) = NormalChart(chart,normals)
 
-CompScienceMeshes.normal(t::CompScienceMeshes.Simplex{3,2,1,3,<:Number}) = t.normals[1]
+#CompScienceMeshes.normal(t::CompScienceMeshes.Simplex{3,2,1,3,<:Number}) = t.normals[1]
 
 
-function permute_barycentric(perm,bary::Tuple{T,T}) where {T}
-    last_coef = 1-sum(bary)
-    total_bary = SVector{3,T}([bary[1],bary[2],last_coef])
-    return Tuple{T,T}(total_bary[perm][1:end-1])
-end
-function permute_barycentric(perm,bary::Tuple{T,T,T}) where {T}
-    last_coef = 1-sum(bary)
-    total_bary = SVector{4,T}([bary[1],bary[2],bary[3],last_coef])
-    return Tuple{T,T,T}(total_bary[perm][1:end-1])
-end
+# function permute_barycentric(perm,bary::Tuple{T,T}) where {T}
+#     last_coef = 1-sum(bary)
+#     total_bary = SVector{3,T}([bary[1],bary[2],last_coef])
+#     return Tuple{T,T}(total_bary[perm][1:end-1])
+# end
+# function permute_barycentric(perm,bary::Tuple{T,T,T}) where {T}
+#     last_coef = 1-sum(bary)
+#     total_bary = SVector{4,T}([bary[1],bary[2],bary[3],last_coef])
+#     return Tuple{T,T,T}(total_bary[perm][1:end-1])
+# end
