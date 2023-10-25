@@ -91,6 +91,60 @@ function momintegrals!(op::Operator,
     test_local_space::RefSpace, trial_local_space::RefSpace,
     test_chart, trial_chart, out, rule::SauterSchwabStrategy)
 
+    out_old = copy(out)
+    momintegrals!_old(op,test_local_space,trial_local_space,test_chart,trial_chart,out_old,rule)
+    I, J, K, L = SauterSchwabQuadrature.reorder(
+        test_chart.vertices,
+        trial_chart.vertices, rule)
+
+    # test_chart1  = simplex(
+    #     test_chart.vertices[I[1]],
+    #     test_chart.vertices[I[2]],
+    #     test_chart.vertices[I[3]])
+
+    # trial_chart1 = simplex(
+    #     trial_chart.vertices[J[1]],
+    #     trial_chart.vertices[J[2]],
+    #     trial_chart.vertices[J[3]])
+    # test_chart = CompScienceMeshes.Simplex(test_chart1.vertices,
+    #                                                     test_chart1.tangents,
+    #                                                     test_chart.normals,
+    #                                                     test_chart1.volume)
+    # trial_chart = CompScienceMeshes.Simplex(trial_chart1.vertices,
+    #                                                     trial_chart1.tangents,
+    #                                                     trial_chart.normals,
+    #                                                     trial_chart1.volume)    
+    igd = Integrand(op, test_local_space, trial_local_space, test_chart, trial_chart)
+    K1 = dof_permutation(test_local_space, I)
+    L1 = dof_permutation(trial_local_space, J)
+    K1 = [i for i in K1]
+    L1 = [i for i in L1]
+    @assert K1 == K
+    @assert L1 == L
+    f = (u,v) -> igd(permute_barycentric(K,u),permute_barycentric(L,v))
+    G = SauterSchwabQuadrature.sauterschwab_parameterized(f, rule)
+    # σ = sign_upon_permutation(op, I, J)
+
+    for i in 1:numfunctions(test_local_space)
+        for j in 1:numfunctions(trial_local_space)
+            #out[i,j] = σ * G[K[i],L[j]]
+            out[i,j] =G[i,j]
+    end end
+    if typeof(abs(out[1,1])) <: Float64
+
+        @assert isapprox(out,out_old,rtol=eps(Float64))
+
+    end
+
+
+    nothing
+end
+
+nextcomplex(a) = nextfloat(real(a))+im*nextfloat(imag(a))
+function momintegrals!_old(op::Operator,
+    test_local_space::RefSpace, trial_local_space::RefSpace,
+    test_chart, trial_chart, out, rule::SauterSchwabStrategy)
+
     I, J, _, _ = SauterSchwabQuadrature.reorder(
         test_chart.vertices,
         trial_chart.vertices, rule)
@@ -118,7 +172,6 @@ function momintegrals!(op::Operator,
 
     nothing
 end
-
 
 function momintegrals_test_refines_trial!(out, op,
     test_functions, test_cell, test_chart,

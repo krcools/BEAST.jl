@@ -18,6 +18,9 @@ using LiftedMaps
 using AbstractTrees
 using NestedUnitRanges
 
+using StaticArrays
+using CompScienceMeshes
+
 import LinearAlgebra: cross, dot
 import LinearAlgebra: ×, ⋅
 
@@ -129,7 +132,7 @@ using FFTW
 using SparseArrays
 
 function convolve end
-
+include("utils/extendedcharts.jl")
 include("utils/polynomial.jl")
 include("utils/specialfns.jl")
 include("utils/combinatorics.jl")
@@ -254,7 +257,7 @@ include("solvers/lusolver.jl")
 include("solvers/itsolver.jl")
 
 include("utils/plotlyglue.jl")
-include("utils/extendedcharts.jl")
+
 
 
 
