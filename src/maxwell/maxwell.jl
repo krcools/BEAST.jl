@@ -53,16 +53,16 @@ module Maxwell3D
             wavenumber=nothing)
 
         gamma, wavenumber = Mod.gamma_wavenumber_handler(gamma, wavenumber)
-
+        println(typeof(wavenumber))
         if alpha === nothing
             if gamma !== nothing
                 alpha = one(gamma)
             else
-                alpha = 1.0 # Default to double precision
+                alpha = one(typeof(wavenumber)) # Default to double precision
             end
         end
-
-        Mod.MWDoubleLayer3D(gamma)
+        println(alpha)
+        Mod.MWDoubleLayer3D(alpha,gamma)
     end
 
     planewave(;
