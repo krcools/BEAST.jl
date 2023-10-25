@@ -78,7 +78,8 @@ function gradient(ref::LagrangeRefSpace{T,1,4}, sh, tet) where {T}
     # opp_face = simplex(other_verts...)
     opp_face = faces(tet)[sh.refid]
     ctr_opp_face = center(opp_face)
-    n = normal(ctr_opp_face)
+   # n = normal(ctr_opp_face)
+    n = normalize(tangents(ctr_opp_face,1)×tangents(ctr_opp_face,2))
     h = -dot(this_vert - cartesian(ctr_opp_face), n)
     @assert h > 0
     gradval = -(1/h)*n

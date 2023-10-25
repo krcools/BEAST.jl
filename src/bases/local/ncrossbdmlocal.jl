@@ -3,10 +3,10 @@ struct NCrossBDMRefSpace{T} <: RefSpace{T,6} end
 function (f::NCrossBDMRefSpace{T})(p) where T
 
     u,v = parametric(p)
-    n = normal(p)
+   # n = normal(p)
     tu = tangents(p,1)
     tv = tangents(p,2)
-
+    n = normalize(tu×tv)
     j = jacobian(p)
     d = 1/j
 
