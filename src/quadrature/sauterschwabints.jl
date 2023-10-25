@@ -96,24 +96,7 @@ function momintegrals!(op::Operator,
     I, J, K, L = SauterSchwabQuadrature.reorder(
         test_chart.vertices,
         trial_chart.vertices, rule)
-
-    # test_chart1  = simplex(
-    #     test_chart.vertices[I[1]],
-    #     test_chart.vertices[I[2]],
-    #     test_chart.vertices[I[3]])
-
-    # trial_chart1 = simplex(
-    #     trial_chart.vertices[J[1]],
-    #     trial_chart.vertices[J[2]],
-    #     trial_chart.vertices[J[3]])
-    # test_chart = CompScienceMeshes.Simplex(test_chart1.vertices,
-    #                                                     test_chart1.tangents,
-    #                                                     test_chart.normals,
-    #                                                     test_chart1.volume)
-    # trial_chart = CompScienceMeshes.Simplex(trial_chart1.vertices,
-    #                                                     trial_chart1.tangents,
-    #                                                     trial_chart.normals,
-    #                                                     trial_chart1.volume)    
+  
     igd = Integrand(op, test_local_space, trial_local_space, test_chart, trial_chart)
     K1 = dof_permutation(test_local_space, I)
     L1 = dof_permutation(trial_local_space, J)
@@ -140,7 +123,6 @@ function momintegrals!(op::Operator,
     nothing
 end
 
-nextcomplex(a) = nextfloat(real(a))+im*nextfloat(imag(a))
 function momintegrals!_old(op::Operator,
     test_local_space::RefSpace, trial_local_space::RefSpace,
     test_chart, trial_chart, out, rule::SauterSchwabStrategy)
