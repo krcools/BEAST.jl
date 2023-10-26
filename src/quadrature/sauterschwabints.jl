@@ -83,47 +83,9 @@ function (igd::Integrand)(x,y,f,g)
 end
 
 
-# function sign_upon_permutation(op, I, J)
-#     return 1
-# end
+
 
 function momintegrals!(op::Operator,
-    test_local_space::RefSpace, trial_local_space::RefSpace,
-    test_chart, trial_chart, out, rule::SauterSchwabStrategy)
-
-    out_old = copy(out)
-    momintegrals!_old(op,test_local_space,trial_local_space,test_chart,trial_chart,out_old,rule)
-    I, J, K, L = SauterSchwabQuadrature.reorder(
-        test_chart.vertices,
-        trial_chart.vertices, rule)
-  
-    igd = Integrand(op, test_local_space, trial_local_space, test_chart, trial_chart)
-    K1 = dof_permutation(test_local_space, I)
-    L1 = dof_permutation(trial_local_space, J)
-    K1 = [i for i in K1]
-    L1 = [i for i in L1]
-    @assert K1 == K
-    @assert L1 == L
-    f = (u,v) -> igd(permute_barycentric(K,u),permute_barycentric(L,v))
-    G = SauterSchwabQuadrature.sauterschwab_parameterized(f, rule)
-    # σ = sign_upon_permutation(op, I, J)
-
-    for i in 1:numfunctions(test_local_space)
-        for j in 1:numfunctions(trial_local_space)
-            #out[i,j] = σ * G[K[i],L[j]]
-            out[i,j] =G[i,j]
-    end end
-    if typeof(abs(out[1,1])) <: Float64
-
-        @assert isapprox(out,out_old,rtol=eps(Float64))
-
-    end
-
-
-    nothing
-end
-
-function momintegrals!_old(op::Operator,
     test_local_space::RefSpace, trial_local_space::RefSpace,
     test_chart, trial_chart, out, rule::SauterSchwabStrategy)
 
@@ -131,25 +93,19 @@ function momintegrals!_old(op::Operator,
         test_chart.vertices,
         trial_chart.vertices, rule)
 
-    test_chart  = simplex(
-        test_chart.vertices[I[1]],
-        test_chart.vertices[I[2]],
-        test_chart.vertices[I[3]])
+    test_chart  = CompScienceMeshes.permute_vertices(test_chart,I)
 
-    trial_chart = simplex(
-        trial_chart.vertices[J[1]],
-        trial_chart.vertices[J[2]],
-        trial_chart.vertices[J[3]])
+    trial_chart = CompScienceMeshes.permute_vertices(trial_chart,J)
 
     igd = Integrand(op, test_local_space, trial_local_space, test_chart, trial_chart)
     G = SauterSchwabQuadrature.sauterschwab_parameterized(igd, rule)
-    σ = sign_upon_permutation(op, I, J)
+    #σ = sign_upon_permutation(op, I, J)
 
     K = dof_permutation(test_local_space, I)
     L = dof_permutation(trial_local_space, J)
     for i in 1:numfunctions(test_local_space)
         for j in 1:numfunctions(trial_local_space)
-            out[i,j] = σ * G[K[i],L[j]]
+            out[i,j] = G[K[i],L[j]] # * σ
     end end
 
     nothing
