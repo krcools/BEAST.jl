@@ -17,6 +17,7 @@ function integrand(op::CurlSingleLayerDP3D, kernel_vals,
     return -α * dot(nx × gx, ∇G * fy)
 end
 
+
 function momintegrals!(op::CurlSingleLayerDP3D,
     test_local_space::RTRefSpace, trial_local_space::LagrangeRefSpace,
     test_triangular_element, trial_triangular_element, out, strat::SauterSchwabStrategy)
@@ -25,9 +26,8 @@ function momintegrals!(op::CurlSingleLayerDP3D,
         test_triangular_element.vertices,
         trial_triangular_element.vertices, strat)
 
-    test_triangular_element  = simplex(test_triangular_element.vertices[I]...)
-    trial_triangular_element = simplex(trial_triangular_element.vertices[J]...)
-
+    test_triangular_element = CompScienceMeshes.permute_vertices(test_triangular_element,I)
+    trial_triangular_element = CompScienceMeshes.permute_vertices(trial_triangular_element,J)
     function igd(u,v)
         α = op.alpha
         γ = op.gamma
@@ -71,3 +71,4 @@ function quadrule(op::BEAST.CurlSingleLayerDP3D,
 
     qrdf(op, test_local_space, trial_local_space, test_index, test_chart, trial_index, trial_chart, quadrature_data)
 end
+

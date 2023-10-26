@@ -30,8 +30,9 @@ function (f::LagrangeRefSpace{T,1,3})(t) where T
     #     (value=u,),
     #     (value=v,),
     #     (value=w,))
-
-    j = jacobian(t)
+    tu = tangents(t,1)
+    tv = tangents(t,2)
+    j = jacobian(t)*sign(dot(normal(t),tu×tv))
     p = t.patch
     SVector(
         (value=u, curl=(p[3]-p[2])/j),
@@ -47,7 +48,9 @@ Compute the values of the shape functions together with their curl.
 """
 function (f::LagrangeRefSpace{T,1,3})(t, ::Type{Val{:withcurl}}) where T
     # Evaluete linear Lagrange elements on a triange, together with their curl
-    j = jacobian(t)
+    tu = tangents(t,1)
+    tv = tangents(t,2)
+    j = jacobian(t)*sign(dot(normal(t),tu×tv))
     u,v,w, = barycentric(t)
     p = t.patch
     SVector(
@@ -78,7 +81,8 @@ function gradient(ref::LagrangeRefSpace{T,1,4}, sh, tet) where {T}
     # opp_face = simplex(other_verts...)
     opp_face = faces(tet)[sh.refid]
     ctr_opp_face = center(opp_face)
-    n = normal(ctr_opp_face)
+   # n = normal(ctr_opp_face)
+    n = normalize(tangents(ctr_opp_face,1)×tangents(ctr_opp_face,2))
     h = -dot(this_vert - cartesian(ctr_opp_face), n)
     @assert h > 0
     gradval = -(1/h)*n
@@ -170,8 +174,9 @@ end
 ## Quadratic Lagrange element on a triangle
 function (f::LagrangeRefSpace{T,2,3})(t) where T
     u,v,w, = barycentric(t)
-
-    j = jacobian(t)
+    tu = tangents(t,1)
+    tv = tangents(t,2)
+    j = jacobian(t)*sign(dot(normal(t),tu×tv))
     p = t.patch
 
     #curl=(p[3]-p[2])/j),
@@ -190,7 +195,9 @@ end
 
 function (f::LagrangeRefSpace{T,2,3})(t, ::Type{Val{:withcurl}}) where T
     # Evaluete quadratic Lagrange elements on a triange, together with their curl
-    j = jacobian(t)
+    tu = tangents(t,1)
+    tv = tangents(t,2)
+    j = jacobian(t)*sign(dot(normal(t),tu×tv))
     u,v,w, = barycentric(t)
     p = t.patch
     SVector(
