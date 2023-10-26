@@ -6,7 +6,7 @@ mutable struct DoubleLayerRotatedMW3D{T,K} <: MaxwellOperator3D{T,K}
     gamma::K
 end
 
-LinearAlgebra.cross(::NormalVector, a::MWDoubleLayer3D) = DoubleLayerRotatedMW3D(a.alpha, a.gamma)
+#LinearAlgebra.cross(::NormalVector, a::MWDoubleLayer3D) = DoubleLayerRotatedMW3D(a.alpha, a.gamma)
 
 # defaultquadstrat(::DoubleLayerRotatedMW3D, tfs, bfs) = DoubleNumQStrat(2,3)
 
@@ -41,6 +41,7 @@ function quadrule(op::DoubleLayerRotatedMW3D, g::RTRefSpace, f::RTRefSpace,  i, 
   
     hits = 0
     dtol = 1.0e3 * eps(eltype(eltype(τ.vertices)))
+    
     dmin2 = floatmax(eltype(eltype(τ.vertices)))
     for t in τ.vertices
         for s in σ.vertices

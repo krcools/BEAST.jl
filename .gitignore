@@ -19,3 +19,5 @@ programs/draft/test_ttrace_doublelayer.jl
 programs/draft/vector_potential_sphere.jl
 src/todo.txt
 
+programs/
+results/

@@ -1,4 +1,4 @@
-mutable struct BDM3DBasis{T,M,P} <: Space{T}
+mutable struct BDM3DBasis{T,M,P} <: VectorVolumeSpace{T}
     geo::M
     fns::Vector{Vector{Shape{T}}}
     pos::Vector{P}

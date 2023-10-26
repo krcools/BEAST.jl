@@ -1,4 +1,4 @@
-mutable struct NDLCDBasis{T,M,P} <: Space{T}
+mutable struct NDLCDBasis{T,M,P} <: VectorVolumeSpace{T}
     geo::M
     fns::Vector{Vector{Shape{T}}}
     pos::Vector{P}
