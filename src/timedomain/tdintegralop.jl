@@ -148,6 +148,8 @@ end
 function assemble!(op::RetardedPotential, testST::Space, trialST::Space, store,
     threading::Type{Threading{:multi}}=Threading{:multi}; quadstrat=defaultquadstrat(op, testST, trialST))
 
+    @show quadstrat
+
 	Y, S = spatialbasis(testST), temporalbasis(testST)
     X, R = spatialbasis(trialST), temporalbasis(trialST)
 
@@ -177,6 +179,7 @@ function assemble!(op::RetardedPotential, testST::Space, trialST::Space, store,
 		store1 = (v,m,n,k) -> store(v,rlo+m-1,clo+n-1,k)
 		assemble_chunk!(op, Y_p ⊗ S, X_q ⊗ R, store1)
 	end
+    println("")
 
 	# P = Threads.nthreads()
 	# splits = [round(Int,s) for s in range(0, stop=numfunctions(Y), length=P+1)]
@@ -279,7 +282,7 @@ function assemble_chunk!(op::RetardedPotential, testST, trialST, store;
         end
     end # next p
 
-    println("")
+    # println("")
 end
 
 

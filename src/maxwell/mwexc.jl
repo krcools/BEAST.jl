@@ -29,7 +29,7 @@ function planewavemw3d(;
     gamma, wavenumber = gamma_wavenumber_handler(gamma, wavenumber)
     gamma === nothing && (gamma = zero(eltype(direction)))
 
-    return PlaneWaveMW(direction, polarization, wavenumber, amplitude)
+    return PlaneWaveMW(direction, polarization, gamma, amplitude)
 
 end
 

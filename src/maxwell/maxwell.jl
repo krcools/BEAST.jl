@@ -1,4 +1,5 @@
 module Maxwell3D
+
     using ..BEAST
     Mod = BEAST
 
@@ -52,16 +53,14 @@ module Maxwell3D
             wavenumber=nothing)
 
         gamma, wavenumber = Mod.gamma_wavenumber_handler(gamma, wavenumber)
-
         if alpha === nothing
             if gamma !== nothing
                 alpha = one(gamma)
             else
-                alpha = 1.0 # Default to double precision
+                alpha = one(typeof(wavenumber)) # Default to double precision
             end
         end
-
-        Mod.MWDoubleLayer3D(gamma)
+        Mod.MWDoubleLayer3D(alpha,gamma)
     end
 
     planewave(;
@@ -69,11 +68,9 @@ module Maxwell3D
             polarization = error("missing arguement `polarization`"),
             wavenumber   = error("missing arguement `wavenumber`"),
             amplitude    = one(real(typeof(wavenumber)))) =
-        Mod.PlaneWaveMW(direction, polarization, wavenumber, amplitude)
+        Mod.PlaneWaveMW(direction, polarization, wavenumber*im, amplitude)
 
     farfield(;
         wavenumber = error("missing argument: `wavenumber`")) =
             Mod.MWFarField3D(wavenumber=wavenumber)
-    
-   
 end

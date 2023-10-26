@@ -17,7 +17,7 @@ function strace(X::DirectProductSpace{T}, γ) where T
     return DirectProductSpace(x)
 end
 
-struct SameBase end
+
 
 function ntrace(X::Space, γ)
 
@@ -193,7 +193,6 @@ currently not working!
 #
 #     ttrace(X, Σ, fns)
 # end
-ttrace(X::Space, y::SameBase)=X
 
 
 function ttrace(X::Space, γ)

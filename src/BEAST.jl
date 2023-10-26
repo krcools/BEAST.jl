@@ -18,6 +18,9 @@ using LiftedMaps
 using AbstractTrees
 using NestedUnitRanges
 
+using StaticArrays
+using CompScienceMeshes
+
 import LinearAlgebra: cross, dot
 import LinearAlgebra: ×, ⋅
 
@@ -25,11 +28,7 @@ import SharedArrays: sdata
 
 export dot
 
-export ⋅
-export trace
-export MWgradgreendot, MWgreenint
 export planewave
-export inside, outside
 export RefSpace, numfunctions, coordtype, scalartype, assemblydata, geometry, refspace, valuetype
 export lagrangecxd0, lagrangec0d1, duallagrangec0d1
 export duallagrangecxd0
@@ -134,7 +133,7 @@ using FFTW
 using SparseArrays
 
 function convolve end
-
+include("utils/extendedcharts.jl")
 include("utils/polynomial.jl")
 include("utils/specialfns.jl")
 include("utils/combinatorics.jl")
@@ -207,6 +206,7 @@ include("timedomain/motlu.jl")
 include("timedomain/tdtimeops.jl")
 include("timedomain/rkcq.jl")
 include("timedomain/zdomain.jl")
+include("timedomain/td_symmetric_quadstrat.jl")
 
 
 # Support for Maxwell equations
@@ -221,7 +221,7 @@ include("maxwell/spotential.jl")
 include("maxwell/maxwell.jl")
 include("maxwell/sourcefield.jl")
 
-# Support for the Helmholtz equatio
+# Support for the Helmholtz equation
 include("helmholtz2d/helmholtzop.jl")
 
 include("helmholtz3d/hh3dexc.jl")
@@ -231,6 +231,7 @@ include("helmholtz3d/hh3dnear.jl")
 include("helmholtz3d/hh3dfar.jl")
 include("helmholtz3d/hh3d_sauterschwabqr.jl")
 include("helmholtz3d/helmholtz3d.jl")
+include("helmholtz3d/wiltonints.jl")
 
 #suport for Volume Integral equation
 include("volumeintegral/vie.jl")
@@ -259,11 +260,6 @@ include("solvers/itsolver.jl")
 
 include("utils/plotlyglue.jl")
 
-#suport for helmholtzhodge equation
-#include("Helmholtzhodge/hhhop.jl")
-include("Helmholtzhodge/helmholtzhodge.jl")
-include("Helmholtzhodge/hhhexc.jl")
-include("Helmholtzhodge/hhhnearfield.jl")
 
 #suport for multi-trace
 include("multi-trace/configuration.jl")

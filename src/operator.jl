@@ -3,9 +3,7 @@ using .LinearSpace
 struct LongDelays{T} end
 struct Threading{T} end
 
-
-
-import Base: transpose, +, -, *, zero
+import Base: transpose, +, -, *
 
 abstract type AbstractOperator end
 
@@ -16,35 +14,9 @@ abstract type AbstractOperator end
 """
 abstract type Operator <: AbstractOperator end
 
-# abstract type TraceOperator <: Operator end
-
-# struct Strace <: TraceOperator
-#     op
-#     orientation
-# end
-
-# struct Ttrace <: TraceOperator
-#     op
-#     orientation
-# end
-struct BasisOperatorLeft <: AbstractOperator 
-operator
-left_function
-end
-struct BasisOperatorRight <: AbstractOperator 
-    operator
-    right_function
-end
-*(f::Function,op::AbstractOperator) = BasisOperatorLeft(op,f)
-*(op::AbstractOperator,f::Function) = BasisOperatorRight(op,f)
-    
 
 struct ZeroOperator <: AbstractOperator end
-# abstract type Orientation end
-# struct Inside <: Orientation end
-# struct Outside <: Orientation end
-# inside() = Inside()
-# outside() = Outside()
+
 
 
 mutable struct TransposedOperator <: AbstractOperator
@@ -283,15 +255,7 @@ function assemble!(op::LinearCombinationOfOperators, tfs::AbstractSpace, bfs::Ab
         assemble!(A, tfs, bfs, store1, threading; quadstrat=qs)
     end
 end
-# function assemble(op::Ttrace, tfs::AbstractSpace, bfs::AbstractSpace)
-#     pvterm, mesh = ttrace!(op.op,tfs.geo,op.orientation)
-#     assemble(pvterm+op.op,ttrace(tfs,mesh),bfs)
-# end
 
-# function assemble(op::Strace, tfs::AbstractSpace, bfs::AbstractSpace)
-#     pvterm, mesh = strace!(op.op,tfs.geo,op.orientation)
-#     assemble(-pvterm-op.op,strace(tfs,mesh),bfs)
-# end
 
 # Support for direct product spaces
 function assemble!(op::AbstractOperator, tfs::DirectProductSpace, bfs::Space,

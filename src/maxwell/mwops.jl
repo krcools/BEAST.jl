@@ -1,8 +1,6 @@
 abstract type MaxwellOperator3D{T,K} <: IntegralOperator end
 abstract type MaxwellOperator3DReg{T,K} <: MaxwellOperator3D{T,K} end
 
-
-
 scalartype(op::MaxwellOperator3D{T,K}) where {T, K <: Nothing} = T
 scalartype(op::MaxwellOperator3D{T,K}) where {T, K} = promote_type(T, K)
 
@@ -35,10 +33,7 @@ function kernelvals(biop::MaxwellOperator3D, p, q)
 
     KernelValsMaxwell3D(γ, r, R, green, gradgreen)
 end
-struct MWDoubleLayer3D{T,K} <: MaxwellOperator3D{T,K}
-  alpha::T
-  gamma::K
-end
+
 
 struct MWSingleLayer3D{T,U} <: MaxwellOperator3D{T,U}
   gamma::T
@@ -46,142 +41,6 @@ struct MWSingleLayer3D{T,U} <: MaxwellOperator3D{T,U}
   β::U
 end
 
-# struct MWgreenint{T,U} <: MaxwellOperator3D{T,U}#check
-#   gamma::T
-#   α::U
-# end
-
-# trace(op::MWgreenint,or::Orientation) = op
-# sign_upon_permutation(op::MWgreenint, I, J) = 1
-
-# struct MWgradgreendot{T,U} <: MaxwellOperator3D{T,U}#check
-#   gamma::T
-#   α::U
-# end
-# trace(op::MWgradgreendot,or::Orientation) = op
-# sign_upon_permutation(op::MWgradgreendot, I, J) = 1
-
-
-# struct nXMWgreenint{T,U} <: MaxwellOperator3D{T,U}#check
-#   gamma::T
-#   α::U
-# end
-# sign_upon_permutation(op::nXMWgreenint, I, J) = Combinatorics.levicivita(I)
-# trace(op::nXMWgreenint,or::Orientation) = op
-
-
-# struct nXdoublelayer{T,U} <: MaxwellOperator3D{T,U}#check
-#   gamma::T
-#   α::U
-# end
-# sign_upon_permutation(op::nXdoublelayer, I, J) = Combinatorics.levicivita(I)
-# trace(op::nXdoublelayer,or::Orientation) = op-1/2*Identity()
-
-
-
-# struct MWgreenintdotn{T,U}<: MaxwellOperator3D{T,U}#check
-#   gamma::T
-#   α::U
-# end
-# sign_upon_permutation(op::MWgreenintdotn, I, J) = Combinatorics.levicivita(J)
-# trace(op::MWgreenintdotn,or::Orientation) = op
-
-
-# struct nXMWgreenintdotn{T,U}<: MaxwellOperator3D{T,U}#check
-#   gamma::T
-#   α::U
-# end
-# sign_upon_permutation(op::nXMWgreenintdotn, I, J) = Combinatorics.levicivita(J)*Combinatorics.levicivita(I)
-# trace(op::nXMWgreenintdotn,or::Orientation) = op
-
-
-# struct nXMWgradgreendot{T,U}<: MaxwellOperator3D{T,U}#check
-#   gamma::T
-#   α::U
-# end
-# sign_upon_permutation(op::nXMWgradgreendot, I, J) = Combinatorics.levicivita(I)
-# trace(op::nXMWgradgreendot,or::Orientation) = op
-
-
-# struct MWgradgreendotn{T,U}<: MaxwellOperator3D{T,U}#check
-#   gamma::T
-#   α::U
-# end
-# sign_upon_permutation(op::MWgradgreendotn, I, J) = Combinatorics.levicivita(J)
-# trace(op::MWgradgreendotn, or::Inside) = op+1/2*Identity()
-# trace(op::MWgradgreendotn, or::Outside) = op-1/2*Identity()
-
-
-# struct MWdoublelayerXn{T,U}<: MaxwellOperator3D{T,U}#check
-#   gamma::T
-#   α::U
-# end
-# sign_upon_permutation(op::MWdoublelayerXn, I, J) = Combinatorics.levicivita(J)
-# trace(op::MWdoublelayerXn,or::Orientation) = op
-
-
-# struct nXMWdoublelayerXn{T,U}<: MaxwellOperator3D{T,U}#check haakjes rechts
-#   gamma::T
-#   α::U
-# end
-# sign_upon_permutation(op::nXMWdoublelayerXn, I, J) = Combinatorics.levicivita(I)*Combinatorics.levicivita(J)
-# trace(op::nXMWdoublelayerXn,or::Orientation) = op
-
-
-# struct ndotMWdoublelayer{T,U}<: MaxwellOperator3D{T,U}#check
-#   gamma::T
-#   α::U
-# end
-# sign_upon_permutation(op::ndotMWdoublelayer, I, J) = Combinatorics.levicivita(I)
-# trace(op::ndotMWdoublelayer,or::Orientation) = op
-
-
-# struct ndotMWgreenint{T,U}<: MaxwellOperator3D{T,U}#cehck
-#   gamma::T
-#   α::U
-# end
-# sign_upon_permutation(op::ndotMWgreenint, I, J) = Combinatorics.levicivita(I)
-# trace(op::ndotMWgreenint,or::Orientation) = op
-
-# struct ndotMWgreenintdotn{T,U}<: MaxwellOperator3D{T,U}#check
-#   gamma::T
-#   α::U
-# end
-# sign_upon_permutation(op::ndotMWgreenintdotn, I, J) = Combinatorics.levicivita(J)*Combinatorics.levicivita(I)
-# trace(op::ndotMWgreenintdotn,or::Orientation) = op
-
-
-# struct ndotMWgradgreen{T,U}<: MaxwellOperator3D{T,U}#check
-#   gamma::T
-#   α::U
-# end
-# sign_upon_permutation(op::ndotMWgradgreen, I, J) = Combinatorics.levicivita(I)
-# trace(op::ndotMWgradgreen,or::Orientation) = op+1/2*Identity()
-
-# ×(n::NormalVector,op::MWgreenint) = nXMWgreenint(op.gamma,op.α)
-# ×(n::NormalVector,op::MWDoubleLayer3D) = nXdoublelayer(op.gamma,op.alpha)
-# ⋅(op::MWgreenint,n::NormalVector) = MWgreenintdotn(op.gamma,op.α)
-# ⋅(op::nXMWgreenint,n::NormalVector) = nXMWgreenintdotn(op.gamma,op.α)
-# ×(n::NormalVector,op::MWgreenintdotn) = nXMWgreenintdotn(op.gamma,op.α)
-# ×(n::NormalVector,op::MWgradgreendot) = nXMWgradgreendot(op.gamma,op.α)
-# ⋅(op::MWgradgreendot,n::NormalVector) = MWgradgreendotn(op.gamma,op.α)
-# ×(op::MWgradgreendot,n::NormalVector) = MWdoublelayerXn(op.gamma,op.α)
-# ×(op::MWDoubleLayer3D,n::NormalVector) = MWdoublelayerXn(op.gamma,op.alpha)
-# ×(n::NormalVector,op::MWdoublelayerXn) = nXMWdoublelayerXn(op.gamma,op.α)
-# ⋅(n::NormalVector,op::MWDoubleLayer3D) = ndotMWdoublelayer(op.gamma,op.alpha)
-# ⋅(n::NormalVector,op::MWgreenint) = ndotMWgreenint(op.gamma,op.α)
-# ⋅(n::NormalVector,op::MWgreenintdotn) = ndotMWgreenintdotn(op.gamma,op.α)
-# ⋅(op::ndotMWgreenint,n::NormalVector)= ndotMWgreenintdotn(op.gamma,op.α)
-# ⋅(n::NormalVector,op::MWgradgreendot) = ndotMWgradgreen(op.gamma,op.α)
-
-# # struct MWgradgreenint{T,U} <: MaxwellOperator3D{T,U}
-# #   gamma::T
-# #   α::U
-# # end
-# # struct MWngradgreenint{T,U} <: MaxwellOperator3D{T,U}
-# #   gamma::T
-# #   α::U
-# # end
 scalartype(op::MWSingleLayer3D{T,U}) where {T,U} = promote_type(T,U)
 sign_upon_permutation(op::MWSingleLayer3D, I, J) = 1
 
@@ -237,12 +96,10 @@ function quaddata(op::MaxwellOperator3D,
     return (tpoints=tqd, bpoints=bqd, gausslegendre=leg)
 end
 
-
-
-# struct MWnDoubleLayer3D{T,K} <: MaxwellOperator3D{T,K}
-#   alpha::T
-#   gamma::K
-# end
+struct MWDoubleLayer3D{T,K} <: MaxwellOperator3D{T,K}
+    alpha::T
+    gamma::K
+end
 
 sign_upon_permutation(op::MWDoubleLayer3D, I, J) = 1
 
@@ -257,7 +114,6 @@ struct MWDoubleLayer3DReg{T,K} <: MaxwellOperator3DReg{T,K}
 end
 
 MWDoubleLayer3D(gamma) = MWDoubleLayer3D(1.0, gamma) # For legacy purposes
-# MWnDoubleLayer3D(gamma) = MWnDoubleLayer3D(1.0, gamma) # For legacy purposes
 
 regularpart(op::MWDoubleLayer3D) = MWDoubleLayer3DReg(op.alpha, op.gamma)
 singularpart(op::MWDoubleLayer3D) = MWDoubleLayer3DSng(op.alpha, op.gamma)
@@ -276,15 +132,14 @@ function quadrule(op::MaxwellOperator3D, g::RTRefSpace, f::RTRefSpace,  i, τ, j
             hits += (d2 < dtol)
         end
     end
-    
+
     hits == 3 && return SauterSchwabQuadrature.CommonFace(qd.gausslegendre[3])
     hits == 2 && return SauterSchwabQuadrature.CommonEdge(qd.gausslegendre[2])
     hits == 1 && return SauterSchwabQuadrature.CommonVertex(qd.gausslegendre[1])
 
     h2 = volume(σ)
-    xtol2 = 0.2 * 0.2 
+    xtol2 = 0.2 * 0.2
     k2 = abs2(gamma(op))
-  
     max(dmin2*k2, dmin2/16h2) < xtol2 && return WiltonSERule(
         qd.tpoints[2,i],
         DoubleQuadRule(
@@ -421,8 +276,6 @@ function (igd::Integrand{<:MWSingleLayer3D})(x,y,f,g)
         αG * dot(fi.value, gj.value) + βG * dot(fi.divergence, gj.divergence)
     end
 end
-# ttrace!(op::MWSingleLayer3D, mesh, or) = ZeroOperator(), SameBase()
-# strace!(op::MWSingleLayer3D, mesh, or) = ZeroOperator(), mesh
 
 function (igd::Integrand{<:MWSingleLayer3DReg})(x,y,f,g)
     α = igd.operator.α
@@ -459,92 +312,7 @@ function (igd::Integrand{<:MWDoubleLayer3D})(x,y,f,g)
     G = cross.(Ref(gradgreen), gvalue)
     return _krondot(fvalue, G)
 end
-# function (igd::Integrand{<:ndotMWdoublelayer})(x,y,f,g)
-    
-#   γ = igd.operator.gamma
 
-#   r = cartesian(x) - cartesian(y)
-#   R = norm(r)
-#   iR = 1/R
-#   green = exp(-γ*R)*(iR*i4pi)
-#   gradgreen = -(γ + iR) * green * (iR * r)
-#   nx = normal(x)
-#   fvalue = getvalue(f)
-#   gvalue = getvalue(g)
-#   G = dot.(Ref(nx),cross.(Ref(gradgreen), gvalue))
-#   return _krondot(fvalue, G)
-# end
-# function (igd::Integrand{<:MWdoublelayerXn})(x,y,f,g)
-    
-#   γ = igd.operator.gamma
-
-#   r = cartesian(x) - cartesian(y)
-#   R = norm(r)
-#   iR = 1/R
-#   green = exp(-γ*R)*(iR*i4pi)
-#   gradgreen = -(γ + iR) * green * (iR * r)
-#   ny = normal(y)
-#   fvalue = getvalue(f)
-#   gvalue = getvalue(g)
-#   G = cross.(Ref(cross(gradgreen,n)), gvalue)
-#   return _krondot(fvalue, G)
-# end
-
-# function (igd::Integrand{<:nXdoublelayer})(x,y,f,g)
-    
-#   γ = igd.operator.gamma
-
-#   r = cartesian(x) - cartesian(y)
-#   R = norm(r)
-#   iR = 1/R
-#   green = exp(-γ*R)*(iR*i4pi)
-#   gradgreen = -(γ + iR) * green * (iR * r)
-#   nx = normal(x)
-#   fvalue = getvalue(f)
-#   gvalue = getvalue(g)
-#   G = cross.(Ref(cross(nx,gradgreen)), gvalue)
-#   return _krondot(fvalue, G)
-# end
-# function (igd::Integrand{<:nXMWdoublelayerXn})(x,y,f,g)
-    
-#   γ = igd.operator.gamma
-
-#   r = cartesian(x) - cartesian(y)
-#   R = norm(r)
-#   iR = 1/R
-#   green = exp(-γ*R)*(iR*i4pi)
-#   gradgreen = -(γ + iR) * green * (iR * r)
-#   nx = normal(x)
-#   ny = normal(y)
-#   fvalue = getvalue(f)
-#   gvalue = getvalue(g)
-#   G = Ref(cross(nx,cross(gradgreen,ny))).* gvalue
-#   return _krondot(fvalue, G)
-# end
-# # ttrace!(op::MWDoubleLayer3D, mesh, orientation::Inside) = 1/2*NCross(), SameBase()
-# # strace!(op::MWDoubleLayer3D, mesh, orientation::Inside) = 1/2*NCross(), mesh
-# # ttrace!(op::MWDoubleLayer3D, mesh, orientation::Outside) = -1/2*NCross(), SameBase()
-# # strace!(op::MWDoubleLayer3D, mesh, orientation::Outside) = -1/2*NCross(), mesh
-
-# # function (igd::Integrand{<:MWnDoubleLayer3D})(x,y,f,g)
-    
-# #   γ = igd.operator.gamma
-
-# #   r = cartesian(x) - cartesian(y)
-# #   R = norm(r)
-# #   iR = 1/R
-# #   green = exp(-γ*R)*(iR*i4pi)
-# #   gradgreen = -(γ + iR) * green * (iR * r)
-# #   normaly = normal(y)
-# #   fvalue = getvalue(f)
-# #   gvalue = getvalue(g)
-# #   t1 = Ref(normaly).*gvalue
-# #   G = cross.(Ref(gradgreen), t1)
-# #   return _krondot(fvalue, G)
-# # end
-
-# # ttrace!(op::MWnDoubleLayer3D, mesh, or) = ZeroOperator(), SameBase()
-# # strace!(op::MWnDoubleLayer3D, mesh, or) = ZeroOperator(), mesh
 
 function (igd::Integrand{<:MWDoubleLayer3DReg})(x,y,f,g)
     
@@ -564,232 +332,6 @@ function (igd::Integrand{<:MWDoubleLayer3DReg})(x,y,f,g)
     return _krondot(fvalue, G)
 end
 
-# function (igd::Integrand{<:MWngreenint})(x,y,f,g)
-#     γ = igd.operator.gamma
-
-#     r = cartesian(x) - cartesian(y)
-#     R = norm(r)
-#     γR = γ*R
-#     iR = 1/R
-#     expo = exp(-γR)
-#     green = (expo - 1 + γR - 0.5*γR^2) * (i4pi*iR)
-    
-#     normaly = normal(y)
-#     fvalue = getvalue(f)
-#     gvalue = getvalue(g)
-#     t = normaly*green
-#     t2 = Ref(t).*gvalue
-#     return _krondot(fvalue,t2)
-# end
-
-# ttrace!(op::MWngreenint, mesh, or) = ZeroOperator(), SameBase()
-# strace!(op::MWngreenint, mesh, or) = ZeroOperator(), mesh
-
-
-
-# function (igd::Integrand{<:MWgreenint})(x,y,f,g)
-#   γ = igd.operator.gamma
-
-#   r = cartesian(x) - cartesian(y)
-#   R = norm(r)
-#   iR = 1/R
-#   green = exp(-γ*R)*(iR*i4pi)
-#   gradgreen = -(γ + iR) * green * (iR * r)
-
-#   fvalue = getvalue(f)
-#   gvalue = getvalue(g)
-
-#   t2 = green*gvalue
-#   return _krondot(fvalue,t2)
-# end
-# function (igd::Integrand{<:ndotMWgreenint})(x,y,f,g)
-#   γ = igd.operator.gamma
-
-#   r = cartesian(x) - cartesian(y)
-#   R = norm(r)
-#   iR = 1/R
-#   green = exp(-γ*R)*(iR*i4pi)
-#   gradgreen = -(γ + iR) * green * (iR * r)
-#   nx = normal(x)
-#   fvalue = getvalue(f)
-#   gvalue = getvalue(g)
-
-#   t2 = dot.(Ref(nx),green*gvalue)
-#   return _krondot(fvalue,t2)
-# end
-# function (igd::Integrand{<:ndotMWgreenintdotn})(x,y,f,g)
-#   γ = igd.operator.gamma
-
-#   r = cartesian(x) - cartesian(y)
-#   R = norm(r)
-#   iR = 1/R
-#   green = exp(-γ*R)*(iR*i4pi)
-#   gradgreen = -(γ + iR) * green * (iR * r)
-#   nx = normal(x)
-#   ny = normal(y)
-#   fvalue = getvalue(f)
-#   gvalue = getvalue(g)
-
-#   t2 = dot.(Ref(nx),Ref(ny))*green*gvalue
-#   return _krondot(fvalue,t2)
-# end
-# function (igd::Integrand{<:MWgreenintdotn})(x,y,f,g)
-#   γ = igd.operator.gamma
-
-#   r = cartesian(x) - cartesian(y)
-#   R = norm(r)
-#   iR = 1/R
-#   green = exp(-γ*R)*(iR*i4pi)
-#   gradgreen = -(γ + iR) * green * (iR * r)
-#   ny = normal(y)
-#   fvalue = getvalue(f)
-#   gvalue = getvalue(g)
-
-#   t2 = green*gvalue.*Ref(ny)
-#   return _krondot(fvalue,t2)
-# end
-# function (igd::Integrand{<:nXMWgreenintdotn})(x,y,f,g)
-#   γ = igd.operator.gamma
-
-#   r = cartesian(x) - cartesian(y)
-#   R = norm(r)
-#   iR = 1/R
-#   green = exp(-γ*R)*(iR*i4pi)
-#   gradgreen = -(γ + iR) * green * (iR * r)
-#   ny = normal(y)
-#   nx = normal(x)
-#   fvalue = getvalue(f)
-#   gvalue = getvalue(g)
-#   t1 = green*gvalue.*Ref(ny)
-#   t2 = cross.(Ref(nx),t1)
-#   return _krondot(fvalue,t2)
-# end
-
-# function (igd::Integrand{<:nXMWgreenint})(x,y,f,g)
-#   γ = igd.operator.gamma
-
-#   r = cartesian(x) - cartesian(y)
-#   R = norm(r)
-#   iR = 1/R
-#   green = exp(-γ*R)*(iR*i4pi)
-#   gradgreen = -(γ + iR) * green * (iR * r)
-#   nx = normal(x)
-#   fvalue = getvalue(f)
-#   gvalue = getvalue(g)
-
-#   t2 = cross.(Ref(nx),green*gvalue)
-#   return _krondot(fvalue,t2)
-# end
-
-# function (igd::Integrand{<:MWgradgreendot})(x,y,f,g)
-#   γ = igd.operator.gamma
-
-#   r = cartesian(x) - cartesian(y)
-#   R = norm(r)
-#   iR = 1/R
-#   green = exp(-γ*R)*(iR*i4pi)
-#   gradgreen = -(γ + iR) * green * (iR * r)
-
-#   fvalue = getvalue(f)
-#   gvalue = getvalue(g)
-
-#   t2 = dot.(gvalue,Ref(gradgreen))
-#   return _krondot(fvalue,t2)
-# end
-# function (igd::Integrand{<:ndotMWgradgreen})(x,y,f,g)
-#   γ = igd.operator.gamma
-
-#   r = cartesian(x) - cartesian(y)
-#   R = norm(r)
-#   iR = 1/R
-#   green = exp(-γ*R)*(iR*i4pi)
-#   gradgreen = -(γ + iR) * green * (iR * r)
-#   nx = normal(x)
-#   fvalue = getvalue(f)
-#   gvalue = getvalue(g)
-
-#   t2 = gvalue*dot(nx,gradgreen)
-#   return _krondot(fvalue,t2)
-# end
-
-# function (igd::Integrand{<:MWgradgreendotn})(x,y,f,g)
-#   γ = igd.operator.gamma
-
-#   r = cartesian(x) - cartesian(y)
-#   R = norm(r)
-#   iR = 1/R
-#   green = exp(-γ*R)*(iR*i4pi)
-#   gradgreen = -(γ + iR) * green * (iR * r)
-
-#   fvalue = getvalue(f)
-#   gvalue = getvalue(g)
-#   ny = normal(y)
-#   t2 = gvalue * dot(ny,Ref(gradgreen))
-#   return _krondot(fvalue,t2)
-# end
-# function (igd::Integrand{<:nXMWgradgreendot})(x,y,f,g)
-#   γ = igd.operator.gamma
-
-#   r = cartesian(x) - cartesian(y)
-#   R = norm(r)
-#   iR = 1/R
-#   green = exp(-γ*R)*(iR*i4pi)
-#   gradgreen = -(γ + iR) * green * (iR * r)
-#   nx = normal(x)
-#   fvalue = getvalue(f)
-#   gvalue = getvalue(g)
-
-#   t2 = gvalue.*Ref(cross(nx,gradgreen))
-#   return _krondot(fvalue,t2)
-# end
-
-# ttrace!(op::MWgreenint, mesh, or) = ZeroOperator(), SameBase()
-# strace!(op::MWgreenint, mesh, or) = ZeroOperator(), mesh
-# ntrace!(op::MWgreenint, mesh, or) = ZeroOperator(), mesh
-
-# function (igd::Integrand{<:MWgradgreenint})(x,y,f,g)
-#   γ = igd.operator.gamma
-
-#   r = cartesian(x) - cartesian(y)
-#   R = norm(r)
-#   γR = γ*R
-#   iR = 1/R
-#   expo = exp(-γR)
-#   green = (expo - 1 + γR - 0.5*γR^2) * (i4pi*iR)
-#   gradgreen = ( -(γR + 1)*expo + (1 - 0.5*γR^2) ) * (i4pi*iR^3) * r
-  
-#   fvalue = getvalue(f)
-#   gvalue = getvalue(g)
-
-#   t2 = dot.(gvalue,Ref(gradgreen))
-
-#   return _krondot(fvalue,t2)
-# end
-# ttrace!(op::MWgradgreenint, mesh, or) = ZeroOperator(), SameBase()
-# strace!(op::MWgradgreenint, mesh, or) = ZeroOperator(), mesh
-# ntrace!(op::MWgradgreenint, mesh, or) = 1/2*Identity(), mesh
-
-# function (igd::Integrand{<:MWngradgreenint})(x,y,f,g)
-#   γ = igd.operator.gamma
-
-#   r = cartesian(x) - cartesian(y)
-#   R = norm(r)
-#   γR = γ*R
-#   iR = 1/R
-#   expo = exp(-γR)
-#   green = (expo - 1 + γR - 0.5*γR^2) * (i4pi*iR)
-#   gradgreen = ( -(γR + 1)*expo + (1 - 0.5*γR^2) ) * (i4pi*iR^3) * r
-  
-#   fvalue = getvalue(f)
-#   gvalue = getvalue(g)
-#   normaly = normal(y)
-#   t1 = Ref(normaly).*gvalue
-#   t2 = dot.(t1,Ref(gradgreen))
-
-#   return _krondot(fvalue,t2)
-# end
-
-# scallartrace!(op::MWngradgreenint, mesh, or) = 1/2*Identity(), SameBase()
 ################################################################################
 #
 #  Handling of operator parameters (Helmholtz and Maxwell)

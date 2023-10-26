@@ -1,4 +1,4 @@
-struct BDMBasis{T,M,P} <: VectorSurfaceSpace{T}
+struct BDMBasis{T,M,P} <: Space{T}
     geo::M
     fns::Vector{Vector{Shape{T}}}
     pos::Vector{P}
