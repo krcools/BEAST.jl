@@ -53,7 +53,6 @@ module Maxwell3D
             wavenumber=nothing)
 
         gamma, wavenumber = Mod.gamma_wavenumber_handler(gamma, wavenumber)
-        println(typeof(wavenumber))
         if alpha === nothing
             if gamma !== nothing
                 alpha = one(gamma)
@@ -61,7 +60,6 @@ module Maxwell3D
                 alpha = one(typeof(wavenumber)) # Default to double precision
             end
         end
-        println(alpha)
         Mod.MWDoubleLayer3D(alpha,gamma)
     end
 
