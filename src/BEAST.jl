@@ -28,11 +28,7 @@ import SharedArrays: sdata
 
 export dot
 
-export ⋅
-export trace
-export MWgradgreendot, MWgreenint
 export planewave
-export inside, outside
 export RefSpace, numfunctions, coordtype, scalartype, assemblydata, geometry, refspace, valuetype
 export lagrangecxd0, lagrangec0d1, duallagrangec0d1
 export duallagrangecxd0
@@ -261,11 +257,6 @@ include("solvers/lusolver.jl")
 include("solvers/itsolver.jl")
 
 include("utils/plotlyglue.jl")
-
-#suport for helmholtzhodge equation
-include("Helmholtzhodge/hhhop.jl")
-include("Helmholtzhodge/helmholtzhodge.jl")
-
 
 
 
