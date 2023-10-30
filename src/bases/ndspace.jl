@@ -3,6 +3,7 @@ struct NDBasis{T,M,P} <: Space{T}
     fns::Vector{Vector{Shape{T}}}
     pos::Vector{P}
 end
+redefine_geometrie(basis::NDBasis{T,M,P},geo::F) where {T,M,P,F}= NDBasis{T,F,P}(geo,basis.fns,basis.pos)
 
 NDBasis(geo, fns) = NDBasis(geo, fns, Vector{vertextype(geo)}(undef,length(fns)))
 

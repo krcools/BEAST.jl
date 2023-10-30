@@ -3,6 +3,7 @@ struct NCrossBDMBasis{T,M,P} <: Space{T}
     fns::Vector{Vector{Shape{T}}}
     pos::Vector{P}
 end
+redefine_geometrie(basis::NCrossBDMBasis{T,M,P},geo::F) where {T,M,P,F}= NCrossBDMBasis{T,F,P}(geo,basis.fns,basis.pos)
 
 NCrossBDMBasis(geo, fns) = NCrossBDMBasis(geo, fns, Vector{vertextype(geo)}(undef,length(fns))) 
 

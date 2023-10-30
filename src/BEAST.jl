@@ -273,6 +273,8 @@ include("composedoperator/composed2.jl")
 include("composedoperator/tracesimplex.jl")
 
 include("display.jl")
+include("Helmholtzhodge/hhhexc.jl")
+include("Helmholtzhodge/hhhnearfield.jl")
 
 const x̂ = point(1,0,0)
 const ŷ = point(0,1,0)

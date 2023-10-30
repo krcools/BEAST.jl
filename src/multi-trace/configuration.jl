@@ -235,7 +235,7 @@ function generate_problem_lhs(config::Configuration,strat::NumericalStrategy)
     out = interaction_matrix(config,0,strat)
     for (id,Ω) in config.domains
         id==0 && continue
-        out += interaction_matrix(config,id,strat)
+        out += Ω.data.coeff* interaction_matrix(config,id,strat)
     end
     return out
 end

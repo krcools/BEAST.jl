@@ -33,7 +33,7 @@ function (f::LagrangeRefSpace{T,1,3})(t) where T
     tu = tangents(t,1)
     tv = tangents(t,2)
     j = jacobian(t)*sign(dot(normal(t),tu×tv))
-    p = t.patch
+    p = chart(t)
     SVector(
         (value=u, curl=(p[3]-p[2])/j),
         (value=v, curl=(p[1]-p[3])/j),
@@ -152,7 +152,7 @@ function restrict(f::LagrangeRefSpace{T,1}, dom1, dom2) where T
 
     # for each point of the new domain
     for i in 1:D
-        v = dom2.vertices[i]
+        v = verticeslist(dom2)[i]
 
         # find the barycentric coordinates in dom1
         uvn = carttobary(dom1, v)

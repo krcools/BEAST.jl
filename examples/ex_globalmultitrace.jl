@@ -23,7 +23,7 @@ k0 = 3.0
 κ = [sqrt(ϵr1*μr1)*κ₀, sqrt(ϵr2*μr2)*κ₀]
 
 # Description of the domain boundaries
-h = 0.125
+h = 0.2
 Γ1 = meshcuboid(1.0, 1.0, 1.0, h)
 Γ2 =  -Mesh([point(-x,y,z) for (x,y,z) in vertices(Γ1)], deepcopy(cells(Γ1)))
 Γ = [Γ1, Γ2]
@@ -32,7 +32,7 @@ h = 0.125
 # of the number of domains and their relative positioning
 
 # Incident field
-Einc = Maxwell3D.planewave(direction=ẑ, polarization=x̂, wavenumber=im*κ₀)
+Einc = Maxwell3D.planewave(direction=ẑ, polarization=x̂, wavenumber=κ₀)
 Hinc = -1/(im*κ₀)*curl(Einc)
 
 # Definition of the boundary integral operators
@@ -112,4 +112,4 @@ Htot = Ho + sum(Hi)
 import Plots
 Plots.heatmap(Xs, Zs, clamp.(real.(getindex.(Htot,2)),-1,1); colormap=:viridis)
 
-Plots.heatmap(Xs, Zs, real.(getindex.(Htot,2)))
+Plots.heatmap(Xs, Zs, imag.(getindex.(Htot,2)))

@@ -3,6 +3,7 @@ mutable struct NDLCCBasis{T,M,P} <: Space{T}
     fns::Vector{Vector{Shape{T}}}
     pos::Vector{P}
 end
+redefine_geometrie(basis::NDLCCBasis{T,M,P},geo::F) where {T,M,P,F}= NDLCCBasis{T,F,P}(geo,basis.fns,basis.pos)
 
 NDLCCBasis(geo, fns) = NDLCCBasis(geo, fns, Vector{vertextype(geo)}(undef,length(fns)))
 

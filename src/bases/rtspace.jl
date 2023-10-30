@@ -5,6 +5,7 @@ mutable struct RTBasis{T,M,P} <: Space{T}
   fns::Vector{Vector{Shape{T}}}
   pos::Vector{P}
 end
+redefine_geometrie(basis::RTBasis{T,M,P},geo::F) where {T,M,P,F}= RTBasis{T,F,P}(geo,basis.fns,basis.pos)
 
 RTBasis(geo, fns) = RTBasis(geo, fns, Vector{vertextype(geo)}(undef,length(fns)))
 

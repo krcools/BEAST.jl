@@ -2,7 +2,7 @@ import Base: *, div
 import LinearAlgebra: ×, ⋅
 
 
-
+#TODO add ref of cross etc to eliminate brackets in notation.
 
 #const i4pi = 1 / (4pi)
 abstract type ComposedOperatorLocal <: LocalOperator end
@@ -12,18 +12,20 @@ ComposedOperator = Union{ComposedOperatorIntegral,ComposedOperatorLocal}
 
 struct BasisFunction <: ComposedOperatorLocal end
 struct DivBasisFunction <: ComposedOperatorLocal end
-const B = BasisFunction
+const B = BasisFunction()
 export B
 
 
 struct TestNormal <: ComposedOperatorLocal end
 struct TrialNormal <: ComposedOperatorLocal end
 struct TraceDirection <: ComposedOperatorLocal end
-scalartype(op::Union{TestNormal,TrialNormal,BasisFunction,TraceDirection}) = Float16
+scalartype(op::Union{TestNormal,TrialNormal,BasisFunction,DivBasisFunction,TraceDirection}) = Float16
 
 
 const nt = TestNormal()
-
+const nb = TrialNormal()
+export nt
+export nb
 struct Potential{T} <: AbstractOperator
     operator::T
     surface
@@ -80,7 +82,7 @@ struct CrossIntegral{U,V} <: ComposedOperatorIntegral
     rhs::V
 end
 
-function TimesLocal(lhs::LinearCombinationOfOperators,rhs::Union{ComposedOperator,LinearCombinationOfOperators})
+function TimesLocal(lhs::LinearCombinationOfOperators,rhs::Union{Union{ComposedOperator,NormalVector},LinearCombinationOfOperators})
     out = ZeroOperator()
     for (op,coeff) in zip(lhs.ops,lhs.coeffs)
         out += coeff*TimesLocal(op,rhs)
@@ -88,7 +90,7 @@ function TimesLocal(lhs::LinearCombinationOfOperators,rhs::Union{ComposedOperato
     return out
 end
 
-function TimesLocal(lhs::ComposedOperator,rhs::LinearCombinationOfOperators)
+function TimesLocal(lhs::Union{ComposedOperator,NormalVector},rhs::LinearCombinationOfOperators)
     out = ZeroOperator()
     for (op,coeff) in zip(rhs.ops,rhs.coeffs)
         out += coeff*TimesLocal(lhs,op)
@@ -96,7 +98,7 @@ function TimesLocal(lhs::ComposedOperator,rhs::LinearCombinationOfOperators)
     return out
 end
 
-function DotLocal(lhs::LinearCombinationOfOperators,rhs::Union{ComposedOperator,LinearCombinationOfOperators})
+function DotLocal(lhs::LinearCombinationOfOperators,rhs::Union{Union{ComposedOperator,NormalVector},LinearCombinationOfOperators})
     out = ZeroOperator()
     for (op,coeff) in zip(lhs.ops,lhs.coeffs)
         out += coeff*DotLocal(op,rhs)
@@ -104,7 +106,7 @@ function DotLocal(lhs::LinearCombinationOfOperators,rhs::Union{ComposedOperator,
     return out
 end
 
-function DotLocal(lhs::ComposedOperator,rhs::LinearCombinationOfOperators)
+function DotLocal(lhs::Union{ComposedOperator,NormalVector},rhs::LinearCombinationOfOperators)
     out = ZeroOperator()
     for (op,coeff) in zip(rhs.ops,rhs.coeffs)
         out += coeff*DotLocal(lhs,op)
@@ -112,7 +114,7 @@ function DotLocal(lhs::ComposedOperator,rhs::LinearCombinationOfOperators)
     return out
 end
 
-function CrossLocal(lhs::LinearCombinationOfOperators,rhs::Union{ComposedOperator,LinearCombinationOfOperators})
+function CrossLocal(lhs::LinearCombinationOfOperators,rhs::Union{Union{ComposedOperator,NormalVector},LinearCombinationOfOperators})
     out = ZeroOperator()
     for (op,coeff) in zip(lhs.ops,lhs.coeffs)
         out += coeff*CrossLocal(op,rhs)
@@ -120,7 +122,7 @@ function CrossLocal(lhs::LinearCombinationOfOperators,rhs::Union{ComposedOperato
     return out
 end
 
-function CrossLocal(lhs::ComposedOperator,rhs::LinearCombinationOfOperators)
+function CrossLocal(lhs::Union{ComposedOperator,NormalVector},rhs::LinearCombinationOfOperators)
     out = ZeroOperator()
     for (op,coeff) in zip(rhs.ops,rhs.coeffs)
         out += coeff*CrossLocal(lhs,op)
@@ -138,21 +140,21 @@ OperationsLocal = Union{TimesLocal,DotLocal,CrossLocal}
 OperationsIntegral = Union{TimesIntegral,DotIntegral,CrossIntegral}
 Operations = Union{OperationsIntegral,OperationsLocal}
 
-TimesLocal(a::ComposedOperatorIntegral,b::ComposedOperatorLocal) = TimesIntegral(a,b)
-TimesLocal(a::ComposedOperatorLocal,b::ComposedOperatorIntegral) = TimesIntegral(a,b)
+TimesLocal(a::ComposedOperatorIntegral,b::Union{ComposedOperatorLocal,NormalVector}) = TimesIntegral(a,b)
+TimesLocal(a::Union{ComposedOperatorLocal,NormalVector},b::ComposedOperatorIntegral) = TimesIntegral(a,b)
 TimesLocal(a::ComposedOperatorIntegral,b::ComposedOperatorIntegral) = TimesIntegral(a,b)
 
-DotLocal(a::ComposedOperatorIntegral,b::ComposedOperatorLocal) = DotIntegral(a,b)
-DotLocal(a::ComposedOperatorLocal,b::ComposedOperatorIntegral) = DotIntegral(a,b)
+DotLocal(a::ComposedOperatorIntegral,b::Union{ComposedOperatorLocal,NormalVector}) = DotIntegral(a,b)
+DotLocal(a::Union{ComposedOperatorLocal,NormalVector},b::ComposedOperatorIntegral) = DotIntegral(a,b)
 DotLocal(a::ComposedOperatorIntegral,b::ComposedOperatorIntegral) = DotIntegral(a,b)
 
-CrossLocal(a::ComposedOperatorIntegral,b::ComposedOperatorLocal) = CrossIntegral(a,b)
-CrossLocal(a::ComposedOperatorLocal,b::ComposedOperatorIntegral) = CrossIntegral(a,b)
+CrossLocal(a::ComposedOperatorIntegral,b::Union{ComposedOperatorLocal,NormalVector}) = CrossIntegral(a,b)
+CrossLocal(a::Union{ComposedOperatorLocal,NormalVector},b::ComposedOperatorIntegral) = CrossIntegral(a,b)
 CrossLocal(a::ComposedOperatorIntegral,b::ComposedOperatorIntegral) = CrossIntegral(a,b)
 
-×(a::ComposedOperator,b::ComposedOperator) = CrossLocal(a,b)
-⋅(a::ComposedOperator,b::ComposedOperator) = DotLocal(a,b)
-*(a::ComposedOperator,b::ComposedOperator) = TimesLocal(a,b)
+×(a::Union{ComposedOperator,NormalVector,LinearCombinationOfOperators},b::Union{ComposedOperator,NormalVector,LinearCombinationOfOperators}) = CrossLocal(a,b)
+⋅(a::Union{ComposedOperator,NormalVector,LinearCombinationOfOperators},b::Union{ComposedOperator,NormalVector,LinearCombinationOfOperators}) = DotLocal(a,b)
+*(a::Union{ComposedOperator,NormalVector,LinearCombinationOfOperators},b::Union{ComposedOperator,NormalVector,LinearCombinationOfOperators}) = TimesLocal(a,b)
 
 Base.div(::BasisFunction) = DivBasisFunction()
 
@@ -207,14 +209,28 @@ end
 
 function γ(op::Potential,direction::CompScienceMeshes.AbstractMesh,surface::CompScienceMeshes.AbstractMesh,sign::Int)# sign + if according to normal on surface, - otherwise
     check_if_coincide(op.surface,surface) || return op.operator
-    newop = γ(op.operator,sign)
+    newop = nt × (γ(op.operator,sign) × nt)
     return TraceOperator(Potential(newop,op.surface),direction,surface)
 end
 function γ(op::Potential,surface::CompScienceMeshes.AbstractMesh,sign::Int)# sign + if according to normal on surface, - otherwise
     γ(op,surface,surface,sign)
 end
+function γₛ(op::Potential,direction::CompScienceMeshes.AbstractMesh,surface::CompScienceMeshes.AbstractMesh,sign::Int)# sign + if according to normal on surface, - otherwise
+    check_if_coincide(op.surface,surface) || return op.operator
+    newop = nt × γ(op.operator,sign)
+    return TraceOperator(Potential(newop,op.surface),direction,surface)
+end
+function γₙ(op::Potential,direction::CompScienceMeshes.AbstractMesh,surface::CompScienceMeshes.AbstractMesh,sign::Int)# sign + if according to normal on surface, - otherwise
+    check_if_coincide(op.surface,surface) || return op.operator
+    newop = nt ⋅ γ(op.operator,sign)
+    return TraceOperator(Potential(newop,op.surface),direction,surface)
+end
 
-
+function τ(op::Potential,direction::CompScienceMeshes.AbstractMesh,surface::CompScienceMeshes.AbstractMesh,sign::Int)# sign + if according to normal on surface, - otherwise
+    check_if_coincide(op.surface,surface) || return op.operator
+    newop = γ(op.operator,sign) 
+    return TraceOperator(Potential(newop,op.surface),direction,surface)
+end
 # γₜᶜ(op::Potential,surface) = nt×(γ(op,surface,-1)×nt)
 # γₜ(op::Potential,surface) = nt×(γ(op,surface,1)×nt)
 
@@ -343,8 +359,7 @@ function assemble!(op::Potential, test_functions::Space, trial_functions::Space,
     nsurf = normal_surface(op)
     surf = geometry(trial_functions)
     @assert same_geometry(nsurf,surf)
-    trial = typeof(trial_functions).name.wrapper
-    trial_functions = trial(OrientedMesh(surf,nsurf),trial_functions.fns,trial_functions.pos)
+    trial_functions = redefine_geometrie(trial_functions,OrientedMesh(surf,nsurf))
 
     assemble!(op.operator, test_functions, trial_functions, store, threading;
     quadstrat = quadstrat)
@@ -360,9 +375,9 @@ function assemble!(op::TraceOperator, test_functions::Space, trial_functions::Sp
     @assert same_geometry(nsurf,dsurf)
     @assert same_geometry(nsurf,surf)
 
-    test = typeof(test_functions).name.wrapper
+    
 
-    test_functions = test(TraceMesh(OrientedMesh(surf,nsurf),dsurf),test_functions.fns,test_functions.pos)
+    test_functions = redefine_geometrie(test_functions,TraceMesh(OrientedMesh(surf,nsurf),dsurf))
 
     assemble!(op.operator, test_functions, trial_functions, store, threading;
     quadstrat = quadstrat)

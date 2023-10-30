@@ -3,6 +3,7 @@ struct BDMBasis{T,M,P} <: Space{T}
     fns::Vector{Vector{Shape{T}}}
     pos::Vector{P}
 end
+redefine_geometrie(basis::BDMBasis{T,M,P},geo::F) where {T,M,P,F}= BDMBasis{T,F,P}(geo,basis.fns,basis.pos)
 
 BDMBasis(geo, fns) = BDMBasis(geo, fns, Vector{vertextype(geo)}(undef,length(fns))) 
 

@@ -1,5 +1,5 @@
 
-
+using LinearAlgebra
 """
 Write for each type of interaction this type of function.
 """
@@ -10,72 +10,72 @@ function (int::Interaction{<:Domain{BackgroundDomain},})()
     return nothing
 end
 
-function alpha(Ω1,Ω2)
+# function alpha(Ω1,Ω2)
 
 
-end
-"""
-cauchylimit needs to be applied before the normalorient function
-"""
+# end
+# """
+# cauchylimit needs to be applied before the normalorient function
+# """
 
-function cauchylimit(operator::AbstractOperator;Ω1,Ω2,Ω3)
-#check first if touching is non empty
-@assert is_child_of(Ω1,Ω3)||Ω1===Ω3
-@assert is_child_of(Ω2,Ω3)||Ω2===Ω3
-    # if Ω2!==Ω3
-    #     sign = -1
-    # elseif Ω2===Ω3
-    #     sign = 1
-    # end
-    @warn "correct sign for inside is 1?"
-    sign = 1
+# function cauchylimit(operator::AbstractOperator;Ω1,Ω2,Ω3)
+# #check first if touching is non empty
+# @assert is_child_of(Ω1,Ω3)||Ω1===Ω3
+# @assert is_child_of(Ω2,Ω3)||Ω2===Ω3
+#     # if Ω2!==Ω3
+#     #     sign = -1
+#     # elseif Ω2===Ω3
+#     #     sign = 1
+#     # end
+#     @warn "correct sign for inside is 1?"
+#     sign = 1
     
-    trace(operator,sign)
+#     trace(operator,sign)
 
-end 
+# end 
 
-function trace(op::AbstractOperator,sign)
-    @warn "general abstract opterator trace function called returning pv of operator!: "*string(typeof(op))
-    return op
-end
-function normalorient(op::AbstractOperator,signtest,signtrial)
-    @warn "normalorient not implemented for: "*string(typeof(op))
-    return op
-end
-trace(op::ZeroOperator,s) = op
+# function trace(op::AbstractOperator,sign)
+#     @warn "general abstract opterator trace function called returning pv of operator!: "*string(typeof(op))
+#     return op
+# end
+# function normalorient(op::AbstractOperator,signtest,signtrial)
+#     @warn "normalorient not implemented for: "*string(typeof(op))
+#     return op
+# end
+# trace(op::ZeroOperator,s) = op
 
-function trace(op::LinearCombinationOfOperators,sign)
-    result = ZeroOperator()
-    for (c,o) in zip(op.coeffs,op.ops)
-        result += c*trace(o,sign)
-    end
-    return result
-end
+# function trace(op::LinearCombinationOfOperators,sign)
+#     result = ZeroOperator()
+#     for (c,o) in zip(op.coeffs,op.ops)
+#         result += c*trace(o,sign)
+#     end
+#     return result
+# end
 
 
-function normalorient(op::LinearCombinationOfOperators,signtest,signtrial)
-    result = ZeroOperator()
-    for (c,o) in zip(op.coeffs,op.ops)
-        result += c*normalorient(o,signtest,signtrial)
-    end
-    return result
-end
+# function normalorient(op::LinearCombinationOfOperators,signtest,signtrial)
+#     result = ZeroOperator()
+#     for (c,o) in zip(op.coeffs,op.ops)
+#         result += c*normalorient(o,signtest,signtrial)
+#     end
+#     return result
+# end
 
-function normalorient(operator::AbstractOperator;Ω1,Ω2,Ω3) 
-    if Ω1===Ω3
-        sign_test_normal = 1
-    else
-        sign_test_normal = -1
-    end
-    if Ω2===Ω3
-        sign_trial_normal = 1
-    else
-        sign_trial_normal = -1
-    end
-    normalorient(operator,sign_test_normal,sign_trial_normal)
-end
+# function normalorient(operator::AbstractOperator;Ω1,Ω2,Ω3) 
+#     if Ω1===Ω3
+#         sign_test_normal = 1
+#     else
+#         sign_test_normal = -1
+#     end
+#     if Ω2===Ω3
+#         sign_trial_normal = 1
+#     else
+#         sign_trial_normal = -1
+#     end
+#     normalorient(operator,sign_test_normal,sign_trial_normal)
+# end
 
-normalorient(op::ZeroOperator,a,b) = op
+# normalorient(op::ZeroOperator,a,b) = op
 
 ###### Interactions
 struct VectorStrat <: BEAST.NumericalStrategy end
@@ -147,39 +147,91 @@ end
 # end
 
 
+# function (int::Interaction{<: Domain{HomogeneousDomain},<: Domain{HomogeneousDomain},<:Union{RootDomain,SubDomain}})(::VectorStrat)
+#     p = physicalconstants(int.embedvol.data)
+#     k = sqrt(p.ϵ*p.μ)*p.ω
+#     G = BEAST.greenhh3d(wavenumber=k)
+#     ∇G = BEAST.∇(G)
+#     Ω1=int.testvol
+#     Ω2=int.trialvol
+#     Ω3=int.embedvol
+#     bs = Ω2.data.trialbasises[1].geo
+#     ts = Ω1.data.testbasises[1].geo
+
+#     ∇Gx =  BEAST.build_potential(∇G×B,bs)
+#     Gn = BEAST.build_potential(G*n*B,bs)
+#     Gnx = BEAST.build_potential(G*n × B,bs)
+#     ∇G = BEAST.build_potential(∇G*B,bs)
+#     ∇Gdotn = BEAST.build_potential(∇G⋅n*B,bs)
+#     ∇Gdot = BEAST.build_potential(∇G⋅B,bs)
+    
+#     Gr = BEAST.build_potential(G*B,bs)
+#     ∇G∇B = BEAST.build_potential(∇G*∇(B),bs)
+#     ∇Gxn = BEAST.build_potential(∇G×n*B,bs)
+
+#     if Ω1==Ω2
+#     a = -[γₛ(∇Gx,ts)         γₛ(Gn,ts)      -γₛ(Gnx,ts)           γₛ(∇G,ts)
+#         BEAST.ZeroOperator()            -τ(∇Gdotn,ts)    τ(∇Gdot,ts)     k^2*τ(Gr,ts)
+#         -γₛ(∇G∇B,ts)-k^2*γₛ(Gr,ts)   -γₛ(∇Gxn,ts)  γₛ(∇Gx,ts)  BEAST.ZeroOperator()
+#          -γₙ(∇Gx,ts)         -γₙ(Gn,ts)     γₙ(Gr,ts)  -γₙ(∇G,ts)]
+#     else
+#         a = -[γₛᶜ(∇Gx,ts)         γₛᶜ(Gn,ts)      -γₛᶜ(Gnx,ts)           γₛᶜ(∇G,ts)
+#         BEAST.ZeroOperator()            -τᶜ(∇Gdotn,ts)    τᶜ(∇Gdot,ts)     k^2*τᶜ(Gr,ts)
+#         -γₛᶜ(∇G∇B,ts)-k^2*γₛᶜ(Gr,ts)   -γₛᶜ(∇Gxn,ts)  γₛᶜ(∇Gx,ts)  BEAST.ZeroOperator()
+#          -γₙᶜ(∇Gx,ts)         -γₙᶜ(Gn,ts)     γₙᶜ(Gr,ts)  -γₙᶜ(∇G,ts)]
+#     end
+
+
+#     #a = BEAST.normalorient.(a;Ω1=int.testvol,Ω2=int.trialvol,Ω3=int.embedvol)
+    
+#     return a
+
+# end
+
 function (int::Interaction{<: Domain{HomogeneousDomain},<: Domain{HomogeneousDomain},<:Union{RootDomain,SubDomain}})(::VectorStrat)
     p = physicalconstants(int.embedvol.data)
     k = sqrt(p.ϵ*p.μ)*p.ω
     G = BEAST.greenhh3d(wavenumber=k)
-    ∇G = BEAST.∇(G)
+    gradG = BEAST.∇(G)
     Ω1=int.testvol
     Ω2=int.trialvol
     Ω3=int.embedvol
-    ∇Gx =  BEAST.build_potential(∇G×B,Ω2.data.trialbasises[1].geo)
-    Gn = BEAST.build_potential(G*n*B,Ω2.data.trialbasises[1].geo)
-    Gnx = BEAST.build_potential(G*n × B,Ω2.data.trialbasises[1].geo)
-    ∇G = BEAST.build_potential(∇G*B,Ω2.data.trialbasises[1].geo)
-    ∇Gdotn = BEAST.build_potential(∇G⋅n*B,Ω2.data.trialbasises[1].geo)
-    ∇Gdot = BEAST.build_potential(∇G⋅B,Ω2.data.trialbasises[1].geo)
+    bs = Ω2.data.trialbasises[1].geo
+    ts = Ω1.data.testbasises[1].geo
+
+    ∇Gx =  BEAST.build_potential(gradG×B,bs)
+    Gn = BEAST.build_potential(G*(n*B),bs)
+    Gnx = BEAST.build_potential(G*(n × B),bs)
+    ∇G = BEAST.build_potential(gradG*B,bs)
+    ∇Gdotn = BEAST.build_potential(nb ⋅ (gradG*B),bs)
+    ∇Gdot = BEAST.build_potential(gradG⋅B,bs)
     
-    Gr = BEAST.build_potential(G*B,Ω2.data.trialbasises[1].geo)
-    ∇G∇B = BEAST.build_potential(∇G*∇(B),Ω2.data.trialbasises[1].geo)
-    ∇Gxn = BEAST.build_potential(∇G×n*B,Ω2.data.trialbasises[1].geo)
-    testsurf = Ω1.data.testbasises[1].geo
-    if Ω1==Ω2
-    a = -[γₛ(∇Gx,testsurf)         γₛ(Gn,testsurf)      -γₛ(Gnx,testsurf)           γₛ(∇G,testsurf)
-        BEAST.ZeroOperator()            -τ(∇Gdotn,testsurf)    τ(∇Gdot,testsurf)     k^2*τ(Gr,testsurf)
-        -γₛ(∇G∇B,testsurf)-k^2*γₛ(Gr,testsurf)   -γₛ(∇Gxn,testsurf)  γₛ(∇Gx,testsurf)  BEAST.ZeroOperator()
-         -γₙ(∇Gx,testsurf)         -γₙ(Gn,testsurf)     γₙ(Gr,testsurf)  -γₙ(∇G,testsurf)]
+    Gr = BEAST.build_potential(G*B,bs)
+    ∇G∇B = BEAST.build_potential(gradG*div(B),bs)
+    ∇Gxn = BEAST.build_potential(gradG×(n*B),bs)
+    sign = 1
+    if Ω1==Ω2==Ω3
+
+    elseif Ω1==Ω2!=Ω3
+        ts = -ts
+        bs = -bs
+
+    elseif Ω1!=Ω2
+        ts = -ts
+        bs = -bs
+        sign = -1
+
     else
-        a = -[γₛᶜ(∇Gx,testsurf)         γₛᶜ(Gn,testsurf)      -γₛᶜ(Gnx,testsurf)           γₛᶜ(∇G,testsurf)
-        BEAST.ZeroOperator()            -τᶜ(∇Gdotn,testsurf)    τᶜ(∇Gdot,testsurf)     k^2*τᶜ(Gr,testsurf)
-        -γₛᶜ(∇G∇B,testsurf)-k^2*γₛᶜ(Gr,testsurf)   -γₛᶜ(∇Gxn,testsurf)  γₛᶜ(∇Gx,testsurf)  BEAST.ZeroOperator()
-         -γₙᶜ(∇Gx,testsurf)         -γₙᶜ(Gn,testsurf)     γₙᶜ(Gr,testsurf)  -γₙᶜ(∇G,testsurf)]
+        @error "none of previous"
+
     end
 
+    a = -[γₛ(∇Gx,ts,ts,sign)         γₛ(Gn,ts,ts,sign)      -γₛ(Gnx,ts,ts,sign)           γₛ(∇G,ts,ts,sign)
+        BEAST.ZeroOperator()            -τ(∇Gdotn,ts,ts,sign)    τ(∇Gdot,ts,ts,sign)     k^2*τ(Gr,ts,ts,sign)
+        -γₛ(∇G∇B,ts,ts,sign)-k^2*γₛ(Gr,ts,ts,sign)   -γₛ(∇Gxn,ts,ts,sign)  γₛ(∇Gx,ts,ts,sign)  BEAST.ZeroOperator()
+         -γₙ(∇Gx,ts,ts,sign)         -γₙ(Gn,ts,ts,sign)     γₙ(Gr,ts,ts,sign)  -γₙ(∇G,ts,ts,sign)]
 
-    a = BEAST.normalorient.(a;Ω1=int.testvol,Ω2=int.trialvol,Ω3=int.embedvol)
+    #a = BEAST.normalorient.(a;Ω1=int.testvol,Ω2=int.trialvol,Ω3=int.embedvol)
     
     return a
 

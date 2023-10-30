@@ -16,7 +16,7 @@ mutable struct LagrangeBasis{D,C,M,T,NF,P} <: Space{T}
   fns::Vector{Vector{Shape{T}}}
   pos::Vector{P}
 end
-
+redefine_geometrie(basis::LagrangeBasis{D,C,M,T,NF,P},geo::F) where {D,C,M,T,NF,P,F} = LagrangeBasis{D,C,F,T,NF,P}(geo,basis.fns,basis.pos)
 
 
 # Constructor that automatically deduces MeshType and ScalarType but requires specification

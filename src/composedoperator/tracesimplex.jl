@@ -20,7 +20,7 @@ CompScienceMeshes.normal(p::TraceMeshPointNM) = normal(p.neighborhood)
 tracedirection(p::TraceMeshPointNM) = p.sign*normal(p)
 CompScienceMeshes.jacobian(p::TraceMeshPointNM) = jacobian(p.neighborhood)
 CompScienceMeshes.tangents(p::TraceMeshPointNM,i) = tangents(p.neighborhood,i)
-
+CompScienceMeshes.barycentric(a::TraceMeshPointNM) = barycentric(a.neighborhood)
 coordtype(p::TraceSimplex) = coordtype(p.simp)
 
 
@@ -104,3 +104,4 @@ CompScienceMeshes.volume(a::TraceSimplex) = volume(simplex(a))
 CompScienceMeshes.dimension(a::TraceSimplex) = dimension(simplex(a))
 CompScienceMeshes.tangents(a::TraceSimplex,i::Int) = tangents(simplex(a),i)
 CompScienceMeshes.carttobary(a::TraceSimplex,b::SVector{T}) where {T} = carttobary(simplex(a),b)
+

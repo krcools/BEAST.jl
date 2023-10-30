@@ -23,8 +23,8 @@ end
 
 const LinearRefSpaceTriangle = Union{RTRefSpace, NDRefSpace, BDMRefSpace, NCrossBDMRefSpace}
 defaultquadstrat(::LocalOperator, ::LinearRefSpaceTriangle, ::LinearRefSpaceTriangle) = SingleNumQStrat(6)
-function quaddata(op::LocalOperator, g::LinearRefSpaceTriangle, f::LinearRefSpaceTriangle, tels, bels,
-        qs::SingleNumQStrat)
+function quaddata(op::LocalOperator, g::Union{LinearRefSpaceTriangle,LagrangeRefSpace{T,Deg,3}}, f::Union{LagrangeRefSpace,LinearRefSpaceTriangle}, tels, bels,
+        qs::SingleNumQStrat) where{T,Deg}
 
     u, w = trgauss(qs.quad_rule)
     qd = [(w[i],SVector(u[1,i],u[2,i])) for i in 1:length(w)]
@@ -66,14 +66,14 @@ function quaddata(op::LocalOperator, g::LagrangeRefSpace{T,Deg,2} where {T,Deg},
 end
 
 defaultquadstrat(::LocalOperator, ::LagrangeRefSpace{T,D1,3}, ::LagrangeRefSpace{T,D2,3}) where {T,D1,D2} = SingleNumQStrat(6)
-function quaddata(op::LocalOperator, g::LagrangeRefSpace{T,Deg,3} where {T,Deg},
-    f::LagrangeRefSpace, tels::Vector, bels::Vector, qs::SingleNumQStrat)
+# function quaddata(op::LocalOperator, g::LagrangeRefSpace{T,Deg,3} where {T,Deg},
+#     f::LagrangeRefSpace, tels::Vector, bels::Vector, qs::SingleNumQStrat)
 
-    u, w = trgauss(qs.quad_rule)
-    qd = [(w[i], SVector(u[1,i], u[2,i])) for i in 1:length(w)]
-    A = _alloc_workspace(qd, g, f, tels, bels)
-    return qd, A
-end
+#     u, w = trgauss(qs.quad_rule)
+#     qd = [(w[i], SVector(u[1,i], u[2,i])) for i in 1:length(w)]
+#     A = _alloc_workspace(qd, g, f, tels, bels)
+#     return qd, A
+# end
 
 defaultquadstrat(::LocalOperator, ::LagrangeRefSpace{T,D1,4}, ::LagrangeRefSpace{T,D2,4}) where {T,D1,D2} = SingleNumQStrat(6)
 function quaddata(op::LocalOperator, g::LagrangeRefSpace{T,Deg,4} where {T,Deg},
