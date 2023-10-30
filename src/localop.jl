@@ -59,7 +59,7 @@ function allocatestorage(op::LocalOperator, testfunctions, trialfunctions,
     n = numfunctions(trialfunctions)
     Z = SparseMatrixDict{T,Int}(m,n)
 
-    store(v,m,n) = (Z[m,n] += v)
+    store(v,m,n) = (Z[m,n] += T(v))
     freeze() = SparseArrays.SparseMatrixCSC(Z)
 
     return freeze, store
@@ -71,7 +71,7 @@ function allocatestorage(op::LocalOperator, test_functions, trial_functions,
     T = scalartype(op, test_functions, trial_functions)
 
     Z = zeros(T, numfunctions(test_functions), numfunctions(trial_functions))
-    store(v,m,n) = (Z[m,n] += v)
+    store(v,m,n) = (Z[m,n] += T(v))
     freeze() = Z
 
     return freeze, store
@@ -126,18 +126,23 @@ function assemble_local_matched!(biop::LocalOperator, tfs::Space, bfs::Space, st
     verbose = length(tels) > 10_000
     verbose && print(string(typeof(biop))*" dots out of 20: ")
     todo, done, pctg = length(tels), 0, 0
-    locmat = zeros(scalartype(biop, trefs, brefs), numfunctions(trefs), numfunctions(brefs))
-    for (p,cell) in enumerate(tels)
+   # locmat = zeros(scalartype(biop, trefs, brefs), numfunctions(trefs), numfunctions(brefs))
+    for (p,tcell) in enumerate(tels)
+
         P = ta2g[p]
+        bcell = bels[P]
+        
+        @assert same_cell(bcell,tcell)
         q = bg2a[P]
         q == 0 && continue
 
-        qr = quadrule(biop, trefs, brefs, cell, qd, quadstrat)
-        fill!(locmat, 0)
-        cellinteractions_matched!(locmat, biop, trefs, brefs, cell, 1, qr)
+        qr = quadrule(biop, trefs, brefs, tcell, bcell,qd, quadstrat)
+  #      fill!(locmat, 0)
+        locmat = cellinteractions(biop, trefs, brefs, tcell, bcell, qr)
 
         for i in 1 : size(locmat, 1), j in 1 : size(locmat, 2)
             for (m,a) in tad[p,i], (n,b) in bad[q,j]
+                
                 store(a * locmat[i,j] * b, m, n)
         
         end end
@@ -178,15 +183,15 @@ function assemble_local_refines!(biop::LocalOperator, tfs::Space, bfs::Space, st
 
         bcell = bels[q]
         @assert overlap(tcell, bcell)
-        s = sign(dot(normal(tcell),normal(bcell)))
-        isct = intersection(tcell, bcell)
-        for cell in isct
+        #s = sign(dot(normal(tcell),normal(bcell)))
+        isct = intersection2(tcell, bcell)
+        for (tcell2,bcell2) in isct
 
-            P = restrict(brefs, bcell, cell)
-            Q = restrict(trefs, tcell, cell)
+            P = restrict(brefs, bcell, bcell2)
+            Q = restrict(trefs, tcell, tcell2)
 
-            qr = quadrule(biop, trefs, brefs, cell, qd, quadstrat)
-            zlocal = cellinteractions(biop, trefs, brefs, cell, s, qr)
+            qr = quadrule(biop, trefs, brefs, tcell2,bcell2, qd, quadstrat)
+            zlocal = cellinteractions(biop, trefs, brefs, tcell2, bcell2, qr)
             zlocal = Q * zlocal * P'
 
             for i in 1 : numfunctions(trefs)
@@ -223,16 +228,19 @@ function assemble_local_matched!(biop::LocalOperator, tfs::subdBasis, bfs::subdB
     brefs = refspace(bfs)
 
     qd = quaddata(biop, trefs, brefs, tels, bels, quadstrat)
-    for (p,cell) in enumerate(tels)
-
-        qr = quadrule(biop, trefs, brefs, cell, qd, quadstrat)
-        locmat = cellinteractions(biop, trefs, brefs, cell,1, qr)
+    for (p,tcell) in enumerate(tels)
+        bcell = bels[p]
+        @assert same_cell(bcell,tcell)
+        qr = quadrule(biop, trefs, brefs, tcell,bcell, qd, quadstrat)
+        locmat = cellinteractions(biop, trefs, brefs, tcell,bcell, qr)
 
         for i in 1 : size(locmat, 1), j in 1 : size(locmat, 2)
             for (m,a) in tad[p][i], (n,b) in bad[p][j]
                 store(a * locmat[i,j] * b, m, n)
 end end end end
-
+function same_cell(a,b)
+sort(verticeslist(a)) ≈ sort(verticeslist(b))
+end
 
 function elementstree(elements)
 
@@ -290,7 +298,7 @@ function assemble_local_mixed!(biop::LocalOperator, tfs::Space{T}, bfs::Space{T}
     todo, done, pctg = length(tels), 0, 0
     for (p,tcell) in enumerate(tels)
 
-        tc, ts = boundingbox(tcell.vertices)
+        tc, ts = boundingbox(verticeslist(tcell))
         pred = (c,s) -> boxesoverlap(c,s,tc,ts)
 
         for box in boxes(tree, pred)
@@ -298,17 +306,16 @@ function assemble_local_mixed!(biop::LocalOperator, tfs::Space{T}, bfs::Space{T}
                 bcell = bels[q]
 
                 if overlap(tcell, bcell)
-                    s = sign(dot(normal(tcell),normal(bcell)))
 
-                    isct = intersection(tcell, bcell)
-                    for cell in isct
-                        volume(cell) < tol && continue
+                    isct = intersection2(tcell, bcell)
+                    for (cellt,cellb) in isct
+                        volume(cellt) < tol && continue
 
-                        P = restrict(brefs, bcell, cell)
-                        Q = restrict(trefs, tcell, cell)
+                        P = restrict(brefs, bcell, cellb)
+                        Q = restrict(trefs, tcell, cellt)
 
-                        qr = quadrule(biop, trefs, brefs, cell, qd, quadstrat)
-                        zlocal = cellinteractions(biop, trefs, brefs, cell, s, qr)
+                        qr = quadrule(biop, trefs, brefs, cellt,cellb, qd, quadstrat)
+                        zlocal = cellinteractions(biop, trefs, brefs, cellt, cellb, qr)
                         zlocal = Q * zlocal * P'
 
                         for i in 1 : numfunctions(trefs)
@@ -364,7 +371,7 @@ end
 #     return zlocal
 # end
 
-function cellinteractions_matched!(zlocal, biop, trefs, brefs, cell,sign, qr)
+function cellinteractions_matched!(zlocal, biop, trefs, brefs, cellt,cellb, qr)
 
     num_tshs = length(qr[1][3])
     num_bshs = length(qr[1][4])
@@ -372,14 +379,12 @@ function cellinteractions_matched!(zlocal, biop, trefs, brefs, cell,sign, qr)
     # zlocal = zeros(Float64, num_tshs, num_bshs)
     for q in qr
 
-        w, tp, tvals, bvals = q[1], q[2], q[3], q[4]
-        bp = map(tp,sign)
+        w, (tp,bp), tvals, bvals = q[1], q[2], q[3], q[4]
         j = w * jacobian(tp)
         kernel = kernelvals(biop, tp)
         
         zlocal += j * integrand(biop, kernel, tp, bp, tvals, bvals)
     end
-
     return zlocal
 end
 
@@ -412,26 +417,31 @@ end
 #     return zlocal
 # end
 
-function cellinteractions(biop, trefs::U, brefs::V, cell, sign,qr) where {U<:RefSpace{T},V<:RefSpace{T}} where {T}
+function cellinteractions(biop, trefs::U, brefs::V, cellt,cellb,qr) where {U<:RefSpace{T},V<:RefSpace{T}} where {T}
     
     num_tshs = length(qr[1][3])
     num_bshs = length(qr[1][4])
 
     zlocal = zeros(T, num_tshs, num_bshs)
-     
+    
     for q in qr
 
-        w, tp, tvals, bvals = q[1], q[2], q[3], q[4]
-        bp = map(tp,sign)
+
+        w, (tp,bp), tvals, bvals = q[1], q[2], q[3], q[4]
+        
         j = w * jacobian(tp)
         kernel = kernelvals(biop, tp)
 
         zlocal += j * integrand(biop, kernel, tp, bp, tvals, bvals)
+        
     end
 
     return zlocal
 end
-
+function getvalue(list::Matrix{T}) where {T}
+    
+    return SVector{length(list),T}([i for i in list])
+end
 # function cellinteractions(biop, trefs::U, brefs::V, cell,qr) where {U<:RefSpace{T},V<:RefSpace{T}} where {T}
     
 #     num_tshs = length(qr[1][3])

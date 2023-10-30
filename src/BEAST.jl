@@ -25,6 +25,7 @@ import LinearAlgebra: cross, dot
 import LinearAlgebra: ×, ⋅
 
 import SharedArrays: sdata
+import CompScienceMeshes: normal, chart, mesh, coordtype, simplex, domain
 
 export dot
 
@@ -133,7 +134,8 @@ using FFTW
 using SparseArrays
 
 function convolve end
-include("utils/extendedcharts.jl")
+
+
 include("utils/polynomial.jl")
 include("utils/specialfns.jl")
 include("utils/combinatorics.jl")
@@ -268,6 +270,8 @@ include("multi-trace/postprocessing.jl")
 
 #suport for displaying operators
 include("composedoperator/composed2.jl")
+include("composedoperator/tracesimplex.jl")
+
 include("display.jl")
 
 const x̂ = point(1,0,0)

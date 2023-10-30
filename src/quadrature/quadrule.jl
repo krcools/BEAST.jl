@@ -4,12 +4,12 @@
 function quadrule(op::IntegralOperator, g::RTRefSpace, f::RTRefSpace,  i, τ, j, σ, qd,
     qs::DoubleNumSauterQstrat)
 
-    T = eltype(eltype(τ.vertices))
+    T = eltype(eltype(verticeslist(τ)))
     hits = 0
     dtol = 1.0e3 * eps(T)
     dmin2 = floatmax(T)
-    for t in τ.vertices
-        for s in σ.vertices
+    for t in verticeslist(τ)
+        for s in verticeslist(σ)
             d2 = LinearAlgebra.norm_sqr(t-s)
             dmin2 = min(dmin2, d2)
             hits += (d2 < dtol)
@@ -29,12 +29,12 @@ end
 function quadrule(op::IntegralOperator, g::LagrangeRefSpace, f::LagrangeRefSpace,  i, τ, j, σ, qd,
     qs::DoubleNumSauterQstrat)
 
-    T = eltype(eltype(τ.vertices))
+    T = eltype(eltype(verticeslist(τ)))
     hits = 0
     dtol = 1.0e3 * eps(T)
     dmin2 = floatmax(T)
-    for t in τ.vertices
-        for s in σ.vertices
+    for t in verticeslist(τ)
+        for s in verticeslist(σ)
             d2 = LinearAlgebra.norm_sqr(t-s)
             dmin2 = min(dmin2, d2)
             hits += (d2 < dtol)

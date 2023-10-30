@@ -1,4 +1,4 @@
-import Base: *
+import Base: *, div
 import LinearAlgebra: ×, ⋅
 
 
@@ -15,6 +15,41 @@ struct DivBasisFunction <: ComposedOperatorLocal end
 const B = BasisFunction
 export B
 
+
+struct TestNormal <: ComposedOperatorLocal end
+struct TrialNormal <: ComposedOperatorLocal end
+struct TraceDirection <: ComposedOperatorLocal end
+scalartype(op::Union{TestNormal,TrialNormal,BasisFunction,TraceDirection}) = Float16
+
+
+const nt = TestNormal()
+
+struct Potential{T} <: AbstractOperator
+    operator::T
+    surface
+end
+normal_surface(p::Potential) = p.surface
+function Potential(linop::LinearCombinationOfOperators,surface)
+    out = ZeroOperator()
+    for (op,coeff) in zip(linop.ops,linop.coeffs)
+        out += coeff*Potential(op,surface)
+    end
+    return out
+end
+struct TraceOperator{T} <: AbstractOperator
+    operator::T
+    directionsurface
+    normalsurface
+end
+function TraceOperator(linop::LinearCombinationOfOperators,dsurf,nsurf)
+    out = ZeroOperator()
+    for (op,coeff) in zip(linop.ops,linop.coeffs)
+        out += coeff*TraceOperator(op,dsurf,nsurf)
+    end
+return out
+end
+normal_surface(p::TraceOperator) = p.normalsurface
+direction_surface(p::TraceOperator) = p.directionsurface
 struct TimesLocal{U,V} <: ComposedOperatorLocal
     lhs::U
     rhs::V
@@ -119,47 +154,37 @@ CrossLocal(a::ComposedOperatorIntegral,b::ComposedOperatorIntegral) = CrossInteg
 ⋅(a::ComposedOperator,b::ComposedOperator) = DotLocal(a,b)
 *(a::ComposedOperator,b::ComposedOperator) = TimesLocal(a,b)
 
-div(::BasisFunction) = DivBasisFunction()
+Base.div(::BasisFunction) = DivBasisFunction()
 
 scalartype(op::Operations) = promote_type(scalartype(op.lhs),scalartype(op.rhs))
-
-struct TestNormal <: ComposedOperatorLocal end
-struct TrialNormal <: ComposedOperatorLocal end
-scalartype(op::Union{TestNormal,TrialNormal,BasisFunction}) = Float64
-
-
-const nt = TestNormal()
-
-struct Potential{T} <: Operator
-    operator::T
-    surface
-end
+scalartype(op::Potential) = scalartype(op.operator)
+scalartype(op::TraceOperator) = scalartype(op.operator)
 
 function count_test_normals(op::Operations)
     count_test_normals(op.lhs) + count_test_normals(op.rhs)
 end
-count_test_normals(op::Kern) = 0
+count_test_normals(op::Kernel) = 0
 count_test_normals(op::TestNormal) = 1
 count_test_normals(op::TrialNormal) = 0
 
 function count_trial_normals(op::Operations)
     count_trial_normals(op.lhs) + count_trial_normals(op.rhs)
 end
-count_trial_normals(op::Kern) = 0
+count_trial_normals(op::Kernel) = 0
 count_trial_normals(op::TestNormal) = 0
 count_trial_normals(op::TrialNormal) = 1
 
 function replace_normal_by_testnormal(op::Operations)
     get_constructor(op)(replace_normal_by_testnormal(op.lhs),replace_normal_by_testnormal(op.rhs))
 end
-replace_normal_by_testnormal(op::Kern) = op
+replace_normal_by_testnormal(op::Kernel) = op
 replace_normal_by_testnormal(op::Union{TestNormal,TrialNormal,BasisFunction,DivBasisFunction}) = op
 replace_normal_by_testnormal(op::NormalVector) = TestNormal()
 
 function replace_normal_by_trialnormal(op::Operations)
     get_constructor(op)(replace_normal_by_trialnormal(op.lhs),replace_normal_by_trialnormal(op.rhs))
 end
-replace_normal_by_trialnormal(op::Kern) = op
+replace_normal_by_trialnormal(op::Kernel) = op
 replace_normal_by_trialnormal(op::Union{TestNormal,TrialNormal,BasisFunction,DivBasisFunction}) = op
 replace_normal_by_trialnormal(op::NormalVector) = TrialNormal()
 
@@ -180,23 +205,25 @@ function check_if_coincide(a,b)
     return true
 end
 
-function γ(op::Potential,surface,sign)# sign + if according to normal on surface, - otherwise
+function γ(op::Potential,direction::CompScienceMeshes.AbstractMesh,surface::CompScienceMeshes.AbstractMesh,sign::Int)# sign + if according to normal on surface, - otherwise
     check_if_coincide(op.surface,surface) || return op.operator
     newop = γ(op.operator,sign)
-    return newop
+    return TraceOperator(Potential(newop,op.surface),direction,surface)
+end
+function γ(op::Potential,surface::CompScienceMeshes.AbstractMesh,sign::Int)# sign + if according to normal on surface, - otherwise
+    γ(op,surface,surface,sign)
 end
 
 
+# γₜᶜ(op::Potential,surface) = nt×(γ(op,surface,-1)×nt)
+# γₜ(op::Potential,surface) = nt×(γ(op,surface,1)×nt)
 
-γₜᶜ(op::Potential,surface) = nt×(γ(op,surface,-1)×nt)
-γₜ(op::Potential,surface) = nt×(γ(op,surface,1)×nt)
-
-γₛ(op::Potential,surface) = nt×γ(op,surface,1)
-γₛᶜ(op::Potential,surface) = nt×γ(op,surface,-1)
-γₙ(op::Potential,surface) = nt⋅γ(op,surface,1)
-γₙᶜ(op::Potential,surface) = nt⋅γ(op,surface,-1)
-τ(op::Potential,surface) = γ(op,surface,1)
-τᶜ(op::Potential,surface) = γ(op,surface,-1)
+# γₛ(op::Potential,surface) = nt×γ(op,surface,1)
+# γₛᶜ(op::Potential,surface) = nt×γ(op,surface,-1)
+# γₙ(op::Potential,surface) = nt⋅γ(op,surface,1)
+# γₙᶜ(op::Potential,surface) = nt⋅γ(op,surface,-1)
+# τ(op::Potential,surface) = γ(op,surface,1)
+# τᶜ(op::Potential,surface) = γ(op,surface,-1)
 
 function greenhh3d(;
     gamma=nothing,
@@ -216,11 +243,11 @@ GradGreenHH3D(gamma)
 end
 
 struct GreenHH3D{T} <: Kernel
-    gamma{T}
+    gamma::T
 end
 
 struct GradGreenHH3D{T} <: Kernel
-    gamma{T}
+    gamma::T
 end
 
 
@@ -245,17 +272,18 @@ function (op::GradGreenHH3D)(x,y,g)
     Ref(gradgreen)
 end
 
-γ(op::GreenHH3D,sign) = op
-γ(op::GradGreenHH3D,sign) = op + sign*1/2*nt
+γ(op::GreenHH3D,sign::Int) = op
+γ(op::GradGreenHH3D,sign::Int) = op + sign*1/2*TraceDirection()
 
 grad(G::GreenHH3D) = GradGreenHH3D(G.gamma)
-∇(G) = grad(G)
+
+function (::Nabla)(G::Kernel)
+    grad(G)
+end
+
+
 scalartype(G::GreenHH3D{T}) where {T} = T
 scalartype(G::GradGreenHH3D{T}) where {T} = T
-
-
-
-div(B::BasisFunction) = DivBasisFunction()
 
 
 function (op::Union{TimesIntegral,TimesLocal})(x,y,g)
@@ -274,6 +302,9 @@ end
 function (op::TestNormal)(x,y,g)
     Ref(normal(x))
 end
+function (op::TraceDirection)(x,y,g)
+    Ref(tracedirection(x))
+end
 function (op::BasisFunction)(x,y,g)
     getvalue(g)
 end
@@ -284,17 +315,57 @@ end
 
 
 function (igd::Integrand{<:ComposedOperatorIntegral})(x,y,f,g)
-    op = igd.operator
-    dot.(f,op(x,y,g))
+    _krondot(getvalue(f),igd.operator(x,y,g))
 end
 
-function integrand(op::ComposedOperatorLocal,kernel,x,y,g)
-    dot.(f,op(x,y,g))
+function integrand(op::ComposedOperatorLocal,kernel,x,y,f,g)
+    _krondot(getvalue(f),op(x,y,g))
 end
 
 
-defaultquadstrat(op::ComposedOperator,testspace::Space,trialspace::Space) = DoubleNumSauterQstrat(6,7,5,5,4,3) 
+defaultquadstrat(op::ComposedOperatorIntegral,testspace::Space,trialspace::Space) = DoubleNumSauterQstrat(6,7,5,5,4,3) 
+defaultquadstrat(op::ComposedOperatorLocal,testspace::Space,trialpsace::Space) = SingleNumQStrat(6)
 sign_upon_permutation(op::ComposedOperator,I,J) = Combinatorics.levicivita(I)^count_test_normals(op)*Combinatorics.levicivita(J)^count_trial_normals(op)
 
 
 normalorient(op::ComposedOperator,sign_test_normal,sign_trial_normal) = sign_test_normal^count_test_normals*sign_trial_normal^count_trial_normals
+
+
+defaultquadstrat(op::TraceOperator,test,trial) = defaultquadstrat(op.operator,test,trial)
+defaultquadstrat(op::Potential,test,trial) = defaultquadstrat(op.operator,test,trial)
+
+
+
+function assemble!(op::Potential, test_functions::Space, trial_functions::Space,
+    store, threading = Threading{:multi}; 
+    quadstrat = defaultquadstrat(op, test_functions, trial_functions))
+
+    nsurf = normal_surface(op)
+    surf = geometry(trial_functions)
+    @assert same_geometry(nsurf,surf)
+    trial = typeof(trial_functions).name.wrapper
+    trial_functions = trial(OrientedMesh(surf,nsurf),trial_functions.fns,trial_functions.pos)
+
+    assemble!(op.operator, test_functions, trial_functions, store, threading;
+    quadstrat = quadstrat)
+end
+
+function assemble!(op::TraceOperator, test_functions::Space, trial_functions::Space,
+    store, threading = Threading{:multi}; 
+    quadstrat = defaultquadstrat(op, test_functions, trial_functions))
+
+    nsurf = normal_surface(op)
+    dsurf = direction_surface(op)
+    surf = geometry(test_functions)
+    @assert same_geometry(nsurf,dsurf)
+    @assert same_geometry(nsurf,surf)
+
+    test = typeof(test_functions).name.wrapper
+
+    test_functions = test(TraceMesh(OrientedMesh(surf,nsurf),dsurf),test_functions.fns,test_functions.pos)
+
+    assemble!(op.operator, test_functions, trial_functions, store, threading;
+    quadstrat = quadstrat)
+end
+
+kernelvals(op::ComposedOperator,a) = nothing

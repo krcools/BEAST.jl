@@ -57,14 +57,15 @@ function restrict(ϕ::RTRefSpace{T}, dom1, dom2) where T
     for i in 1:K
 
         # find the center of edge i of dom2
-        a = dom2.vertices[mod1(i+1,D+1)]
-        b = dom2.vertices[mod1(i+2,D+1)]
+        a = verticeslist(dom2)[mod1(i+1,D+1)]
+        b = verticeslist(dom2)[mod1(i+2,D+1)]
         c = (a + b) / 2
 
         # find the outer binormal there
         t = b - a
         l = norm(t)
-        n = dom2.normals[1]
+ #       n = dom2.normals[1]
+        n = normalize(tangents(dom2,1)×tangents(dom2,2))
         m = cross(t, n) / l
 
         u = carttobary(dom1, c)

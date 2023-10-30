@@ -22,6 +22,7 @@ for T in [Float32, Float64]
 
     @test size(N) == (numfunctions(X), numfunctions(X))
     @test size(I) == (numfunctions(X), numfunctions(X))
+    
     @test rank(I) == numfunctions(X)
 
     @time e = assemble(PlaneWaveNeumann(κ, point(0.0, 1.0)), X)

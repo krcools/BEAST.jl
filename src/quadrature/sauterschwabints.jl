@@ -90,8 +90,8 @@ function momintegrals!(op::Operator,
     test_chart, trial_chart, out, rule::SauterSchwabStrategy)
 
     I, J, _, _ = SauterSchwabQuadrature.reorder(
-        test_chart.vertices,
-        trial_chart.vertices, rule)
+        verticeslist(test_chart),
+        verticeslist(trial_chart), rule)
 
     test_chart  = CompScienceMeshes.permute_vertices(test_chart,I)
 

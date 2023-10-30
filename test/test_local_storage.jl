@@ -3,11 +3,11 @@ using BEAST
 using CompScienceMeshes
 using SparseArrays
 for T in [Float32, Float64]
-    local fn = joinpath(@__DIR__, "assets/sphere5.in")
-    local m = readmesh(fn, T=T)
+    fn = joinpath(@__DIR__, "assets/sphere5.in")
+    m = readmesh(fn, T=T)
 
     Id = BEAST.Identity()
-    local X = BEAST.raviartthomas(m)
+    X = BEAST.raviartthomas(m)
 
     Z1 = assemble(Id, X, X, storage_policy=Val{:densestorage})
     Z2 = assemble(Id, X, X, storage_policy=Val{:bandedstorage})
