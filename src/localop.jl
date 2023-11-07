@@ -248,7 +248,7 @@ function elementstree(elements)
     ncells = length(elements)
 
     @assert !isempty(elements)
-    P = eltype(elements[1].vertices)
+    P = eltype(verticeslist(elements[1]))
     T = coordtype(eltype(elements))
 
     points = zeros(P, ncells)
@@ -256,7 +256,7 @@ function elementstree(elements)
 
     for i in 1 : ncells
 
-        verts = elements[i].vertices
+        verts = verticeslist(elements[i])
 
         bary = verts[1]
         for j in 2:length(verts)

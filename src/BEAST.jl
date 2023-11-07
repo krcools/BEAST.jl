@@ -269,8 +269,9 @@ include("multi-trace/interactions.jl")
 include("multi-trace/postprocessing.jl")
 
 #suport for displaying operators
-include("composedoperator/composed2.jl")
 include("composedoperator/tracesimplex.jl")
+include("composedoperator/composed2.jl")
+
 
 include("display.jl")
 include("Helmholtzhodge/hhhexc.jl")

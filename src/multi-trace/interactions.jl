@@ -204,7 +204,7 @@ function (int::Interaction{<: Domain{HomogeneousDomain},<: Domain{HomogeneousDom
     Gnx = BEAST.build_potential(G*(n × B),bs)
     ∇G = BEAST.build_potential(gradG*B,bs)
     ∇Gdotn = BEAST.build_potential(nb ⋅ (gradG*B),bs)
-    ∇Gdot = BEAST.build_potential(gradG⋅B,bs)
+    ∇Gdot = BEAST.build_potential(B ⋅ gradG,bs)
     
     Gr = BEAST.build_potential(G*B,bs)
     ∇G∇B = BEAST.build_potential(gradG*div(B),bs)

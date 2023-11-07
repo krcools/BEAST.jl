@@ -27,7 +27,7 @@ radius = 1.0
 λ = 2.9979563769321627
 ω = 2π*c/λ
 
-Ω = CompScienceMeshes.tetmeshsphere(radius,0.4*radius)
+Ω = CompScienceMeshes.tetmeshsphere(radius,0.2*radius)
 Γ = boundary(Ω)
 X = raviartthomas(Γ)
 @show numfunctions(X)
@@ -46,7 +46,7 @@ T′ = Maxwell3D.singlelayer(wavenumber=κ′)
 K  = Maxwell3D.doublelayer(wavenumber=κ)
 K′ = Maxwell3D.doublelayer(wavenumber=κ′)
 
-E = Maxwell3D.planewave(direction=ẑ, polarization=x̂, wavenumber=im*κ)
+E = Maxwell3D.planewave(direction=ẑ, polarization=x̂, wavenumber=κ)
 H = -1/(im*κ*η)*curl(E)
 
 e = (n × E) × n
@@ -99,7 +99,7 @@ Plotly.plot(patch(Γ, norm.(fcrm)))
 
 Z = range(-6,6,length=200)
 Y = range(-4,4,length=200)
-nfpoints = [point(0,y,z) for z in Z, y in Y]
+nfpoints = [point(0,y,z) for y in Y, z in Z]
 
 import Base.Threads: @spawn
 task1 = @spawn nearfield(u[m],u[j],X,X,κ,η,nfpoints,E,H)
