@@ -255,6 +255,9 @@ include("solvers/itsolver.jl")
 
 include("utils/plotlyglue.jl")
 
+#support for nonlinear conductivity problems in time domain
+include("maxwell/timedomain/conductivity.jl")
+include("maxwell/timedomain/nonlinearmot.jl")
 
 
 
