@@ -126,15 +126,17 @@ function assemble_local_matched!(biop::LocalOperator, tfs::Space, bfs::Space, st
     verbose = length(tels) > 10_000
     verbose && print(string(typeof(biop))*" dots out of 20: ")
     todo, done, pctg = length(tels), 0, 0
+
    # locmat = zeros(scalartype(biop, trefs, brefs), numfunctions(trefs), numfunctions(brefs))
     for (p,tcell) in enumerate(tels)
 
         P = ta2g[p]
-        bcell = bels[P]
-        
-        @assert same_cell(bcell,tcell)
+
         q = bg2a[P]
         q == 0 && continue
+        bcell = bels[q]
+        @assert same_cell(bcell,tcell)
+
 
         qr = quadrule(biop, trefs, brefs, tcell, bcell,qd, quadstrat)
   #      fill!(locmat, 0)
@@ -221,15 +223,26 @@ end
 function assemble_local_matched!(biop::LocalOperator, tfs::subdBasis, bfs::subdBasis, store;
     quadstrat=defaultquadstrat(biop, tfs, bfs))
 
-    tels, tad = assemblydata(tfs)
-    bels, bad = assemblydata(bfs)
+    tels, tad, ta2g = assemblydata(tfs)
+    bels, bad, ba2g = assemblydata(bfs)
+
+    bg2a = zeros(Int, length(geometry(bfs)))
+    for (i,j) in enumerate(ba2g) bg2a[j] = i end
+
 
     trefs = refspace(tfs)
     brefs = refspace(bfs)
 
     qd = quaddata(biop, trefs, brefs, tels, bels, quadstrat)
     for (p,tcell) in enumerate(tels)
-        bcell = bels[p]
+      #  bcell = bels[p]
+
+        P = ta2g[p]
+
+        q = bg2a[P]
+        q == 0 && continue
+        bcell = bels[q]
+
         @assert same_cell(bcell,tcell)
         qr = quadrule(biop, trefs, brefs, tcell,bcell, qd, quadstrat)
         locmat = cellinteractions(biop, trefs, brefs, tcell,bcell, qr)

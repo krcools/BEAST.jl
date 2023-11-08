@@ -264,13 +264,13 @@ include("utils/plotlyglue.jl")
 
 
 #suport for multi-trace
-include("multi-trace/configuration.jl")
-include("multi-trace/interactions.jl")
-include("multi-trace/postprocessing.jl")
+# include("multi-trace/configuration.jl")
+# include("multi-trace/interactions.jl")
+# include("multi-trace/postprocessing.jl")
 
 #suport for displaying operators
 include("composedoperator/tracesimplex.jl")
-include("composedoperator/composed2.jl")
+include("composedoperator/composedoperator.jl")
 
 
 include("display.jl")
