@@ -222,8 +222,8 @@ end
 
 function assemble_local_matched!(biop::LocalOperator, tfs::subdBasis, bfs::subdBasis, store;
     quadstrat=defaultquadstrat(biop, tfs, bfs))
-    
-    @assert !(biop <: ComposedOperator)
+
+    @assert !(typeof(biop) <: ComposedOperator)
 
     tels, tad = assemblydata(tfs)
     bels, bad = assemblydata(bfs)
