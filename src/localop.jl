@@ -222,30 +222,21 @@ end
 
 function assemble_local_matched!(biop::LocalOperator, tfs::subdBasis, bfs::subdBasis, store;
     quadstrat=defaultquadstrat(biop, tfs, bfs))
+    
+    @assert !(biop <: ComposedOperator)
 
-    tels, tad, ta2g = assemblydata(tfs)
-    bels, bad, ba2g = assemblydata(bfs)
-
-    bg2a = zeros(Int, length(geometry(bfs)))
-    for (i,j) in enumerate(ba2g) bg2a[j] = i end
-
+    tels, tad = assemblydata(tfs)
+    bels, bad = assemblydata(bfs)
 
     trefs = refspace(tfs)
     brefs = refspace(bfs)
 
     qd = quaddata(biop, trefs, brefs, tels, bels, quadstrat)
-    for (p,tcell) in enumerate(tels)
+    for (p,cell) in enumerate(tels)
       #  bcell = bels[p]
 
-        P = ta2g[p]
-
-        q = bg2a[P]
-        q == 0 && continue
-        bcell = bels[q]
-
-        @assert same_cell(bcell,tcell)
-        qr = quadrule(biop, trefs, brefs, tcell,bcell, qd, quadstrat)
-        locmat = cellinteractions(biop, trefs, brefs, tcell,bcell, qr)
+        qr = quadrule(biop, trefs, brefs, cell,cell, qd, quadstrat)
+        locmat = cellinteractions(biop, trefs, brefs, cell,cell, qr)
 
         for i in 1 : size(locmat, 1), j in 1 : size(locmat, 2)
             for (m,a) in tad[p][i], (n,b) in bad[p][j]
