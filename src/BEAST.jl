@@ -273,7 +273,7 @@ include("composedoperator/tracesimplex.jl")
 include("composedoperator/composedoperator.jl")
 
 
-include("display.jl")
+#include("display.jl")
 include("Helmholtzhodge/hhhexc.jl")
 include("Helmholtzhodge/hhhnearfield.jl")
 
