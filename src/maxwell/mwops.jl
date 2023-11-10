@@ -42,7 +42,7 @@ struct MWSingleLayer3D{T,U} <: MaxwellOperator3D{T,U}
 end
 
 scalartype(op::MWSingleLayer3D{T,U}) where {T,U} = promote_type(T,U)
-sign_upon_permutation(op::MWSingleLayer3D, I, J) = 1
+# sign_upon_permutation(op::MWSingleLayer3D, I, J) = 1
 
 MWSingleLayer3D(gamma)  = MWSingleLayer3D(gamma, -gamma, -1/(gamma))
 MWWeaklySingular(gamma) = MWSingleLayer3D(gamma, 1, 0)
@@ -75,33 +75,20 @@ function _legendre(n,a,b)
     collect(zip(x,w))
 end
 
-defaultquadstrat(op::MaxwellOperator3D, tfs::Space, bfs::Space) = DoubleNumWiltonSauterQStrat(2,3,6,7,5,5,4,3)
-defaultquadstrat(op::MaxwellOperator3D, tfs::RefSpace, bfs::RefSpace) = DoubleNumWiltonSauterQStrat(2,3,6,7,5,5,4,3)
+# defaultquadstrat(op::MaxwellOperator3D, tfs::Space, bfs::Space) = DoubleNumWiltonSauterQStrat(2,3,6,7,5,5,4,3)
+
+defaultquadstrat(op::MaxwellOperator3D, tfs::RTRefSpace, bfs::RTRefSpace) = DoubleNumWiltonSauterQStrat(2,3,6,7,5,5,4,3)
+# defaultquadstrat(op::MaxwellOperator3D, tfs::RefSpace, bfs::RefSpace) = DoubleNumWiltonSauterQStrat(2,3,6,7,5,5,4,3)
 
 
-function quaddata(op::MaxwellOperator3D,
-    test_local_space::RefSpace, trial_local_space::RefSpace,
-    test_charts, trial_charts, qs::DoubleNumWiltonSauterQStrat)
 
-    T = coordtype(test_charts[1])
-
-    tqd = quadpoints(test_local_space,  test_charts,  (qs.outer_rule_far,qs.outer_rule_near))
-    bqd = quadpoints(trial_local_space, trial_charts, (qs.inner_rule_far,qs.inner_rule_near))
-     
-    leg = (
-      convert.(NTuple{2,T},_legendre(qs.sauter_schwab_common_vert,0,1)),
-      convert.(NTuple{2,T},_legendre(qs.sauter_schwab_common_edge,0,1)),
-      convert.(NTuple{2,T},_legendre(qs.sauter_schwab_common_face,0,1)),)
-
-    return (tpoints=tqd, bpoints=bqd, gausslegendre=leg)
-end
 
 struct MWDoubleLayer3D{T,K} <: MaxwellOperator3D{T,K}
     alpha::T
     gamma::K
 end
 
-sign_upon_permutation(op::MWDoubleLayer3D, I, J) = 1
+# sign_upon_permutation(op::MWDoubleLayer3D, I, J) = 1
 
 struct MWDoubleLayer3DSng{T,K} <: MaxwellOperator3D{T,K}
     alpha::T
@@ -118,139 +105,70 @@ MWDoubleLayer3D(gamma) = MWDoubleLayer3D(1.0, gamma) # For legacy purposes
 regularpart(op::MWDoubleLayer3D) = MWDoubleLayer3DReg(op.alpha, op.gamma)
 singularpart(op::MWDoubleLayer3D) = MWDoubleLayer3DSng(op.alpha, op.gamma)
 
-function quadrule(op::MaxwellOperator3D, g::RTRefSpace, f::RTRefSpace,  i, τ, j, σ, qd,
-      qs::DoubleNumWiltonSauterQStrat)
-
-    T = eltype(eltype(τ.vertices))
-    hits = 0
-    dtol = 1.0e3 * eps(T)
-    dmin2 = floatmax(T)
-    for t in τ.vertices
-        for s in σ.vertices
-            d2 = LinearAlgebra.norm_sqr(t-s)
-            dmin2 = min(dmin2, d2)
-            hits += (d2 < dtol)
-        end
-    end
-
-    hits == 3 && return SauterSchwabQuadrature.CommonFace(qd.gausslegendre[3])
-    hits == 2 && return SauterSchwabQuadrature.CommonEdge(qd.gausslegendre[2])
-    hits == 1 && return SauterSchwabQuadrature.CommonVertex(qd.gausslegendre[1])
-
-    h2 = volume(σ)
-    xtol2 = 0.2 * 0.2
-    k2 = abs2(gamma(op))
-    max(dmin2*k2, dmin2/16h2) < xtol2 && return WiltonSERule(
-        qd.tpoints[2,i],
-        DoubleQuadRule(
-            qd.tpoints[2,i],
-            qd.bpoints[2,j],),)
-    return DoubleQuadRule(
-        qd.tpoints[1,i],
-        qd.bpoints[1,j],)
-end
-
-function quadrule(op::MaxwellOperator3D, g::BDMRefSpace, f::BDMRefSpace,  i, τ, j, σ, qd,
-  qs::DoubleNumWiltonSauterQStrat)
-
-  hits = 0
-  dtol = 1.0e3 * eps(eltype(eltype(τ.vertices)))
-  dmin2 = floatmax(eltype(eltype(τ.vertices)))
-  for t in τ.vertices
-      for s in σ.vertices
-          d2 = LinearAlgebra.norm_sqr(t-s)
-          dmin2 = min(dmin2, d2)
-          hits += (d2 < dtol)
-      end
-  end
-
-  hits == 3 && return SauterSchwabQuadrature.CommonFace(qd.gausslegendre[3])
-  hits == 2 && return SauterSchwabQuadrature.CommonEdge(qd.gausslegendre[2])
-  hits == 1 && return SauterSchwabQuadrature.CommonVertex(qd.gausslegendre[1])
-
-  h2 = volume(σ)
-  xtol2 = 0.2 * 0.2
-  k2 = abs2(gamma(op))
-  return DoubleQuadRule(
-      qd.tpoints[1,i],
-      qd.bpoints[1,j],)
-end
 
 
-function qrib(op::MaxwellOperator3D, g::RTRefSpace, f::RTRefSpace, i, τ, j, σ, qd)
+# function quadrule(op::MaxwellOperator3D, g::BDMRefSpace, f::BDMRefSpace,  i, τ, j, σ, qd,
+#   qs::DoubleNumWiltonSauterQStrat)
 
-  dtol = 1.0e3 * eps(eltype(eltype(τ.vertices)))
-  xtol = 0.2
+#   hits = 0
+#   dtol = 1.0e3 * eps(eltype(eltype(τ.vertices)))
+#   dmin2 = floatmax(eltype(eltype(τ.vertices)))
+#   for t in τ.vertices
+#       for s in σ.vertices
+#           d2 = LinearAlgebra.norm_sqr(t-s)
+#           dmin2 = min(dmin2, d2)
+#           hits += (d2 < dtol)
+#       end
+#   end
 
-  k = norm(gamma(op))
+#   hits == 3 && return SauterSchwabQuadrature.CommonFace(qd.gausslegendre[3])
+#   hits == 2 && return SauterSchwabQuadrature.CommonEdge(qd.gausslegendre[2])
+#   hits == 1 && return SauterSchwabQuadrature.CommonVertex(qd.gausslegendre[1])
 
-  hits = 0
-  xmin = xtol
-  for t in τ.vertices
-    for s in σ.vertices
-      d = norm(t-s)
-      xmin = min(xmin, k*d)
-      if d < dtol
-        hits +=1
-        break
-      end
-    end
-  end
-
-  hits == 3   && return BogaertSelfPatchStrategy(5)
-  hits == 2   && return BogaertEdgePatchStrategy(8, 4)
-  hits == 1   && return BogaertPointPatchStrategy(2, 3)
-  rmin = xmin/k
-  xmin < xtol && return WiltonSERule(
-    qd.tpoints[1,i],
-    DoubleQuadRule(
-      qd.tpoints[2,i],
-      qd.bpoints[2,j],
-    ),
-  )
-  return DoubleQuadRule(
-    qd.tpoints[1,i],
-    qd.bpoints[1,j],
-  )
-
-end
+#   h2 = volume(σ)
+#   xtol2 = 0.2 * 0.2
+#   k2 = abs2(gamma(op))
+#   return DoubleQuadRule(
+#       qd.tpoints[1,i],
+#       qd.bpoints[1,j],)
+# end
 
 
-function qrdf(op::MaxwellOperator3D, g::RTRefSpace, f::RTRefSpace, i, τ, j, σ, qd)
-  # defines coincidence of points
-  dtol = 1.0e3 * eps(eltype(eltype(τ.vertices)))
+# function qrdf(op::MaxwellOperator3D, g::RTRefSpace, f::RTRefSpace, i, τ, j, σ, qd)
+#   # defines coincidence of points
+#   dtol = 1.0e3 * eps(eltype(eltype(τ.vertices)))
 
-  # decides on whether to use singularity extraction
-  xtol = 0.2
+#   # decides on whether to use singularity extraction
+#   xtol = 0.2
 
-  k = norm(gamma(op))
+#   k = norm(gamma(op))
 
-  hits = 0
-  xmin = xtol
-  for t in τ.vertices
-    for s in σ.vertices
-      d = norm(t-s)
-      xmin = min(xmin, k*d)
-      if d < dtol
-        hits +=1
-        break
-      end
-    end
-  end
+#   hits = 0
+#   xmin = xtol
+#   for t in τ.vertices
+#     for s in σ.vertices
+#       d = norm(t-s)
+#       xmin = min(xmin, k*d)
+#       if d < dtol
+#         hits +=1
+#         break
+#       end
+#     end
+#   end
 
-  xmin < xtol && return WiltonSERule(
-    qd.tpoints[1,i],
-    DoubleQuadRule(
-      qd.tpoints[2,i],
-      qd.bpoints[2,j],
-    ),
-  )
-  return DoubleQuadRule(
-    qd.tpoints[1,i],
-    qd.bpoints[1,j],
-  )
+#   xmin < xtol && return WiltonSERule(
+#     qd.tpoints[1,i],
+#     DoubleQuadRule(
+#       qd.tpoints[2,i],
+#       qd.bpoints[2,j],
+#     ),
+#   )
+#   return DoubleQuadRule(
+#     qd.tpoints[1,i],
+#     qd.bpoints[1,j],
+#   )
 
-end
+# end
 
 ################################################################################
 #

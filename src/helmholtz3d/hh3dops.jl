@@ -128,30 +128,30 @@ function quaddata(op::Helmholtz3DOp, test_refspace::LagrangeRefSpace,
     return (;test_qp, bsis_qp, gausslegendre)
 end
 
-function quaddata(op::Helmholtz3DOp, test_refspace::LagrangeRefSpace,
-    trial_refspace::LagrangeRefSpace, test_elements, trial_elements,
-    qs::DoubleNumQStrat)
+# function quaddata(op::Helmholtz3DOp, test_refspace::LagrangeRefSpace,
+#     trial_refspace::LagrangeRefSpace, test_elements, trial_elements,
+#     qs::DoubleNumQStrat)
 
-    test_eval(x)  = test_refspace(x,  Val{:withcurl})
-    trial_eval(x) = trial_refspace(x, Val{:withcurl})
+#     test_eval(x)  = test_refspace(x,  Val{:withcurl})
+#     trial_eval(x) = trial_refspace(x, Val{:withcurl})
 
-    # The combinations of rules (6,7) and (5,7 are) BAAAADDDD
-    # they result in many near singularity evaluations with any
-    # resemblence of accuracy going down the drain! Simply don't!
-    # (same for (5,7) btw...).
-    # test_qp = quadpoints(test_eval,  test_elements,  (6,))
-    # bssi_qp = quadpoints(trial_eval, trial_elements, (7,))
+#     # The combinations of rules (6,7) and (5,7 are) BAAAADDDD
+#     # they result in many near singularity evaluations with any
+#     # resemblence of accuracy going down the drain! Simply don't!
+#     # (same for (5,7) btw...).
+#     # test_qp = quadpoints(test_eval,  test_elements,  (6,))
+#     # bssi_qp = quadpoints(trial_eval, trial_elements, (7,))
 
-    test_qp = quadpoints(test_eval,  test_elements,  (qs.outer_rule,))
-    bsis_qp = quadpoints(trial_eval, trial_elements, (qs.inner_rule,))
+#     test_qp = quadpoints(test_eval,  test_elements,  (qs.outer_rule,))
+#     bsis_qp = quadpoints(trial_eval, trial_elements, (qs.inner_rule,))
 
-    # gausslegendre = (
-    # _legendre(qs.sauter_schwab_common_vert,0,1),
-    # _legendre(qs.sauter_schwab_common_edge,0,1),
-    # _legendre(qs.sauter_schwab_common_face,0,1),)
+#     # gausslegendre = (
+#     # _legendre(qs.sauter_schwab_common_vert,0,1),
+#     # _legendre(qs.sauter_schwab_common_edge,0,1),
+#     # _legendre(qs.sauter_schwab_common_face,0,1),)
 
-    return (;test_qp, bsis_qp)
-end
+#     return (;test_qp, bsis_qp)
+# end
 
 defaultquadstrat(::Helmholtz3DOp, ::subReferenceSpace, ::subReferenceSpace) = DoubleNumWiltonSauterQStrat(4,7,4,7,4,4,4,4)
 
@@ -205,16 +205,16 @@ function quadrule(op::Helmholtz3DOp,
 end
 
 
-function quadrule(op::HH3DSingleLayerFDBIO,
-        test_refspace::LagrangeRefSpace{T,0} where T,
-        trial_refspace::LagrangeRefSpace{T,0} where T,
-        i, test_element, j, trial_element, qd,
-        qs::DoubleNumQStrat)
+# function quadrule(op::HH3DSingleLayerFDBIO,
+#         test_refspace::LagrangeRefSpace{T,0} where T,
+#         trial_refspace::LagrangeRefSpace{T,0} where T,
+#         i, test_element, j, trial_element, qd,
+#         qs::DoubleNumQStrat)
 
-    return DoubleQuadRule(
-        qd.test_qp[1,i],
-        qd.bsis_qp[1,j])
-end
+#     return DoubleQuadRule(
+#         qd.test_qp[1,i],
+#         qd.bsis_qp[1,j])
+# end
 
 regularpart(op::HH3DHyperSingularFDBIO) = HH3DHyperSingularReg(op.alpha, op.beta, op.gamma)
 singularpart(op::HH3DHyperSingularFDBIO) = HH3DHyperSingularSng(op.alpha, op.beta, op.gamma)
@@ -252,35 +252,35 @@ singularpart(op::HH3DHyperSingularFDBIO) = HH3DHyperSingularSng(op.alpha, op.bet
 end =#
 
 
-function quadrule(op::HH3DHyperSingularFDBIO,
-    test_refspace::LagrangeRefSpace{T,1} where T,
-    trial_refspace::LagrangeRefSpace{T,1} where T,
-    i, test_element, j, trial_element, qd,
-    qs::DoubleNumQStrat)
+# function quadrule(op::HH3DHyperSingularFDBIO,
+#     test_refspace::LagrangeRefSpace{T,1} where T,
+#     trial_refspace::LagrangeRefSpace{T,1} where T,
+#     i, test_element, j, trial_element, qd,
+#     qs::DoubleNumQStrat)
 
-    # tol, hits = sqrt(eps(eltype(eltype(test_element.vertices)))), 0
-    # for t in test_element.vertices
-    #     for s in trial_element.vertices
-    #         norm(t-s) < tol && (hits +=1)
-    # end end
+#     # tol, hits = sqrt(eps(eltype(eltype(test_element.vertices)))), 0
+#     # for t in test_element.vertices
+#     #     for s in trial_element.vertices
+#     #         norm(t-s) < tol && (hits +=1)
+#     # end end
 
-    # hits == 3 && return SauterSchwabQuadrature.CommonFace(qd.gausslegendre[3])
-    # hits == 2 && return SauterSchwabQuadrature.CommonEdge(qd.gausslegendre[2])
-    # hits == 1 && return SauterSchwabQuadrature.CommonVertex(qd.gausslegendre[1])
+#     # hits == 3 && return SauterSchwabQuadrature.CommonFace(qd.gausslegendre[3])
+#     # hits == 2 && return SauterSchwabQuadrature.CommonEdge(qd.gausslegendre[2])
+#     # hits == 1 && return SauterSchwabQuadrature.CommonVertex(qd.gausslegendre[1])
 
-    # test_quadpoints  = qd.test_qp
-    # trial_quadpoints = qd.bsis_qp
+#     # test_quadpoints  = qd.test_qp
+#     # trial_quadpoints = qd.bsis_qp
 
-    # hits != 0 && return WiltonSERule(
-    #     test_quadpoints[1,i],
-    #     DoubleQuadRule(
-    #         test_quadpoints[1,i],
-    #         trial_quadpoints[1,j]))
+#     # hits != 0 && return WiltonSERule(
+#     #     test_quadpoints[1,i],
+#     #     DoubleQuadRule(
+#     #         test_quadpoints[1,i],
+#     #         trial_quadpoints[1,j]))
 
-    return DoubleQuadRule(
-        qd.test_qp[1,i],
-        qd.bsis_qp[1,j])
-end
+#     return DoubleQuadRule(
+#         qd.test_qp[1,i],
+#         qd.bsis_qp[1,j])
+# end
 
 
 function quadrule(op::HH3DSingleLayerFDBIO, test_refspace::subReferenceSpace,
@@ -404,15 +404,15 @@ end =#
 end =#
 
 
-function quadrule(op::Helmholtz3DOp,
-    test_refspace::RefSpace, trial_refspace::RefSpace,
-    i, test_element, j, trial_element, quadrature_data,
-    qs::DoubleNumQStrat)
+# function quadrule(op::Helmholtz3DOp,
+#     test_refspace::RefSpace, trial_refspace::RefSpace,
+#     i, test_element, j, trial_element, quadrature_data,
+#     qs::DoubleNumQStrat)
 
-    return DoubleQuadRule(
-        quadrature_data[1][1,i],
-        quadrature_data[2][1,j])
-end
+#     return DoubleQuadRule(
+#         quadrature_data[1][1,i],
+#         quadrature_data[2][1,j])
+# end
 
 function quadrule(op::Helmholtz3DOp,
     test_refspace::RTRefSpace, trial_refspace::RTRefSpace,

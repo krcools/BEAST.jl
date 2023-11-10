@@ -189,9 +189,11 @@ include("quadrature/quadrule.jl")
 
 include("quadrature/doublenumqstrat.jl")
 include("quadrature/doublenumsauterqstrat.jl")
+include("quadrature/doublenumwiltonsauterqstrat.jl")
+include("quadrature/doublenumwiltonbogaertqstrat.jl")
 
-include("quadrature/double_quadrature.jl")
-include("quadrature/singularity_extraction.jl")
+include("quadrature/doublenumints.jl")
+include("quadrature/singularityextractionints.jl")
 include("quadrature/sauterschwabints.jl")
 
 include("postproc.jl")
