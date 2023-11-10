@@ -1,8 +1,10 @@
 # single layer
-function (igd::Integrand{<:HH3DSingleLayerReg})(x,y,f,g)
+function (igd::Integrand{<:HH3DSingleLayerReg})(x,y,f,g)  
+    # TODO: It is better to dispatch on γ
+    # to handle the static case more efficiently
+    γ = gamma(igd.operator)
     α = igd.operator.alpha
-    γ = igd.operator.gamma
-
+    
     r = cartesian(x) - cartesian(y)
     R = norm(r)
     iR = 1 / R
@@ -18,21 +20,23 @@ function innerintegrals!(op::HH3DSingleLayerSng, test_neighborhood,
     test_refspace::LagrangeRefSpace{T,0} where {T},
     trial_refspace::LagrangeRefSpace{T,0} where {T},
     test_elements, trial_element, zlocal, quadrature_rule::WiltonSERule, dx)
+    # TODO: It is better to dispatch on γ
+    # to handle the static case more efficiently
+    γ = gamma(op)
+    α = op.alpha
+    
+    s1, s2, s3 = trial_element.vertices
 
-γ = op.gamma
-α = op.alpha
+    x = cartesian(test_neighborhood)
+    n = normalize((s1-s3)×(s2-s3))
+    ρ = x - dot(x - s1, n) * n
 
-s1, s2, s3 = trial_element.vertices
+    scal, vec = WiltonInts84.wiltonints(s1, s2, s3, x, Val{1})
+    ∫G = (scal[2] + 0.5*γ^2*scal[4]) / (4π)
 
-x = cartesian(test_neighborhood)
-n = normalize((s1-s3)×(s2-s3))
-ρ = x - dot(x - s1, n) * n
+    zlocal[1,1] += α * ∫G * dx
 
-scal, vec = WiltonInts84.wiltonints(s1, s2, s3, x, Val{1})
-∫G = (scal[2] + 0.5*γ^2*scal[4]) / (4π)
-
-zlocal[1,1] += α * ∫G * dx
-return nothing
+    return nothing
 end
 
 # single layer with patch basis and pyramid testing
@@ -40,29 +44,31 @@ function innerintegrals!(op::HH3DSingleLayerSng, test_neighborhood,
     test_refspace::LagrangeRefSpace{T,1} where {T},
     trial_refspace::LagrangeRefSpace{T,0} where {T},
     test_elements, trial_element, zlocal, quadrature_rule::WiltonSERule, dx)
+    # TODO: It is better to dispatch on γ
+    # to handle the static case more efficiently
+    γ = gamma(op)
+    α = op.alpha
 
-γ = op.gamma
-α = op.alpha
-
-s1, s2, s3 = trial_element.vertices
-t1, t2, t3 = test_elements.vertices
+    s1, s2, s3 = trial_element.vertices
+    t1, t2, t3 = test_elements.vertices
 
 
-x = cartesian(test_neighborhood)
-n = normalize((s1-s3)×(s2-s3))
-ρ = x - dot(x - s1, n) * n
+    x = cartesian(test_neighborhood)
+    n = normalize((s1-s3)×(s2-s3))
+    ρ = x - dot(x - s1, n) * n
 
-scal, vec = WiltonInts84.wiltonints(s1, s2, s3, x, Val{1})
-∫G = (scal[2] + 0.5*γ^2*scal[4]) / (4π)
-Atot = 1/2*norm(cross(t3-t1,t3-t2))
-for i in 1:numfunctions(test_refspace)
-    Ai = 1/2*norm(cross(test_elements.vertices[mod1(i-1,3)]-x,test_elements.vertices[mod1(i+1,3)]-x))
-    g = Ai/Atot
-    for j in 1:numfunctions(trial_refspace)
-        zlocal[i,j] += α * ∫G * g * dx
+    scal, vec = WiltonInts84.wiltonints(s1, s2, s3, x, Val{1})
+    ∫G = (scal[2] + 0.5*γ^2*scal[4]) / (4π)
+    Atot = 1/2*norm(cross(t3-t1,t3-t2))
+    for i in 1:numfunctions(test_refspace)
+        Ai = 1/2*norm(cross(test_elements.vertices[mod1(i-1,3)]-x,test_elements.vertices[mod1(i+1,3)]-x))
+        g = Ai/Atot
+        for j in 1:numfunctions(trial_refspace)
+            zlocal[i,j] += α * ∫G * g * dx
+        end
     end
-end
-return nothing
+
+    return nothing
 end
 
 # single layer with pyramid basis and patch testing
@@ -70,23 +76,25 @@ function innerintegrals!(op::HH3DSingleLayerSng, test_neighborhood,
     test_refspace::LagrangeRefSpace{T,0} where {T},
     trial_refspace::LagrangeRefSpace{T,1} where {T},
     test_elements, trial_element, zlocal, quadrature_rule::WiltonSERule, dx)
+    # TODO: It is better to dispatch on γ
+    # to handle the static case more efficiently
+    γ = gamma(op)
+    α = op.alpha
 
-γ = op.gamma
-α = op.alpha
+    s1, s2, s3 = trial_element.vertices
 
-s1, s2, s3 = trial_element.vertices
+    x = cartesian(test_neighborhood)
+    n = normalize((s1-s3)×(s2-s3))
+    ρ = x - dot(x - s1, n) * n
 
-x = cartesian(test_neighborhood)
-n = normalize((s1-s3)×(s2-s3))
-ρ = x - dot(x - s1, n) * n
+    ∫Rⁿ, ∫RⁿN = WiltonInts84.higherorder(s1,s2,s3,x,3)
+    ∫G = (∫RⁿN[2] + 0.5*γ^2*∫RⁿN[3]) / (4π)
 
-∫Rⁿ, ∫RⁿN = WiltonInts84.higherorder(s1,s2,s3,x,3)
-∫G = (∫RⁿN[2] + 0.5*γ^2*∫RⁿN[3]) / (4π)
+    for i in 1:numfunctions(trial_refspace)
+    zlocal[1,i] += α * ∫G[i] * dx
+    end
 
-for i in 1:numfunctions(trial_refspace)
-zlocal[1,i] += α * ∫G[i] * dx
-end
-return nothing
+    return nothing
 end
 
 #single layer with pyramid basis and pyramid testing
@@ -94,34 +102,38 @@ function innerintegrals!(op::HH3DSingleLayerSng, test_neighborhood,
     test_refspace::LagrangeRefSpace{T,1} where {T},
     trial_refspace::LagrangeRefSpace{T,1} where {T},
     test_elements, trial_element, zlocal, quadrature_rule::WiltonSERule, dx)
+    # TODO: It is better to dispatch on γ
+    # to handle the static case more efficiently    
+    γ = gamma(op)
+    α = op.alpha
 
-γ = op.gamma
-α = op.alpha
+    s1, s2, s3 = trial_element.vertices
+    t1, t2, t3 = test_elements.vertices
 
-s1, s2, s3 = trial_element.vertices
-t1, t2, t3 = test_elements.vertices
+    x = cartesian(test_neighborhood)
+    n = normalize((s1-s3)×(s2-s3))
+    ρ = x - dot(x - s1, n) * n
 
-x = cartesian(test_neighborhood)
-n = normalize((s1-s3)×(s2-s3))
-ρ = x - dot(x - s1, n) * n
+    ∫Rⁿ, ∫RⁿN = WiltonInts84.higherorder(s1,s2,s3,x,3)
+    ∫G = (∫RⁿN[2] + 0.5*γ^2*∫RⁿN[3]) / (4π)
 
-∫Rⁿ, ∫RⁿN = WiltonInts84.higherorder(s1,s2,s3,x,3)
-∫G = (∫RⁿN[2] + 0.5*γ^2*∫RⁿN[3]) / (4π)
-
-Atot = 1/2*norm(cross(t3-t1,t3-t2))
-for i in 1:numfunctions(test_refspace)
-    Ai = 1/2*norm(cross(test_elements.vertices[mod1(i-1,3)]-x,test_elements.vertices[mod1(i+1,3)]-x))
-    g = Ai/Atot
-    for j in 1:numfunctions(trial_refspace)
-        zlocal[i,j] += α * ∫G[j] * g * dx
+    Atot = 1/2*norm(cross(t3-t1,t3-t2))
+    for i in 1:numfunctions(test_refspace)
+        Ai = 1/2*norm(cross(test_elements.vertices[mod1(i-1,3)]-x,test_elements.vertices[mod1(i+1,3)]-x))
+        g = Ai/Atot
+        for j in 1:numfunctions(trial_refspace)
+            zlocal[i,j] += α * ∫G[j] * g * dx
+        end
     end
-end
-return nothing
+
+    return nothing
 end
 
 # double layer transposed
 function (igd::Integrand{<:HH3DDoubleLayerTransposedReg})(x,y,f,g)
-    γ = igd.operator.gamma
+    # TODO: It is better to dispatch on γ
+    # to handle the static case more efficiently
+    γ = gamma(igd.operator)
     
     r = cartesian(x) - cartesian(y)
     R = norm(r)
@@ -143,7 +155,9 @@ function innerintegrals!(op::HH3DDoubleLayerTransposedSng, test_neighborhood,
     test_refspace::LagrangeRefSpace{T,0,3,1} where {T},
     trial_refspace::LagrangeRefSpace{T,0,3,1} where {T},
     test_elements, trial_element, zlocal, quadrature_rule::WiltonSERule, dx)
-    γ = op.gamma
+    # TODO: It is better to dispatch on γ
+    # to handle the static case more efficiently    
+    γ = gamma(op)
     α = op.alpha
 
     s1, s2, s3 = trial_element.vertices
@@ -169,7 +183,9 @@ function innerintegrals!(op::HH3DDoubleLayerTransposedSng, test_neighborhood,
     test_refspace::LagrangeRefSpace{T,1,3,3} where {T},
     trial_refspace::LagrangeRefSpace{T,0,3,1} where {T},
     test_elements, trial_element, zlocal, quadrature_rule::WiltonSERule, dx)
-    γ = op.gamma
+    # TODO: It is better to dispatch on γ
+    # to handle the static case more efficiently    
+    γ = gamma(op)
     α = op.alpha
 
     s1, s2, s3 = trial_element.vertices
@@ -198,7 +214,9 @@ function innerintegrals!(op::HH3DDoubleLayerTransposedSng, test_neighborhood,
     test_refspace::LagrangeRefSpace{T,0,3,1} where {T},
     trial_refspace::LagrangeRefSpace{T,1,3,3} where {T},
     test_elements, trial_element, zlocal, quadrature_rule::WiltonSERule, dx)
-    γ = op.gamma
+    # TODO: It is better to dispatch on γ
+    # to handle the static case more efficiently    
+    γ = gamma(op)
     α = op.alpha
 
     s1, s2, s3 = trial_element.vertices
@@ -224,7 +242,9 @@ function innerintegrals!(op::HH3DDoubleLayerTransposedSng, test_neighborhood,
     test_refspace::LagrangeRefSpace{T,1,3,3} where {T},
     trial_refspace::LagrangeRefSpace{T,1,3,3} where {T},
     test_elements, trial_element, zlocal, quadrature_rule::WiltonSERule, dx)
-    γ = op.gamma
+    # TODO: It is better to dispatch on γ
+    # to handle the static case more efficiently    
+    γ = gamma(op)
     α = op.alpha
 
     s1, s2, s3 = trial_element.vertices
@@ -251,7 +271,9 @@ function innerintegrals!(op::HH3DDoubleLayerTransposedSng, test_neighborhood,
 end
 # double layer
 function (igd::Integrand{<:HH3DDoubleLayerReg})(x,y,f,g)
-    γ = igd.operator.gamma
+    # TODO: It is better to dispatch on γ
+    # to handle the static case more efficiently    
+    γ = gamma(igd.operator)
 
     r = cartesian(x) - cartesian(y)
     R = norm(r)
@@ -273,7 +295,9 @@ function innerintegrals!(op::HH3DDoubleLayerSng, p,
     g::LagrangeRefSpace{T,1} where {T},
     f::LagrangeRefSpace{T,1} where {T},
     t, s, z, quadrature_rule::WiltonSERule, dx)
-    γ = op.gamma
+    # TODO: It is better to dispatch on γ
+    # to handle the static case more efficiently    
+    γ = gamma(op)
     α = op.alpha
 
     s1, s2, s3 = s.vertices
@@ -303,7 +327,9 @@ function innerintegrals!(op::HH3DDoubleLayerSng, p,
     g::LagrangeRefSpace{T,0} where {T},
     f::LagrangeRefSpace{T,0} where {T},
     t, s, z, quadrature_rule::WiltonSERule, dx)
-    γ = op.gamma
+    # TODO: It is better to dispatch on γ
+    # to handle the static case more efficiently    
+    γ = gamma(op)
     α = op.alpha
 
     s1, s2, s3 = s.vertices
@@ -329,7 +355,9 @@ function innerintegrals!(op::HH3DDoubleLayerSng, p,
     g::LagrangeRefSpace{T,1} where {T},
     f::LagrangeRefSpace{T,0} where {T},
     t, s, z, quadrature_rule::WiltonSERule, dx)
-    γ = op.gamma
+    # TODO: It is better to dispatch on γ
+    # to handle the static case more efficiently    
+    γ = gamma(op)
     α = op.alpha
 
     s1, s2, s3 = s.vertices
@@ -359,7 +387,9 @@ function innerintegrals!(op::HH3DDoubleLayerSng, p,
     g::LagrangeRefSpace{T,0} where {T},
     f::LagrangeRefSpace{T,1} where {T},
     t, s, z, quadrature_rule::WiltonSERule, dx)
-    γ = op.gamma
+    # TODO: It is better to dispatch on γ
+    # to handle the static case more efficiently    
+    γ = gamma(op)
     α = op.alpha
 
     s1, s2, s3 = s.vertices
@@ -386,7 +416,9 @@ end
 function (igd::Integrand{<:HH3DHyperSingularReg})(x,y,f,g)
     α = igd.operator.alpha
     β = igd.operator.beta
-    γ = igd.operator.gamma
+    # TODO: It is better to dispatch on γ
+    # to handle the static case more efficiently    
+    γ = gamma(igd.operator)
 
     r = cartesian(x) - cartesian(y)
     R = norm(r)
@@ -406,7 +438,9 @@ function innerintegrals!(op::HH3DHyperSingularSng, p,
     t, s, z, quadrature_rule::WiltonSERule, dx)
     α = op.alpha
     β = op.beta
-    γ = op.gamma
+    # TODO: It is better to dispatch on γ
+    # to handle the static case more efficiently    
+    γ = gamma(op)
     s1, s2, s3 = s.vertices
     t1, t2, t3 = t.vertices
     x = cartesian(p)
