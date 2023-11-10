@@ -187,6 +187,9 @@ include("quaddata.jl")
 include("quadrature/quaddata.jl")
 include("quadrature/quadrule.jl")
 
+include("quadrature/doublenumqstrat.jl")
+include("quadrature/doublenumsauterqstrat.jl")
+
 include("quadrature/double_quadrature.jl")
 include("quadrature/singularity_extraction.jl")
 include("quadrature/sauterschwabints.jl")

@@ -258,18 +258,18 @@ function quadrule(op::HH3DHyperSingularFDBIO,
     i, test_element, j, trial_element, qd,
     qs::DoubleNumQStrat)
 
-    tol, hits = sqrt(eps(eltype(eltype(test_element.vertices)))), 0
-    for t in test_element.vertices
-        for s in trial_element.vertices
-            norm(t-s) < tol && (hits +=1)
-    end end
+    # tol, hits = sqrt(eps(eltype(eltype(test_element.vertices)))), 0
+    # for t in test_element.vertices
+    #     for s in trial_element.vertices
+    #         norm(t-s) < tol && (hits +=1)
+    # end end
 
     # hits == 3 && return SauterSchwabQuadrature.CommonFace(qd.gausslegendre[3])
     # hits == 2 && return SauterSchwabQuadrature.CommonEdge(qd.gausslegendre[2])
     # hits == 1 && return SauterSchwabQuadrature.CommonVertex(qd.gausslegendre[1])
 
-    test_quadpoints  = qd.test_qp
-    trial_quadpoints = qd.bsis_qp
+    # test_quadpoints  = qd.test_qp
+    # trial_quadpoints = qd.bsis_qp
 
     # hits != 0 && return WiltonSERule(
     #     test_quadpoints[1,i],
