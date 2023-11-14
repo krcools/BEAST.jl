@@ -204,3 +204,33 @@ function momintegrals_trial_refines_test!(out, op,
         end end end
     end
 end
+
+function momintegrals_overlap!(biop, 
+    test_shapes, trial_shapes, 
+    tcell, bcell, 
+    out, quadstrat)
+    tcells, bcells = CompScienceMeshes.complementary_mesh(tcell,bcell)
+    
+    qd = quaddata(biop,test_shapes,trial_shapes,tcells,bcells,quadstrat)
+
+    Nt = numfunctions(test_shapes)
+    Nb = numfunctions(trial_shapes)
+
+
+    for (p,tsubcell) in enumerate(tcells)
+        for (q,bsubcell) in enumerate(bcells)
+            zlocal = zero(out)
+            qrule = quadrule(biop, test_shapes, trial_shapes, p, tsubcell, q, bsubcell, qd, quadstrat)
+            momintegrals!(biop, test_shapes, trial_shapes, tsubcell, bsubcell, zlocal, qrule)
+            Qt = restrict(test_shapes,tcell,tsubcell)
+            Qb = restrict(trial_shapes,bcell,bsubcell)
+            for j in 1:Nb
+                for i in 1:Nt
+                    for m in 1:Nb
+                        for n in 1:Nt
+                            out[i,j] += Qt[i,n] * zlocal[n,m] * Qb[j,m]
+            end end end end
+        end
+    end
+
+end
