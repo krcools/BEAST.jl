@@ -36,8 +36,7 @@ Nxy = assemble(@discretise(BEAST.diag(N)[p,q], p∈X, q∈Y))
 Dyx = BEAST.GMRESSolver(Nxy, tol=2e-12, restart=250, verbose=false)
 Dxy = BEAST.GMRESSolver(transpose(Nxy), tol=2e-12, restart=250, verbose=false)
 Syy = BEAST.assemble(@discretise BEAST.diag(SL)[p,q] p∈Y q∈Y)
-#P = Dxy * Syy * Dyx
-P = Syy * Dyx
+P = Dxy * Syy * Dyx
 
 # Solve system without and with preconditioner
 u1, ch1 = solve(BEAST.GMRESSolver(Sxx,tol=2e-5, restart=250), ex)

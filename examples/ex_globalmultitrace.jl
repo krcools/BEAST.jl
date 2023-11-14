@@ -3,28 +3,15 @@ using BEAST
 using LinearAlgebra
 import Plotly
 
-
-# ϵ0 = 8.854e-12
-# μ0 = 4π*1e-7
-ϵr1 = 2.0
-μr1 = 2.0
-ϵr2 = 3.0
-μr2 = 3.0
-# c = 1/√(ϵ0*μ0)
-# λ = 2.9979563769321627
-# ω = 2π*c/λ
-# k0 = ω*sqrt(ϵ0*μ0)
-k0 = 3.0
-
 # Exterior wavenumber
-κ₀ = k0
+κ₀ = 3.0
 
 # This is where the number of domains enters the problem description
-κ = [sqrt(ϵr1*μr1)*κ₀, sqrt(ϵr2*μr2)*κ₀]
+κ = [1.5κ₀, 2.5κ₀]
 
 # Description of the domain boundaries
-h = 0.2
-Γ1 = meshcuboid(1.0, 1.0, 1.0, h)
+h = 0.125
+Γ1 = meshcuboid(0.5, 1.0, 1.0, h)
 Γ2 =  -Mesh([point(-x,y,z) for (x,y,z) in vertices(Γ1)], deepcopy(cells(Γ1)))
 Γ = [Γ1, Γ2]
 
@@ -32,7 +19,7 @@ h = 0.2
 # of the number of domains and their relative positioning
 
 # Incident field
-Einc = Maxwell3D.planewave(direction=ẑ, polarization=x̂, wavenumber=κ₀)
+Einc = Maxwell3D.planewave(direction=(x̂+ẑ)/√2, polarization=ŷ, wavenumber=κ₀)
 Hinc = -1/(im*κ₀)*curl(Einc)
 
 # Definition of the boundary integral operators
@@ -110,6 +97,4 @@ Etot = Eo + sum(Ei)
 Htot = Ho + sum(Hi)
 
 import Plots
-Plots.heatmap(Xs, Zs, clamp.(real.(getindex.(Htot,2)),-1,1); colormap=:viridis)
-
-Plots.heatmap(Xs, Zs, imag.(getindex.(Htot,2)))
+Plots.heatmap(Xs, Zs, clamp.(real.(getindex.(Etot,2)),-2.0,2.0); colormap=:viridis)
