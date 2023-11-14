@@ -274,8 +274,8 @@ include("composedoperator/composedoperator.jl")
 
 
 #include("display.jl")
-include("Helmholtzhodge/hhhexc.jl")
-include("Helmholtzhodge/hhhnearfield.jl")
+# include("Helmholtzhodge/hhhexc.jl")
+# include("Helmholtzhodge/hhhnearfield.jl")
 
 const x̂ = point(1,0,0)
 const ŷ = point(0,1,0)
@@ -289,14 +289,14 @@ const ∇ = Nabla()
 export ∇
 
 
-export Interaction
-export Domain
-export HomogeneousDomain
-export RootDomain
-export SubDomain
+# export Interaction
+# export Domain
+# export HomogeneousDomain
+# export RootDomain
+# export SubDomain
 
-export FunctionExcitation
-export NdotExcitation
-export NcrossExcitation
+# export FunctionExcitation
+# export NdotExcitation
+# export NcrossExcitation
 
 end # module

@@ -368,7 +368,14 @@ scalartype(G::GreenHH3D{T}) where {T} = T
 scalartype(G::GradGreenHH3D{T}) where {T} = T
 
 
+struct DoubleIntegralR{T} <: Kernel end
 
+function (op::DoubleIntegralR)(x,y,g)
+    r = cartesian(x) - cartesian(y)
+    Ref(r)
+end
+scalartype(G::DoubleIntegralR{T}) where {T} = T
+γ(op::DoubleIntegralR) = op
 
 
 function (op::Union{TimesIntegral,TimesLocal})(x,y,g)

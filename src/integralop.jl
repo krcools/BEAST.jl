@@ -109,8 +109,6 @@ function assemblechunk_body!(biop,
         test_shapes, test_elements, test_assembly_data,
         trial_shapes, trial_elements, trial_assembly_data,
         qd, zlocal, store; quadstrat)
-    println(typeof(test_elements))
-    println(typeof(trial_elements))
     myid = Threads.threadid()
     myid == 1 && print(string(typeof(biop))*" dots out of 10: ")
     todo, done, pctg = length(test_elements), 0, 0

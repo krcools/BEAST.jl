@@ -443,7 +443,7 @@ function cellinteractions(biop, trefs::U, brefs::V, cellt,cellb,qr) where {U<:Re
     return zlocal
 end
 function getvalue(list::Matrix{T}) where {T}
-    
+    display(list)
     return SVector{length(list),T}([i for i in list])
 end
 # function cellinteractions(biop, trefs::U, brefs::V, cell,qr) where {U<:RefSpace{T},V<:RefSpace{T}} where {T}
