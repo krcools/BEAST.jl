@@ -2,7 +2,7 @@ using CompScienceMeshes
 using BEAST
 
 # Γ = readmesh(joinpath(@__DIR__,"sphere2.in"))
-Γ = meshsphere(radius=1.0, h=0.2)
+Γ = meshsphere(radius=1.0, h=0.1)
 X = brezzidouglasmarini(Γ)
 
 κ = 1.0

@@ -1,6 +1,7 @@
 abstract type IntegralOperator <: Operator end
 
-
+defaultquadstrat(op::IntegralOperator, tfs::RefSpace, bfs::RefSpace) =
+    DoubleNumSauterQstrat(2,3,5,5,4,3)
 
 """
     blockassembler(operator, test_space, trial_space) -> assembler
