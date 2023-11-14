@@ -14,6 +14,11 @@ abstract type AbstractOperator end
 """
 abstract type Operator <: AbstractOperator end
 
+
+struct ZeroOperator <: AbstractOperator end
+
+
+
 mutable struct TransposedOperator <: AbstractOperator
     op::AbstractOperator
 end
@@ -59,8 +64,19 @@ end
 +(a::AbstractOperator, b::Number) = a + (b * Identity())
 +(a::Number, b::AbstractOperator) = b + a
 
-*(a::Number, b::AbstractOperator) = LinearCombinationOfOperators([a], [b])
-*(a::Number, b::LinearCombinationOfOperators) = LinearCombinationOfOperators(a * b.coeffs, b.ops)
+function *(a::Number, b::AbstractOperator) 
+    if abs(a) ≈ 0
+        return ZeroOperator()
+    end
+    LinearCombinationOfOperators([a], [b])
+end
+*(a::AbstractOperator, b::Number) = b*a
+function *(a::Number, b::LinearCombinationOfOperators) 
+    if abs(a) ≈ 0
+        return ZeroOperator()
+    end
+    LinearCombinationOfOperators(a * b.coeffs, b.ops)
+end
 -(a::AbstractOperator, b::AbstractOperator) = a + (-1.0) * b
 -(a::AbstractOperator) = (-1.0) * a
 
@@ -74,7 +90,8 @@ end
 
 transpose(op::TransposedOperator) = op.op
 transpose(op::Operator) = TransposedOperator(op)
-
+defaultquadstrat(op::ZeroOperator,tfs,bfs) = nothing
+scalartype(op::ZeroOperator) = Union{}
 defaultquadstrat(lc::LinearCombinationOfOperators, tfs, bfs) =
     [defaultquadstrat(op,tfs,bfs) for op in lc.ops]
 
@@ -199,7 +216,8 @@ function assemble!(operator::Operator, test_functions::Space, trial_functions::S
 
     assemblechunk!(operator, test_functions, trial_functions, store; quadstrat)
 end
-
+# defaultquadstrat(op::BasisOperatorLeft,tfs,bfs) = defaultquadstrat(op.operator,op.left_function(tfs),bfs)
+# defaultquadstrat(op::BasisOperatorRight,tfs,bfs) = defaultquadstrat(op.operator,tfs,op.right_function(bfs))
 
 
 function assemble!(op::TransposedOperator, tfs::Space, bfs::Space,
@@ -209,6 +227,22 @@ function assemble!(op::TransposedOperator, tfs::Space, bfs::Space,
     store1(v,m,n) = store(v,n,m)
     assemble!(op.op, bfs, tfs, store1, threading; quadstrat)
 end
+function assemble!(op::ZeroOperator, tfs::Space, bfs::Space, 
+    store, threading = Threading{:multi};
+    quadstrat=nothing)
+end
+
+# function assemble!(op::BasisOperatorLeft, tfs::Space, bfs::Space, store,threading = Threading{:multi};
+#     quadstrat=defaultquadstrat(op, tfs, bfs))
+#     #quadstrat = defaultquadstrat(op.operator,op.left_function(tfs),bfs)
+#     assemble!(op.operator,op.left_function(tfs),bfs,store,threading;quadstrat)
+# end
+
+# function assemble!(op::BasisOperatorRight, tfs::Space, bfs::Space, store,threading = Threading{:multi};
+#     quadstrat=defaultquadstrat(op, tfs, bfs))
+#     #quadstrat = defaultquadstrat(op.operator,tfs,op.right_function(bfs))
+#     assemble!(op.operator,tfs,op.right_function(bfs),store,threading;quadstrat)
+# end
 
 
 function assemble!(op::LinearCombinationOfOperators, tfs::AbstractSpace, bfs::AbstractSpace,
@@ -321,3 +355,19 @@ function assemble!(op::BlockFullOperators, U::DirectProductSpace, V::DirectProdu
         end
     end
 end
+
+
+# strace(op::Operator,orientation::Orientation) = Strace(op,orientation)
+# ttrace(op::Operator,orientation::Orientation) = Ttrace(op,orientation)
+
+
+
+Base.zero(op::AbstractOperator) = ZeroOperator()
++(a::AbstractOperator,b::ZeroOperator) = a
++(a::ZeroOperator,b::ZeroOperator) = a
++(a::ZeroOperator,b::AbstractOperator) = b
++(a::ZeroOperator,b::LinearCombinationOfOperators) = b
++(b::LinearCombinationOfOperators,a::ZeroOperator) = b
+-(a::ZeroOperator,b::AbstractOperator) = -b
+*(a::Number,b::ZeroOperator) = b
+

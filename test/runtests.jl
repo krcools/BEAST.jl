@@ -71,7 +71,9 @@ include("test_tdrhs_scaling.jl")
 include("test_td_tensoroperator.jl")
 
 include("test_variational.jl")
+include("test_composed_operator.jl")
 
+include("test_momintegrals_overlap.jl")
 
 try
     Pkg.installed("BogaertInts10")

@@ -39,7 +39,10 @@ struct OuterNumInnerAnalyticQStrat{R}
 end
 
 
-defaultquadstrat(op, tfs, bfs) = defaultquadstrat(op, refspace(tfs), refspace(bfs))
+function defaultquadstrat(op, tfs, bfs) 
+    @warn "made use of general defaultquadstrat routine which cals defaultquadstrat on refspaces "*string(typeof(op))
+    defaultquadstrat(op, refspace(tfs), refspace(bfs))
+end
 macro defaultquadstrat(dop, body)
     @assert dop.head == :tuple
     @assert length(dop.args) == 3

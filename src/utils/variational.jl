@@ -281,6 +281,14 @@ end
 
 Create a BilForm corresponding to A[v,u]
 """
+struct DualElement
+    operator
+    testhilbertspace
+end
+
+*(h::HilbertVector, A::BEAST.AbstractOperator) = DualElement(A,h)
+*(A::DualElement,h::HilbertVector) = A.operator[A.testhilbertspace,h]
+
 function getindex(A, v::HilbertVector, u::HilbertVector)
     terms = [ BilTerm(v.idx, u.idx, v.opstack, u.opstack, 1, A) ]
     BilForm(v.space, u.space, terms)

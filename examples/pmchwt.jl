@@ -121,6 +121,3 @@ Plots.heatmap(Z, Y, imag.(getindex.(H_tot,2)))
 
 Plots.plot(real.(getindex.(E_tot[:,51],1)))
 Plots.plot(real.(getindex.(H_tot[:,51],2)))
-
-
-

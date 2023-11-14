@@ -3,6 +3,7 @@ mutable struct BDM3DBasis{T,M,P} <: Space{T}
     fns::Vector{Vector{Shape{T}}}
     pos::Vector{P}
 end
+redefine_geometrie(basis::BDM3DBasis{T,M,P},geo::F) where {T,M,P,F}= BDM3DBasis{T,F,P}(geo,basis.fns,basis.pos)
 
 refspace(s::BDM3DBasis{T}) where {T} = BDM3DRefSpace{T}()
 

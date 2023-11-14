@@ -25,6 +25,7 @@ import LinearAlgebra: cross, dot
 import LinearAlgebra: ×, ⋅
 
 import SharedArrays: sdata
+import CompScienceMeshes: normal, chart, mesh, coordtype, simplex, domain
 
 export dot
 
@@ -125,6 +126,7 @@ export PlaneWaveDirichlet
 export PlaneWaveNeumann
 
 struct NormalVector end
+struct Nabla end
 
 using CompScienceMeshes
 using Combinatorics
@@ -132,13 +134,15 @@ using FFTW
 using SparseArrays
 
 function convolve end
-include("utils/extendedcharts.jl")
+
+
 include("utils/polynomial.jl")
 include("utils/specialfns.jl")
 include("utils/combinatorics.jl")
 include("utils/linearspace.jl")
 include("utils/zeromap.jl")
 include("utils/rank1map.jl")
+include("utils/geometrie.jl")
 
 include("bases/basis.jl")
 include("bases/lincomb.jl")
@@ -259,7 +263,19 @@ include("solvers/itsolver.jl")
 include("utils/plotlyglue.jl")
 
 
+#suport for multi-trace
+# include("multi-trace/configuration.jl")
+# include("multi-trace/interactions.jl")
+# include("multi-trace/postprocessing.jl")
 
+#suport for displaying operators
+include("composedoperator/tracesimplex.jl")
+include("composedoperator/composedoperator.jl")
+
+
+#include("display.jl")
+# include("Helmholtzhodge/hhhexc.jl")
+# include("Helmholtzhodge/hhhnearfield.jl")
 
 const x̂ = point(1,0,0)
 const ŷ = point(0,1,0)
@@ -268,5 +284,19 @@ export x̂, ŷ, ẑ
 
 const n = NormalVector()
 export n
+
+const ∇ = Nabla()
+export ∇
+
+
+# export Interaction
+# export Domain
+# export HomogeneousDomain
+# export RootDomain
+# export SubDomain
+
+# export FunctionExcitation
+# export NdotExcitation
+# export NcrossExcitation
 
 end # module
