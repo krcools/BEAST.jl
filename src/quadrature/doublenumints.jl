@@ -5,7 +5,7 @@ end
 
 
 """
-    regularcellcellinteractions!(biop, tshs, bshs, tcell, bcell, interactions, strat)
+momintegrals!(biop, tshs, bshs, tcell, bcell, interactions, strat)
 
 Function for the computation of moment integrals using simple double quadrature.
 """

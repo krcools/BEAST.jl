@@ -50,6 +50,7 @@ include("test_dipole.jl")
 
 include("test_wiltonints.jl")
 include("test_sauterschwabints.jl")
+include("test_hh3dints.jl")
 include("test_ss_nested_meshes.jl")
 include("test_nitsche.jl")
 include("test_nitschehh3d.jl")
@@ -62,10 +63,12 @@ include("test_tdassembly.jl")
 include("test_tdhhdbl.jl")
 include("test_tdmwdbl.jl")
 include("test_compressed_storage.jl")
+include("test_dyadicop.jl")
 # include("test_matrixconv.jl")
 
 include("test_tdop_scaling.jl")
 include("test_tdrhs_scaling.jl")
+include("test_td_tensoroperator.jl")
 
 include("test_variational.jl")
 

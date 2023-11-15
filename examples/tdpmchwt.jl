@@ -10,7 +10,7 @@ using LinearAlgebra
 # fn = joinpath(dirname(pathof(CompScienceMeshes)),"geos/torus.geo")
 # Γ = CompScienceMeshes.meshgeo(fn; dim=2, h=1.0)
 
-Γ = meshsphere(radius=1.0, h=0.35)
+Γ = meshsphere(radius=1.0, h=0.25)
 X = raviartthomas(Γ)
 Y = buffachristiansen(Γ)
 
@@ -42,8 +42,8 @@ H = direction × E
 #     2.0K[l,j] + 2.0T[l,m] == H[k] + E[l],
 #     j∈X⊗T2, m∈Y⊗T2, k∈X⊗δ, l∈Y⊗δ)
 
-BEAST.@defaultquadstrat (T, X⊗δ, X⊗T2) BEAST.OuterNumInnerAnalyticQStrat(3)
-BEAST.@defaultquadstrat (K, X⊗δ, X⊗T2) BEAST.OuterNumInnerAnalyticQStrat(3)
+BEAST.@defaultquadstrat (T, X⊗δ, X⊗T2) BEAST.OuterNumInnerAnalyticQStrat(7)
+BEAST.@defaultquadstrat (K, X⊗δ, X⊗T2) BEAST.OuterNumInnerAnalyticQStrat(7)
 
 pmchwt = @discretise(
     2.0T[k,j] + 2.0K[k,m] -

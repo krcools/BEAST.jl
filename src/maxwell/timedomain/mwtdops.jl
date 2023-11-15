@@ -101,7 +101,7 @@ end
 
 
 function assemble!(dl::MWDoubleLayerTDIO, W::SpaceTimeBasis, V::SpaceTimeBasis, store,
-    threading=Threading{:multi}; quadstrat=defaultquadstrat(dl,W,V))
+    threading::Type{Threading{:multi}}; quadstrat=defaultquadstrat(dl,W,V))
 
 	X, T = spatialbasis(W), temporalbasis(W)
 	Y, U = spatialbasis(V), temporalbasis(V)

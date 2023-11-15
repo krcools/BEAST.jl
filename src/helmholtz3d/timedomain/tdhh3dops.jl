@@ -150,8 +150,8 @@ function innerintegrals!(zlocal, operator::HH3DHyperSingularTDBIO,
         (isodd(d) ? -1 : 1) * ((1 - h*dot(m,bξ)) * ∫G[d+2] - h*dot(m, ∫Gξy[d+2]))
     end
 
-    test_values = test_local_space(test_point, Val{:withcurl})
-    trial_values = trial_local_space(center(trial_element), Val{:withcurl})
+    test_values = test_local_space(test_point)
+    trial_values = trial_local_space(center(trial_element))
 
     # weakly singular term
     α = dx / (4π) * operator.weight_of_weakly_singular_term
@@ -222,8 +222,8 @@ function innerintegrals!(zlocal, operator::HH3DDoubleLayerTDBIO,
         return σ * ∇G[d+1]
     end
 
-    test_values = test_local_space(test_point, Val{:withcurl})
-    trial_values = trial_local_space(center(trial_element), Val{:withcurl})
+    test_values = test_local_space(test_point)
+    trial_values = trial_local_space(center(trial_element))
 
     @assert all(getindex.(trial_values,1) .≈ [1])
     # @assert all(getindex.(trial_values,2) .≈ Ref([0,0,0]))

@@ -2,8 +2,10 @@
 
 abstract type Functional end
 
-quaddata(fn::Functional, refs, cells) = quadpoints(refs, cells, [8])
-quadrule(fn::Functional, refs, p, cell, qd) = qd[1,p]
+defaultquadstrat(fn::Functional, basis) = SingleNumQStrat(8)
+quaddata(fn::Functional, refs, cells, qs::SingleNumQStrat) =
+    quadpoints(refs, cells, [qs.quad_rule])
+quadrule(fn::Functional, refs, p, cell, qd, qs::SingleNumQStrat) = qd[1,p]
 
 """
     assemble(fn, tfs)
@@ -11,38 +13,39 @@ quadrule(fn::Functional, refs, p, cell, qd) = qd[1,p]
 Assemble the vector of test coefficients corresponding to functional
 `fn` and test functions `tfs`.
 """
-function assemble(field::Functional, tfs; quaddata=quaddata, quadrule=quadrule)
+function assemble(field::Functional, tfs;
+    quadstrat=defaultquadstrat(field, tfs))
 
     R = scalartype(tfs)
     b = zeros(Complex{R}, numfunctions(tfs))
     store(v,m) = (b[m] += v)
-    assemble!(field, tfs, store, quaddata=quaddata, quadrule=quadrule)
+    assemble!(field, tfs, store; quadstrat)
     return b
 end
 
 function assemble!(field::Functional, tfs::DirectProductSpace, store;
-    quaddata=quaddata, quadrule=quadrule)
+    quadstrat=defaultquadstrat(field, tfs))
 
     I = Int[0]
     for s in tfs.factors push!(I, last(I) + numfunctions(s)) end
     for (i,s) in enumerate(tfs.factors)
         store1(v,m) = store(v, m + I[i])
-        assemble!(field, s, store1, quaddata=quaddata, quadrule=quadrule)
+        assemble!(field, s, store1; quadstrat)
     end
 end
 
 function assemble!(field::Functional, tfs::Space, store;
-    quaddata=quaddata, quadrule=quadrule)
+    quadstrat=defaultquadstrat(field, tfs))
 
     tels, tad = assemblydata(tfs)
 
     trefs = refspace(tfs)
-    qd = quaddata(field, trefs, tels)
+    qd = quaddata(field, trefs, tels, quadstrat)
 
     for (t, tcell) in enumerate(tels)
 
         # compute the testing with the reference elements
-        qr = quadrule(field, trefs, t, tcell, qd)
+        qr = quadrule(field, trefs, t, tcell, qd, quadstrat)
         blocal = celltestvalues(trefs, tcell, field, qr)
 
         for i in 1 : numfunctions(trefs)
@@ -56,7 +59,7 @@ function assemble!(field::Functional, tfs::Space, store;
 end
 
 function assemble!(field::Functional, tfs::subdBasis, store;
-    quaddata=quaddata, quadrule=quadrule)
+    quadstrat=defaultquadstrat(field, tfs))
 
     tels, tad = assemblydata(tfs)
 
@@ -66,8 +69,8 @@ function assemble!(field::Functional, tfs::subdBasis, store;
     for (t, tcell) in enumerate(tels)
 
         # compute the testing with the reference elements
-        qr = quadrule(field, trefs, t, tcell, qd)
-        blocal = celltestvalues(trefs, tcell, field, qr)
+        qr = quadrule(field, trefs, t, tcell, qd, quadstrat)
+        blocal = celltestvalues(trefs, tcell, field, qr, quadstrat)
 
         for i in 1 : length(tad[t])
             for (m,a) in tad[t][i]
