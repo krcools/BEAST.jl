@@ -43,6 +43,7 @@ for T in [Float32, Float64]
 
     numfunctions(X)
 
+    BEAST.quadinfo(N, X, X)
     Nxx = assemble(N, X, X)
 
     @test size(Nxx) == (numfunctions(X), numfunctions(X))

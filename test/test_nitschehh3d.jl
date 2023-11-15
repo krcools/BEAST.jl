@@ -19,7 +19,7 @@ X = lagrangec0d1(m, boundary(m))
 x = refspace(X)
 s = chart(m, X.fns[1][1].cellid)
 c = neighborhood(s, [1,1]/3)      # get the barycenter of that patch
-v = x(c, Val{:withcurl})       # evaluate the Lagrange elements in c, together with their curls
+v = x(c)       # evaluate the Lagrange elements in c, together with their curls
 
 @test (s[3] - s[2]) / (2 * volume(s)) ≈ v[1][2]
 @test (s[1] - s[3]) / (2 * volume(s)) ≈ v[2][2]

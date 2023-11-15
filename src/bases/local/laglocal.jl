@@ -33,10 +33,11 @@ function (f::LagrangeRefSpace{T,1,3})(t) where T
 
     j = jacobian(t)
     p = t.patch
+    σ = sign(dot(normal(t), cross(p[1]-p[3],p[2]-p[3])))
     SVector(
-        (value=u, curl=(p[3]-p[2])/j),
-        (value=v, curl=(p[1]-p[3])/j),
-        (value=w, curl=(p[2]-p[1])/j))
+        (value=u, curl=σ*(p[3]-p[2])/j),
+        (value=v, curl=σ*(p[1]-p[3])/j),
+        (value=w, curl=σ*(p[2]-p[1])/j))
 end
 
 
@@ -45,17 +46,18 @@ end
 
 Compute the values of the shape functions together with their curl.
 """
-function (f::LagrangeRefSpace{T,1,3})(t, ::Type{Val{:withcurl}}) where T
-    # Evaluete linear Lagrange elements on a triange, together with their curl
-    j = jacobian(t)
-    u,v,w, = barycentric(t)
-    p = t.patch
-    SVector(
-        (value=u, curl=(p[3]-p[2])/j),
-        (value=v, curl=(p[1]-p[3])/j),
-        (value=w, curl=(p[2]-p[1])/j)
-    )
-end
+# function (f::LagrangeRefSpace{T,1,3})(t, ::Type{Val{:withcurl}}) where T
+#     # Evaluete linear Lagrange elements on a triange, together with their curl
+#     j = jacobian(t)
+#     u,v,w, = barycentric(t)
+#     p = t.patch
+#     σ = sign(dot(normal(t), cross(p[1]-p[3],p[2]-p[3])))
+#     SVector(
+#         (value=u, curl=σ*(p[3]-p[2])/j),
+#         (value=v, curl=σ*(p[1]-p[3])/j),
+#         (value=w, curl=σ*(p[2]-p[1])/j)
+#     )
+# end
 
 
 # Evaluate constant Lagrange elements on a triangle, with their curls
@@ -178,30 +180,33 @@ function (f::LagrangeRefSpace{T,2,3})(t) where T
      #   (value=v, curl=(p[1]-p[3])/j),
       #  (value=w, curl=(p[2]-p[1])/j)
 
+    σ = sign(dot(normal(t), cross(p[1]-p[3],p[2]-p[3])))
      SVector(
-        (value=u*(2*u-1), curl=(p[3]-p[2])*(4u-1)/j),
-        (value=v*(2*v-1), curl=(p[1]-p[3])*(4v-1)/j),
-        (value=w*(2*w-1), curl=(p[2]-p[1])*(4w-1)/j),
-        (value=4*v*w, curl=4*(w*(p[1]-p[3])+v*(p[2]-p[1]))/j),
-        (value=4*w*u, curl=4*(w*(p[3]-p[2])+u*(p[2]-p[1]))/j),
-        (value=4*u*v, curl=4*(u*(p[1]-p[3])+v*(p[3]-p[2]))/j),
+        (value=u*(2*u-1), curl=σ*(p[3]-p[2])*(4u-1)/j),
+        (value=v*(2*v-1), curl=σ*(p[1]-p[3])*(4v-1)/j),
+        (value=w*(2*w-1), curl=σ*(p[2]-p[1])*(4w-1)/j),
+        (value=4*v*w, curl=4*σ*(w*(p[1]-p[3])+v*(p[2]-p[1]))/j),
+        (value=4*w*u, curl=4*σ*(w*(p[3]-p[2])+u*(p[2]-p[1]))/j),
+        (value=4*u*v, curl=4*σ*(u*(p[1]-p[3])+v*(p[3]-p[2]))/j),
     )
 end
 
-function (f::LagrangeRefSpace{T,2,3})(t, ::Type{Val{:withcurl}}) where T
-    # Evaluete quadratic Lagrange elements on a triange, together with their curl
-    j = jacobian(t)
-    u,v,w, = barycentric(t)
-    p = t.patch
-    SVector(
-        (value=u*(2*u-1), curl=(p[3]-p[2])*(4u-1)/j),
-        (value=v*(2*v-1), curl=(p[1]-p[3])*(4v-1)/j),
-        (value=w*(2*w-1), curl=(p[2]-p[1])*(4w-1)/j),
-        (value=4*v*w, curl=4*(w*(p[1]-p[3])+v*(p[2]-p[1]))/j),
-        (value=4*w*u, curl=4*(w*(p[3]-p[2])+u*(p[2]-p[1]))/j),
-        (value=4*u*v, curl=4*(u*(p[1]-p[3])+v*(p[3]-p[2]))/j),
-    )
-end
+# function (f::LagrangeRefSpace{T,2,3})(t, ::Type{Val{:withcurl}}) where T
+#     # Evaluete quadratic Lagrange elements on a triange, together with their curl
+#     j = jacobian(t)
+#     u,v,w, = barycentric(t)
+#     p = t.patch
+
+#     σ = sign(dot(normal(t), cross(p[1]-p[3],p[2]-p[3])))
+#     SVector(
+#         (value=u*(2*u-1), curl=σ*(p[3]-p[2])*(4u-1)/j),
+#         (value=v*(2*v-1), curl=σ*(p[1]-p[3])*(4v-1)/j),
+#         (value=w*(2*w-1), curl=σ*(p[2]-p[1])*(4w-1)/j),
+#         (value=4*v*w, curl=4*σ*(w*(p[1]-p[3])+v*(p[2]-p[1]))/j),
+#         (value=4*w*u, curl=4*σ*(w*(p[3]-p[2])+u*(p[2]-p[1]))/j),
+#         (value=4*u*v, curl=4*σ*(u*(p[1]-p[3])+v*(p[3]-p[2]))/j),
+#     )
+# end
 
 function curl(ref::LagrangeRefSpace{T,2,3} where {T}, sh, el)
     #curl of lagc0d2 as combination of bdm functions 

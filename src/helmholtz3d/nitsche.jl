@@ -12,7 +12,7 @@ function quaddata(operator::NitscheHH3,
     testelements, trialelements, qs::DoubleNumWiltonSauterQStrat)
 
   tqd = quadpoints(localtestbasis,  testelements,  (qs.outer_rule_far,))
-  bqd = quadpoints(x -> localtrialbasis(x, Val{:withcurl}), trialelements, (qs.inner_rule_far,))
+  bqd = quadpoints(x -> localtrialbasis(x), trialelements, (qs.inner_rule_far,))
 
   #return QuadData(tqd, bqd)
   return (tpoints=tqd, bpoints=bqd)

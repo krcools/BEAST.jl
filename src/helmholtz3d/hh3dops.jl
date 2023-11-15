@@ -59,9 +59,9 @@ struct HH3DSingleLayerSng{T,K} <: Helmholtz3DOp{T,K}
     gamma::K
 end
 
-function sign_upon_permutation(op::HH3DSingleLayerFDBIO, I, J)
-    return 1
-end
+# function sign_upon_permutation(op::HH3DSingleLayerFDBIO, I, J)
+#     return 1
+# end
 
 struct HH3DDoubleLayerFDBIO{T,K} <: Helmholtz3DOp{T,K}
     alpha::T
@@ -78,9 +78,9 @@ struct HH3DDoubleLayerSng{T,K} <: Helmholtz3DOp{T,K}
     gamma::K
 end
 
-function sign_upon_permutation(op::HH3DDoubleLayerFDBIO, I, J)
-    return Combinatorics.levicivita(J)
-end
+# function sign_upon_permutation(op::HH3DDoubleLayerFDBIO, I, J)
+#     return Combinatorics.levicivita(J)
+# end
 struct HH3DDoubleLayerTransposedFDBIO{T,K} <: Helmholtz3DOp{T,K}
     alpha::T
     gamma::K
@@ -96,36 +96,36 @@ struct HH3DDoubleLayerTransposedSng{T,K} <: Helmholtz3DOp{T,K}
     gamma::K
 end
 
-function sign_upon_permutation(op::HH3DDoubleLayerTransposedFDBIO, I, J)
-    return Combinatorics.levicivita(I)
-end
+# function sign_upon_permutation(op::HH3DDoubleLayerTransposedFDBIO, I, J)
+#     return Combinatorics.levicivita(I)
+# end
 
 defaultquadstrat(::Helmholtz3DOp, ::LagrangeRefSpace, ::LagrangeRefSpace) = DoubleNumWiltonSauterQStrat(2,3,2,3,4,4,4,4)
 
-function quaddata(op::Helmholtz3DOp, test_refspace::LagrangeRefSpace,
-        trial_refspace::LagrangeRefSpace, test_elements, trial_elements,
-        qs::DoubleNumWiltonSauterQStrat)
+# function quaddata(op::Helmholtz3DOp, test_refspace::LagrangeRefSpace,
+#         trial_refspace::LagrangeRefSpace, test_elements, trial_elements,
+#         qs::DoubleNumWiltonSauterQStrat)
 
-    test_eval(x)  = test_refspace(x,  Val{:withcurl})
-    trial_eval(x) = trial_refspace(x, Val{:withcurl})
+#     test_eval(x)  = test_refspace(x,  Val{:withcurl})
+#     trial_eval(x) = trial_refspace(x, Val{:withcurl})
     
-    # The combinations of rules (6,7) and (5,7 are) BAAAADDDD
-    # they result in many near singularity evaluations with any
-    # resemblence of accuracy going down the drain! Simply don't!
-    # (same for (5,7) btw...).
-    # test_qp = quadpoints(test_eval,  test_elements,  (6,))
-    # bssi_qp = quadpoints(trial_eval, trial_elements, (7,))
+#     # The combinations of rules (6,7) and (5,7 are) BAAAADDDD
+#     # they result in many near singularity evaluations with any
+#     # resemblence of accuracy going down the drain! Simply don't!
+#     # (same for (5,7) btw...).
+#     # test_qp = quadpoints(test_eval,  test_elements,  (6,))
+#     # bssi_qp = quadpoints(trial_eval, trial_elements, (7,))
 
-    test_qp = quadpoints(test_eval,  test_elements,  (qs.outer_rule_far,))
-    bsis_qp = quadpoints(trial_eval, trial_elements, (qs.inner_rule_far,))
+#     test_qp = quadpoints(test_eval,  test_elements,  (qs.outer_rule_far,))
+#     bsis_qp = quadpoints(trial_eval, trial_elements, (qs.inner_rule_far,))
 
-    gausslegendre = (
-      _legendre(qs.sauter_schwab_common_vert,0,1),
-      _legendre(qs.sauter_schwab_common_edge,0,1),
-      _legendre(qs.sauter_schwab_common_face,0,1),)
+#     gausslegendre = (
+#       _legendre(qs.sauter_schwab_common_vert,0,1),
+#       _legendre(qs.sauter_schwab_common_edge,0,1),
+#       _legendre(qs.sauter_schwab_common_face,0,1),)
 
-    return (;test_qp, bsis_qp, gausslegendre)
-end
+#     return (;test_qp, bsis_qp, gausslegendre)
+# end
 
 # function quaddata(op::Helmholtz3DOp, test_refspace::LagrangeRefSpace,
 #     trial_refspace::LagrangeRefSpace, test_elements, trial_elements,
@@ -155,51 +155,51 @@ end
 defaultquadstrat(::Helmholtz3DOp, ::subReferenceSpace, ::subReferenceSpace) = 
     DoubleNumWiltonSauterQStrat(4,7,4,7,4,4,4,4)
 
-function quaddata(op::Helmholtz3DOp, test_refspace::subReferenceSpace,
-        trial_refspace::subReferenceSpace, test_elements, trial_elements,
-        qs::DoubleNumWiltonSauterQStrat)
+# function quaddata(op::Helmholtz3DOp, test_refspace::subReferenceSpace,
+#         trial_refspace::subReferenceSpace, test_elements, trial_elements,
+#         qs::DoubleNumWiltonSauterQStrat)
 
-    test_qp = quadpoints(test_refspace,  test_elements,  (qs.outer_rule_far,))
-    bsis_qp = quadpoints(trial_refspace, trial_elements, (qs.inner_rule_far,))
+#     test_qp = quadpoints(test_refspace,  test_elements,  (qs.outer_rule_far,))
+#     bsis_qp = quadpoints(trial_refspace, trial_elements, (qs.inner_rule_far,))
 
-    return test_qp, bsis_qp
-end
+#     return test_qp, bsis_qp
+# end
 
-function quadrule(op::Helmholtz3DOp,
-    test_refspace::LagrangeRefSpace,
-    trial_refspace::LagrangeRefSpace,
-    i, test_element, j, trial_element, qd,
-    qs::DoubleNumWiltonSauterQStrat)
+# function quadrule(op::Helmholtz3DOp,
+#     test_refspace::LagrangeRefSpace,
+#     trial_refspace::LagrangeRefSpace,
+#     i, test_element, j, trial_element, qd,
+#     qs::DoubleNumWiltonSauterQStrat)
 
-    tol, hits = sqrt(eps(eltype(eltype(test_element.vertices)))), 0
-    dmin2 = floatmax(eltype(eltype(test_element.vertices)))
+#     tol, hits = sqrt(eps(eltype(eltype(test_element.vertices)))), 0
+#     dmin2 = floatmax(eltype(eltype(test_element.vertices)))
 
-    for t in test_element.vertices
-        for s in trial_element.vertices
-            d2 = LinearAlgebra.norm_sqr(t-s)
-            dmin2 = min(dmin2, d2)
-            hits += (d2 < tol)
-    end end
+#     for t in test_element.vertices
+#         for s in trial_element.vertices
+#             d2 = LinearAlgebra.norm_sqr(t-s)
+#             dmin2 = min(dmin2, d2)
+#             hits += (d2 < tol)
+#     end end
 
-    hits == 3 && return SauterSchwabQuadrature.CommonFace(qd.gausslegendre[3])
-    hits == 2 && return SauterSchwabQuadrature.CommonEdge(qd.gausslegendre[2])
-    hits == 1 && return SauterSchwabQuadrature.CommonVertex(qd.gausslegendre[1])
+#     hits == 3 && return SauterSchwabQuadrature.CommonFace(qd.gausslegendre[3])
+#     hits == 2 && return SauterSchwabQuadrature.CommonEdge(qd.gausslegendre[2])
+#     hits == 1 && return SauterSchwabQuadrature.CommonVertex(qd.gausslegendre[1])
 
-    test_quadpoints  = qd.test_qp
-    trial_quadpoints = qd.bsis_qp
-    h2 = volume(trial_element)
-    xtol2 = 0.2 * 0.2
-    k2 = abs2(gamma(op))
-    max(dmin2*k2, dmin2/16h2) < xtol2 && return WiltonSERule(
-        test_quadpoints[1,i],
-        DoubleQuadRule(
-            test_quadpoints[1,i],
-            trial_quadpoints[1,j]))
+#     test_quadpoints  = qd.test_qp
+#     trial_quadpoints = qd.bsis_qp
+#     h2 = volume(trial_element)
+#     xtol2 = 0.2 * 0.2
+#     k2 = abs2(gamma(op))
+#     max(dmin2*k2, dmin2/16h2) < xtol2 && return WiltonSERule(
+#         test_quadpoints[1,i],
+#         DoubleQuadRule(
+#             test_quadpoints[1,i],
+#             trial_quadpoints[1,j]))
 
-    return DoubleQuadRule(
-        qd.test_qp[1,i],
-        qd.bsis_qp[1,j])
-end
+#     return DoubleQuadRule(
+#         qd.test_qp[1,i],
+#         qd.bsis_qp[1,j])
+# end
 
 
 # function quadrule(op::HH3DSingleLayerFDBIO,
@@ -279,47 +279,47 @@ end =#
 #         qd.bsis_qp[1,j])
 # end
 
-function quadrule(op::HH3DSingleLayerFDBIO, test_refspace::subReferenceSpace,
-    trial_refspace::subReferenceSpace, i, test_element, j, trial_element, quadrature_data,
-    qs::DoubleNumWiltonSauterQStrat)
+# function quadrule(op::HH3DSingleLayerFDBIO, test_refspace::subReferenceSpace,
+#     trial_refspace::subReferenceSpace, i, test_element, j, trial_element, quadrature_data,
+#     qs::DoubleNumWiltonSauterQStrat)
 
-    # tol, hits = 1e-10, 0
-    # for t in getelementVertices(test_element)
-    #     for s in getelementVertices(trial_element)
-    #         norm(t-s) < tol && (hits +=1; break)
-    # end end
-    #
-    # test_quadpoints  = quadrature_data[1]
-    # trial_quadpoints = quadrature_data[2]
+#     # tol, hits = 1e-10, 0
+#     # for t in getelementVertices(test_element)
+#     #     for s in getelementVertices(trial_element)
+#     #         norm(t-s) < tol && (hits +=1; break)
+#     # end end
+#     #
+#     # test_quadpoints  = quadrature_data[1]
+#     # trial_quadpoints = quadrature_data[2]
 
-    # hits != 0 && return WiltonSERule(
-    #     test_quadpoints[1,i],
-    #     DoubleQuadRule(
-    #         test_quadpoints[1,i],
-    #         trial_quadpoints[1,j]))
+#     # hits != 0 && return WiltonSERule(
+#     #     test_quadpoints[1,i],
+#     #     DoubleQuadRule(
+#     #         test_quadpoints[1,i],
+#     #         trial_quadpoints[1,j]))
 
-    return DoubleQuadRule(
-        quadrature_data[1][1,i],
-        quadrature_data[2][1,j])
-    # return SauterSchwabStrategy(hits)
-     # test_qd = qd[1]
-     # trial_qd = qd[2]
-     #
-     # DoubleQuadRule(
-     #    test_qd[1,i], # rule 1 on test element j
-     #    trial_qd[1,j] # rule 1 on trial element i
-     # )
-end
+#     return DoubleQuadRule(
+#         quadrature_data[1][1,i],
+#         quadrature_data[2][1,j])
+#     # return SauterSchwabStrategy(hits)
+#      # test_qd = qd[1]
+#      # trial_qd = qd[2]
+#      #
+#      # DoubleQuadRule(
+#      #    test_qd[1,i], # rule 1 on test element j
+#      #    trial_qd[1,j] # rule 1 on trial element i
+#      # )
+# end
 
-function quadrule(op::Helmholtz3DOp,
-    test_refspace::RefSpace, trial_refspace::RefSpace,
-    i, test_element, j, trial_element, quadrature_data,
-    qs::DoubleNumWiltonSauterQStrat)
+# function quadrule(op::Helmholtz3DOp,
+#     test_refspace::RefSpace, trial_refspace::RefSpace,
+#     i, test_element, j, trial_element, quadrature_data,
+#     qs::DoubleNumWiltonSauterQStrat)
 
-    return DoubleQuadRule(
-        quadrature_data[1][1,i],
-        quadrature_data[2][1,j])
-end
+#     return DoubleQuadRule(
+#         quadrature_data[1][1,i],
+#         quadrature_data[2][1,j])
+# end
 
 #= function quadrule(op::HH3DDoubleLayerTransposedFDBIO,
     test_refspace::LagrangeRefSpace{T,1} where T,
@@ -409,18 +409,18 @@ end =#
 #         quadrature_data[2][1,j])
 # end
 
-function quadrule(op::Helmholtz3DOp,
-    test_refspace::RTRefSpace, trial_refspace::RTRefSpace,
-    i, test_element, j, trial_element, quadrature_data,
-    qs::DoubleNumWiltonSauterQStrat)
+# function quadrule(op::Helmholtz3DOp,
+#     test_refspace::RTRefSpace, trial_refspace::RTRefSpace,
+#     i, test_element, j, trial_element, quadrature_data,
+#     qs::DoubleNumWiltonSauterQStrat)
 
-    test_quadpoints  = quadrature_data[1]
-    trial_quadpoints = quadrature_data[2]
+#     test_quadpoints  = quadrature_data[1]
+#     trial_quadpoints = quadrature_data[2]
 
-    return DoubleQuadRule(
-        quadrature_data[1][1,i],
-        quadrature_data[2][1,j])
-end
+#     return DoubleQuadRule(
+#         quadrature_data[1][1,i],
+#         quadrature_data[2][1,j])
+# end
 
 function (igd::Integrand{<:HH3DHyperSingularFDBIO})(x,y,f,g)
     α = igd.operator.alpha
