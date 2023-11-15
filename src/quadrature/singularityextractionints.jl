@@ -1,23 +1,20 @@
 abstract type SingularityExtractionRule end
 regularpart_quadrule(qr::SingularityExtractionRule) = qr.regularpart_quadrule
 
-function momintegrals!(op, g, f, t, s, z, strat::SingularityExtractionRule)
+function momintegrals!(op, g, f, t, s, z, qrule::SingularityExtractionRule)
 
-
-    womps = strat.outer_quad_points
+    womps = qrule.outer_quad_points
 
     sop = singularpart(op)
     rop = regularpart(op)
 
-    # compute the regular part
-    rstrat = regularpart_quadrule(strat)
-    momintegrals!(rop, g, f, t, s, z, rstrat)
+    regqrule = regularpart_quadrule(qrule)
+    momintegrals!(rop, g, f, t, s, z, regqrule)
 
     for p in 1 : length(womps)
         x = womps[p].point
         dx = womps[p].weight
 
-        innerintegrals!(sop, x, g, f, t, s, z, strat, dx)
-    end # next quadrature point
-
+        innerintegrals!(sop, x, g, f, t, s, z, qrule, dx)
+    end
 end
