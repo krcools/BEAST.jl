@@ -28,6 +28,12 @@ function (f::ConductivityTDFunc)(cell, cqdpt, mp)
     return f.chr(norm(ei))*ei
 end
 
+#= function (f::ConductivityTDFunc)(cell, cqdpt, mp)
+    y = mp.cart[2]/10
+    ei = [0.0,1.0*sqrt(y),0.0]
+    #return ei
+    return ei*f.chr.(norm(ei))
+end =#
 BEAST.integrand(::BEAST.ConductivityTD_Functionaltype, gx, ϕx) = gx[1] ⋅ ϕx
 BEAST.defaultquadstrat(::BEAST.ConductivityTD_Functionaltype, ::BEAST.LinearRefSpaceTriangle, ::BEAST.LinearRefSpaceTriangle) = BEAST.SingleNumQStrat(10)
 BEAST.defaultquadstrat(::BEAST.ConductivityTD_Functionaltype, ::BEAST.Space) = BEAST.SingleNumQStrat(10)

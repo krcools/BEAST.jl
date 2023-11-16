@@ -191,7 +191,10 @@ function marchonintimenl(eq1, eq2,  Z, inc, Ġ, G_j, G_nl, Nt)
     σ = eq2.equation.rhs.terms[1].functional
     σop = BEAST.ConductivityTDOp(σ)
     bσ = zeros(T, N)
-    println(Nt)
+    iZ = BEAST.GMRESSolver(Z0, restart=0, reltol=1e-6)
+    invZ = inv(Z0)
+    C1 = G_j0*invZ
+    C2 = C1*Ġ0
     #= try =#
     for i in 1:Nt
         println(i)
@@ -214,13 +217,19 @@ function marchonintimenl(eq1, eq2,  Z, inc, Ġ, G_j, G_nl, Nt)
             end
             bσ = BEAST.assemble(σ, eq2.test_space_dict[1].space)
             Q = BEAST.assemble(σop, eq2.test_space_dict[1].space, eq2.trial_space_dict[1].space)
-            V0[N+1:N+Ne,N+1:N+Ne] = -Q
-            rhs1 = R - yj + ye
+            #= rhs1 = R - yj + ye
             rhs2 = bσ - Q*xeprev
+            V0[N+1:N+Ne,N+1:N+Ne] = -Q
             b = [rhs1; rhs2]
             sol = inv(Matrix(V0))*b
             xj[:,i] = sol[1:N]
-            xe[:,i] = sol[N+1:end]
+            xe[:,i] = sol[N+1:end] =#
+            rhs1 = R - yj + ye
+            rhs2 = bσ - Q*xeprev - C1*rhs1
+            iw = BEAST.GMRESSolver(C2-Q, restart=0, reltol=1e-6)
+            u, ch = solve(iw, rhs2)
+            xe[:,i] .= u
+            xj[:,i] .= invZ*(rhs1+Ġ0*xe[:,i])
             #xe_all = hcat(xe_all, xe[:,i])
             #xj_all = hcat(xj_all, xj[:,i])
             println("norm xe ", norm(xe[:,i]-xeprev)/M)
