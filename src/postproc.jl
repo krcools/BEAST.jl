@@ -127,13 +127,13 @@ function facecurrents(u, X::DirectProductSpace)
 	fcr, m
 end
 
-function potential(op, points, coeffs, basis; type=SVector{3,ComplexF64})
-	# T = SVector{3,ComplexF64}
-	# T = SVector{3,eltype(coeffs)}
-	T = type
-	ff = zeros(T, size(points))
+function potential(op, points, coeffs, basis;
+	type=SVector{3,ComplexF64},
+	quadstrat=defaultquadstrat(op, basis))
+
+	ff = zeros(type, size(points))
 	store(v,m,n) = (ff[m] += v*coeffs[n])
-	potential!(store, op, points, basis, type=T)
+	potential!(store, op, points, basis; type, quadstrat)
 	return ff
 end
 
@@ -145,39 +145,35 @@ function potential(op, points,coeffs, basis::SpaceTimeBasis)
 	return ff
 end
 
-function potential(op, points, coeffs, space::DirectProductSpace; type=SVector{3,ComplexF64})
-	# T = SVector{3,ComplexF64}
-	# T = SVector{3,eltype(coeffs)}
-	T = type
-	ff = zeros(T, size(points))
-	# @show size(ff)
+function potential(op, points, coeffs, space::DirectProductSpace;
+	type=SVector{3,ComplexF64},
+	quadstrat=defaultquadstrat(op,space))
 
+	ff = zeros(type, size(points))
 	@assert length(coeffs) == numfunctions(space)
 
 	offset = 0
 	for fct in space.factors
 		store(v,m,n) = (ff[m] += v*coeffs[offset+n])
-		potential!(store, op, points, fct, type=T)
+		potential!(store, op, points, fct; type, quadstrat)
 		offset += numfunctions(fct)
 	end
 
 	ff
 end
 
-function potential!(store, op, points, basis; type=SVector{3,ComplexF64})
+function potential!(store, op, points, basis;
+	type=SVector{3,ComplexF64},
+	quadstrat=defaultquadstrat(op, basis))
 
-	# T = SVector{3,ComplexF64}
-	T = type
-	# @show T
-	z = zeros(T,length(points))
+	z = zeros(type,length(points))
 
 	els, ad = assemblydata(basis)
 	rs = refspace(basis)
 
-	zlocal = Array{T}(undef,numfunctions(rs))
-	qdata = quaddata(op,rs,els)
+	zlocal = Array{type}(undef,numfunctions(rs))
+	qdata = quaddata(op,rs,els,quadstrat)
 
-	#println("Computing nearfield.")
 	print("dots out of 10: ")
 
 	todo, done, pctg = length(points), 0, 0
@@ -185,8 +181,8 @@ function potential!(store, op, points, basis; type=SVector{3,ComplexF64})
 	for (p,y) in enumerate(points)
 		for (q,el) in enumerate(els)
 
-			fill!(zlocal,zero(T))
-			qr = quadrule(op,rs,p,y,q,el,qdata)
+			fill!(zlocal,zero(type))
+			qr = quadrule(op,rs,p,y,q,el,qdata,quadstrat)
 			farfieldlocal!(zlocal,op,rs,y,el,qr)
 
 			# assemble from local contributions

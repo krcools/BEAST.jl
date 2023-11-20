@@ -8,7 +8,7 @@ for T in [Float32, Float64]
 
     local κ = T(2π)
     direction = point(T,0,0,1)
-    local f = BEAST.HH3DPlaneWave(direction, κ)
+    local f = BEAST.HH3DPlaneWave(direction, im*κ, T(1.0))
 
     v1 = f(point(T,0,0,0))
     v2 = f(point(T,0,0,0.5))
@@ -16,7 +16,7 @@ for T in [Float32, Float64]
     @test v1 ≈ +1
     @test v2 ≈ -1
 
-    lp = HH3DLinearPotential(direction=point(T,0,1,0), amplitude=2.0)
+    lp = HH3DLinearPotential(point(T,0,1,0), 2.0)
     @test lp(point(T,1,1,0)) == T(2.0)
 
     gradlp = grad(lp)
@@ -43,6 +43,7 @@ for T in [Float32, Float64]
 
     numfunctions(X)
 
+    BEAST.quadinfo(N, X, X)
     Nxx = assemble(N, X, X)
 
     @test size(Nxx) == (numfunctions(X), numfunctions(X))

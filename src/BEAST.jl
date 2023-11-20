@@ -135,6 +135,7 @@ include("utils/specialfns.jl")
 include("utils/combinatorics.jl")
 include("utils/linearspace.jl")
 include("utils/zeromap.jl")
+include("utils/rank1map.jl")
 
 include("bases/basis.jl")
 include("bases/lincomb.jl")
@@ -179,18 +180,21 @@ include("localop.jl")
 include("multiplicativeop.jl")
 include("identityop.jl")
 include("integralop.jl")
+include("dyadicop.jl")
 include("interpolation.jl")
-include("quaddata.jl")
 
-include("quadrature/quaddata.jl")
-include("quadrature/quadrule.jl")
+include("quadrature/doublenumqstrat.jl")
+include("quadrature/doublenumsauterqstrat.jl")
+include("quadrature/doublenumwiltonsauterqstrat.jl")
+include("quadrature/doublenumwiltonbogaertqstrat.jl")
 
-include("quadrature/double_quadrature.jl")
-include("quadrature/singularity_extraction.jl")
+include("quadrature/doublenumints.jl")
+include("quadrature/singularityextractionints.jl")
 include("quadrature/sauterschwabints.jl")
 
 include("postproc.jl")
 include("postproc/segcurrents.jl")
+include("postproc/farfield.jl")
 
 include("timedomain/tdintegralop.jl")
 include("timedomain/tdexcitation.jl")
@@ -198,6 +202,7 @@ include("timedomain/motlu.jl")
 include("timedomain/tdtimeops.jl")
 include("timedomain/rkcq.jl")
 include("timedomain/zdomain.jl")
+include("timedomain/td_symmetric_quadstrat.jl")
 
 
 # Support for Maxwell equations
@@ -212,7 +217,7 @@ include("maxwell/spotential.jl")
 include("maxwell/maxwell.jl")
 include("maxwell/sourcefield.jl")
 
-# Support for the Helmholtz equatio
+# Support for the Helmholtz equation
 include("helmholtz2d/helmholtzop.jl")
 
 include("helmholtz3d/hh3dexc.jl")
@@ -221,6 +226,8 @@ include("helmholtz3d/nitsche.jl")
 include("helmholtz3d/hh3dnear.jl")
 include("helmholtz3d/hh3dfar.jl")
 include("helmholtz3d/hh3d_sauterschwabqr.jl")
+include("helmholtz3d/helmholtz3d.jl")
+include("helmholtz3d/wiltonints.jl")
 
 #suport for Volume Integral equation
 include("volumeintegral/vie.jl")

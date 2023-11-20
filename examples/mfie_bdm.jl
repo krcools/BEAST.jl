@@ -10,7 +10,7 @@ Y = brezzidouglasmarini(Γ)
 
 ϵ, μ, ω = 1.0, 1.0, 1.0; κ = ω * √(ϵ*μ)
 # κ = 3.0
-NK, Id = BEAST.DoubleLayerRotatedMW3D(im*κ), Identity()
+NK, Id = BEAST.DoubleLayerRotatedMW3D(1.0, im*κ), Identity()
 E = Maxwell3D.planewave(direction=ẑ, polarization=x̂, wavenumber=κ)
 H = -1/(im*μ*ω)*curl(E)
 h = n × H

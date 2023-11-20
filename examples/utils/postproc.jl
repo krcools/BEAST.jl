@@ -11,8 +11,9 @@ if postproc
     fcr, geo = facecurrents(u, X)
 
     nx, nz = 50, 100
-    xs, zs = range(-2,stop=2,length=nx), range(-4,stop=4,length=nz)
-    gridpoints = [point(x,0,z) for x in xs, z in zs]
+    x = 0.0
+    ys, zs = range(-2,stop=2,length=nx), range(-4,stop=4,length=nz)
+    gridpoints = [point(x,y,z) for y in ys, z in zs]
     nfd = potential(MWSingleLayerField3D(wavenumber = κ), gridpoints, u, X)
     nfd = reshape(nfd, (nx,nz))
     nfd .-= E.(gridpoints)

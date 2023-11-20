@@ -17,7 +17,7 @@ function octree(charts::Vector{S} where {S <: CompScienceMeshes.Simplex})
 end
 
 """
-    Hi
+    grideval(points, coeffs, basis; type=nothing)
 """
 function grideval(points, coeffs, basis; type=nothing)
 
@@ -48,6 +48,7 @@ function grideval(points, coeffs, basis; type=nothing)
                     values[j] += w * coeffs[m] * vals[r][1]
                 end
             end
+            continue
         end
     end
     return values
