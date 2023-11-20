@@ -290,7 +290,7 @@ struct WiltonInts84Strat{T,V,W}
     workspace::W
 end
 
-struct ZuccottiStrat{T}
+struct ZuccottiRule{T}
 	weight::T #Allanalyticalformula
 end
 

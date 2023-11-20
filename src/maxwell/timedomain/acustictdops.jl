@@ -39,11 +39,11 @@ defaultquadstrat(::AcusticSingleLayerTDIO, tfs, bfs) = AllAnalyticalQStrat(1)
 
 function quaddata(op::AcusticSingleLayerTDIO, testrefs, trialrefs, timerefs,
     testels, trialels, timeels, quadstrat::AllAnalyticalQStrat)
-    return 0.0
+    return nothing
 end
 
 quadrule(op::AcusticSingleLayerTDIO, testrefs, trialrefs, timerefs,
-        p, testel, q, trialel, r, timeel, qd, ::AllAnalyticalQStrat) = ZuccottiStrat(1.0)
+        p, testel, q, trialel, r, timeel, qd, ::AllAnalyticalQStrat) = ZuccottiRule(1.0)
 
 function quaddata(op::AcusticSingleLayerTDIO, testrefs, trialrefs, timerefs,
         testels, trialels, timeels, quadstrat::OuterNumInnerAnalyticQStrat)
@@ -62,12 +62,9 @@ quadrule(op::AcusticSingleLayerTDIO, testrefs, trialrefs, timerefs,
         p, testel, q, trialel, r, timeel, qd, ::OuterNumInnerAnalyticQStrat) = WiltonInts84Strat(qd[1][1,p],qd[2],qd[3])
 
 function momintegrals!(z, op::AcusticSingleLayerTDIO, g::LagrangeRefSpace{T,0,3}, f::LagrangeRefSpace{T,0,3}, t::MonomialBasis{T,0,1}, τ, σ, ι, qr::ZuccottiStrat) where T
-        if ι[1]<0
-           t1=0.0
-        else
-            t1=ι[1]
-        end
-          t2=ι[2]
+        
+        t1=ι[1]
+        t2=ι[2]
         
             
           @assert t2 > t1
@@ -99,7 +96,7 @@ function momintegrals!(z, op::AcusticSingleLayerTDIO, g::LagrangeRefSpace{T,0,3}
           if hits==3 
              z[1,1,1]+=TimeDomainBEMInt.intcoinctriangles(τ[1],τ[2],τ[3],t1,t2)
           elseif hits==2
-           
+            #pay attention with double layer and index permutation
             if mod1(a1index +1,3)==a2index
                 a3index=mod1(a1index-1,3)
             else
