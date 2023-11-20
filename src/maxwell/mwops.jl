@@ -106,7 +106,7 @@ singularpart(op::MWDoubleLayer3D) = MWDoubleLayer3DSng(op.gamma)
 
 const LinearRefSpaceTriangle = Union{RTRefSpace, NDRefSpace, BDMRefSpace, NCrossBDMRefSpace}
 
-function quadrule(op::MaxwellOperator3D, g::LinearRefSpaceTriangle, f::LinearRefSpaceTriangle,  i, τ, j, σ, qd,
+function quadrule(op::MaxwellOperator3D, g::RTRefSpace, f::RTRefSpace,  i, τ, j, σ, qd,
       qs::DoubleNumWiltonSauterQStrat)
 
     T = eltype(eltype(τ.vertices))
@@ -138,7 +138,7 @@ function quadrule(op::MaxwellOperator3D, g::LinearRefSpaceTriangle, f::LinearRef
         qd.bpoints[1,j],)
 end
 
-function quadrule(op::MaxwellOperator3D, g::NDRefSpace, f::RTRefSpace,  i, τ, j, σ, qd,
+function quadrule(op::MaxwellOperator3D,  g::LinearRefSpaceTriangle, f::LinearRefSpaceTriangle,  i, τ, j, σ, qd,
   qs::DoubleNumWiltonSauterQStrat)
 
 T = eltype(eltype(τ.vertices))
@@ -170,31 +170,6 @@ return DoubleQuadRule(
     qd.bpoints[1,j],)
 end
 
-function quadrule(op::MaxwellOperator3D, g::BDMRefSpace, f::BDMRefSpace,  i, τ, j, σ, qd,
-  qs::DoubleNumWiltonSauterQStrat)
-
-  hits = 0
-  dtol = 1.0e3 * eps(eltype(eltype(τ.vertices)))
-  dmin2 = floatmax(eltype(eltype(τ.vertices)))
-  for t in τ.vertices
-      for s in σ.vertices
-          d2 = LinearAlgebra.norm_sqr(t-s)
-          dmin2 = min(dmin2, d2)
-          hits += (d2 < dtol)
-      end
-  end
-
-  hits == 3 && return SauterSchwabQuadrature.CommonFace(qd.gausslegendre[3])
-  hits == 2 && return SauterSchwabQuadrature.CommonEdge(qd.gausslegendre[2])
-  hits == 1 && return SauterSchwabQuadrature.CommonVertex(qd.gausslegendre[1])
-
-  h2 = volume(σ)
-  xtol2 = 0.2 * 0.2
-  k2 = abs2(op.gamma)
-  return DoubleQuadRule(
-      qd.tpoints[1,i],
-      qd.bpoints[1,j],)
-end
 
 
 

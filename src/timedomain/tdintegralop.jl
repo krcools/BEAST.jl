@@ -1,4 +1,5 @@
 using WiltonInts84
+using TimeDomainBEMInt
 
 abstract type RetardedPotential{T} <: Operator end
 Base.eltype(::RetardedPotential{T}) where {T} = T
@@ -289,6 +290,9 @@ struct WiltonInts84Strat{T,V,W}
     workspace::W
 end
 
+struct ZuccottiStrat{T}
+	weight::T #Allanalyticalformula
+end
 
 function momintegrals!(z, op, g, f, T, τ, σ, ι, qr::WiltonInts84Strat)
 
@@ -300,3 +304,5 @@ function momintegrals!(z, op, g, f, T, τ, σ, ι, qr::WiltonInts84Strat)
     end
 
 end
+
+
