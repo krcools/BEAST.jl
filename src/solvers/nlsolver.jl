@@ -1,22 +1,22 @@
 function newtoniterator(eq1, eq2, inc, Z, G_e, G_j)
-    T = eltype(G_e)
+    T = eltype(G_j)
     M,N = size(G_e)
-    V0 = zeros(N+N,N+N)
-    V0[1:N, 1:N] = 2.0*Z
-    V0[1:N, N+1:N+N] = G_e 
-    V0[N+1:N+N, 1:N] = G_j
-    sol = zeros(2*N)
+    V0 = zeros(M+N,M+N)
+    V0[1:M, 1:M] = 2.0*Z
+    V0[1:M, M+1:M+N] = G_e 
+    V0[M+1:M+N, 1:M] = G_j
+    sol = zeros(M+N)
     @assert M == size(inc,1)
-    xj = zeros(T,N,5)
+    xj = zeros(T,M,5)
 	xe = zeros(T,N,5)
 	xeprev = zeros(T,N,1)
-    xj_all = zeros(N)
+    xj_all = zeros(M)
     xe_all = zeros(N)
     σ = eq2.equation.rhs.terms[1].functional
     σop = BEAST.ConductivityTDOp(σ)
     bσ = zeros(T, N)
     iter_max = 100
-    R = inc[:,Int(floor(end/2))]
+    R = inc[:,50]
     for l in 1:iter_max
         xeprev = xe[:,1]
         update!(σ, xj, xe, 1, eq1, eq2)
@@ -26,7 +26,7 @@ function newtoniterator(eq1, eq2, inc, Z, G_e, G_j)
         #= println("normQ ", norm(Q))
         println("normbsigma ", norm(bσ)) =#
         #V0 = inv(Z0*G_j0_inv*Q - Ġ0)
-        V0[N+1:N+N,N+1:N+N] = -Q
+        V0[M+1:M+N,M+1:M+N] = -Q
         rhs1 = R
         rhs2 = bσ - Q*xeprev
         #b = rhs1 + rhs2         #solve |Z   -Ġ|J =|b|
@@ -34,8 +34,8 @@ function newtoniterator(eq1, eq2, inc, Z, G_e, G_j)
         sol = inv(Matrix(V0))*b
         #= invV0 = GMRESSolver(V0, maxiter=1000, restart=0, tol=1e-6)
         mul!(sol, invV0, b) =#
-        xj[:,1] = sol[1:N]                            #|G_j  Q|E =|0|
-        xe[:,1] = sol[N+1:N+N]
+        xj[:,1] = sol[1:M]                            #|G_j  Q|E =|0|
+        xe[:,1] = sol[M+1:M+N]
         xe_all = hcat(xe_all, xe[:,1])
         xj_all = hcat(xj_all, xj[:,1])
         #= println(l, " norm xe ", norm(xe[:,1]-xeprev))
@@ -43,7 +43,7 @@ function newtoniterator(eq1, eq2, inc, Z, G_e, G_j)
             break
         end =#
         println("L_inf norm of diff of xe ", maximum(abs.((xe[:,1]-xeprev))))
-        if maximum(abs.((xe[:,1]-xeprev))) < 1e-12
+        if maximum(abs.((xe[:,1]-xeprev))) < 1e-4
             #test if the discrete ohms law is satisfied
             update!(σ, xj, xe, 1, eq1, eq2)
             bσ = BEAST.assemble(σ, eq2.test_space_dict[1].space)
