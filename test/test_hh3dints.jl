@@ -259,6 +259,10 @@ end
   BEAST.momintegrals!(op4, lag1, lag1, t1, t2, z_cv_ss, SS_strategy)
   BEAST.momintegrals!(op4, lag1, lag1, t1, t2, z_cv_double, Double_strategy)
 
+  # @show z_cv_double
+  # @show z_cv_se
+  # @show z_cv_ss
+  # @show 2 * norm(z_cv_double + z_cv_ss) / norm(z_cv_double - z_cv_ss)
   @test z_cv_double ≈ z_cv_ss rtol = 1e-4
   @test z_cv_se ≈ z_cv_ss rtol=1e-4
   @test_broken norm(z_cv_ss-z_cv_se) < norm(z_cv_ss-z_cv_double)

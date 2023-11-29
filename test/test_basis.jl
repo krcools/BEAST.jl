@@ -52,7 +52,8 @@ for T in [Float32, Float64]
     sphere = readmesh(joinpath(dirname(@__FILE__),"assets","sphere5.in"),T=T)
     s = chart(sphere, first(sphere))
     t = neighborhood(s, T.([1,1]/3))
-    v = f(t, Val{:withcurl})
+    # v = f(t, Val{:withcurl})
+    v = f(t)
 
     A = volume(s)
     @test v[1][2] == (s[3]-s[2])/2A

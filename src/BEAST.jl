@@ -189,10 +189,6 @@ include("identityop.jl")
 include("integralop.jl")
 include("dyadicop.jl")
 include("interpolation.jl")
-include("quaddata.jl")
-
-include("quadrature/quaddata.jl")
-include("quadrature/quadrule.jl")
 
 include("quadrature/doublenumqstrat.jl")
 include("quadrature/doublenumsauterqstrat.jl")
