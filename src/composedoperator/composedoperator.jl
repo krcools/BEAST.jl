@@ -429,7 +429,7 @@ defaultquadstrat(op::Potential,test,trial) = defaultquadstrat(op.operator,test,t
 
 
 function assemble!(op::Potential, test_functions::Space, trial_functions::Space,
-    store, threading = Threading{:multi}; 
+    store, threading = Threading{:multi};
     quadstrat = defaultquadstrat(op, test_functions, trial_functions))
 
     dsurf = surface(op)

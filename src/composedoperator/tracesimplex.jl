@@ -88,7 +88,7 @@ function CompScienceMeshes.chart(p::OrientedMesh,i)
     d = dot(n1,n2)
     @assert abs(d) ≈ 1.0
     sign(d) == 1 && return c
-    return flip_normal(c)
+    return mirror(c)
 end
 function CompScienceMeshes.chart(p::TraceMesh,i)
     c = chart(mesh(p),i)

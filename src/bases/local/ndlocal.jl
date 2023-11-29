@@ -41,8 +41,8 @@ function restrict(ϕ::NDRefSpace{T}, dom1, dom2) where T
     for i in 1:K
 
         # find the center of edge i of dom2
-        a = dom2.vertices[mod1(i+1,D+1)]
-        b = dom2.vertices[mod1(i+2,D+1)]
+        a = verticeslist(dom2)[mod1(i+1,D+1)]
+        b = verticeslist(dom2)[mod1(i+2,D+1)]
         c = (a + b) / 2
 
         # find the tangent in this point to the edge

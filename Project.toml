@@ -33,6 +33,7 @@ SparseMatrixDicts = "5cb6c4b0-9b79-11e8-24c9-f9621d252589"
 SpecialFunctions = "276daf66-3868-5448-9aa4-cd146d93841b"
 StaticArrays = "90137ffa-7385-5640-81b9-e52037218182"
 TableView = "40c74d1a-b44c-5b06-a7c1-6cbea58ea978"
+Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 WiltonInts84 = "a3e2863e-c0ee-5ff6-a523-307a4cdc8724"
 
 [compat]

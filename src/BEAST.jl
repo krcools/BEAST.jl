@@ -267,20 +267,9 @@ include("solvers/itsolver.jl")
 
 include("utils/plotlyglue.jl")
 
-
-#suport for multi-trace
-# include("multi-trace/configuration.jl")
-# include("multi-trace/interactions.jl")
-# include("multi-trace/postprocessing.jl")
-
-#suport for displaying operators
 include("composedoperator/tracesimplex.jl")
 include("composedoperator/composedoperator.jl")
 
-
-#include("display.jl")
-# include("Helmholtzhodge/hhhexc.jl")
-# include("Helmholtzhodge/hhhnearfield.jl")
 
 const x̂ = point(1,0,0)
 const ŷ = point(0,1,0)
@@ -292,16 +281,5 @@ export n
 
 const ∇ = Nabla()
 export ∇
-
-
-# export Interaction
-# export Domain
-# export HomogeneousDomain
-# export RootDomain
-# export SubDomain
-
-# export FunctionExcitation
-# export NdotExcitation
-# export NcrossExcitation
 
 end # module
