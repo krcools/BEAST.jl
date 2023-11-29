@@ -471,7 +471,7 @@ function getindex(op::OffDiagKernel, V::Vector{HilbertVector}, U::Vector{Hilbert
     for (i,v) in enumerate(V)
         for (j,u) in enumerate(U)
             i == j && continue
-            term = BilTerm(v.idx, u.idx, v.opstack, u.opstack, 1, op)
+            term = BilTerm(v.idx, u.idx, v.opstack, u.opstack, 1, op.bilform)
             push!(terms, term)
         end
     end
