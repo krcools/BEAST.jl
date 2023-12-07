@@ -1,9 +1,22 @@
 using WiltonInts84
 
-abstract type AbstractTimeOperator end
-abstract type TimeDomainOperator end # atomic operator
+abstract type AbstractSpaceTimeOperator end
+abstract type SpaceTimeOperator <: AbstractSpaceTimeOperator end # atomic operator
 
-abstract type RetardedPotential{T} <: Operator end
+function assemble(operator::AbstractSpaceTimeOperator, test_functions, trial_functions;
+    storage_policy = Val{:bandedstorage},
+    long_delays_policy = LongDelays{:compress},
+    threading = Threading{:multi},
+    quadstrat=defaultquadstrat(operator, test_functions, trial_functions))
+
+    Z, store = allocatestorage(operator, test_functions, trial_functions,
+        storage_policy, long_delays_policy)
+    assemble!(operator, test_functions, trial_functions, store, threading; quadstrat)
+    return Z()
+end
+
+
+abstract type RetardedPotential{T} <: SpaceTimeOperator end
 # Base.eltype(::RetardedPotential{T}) where {T} = T
 scalartype(A::RetardedPotential{T}) where {T} = T
 

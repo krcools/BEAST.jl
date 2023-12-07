@@ -32,7 +32,7 @@ function assemble(op::Identity,
     return z
 end
 
-mutable struct TensorOperator <: Operator
+mutable struct TensorOperator <: SpaceTimeOperator
     spatial_factor
     temporal_factor
 end
@@ -210,13 +210,13 @@ function assemble!(operator::TemporalDifferentiation, testfns, trialfns, store, 
 
 end
 
-struct TemporalIntegration <: AbstractOperator
-    operator::AbstractOperator
+struct TemporalIntegration <: AbstractSpaceTimeOperator
+    operator::AbstractSpaceTimeOperator
 end
 
 defaultquadstrat(op::TemporalIntegration, tfs, bfs) = defaultquadstrat(op.operator, tfs, bfs)
 
-integrate(op::AbstractOperator) = TemporalIntegration(op)
+integrate(op::SpaceTimeOperator) = TemporalIntegration(op)
 derive(op::TemporalIntegration) = op.operator
 scalartype(op::TemporalIntegration) = scalartype(op.operator)
 Base.:*(a::Number, op::TemporalIntegration) = TemporalIntegration(a * op.operator)
