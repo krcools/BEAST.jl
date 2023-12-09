@@ -14,7 +14,13 @@ function SpaceTimeBasis(space, time)
     return SpaceTimeBasis{S,T,U}(space,time)
 end
 
+spatialbasis(s) = s
 spatialbasis(s::SpaceTimeBasis) = s.space
+function spatialbasis(s::DirectProductSpace)
+    r = [spatialbasis(ch) for ch in s.factors]
+    return DirectProductSpace(r)
+end
+
 temporalbasis(s::SpaceTimeBasis) = s.time
 
 ⊗(a, b) = SpaceTimeBasis(a,b)

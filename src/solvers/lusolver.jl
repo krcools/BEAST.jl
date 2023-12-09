@@ -67,7 +67,7 @@ function td_solve(eq)
 
     # bilform = eq.equation.lhs
 
-    A = td_assemble(eq.equation.lhs, eq.test_space_dict, eq.trial_space_dict)
+    A = assemble(eq.equation.lhs, eq.test_space_dict, eq.trial_space_dict)
     T = eltype(A)
     S = zeros(T, size(A)[1:2])
     ConvolutionOperators.timeslice!(S, A, 1)
