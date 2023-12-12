@@ -3,6 +3,7 @@ struct TraceSimplex{T,U}
     simp::T
     direction::SVector{3,U}
 end
+TraceSimplex(t::TraceSimplex,d::SVector{3,U}) where {U} = TraceSimplex(simplex(t),direction(t)+d)
 simplex(t::TraceSimplex) = t.simp
 direction(t::TraceSimplex) = t.direction
 struct TraceMeshPointNM{T,U}
@@ -26,7 +27,8 @@ CompScienceMeshes.volume(a::TraceSimplex) = volume(simplex(a))
 CompScienceMeshes.dimension(a::TraceSimplex) = dimension(simplex(a))
 CompScienceMeshes.tangents(a::TraceSimplex,i::Int) = tangents(simplex(a),i)
 CompScienceMeshes.carttobary(a::TraceSimplex,b::SVector{T}) where {T} = carttobary(simplex(a),b)
-
+CompScienceMeshes.center(a::TraceSimplex) = TraceMeshPointNM(center(simplex(a)),direction(a))
+CompScienceMeshes.normal(a::TraceSimplex) = normal(simplex(a))
 function CompScienceMeshes.quadpoints(chart::TraceSimplex, rule)
     PV = quadpoints(CompScienceMeshes.domain(chart), rule)
     map(PV) do pv
@@ -75,6 +77,10 @@ TraceMesh(a::CompScienceMeshes.AbstractMesh{U,D,T}) where {U,D,T} = TraceMesh(a,
 +(a::TraceMesh{U,D,T},b::SVector{3,T}) where {U,D,T} = TraceMesh(mesh(a),direction(a).+Ref(b))
 +(a::TraceMesh,b::SVector) = TraceMesh(mesh(a),a.direction+b)
 +(a::SVector,b::TraceMesh) = b+a
+CompScienceMeshes.indices(t::TraceMesh,i::Int) = CompScienceMeshes.indices(mesh(t),i)
+CompScienceMeshes.numvertices(t::TraceMesh) = CompScienceMeshes.numvertices(mesh(t))
+CompScienceMeshes.vertextype(t::TraceMesh) = CompScienceMeshes.vertextype(mesh(t))
+CompScienceMeshes.universedimension(t::TraceMesh) = CompScienceMeshes.universedimension(mesh(t))
 
 mesh(p::OrientedMesh) = p.mesh
 mesh(p::TraceMesh) = p.mesh

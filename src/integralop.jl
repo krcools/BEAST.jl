@@ -138,43 +138,43 @@ function assemblechunk_body!(biop,
     end end
     myid == 1 && println("")
 end
-function assemblechunk_body!(biop,
-    test_shapes, test_elements::Vector{CompScienceMeshes.Simplex{3,2,1,3,U}}, test_assembly_data,
-    trial_shapes, trial_elements::Vector{CompScienceMeshes.Simplex{3,2,1,3,V}}, trial_assembly_data,
-    qd, zlocal, store; quadstrat) where {U,V}
+# function assemblechunk_body!(biop,
+#     test_shapes, test_elements::Vector{CompScienceMeshes.Simplex{3,2,1,3,U}}, test_assembly_data,
+#     trial_shapes, trial_elements::Vector{CompScienceMeshes.Simplex{3,2,1,3,V}}, trial_assembly_data,
+#     qd, zlocal, store; quadstrat) where {U,V}
 
-    @info "triangle assemblechunk_body used"
-    myid = Threads.threadid()
-    myid == 1 && print(string(typeof(biop))*" dots out of 10: ")
-    todo, done, pctg = length(test_elements), 0, 0
-    for (p,tcell) in enumerate(test_elements)
-        for (q,bcell) in enumerate(trial_elements)
+#     @info "triangle assemblechunk_body used"
+#     myid = Threads.threadid()
+#     myid == 1 && print(string(typeof(biop))*" dots out of 10: ")
+#     todo, done, pctg = length(test_elements), 0, 0
+#     for (p,tcell) in enumerate(test_elements)
+#         for (q,bcell) in enumerate(trial_elements)
 
-        fill!(zlocal, 0)
-        if overlap(tcell,bcell)
-            momintegrals_overlap!(biop, test_shapes, trial_shapes, tcell, bcell, zlocal, quadstrat)
-        else
-            qrule = quadrule(biop, test_shapes, trial_shapes, p, tcell, q, bcell, qd, quadstrat)
-            momintegrals!(biop, test_shapes, trial_shapes, tcell, bcell, zlocal, qrule)
-        end
-        I = length(test_assembly_data[p])
-        J = length(trial_assembly_data[q])
-        for j in 1 : J, i in 1 : I
-            zij = zlocal[i,j]
-            for (n,b) in trial_assembly_data[q][j]
-                zb = zij*b
-                for (m,a) in test_assembly_data[p][i]
-                    store(a*zb, m, n)
-        end end end end
+#         fill!(zlocal, 0)
+#         if overlap(tcell,bcell)
+#             momintegrals_overlap!(biop, test_shapes, trial_shapes, tcell, bcell, zlocal, quadstrat)
+#         else
+#             qrule = quadrule(biop, test_shapes, trial_shapes, p, tcell, q, bcell, qd, quadstrat)
+#             momintegrals!(biop, test_shapes, trial_shapes, tcell, bcell, zlocal, qrule)
+#         end
+#         I = length(test_assembly_data[p])
+#         J = length(trial_assembly_data[q])
+#         for j in 1 : J, i in 1 : I
+#             zij = zlocal[i,j]
+#             for (n,b) in trial_assembly_data[q][j]
+#                 zb = zij*b
+#                 for (m,a) in test_assembly_data[p][i]
+#                     store(a*zb, m, n)
+#         end end end end
 
-        done += 1
-        new_pctg = round(Int, done / todo * 100)
-        if new_pctg > pctg + 9
-            myid == 1 && print(".")
-            pctg = new_pctg
-    end end
-    myid == 1 && println("")
-end
+#         done += 1
+#         new_pctg = round(Int, done / todo * 100)
+#         if new_pctg > pctg + 9
+#             myid == 1 && print(".")
+#             pctg = new_pctg
+#     end end
+#     myid == 1 && println("")
+# end
 
 function assemblechunk_body_test_refines_trial!(biop,
     test_functions, test_charts, test_assembly_data, test_cells,

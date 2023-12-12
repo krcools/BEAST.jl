@@ -258,6 +258,27 @@ function γₛ(op::Potential,surface::TraceMesh,sign::Int)# sign + if according 
     return TraceOperator(Potential(newop,op.surface),SVector{length(direction),typeof(direction[1])}(direction)+surface)
 end
 
+function γₜ(op::Potential,surface::CompScienceMeshes.AbstractMesh,sign::Int)# sign + if according to normal on surface, - otherwise
+    #    check_if_coincide(op.surface,surface) || return op.operator
+        newop = -nt × nt × γ(op.operator)
+        direction = []
+        for i in 1:numcells(surface)
+            c = chart(surface,i)
+            push!(direction,sign*normal(c)/3)
+        end
+        return TraceOperator(Potential(newop,op.surface),TraceMesh(surface,SVector{length(direction),typeof(direction[1])}(direction)))
+    end
+    function γₜ(op::Potential,surface::TraceMesh,sign::Int)# sign + if according to normal on surface, - otherwise
+    #    check_if_coincide(op.surface,surface) || return op.operator
+        newop = -nt × nt × γ(op.operator)
+        direction = []
+        for i in 1:numcells(surface)
+            c = chart(surface,i)
+            push!(direction,sign*normal(c)/3)
+        end
+        return TraceOperator(Potential(newop,op.surface),SVector{length(direction),typeof(direction[1])}(direction)+surface)
+    end
+
 function γₙ(op::Potential,surface::CompScienceMeshes.AbstractMesh,sign::Int)# sign + if according to normal on surface, - otherwise
 #    check_if_coincide(op.surface,surface) || return op.operator
     newop = nt ⋅ γ(op.operator)
@@ -338,6 +359,15 @@ function (op::GreenHH3D)(x,y,g)
     green = exp(-gamma*R)*(i4pi*iR)
     Ref(green)
 end
+function (op::GreenHH3D)(x::Union{SVector,Vector},y,g)
+    gamma = op.gamma
+
+    r = x - cartesian(y)
+    R = norm(r)
+    iR = 1/R
+    green = exp(-gamma*R)*(i4pi*iR)
+    Ref(green)
+end
 
 function (op::GradGreenHH3D)(x,y,g)
     gamma = op.gamma
@@ -354,9 +384,24 @@ function (op::GradGreenHH3D)(x,y,g)
     end
     return tt
 end
+function (op::GradGreenHH3D)(x::Union{SVector,Vector},y,g)
+    gamma = op.gamma
+
+    r = x - cartesian(y)
+    R = norm(r)
+    iR = 1/R
+    green = exp(-gamma*R)*(iR*i4pi)
+    gradgreen = -(gamma + iR) * green * (iR * r)
+    tt = Ref(gradgreen)
+
+    if maximum(abs.(gradgreen)) === NaN
+        display(R)
+    end
+    return tt
+end
 
 γ(op::GreenHH3D) = op
-γ(op::GradGreenHH3D) = op + 1/2*TraceDirection()
+γ(op::GradGreenHH3D) = op - 1/2*TraceDirection()
 
 grad(G::GreenHH3D) = GradGreenHH3D(G.gamma)
 
@@ -382,7 +427,7 @@ function (op::Union{TimesIntegral,TimesLocal})(x,y,g)
     op.lhs(x,y,g).*op.rhs(x,y,g)
 end
 function (op::Union{DotIntegral,DotLocal})(x,y,g)
-    dot.(op.lhs(x,y,g),op.rhs(x,y,g))
+    transpose.(op.lhs(x,y,g)).*op.rhs(x,y,g)
 end
 function (op::Union{CrossIntegral,CrossLocal})(x,y,g)
     cross.(op.lhs(x,y,g),op.rhs(x,y,g))
@@ -395,7 +440,7 @@ function (op::TestNormal)(x,y,g)
     Ref(normal(x))
 end
 function (op::TraceDirection)(x,y,g)
-    Ref(sign(dot(normal(x),(direction(x)-direction(y))))*normal(x))
+    Ref(approx_sign(dot(normal(x),(direction(x)-direction(y))))*normal(x))
 end
 function (op::BasisFunction)(x,y,g)
     getvalue(g)
@@ -403,7 +448,10 @@ end
 function (op::DivBasisFunction)(x,y,g)
     getdivergence(g)
 end
-
+function approx_sign(a::T; tol=eps(T)) where {T <: Number}
+    abs(a) < tol && return zero(T)
+    return sign(a)
+end
 
 
 function (igd::Integrand{<:ComposedOperatorIntegral})(x,y,f,g)
@@ -413,8 +461,15 @@ end
 function integrand(op::ComposedOperatorLocal,kernel,x,y,f,g)
     _krondot(getvalue(f),op(x,y,g))
 end
+function integrand(op::ComposedOperator,kernel, y, f, x)
+    r = op(y,x,f)
+    return r
+end
+kernelvals(op::ComposedOperatorIntegral, y,x) = nothing
+quaddata(op::ComposedOperatorIntegral,rs,els,qs::SingleNumQStrat) = quadpoints(rs,els,(qs.quad_rule,))
+quadrule(op::ComposedOperatorIntegral,refspace,p,y,q,el,qdata,qs::SingleNumQStrat) = qdata[1,q]
 
-
+defaultquadstrat(op::ComposedOperatorIntegral, basis) = SingleNumQStrat(3)
 defaultquadstrat(op::ComposedOperatorIntegral,testspace::Space,trialspace::Space) = DoubleNumSauterQstrat(6,7,5,5,4,3) 
 defaultquadstrat(op::ComposedOperatorLocal,testspace::Space,trialpsace::Space) = SingleNumQStrat(6)
 #sign_upon_permutation(op::ComposedOperator,I,J) = Combinatorics.levicivita(I)^count_test_normals(op)*Combinatorics.levicivita(J)^count_trial_normals(op)
@@ -457,4 +512,3 @@ function assemble!(op::TraceOperator, test_functions::Space, trial_functions::Sp
     quadstrat = quadstrat)
 end
 
-kernelvals(op::ComposedOperator,a) = nothing
