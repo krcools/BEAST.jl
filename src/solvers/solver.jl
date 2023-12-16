@@ -150,12 +150,15 @@ function assemble(lform::LinForm, X::DirectProductSpace)
 
     @assert !isempty(lform.terms)
 
-    M = length.(X.factors)
-    U = NestedUnitRanges.nestedrange(X, 1, numfunctions)
-
     T = scalartype(lform, X)
-    Z = zeros(T, numfunctions(X))
-    B = PseudoBlockArray{T}(Z, (U,))
+    U = NestedUnitRanges.nestedrange(spatialbasis(X), 1, numfunctions)
+    
+    x = first(AbstractTrees.Leaves(X))
+    N = Base.OneTo(tensordim(x,2))
+    ax = _righthandside_axes(x, U, N)
+
+    B = BlockArray{T}(undef, ax)
+    fill!(B, 0)
 
     for t in lform.terms
 
@@ -165,7 +168,7 @@ function assemble(lform::LinForm, X::DirectProductSpace)
         for op in reverse(t.test_ops) x = op[end](op[1:end-1]..., x) end
 
         b = assemble(t.functional, x)
-        B[Block(m)] = t.coeff * b
+        B[Block(m),Block(1)] = t.coeff * b
     end
 
     return B
@@ -180,45 +183,42 @@ Base.size(x::SpaceTimeData) = (size(x.data)[1],)
 Base.getindex(x::SpaceTimeData, i::Int) = x.data[i,:]
 
 function td_assemble(lform::LinForm, test_space_dict)
-
-    terms = lform.terms
-
-    T = Float32
-    for term in lform.terms
-        T = scalartype(T,term.coeff)
-        T = scalartype(T,term.functional)
-    end
-    for kv in test_space_dict;  T = scalartype(T,kv[2]) end
-
-    I = [numfunctions(spatialbasis(test_space_dict[i])) for i in 1:length(lform.test_space)]
-
-    M = zeros(Int, length(test_space_dict))
-    for (p,x) in test_space_dict M[p]=numfunctions(spatialbasis(x)) end
-
-    N = [numfunctions(temporalbasis(test_space_dict[1]))]
-    B = BlockArray{T}(undef, M, N)
-
-    for t in terms
-
-        α = t.coeff
-        a = t.functional
-        m = t.test_id
-        X = test_space_dict[m]
-        o = t.test_ops
-        
-
-        # act with the various ops on X
-        for op in reverse(o)
-            Y = X;
-            X = op[end](op[1:end-1]..., Y)
-        end
-
-        b = assemble(a, X)
-        B[Block(m),Block(1)] = α*b
-    end
-
-    return B
+    X = _spacedict_to_directproductspace(test_space_dict)
+    return td_assemble(lform, X)
 end
+
+_righthandside_axes(x::SpaceTimeBasis, U, N) = (U,N,)
+_righthandside_axes(x, U, N) = (U,)
+
+td_assemble(lform::LinForm, X::DirectProductSpace) = assemble(lform, X)
+
+# function td_assemble(lform::LinForm, X::DirectProductSpace)
+
+#     @assert !isempty(lform.terms)
+
+#     T = scalartype(lform, X)
+#     U = NestedUnitRanges.nestedrange(spatialbasis(X), 1, numfunctions)
+
+#     x = first(AbstractTrees.Leaves(X))
+#     N = Base.OneTo(tensordim(x,2))
+#     ax = _rigthandside_axes(x, U, N)
+
+#     B = BlockArray{T}(undef, ax)
+#     fill!(B, 0)
+
+#     for t in lform.terms
+
+#         m = t.test_id
+#         x = X[m]
+
+#         for op in reverse(t.test_ops) x = op[end](op[1:end-1]..., x) end
+
+#         b = assemble(t.functional, x)
+#         B[Block(m),Block(1)] = t.coeff * b
+#     end
+
+#     return B
+# end
 
 function assemble(bilform::BilForm, test_space_dict, trial_space_dict;
     materialize=BEAST.assemble)
@@ -261,56 +261,3 @@ function assemble(bf::BilForm, X::DirectProductSpace, Y::DirectProductSpace;
         lift(z, Block(term.test_id), Block(term.trial_id), U, V)
     end
 end
-
-
-# function assemble(bf::BilForm, X::DirectProductSpace, Y::DirectProductSpace)
-
-#     test_space_dict = Dict(enumerate(X.factors))
-#     trial_space_dict = Dict(enumerate(Y.factors))
-
-#     z = assemble(bf, test_space_dict, trial_space_dict)
-# end
-
-# td_assemble(dbf::DiscreteBilform; materialize=BEAST.assemble) =
-#     td_assemble(dbf.bilform, dbf.test_space_dict, dbf.trial_space_dict; materialize)
-
-
-# function td_assemble(bilform::BilForm, test_space_dict, trial_space_dict;
-#     materialize=BEAST.assemble)
-
-#     X = _spacedict_to_directproductspace(test_space_dict)
-#     Y = _spacedict_to_directproductspace(trial_space_dict)
-
-#     return td_assemble(bilform, X, Y)
-# end
-
-# function td_assemble(bilform::BilForm,
-#     X::DirectProductSpace,
-#     Y::DirectProductSpace)
-
-#     M = [length(fct.space) for fct in X.factors]
-#     N = [length(fct.space) for fct in Y.factors]
-
-#     row_axis = BlockArrays.blockedrange(M)
-#     col_axis = BlockArrays.blockedrange(N)
-
-#     sum(bilform.terms) do t
-
-#         a = t.coeff * t.kernel
-
-#         m = t.test_id
-#         x = X.factors[m]
-#         for op in reverse(t.test_ops)
-#             x = op[end](op[1:end-1]..., x)
-#         end
-
-#         n = t.trial_id
-#         y = Y.factors[n]
-#         for op in reverse(t.trial_ops)
-#             y = op[end](op[1:end-1]..., y)
-#         end
-
-#         z = assemble(a, x, y)
-#         lift(z, Block(m), Block(n), row_axis, col_axis)
-#     end
-# end
