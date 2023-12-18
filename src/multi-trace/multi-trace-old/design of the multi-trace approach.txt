@@ -1,0 +1,11 @@
+design of the multi-trace approach:
+
+structure is devided in a tree like domain of open domains, there is the free space, domain 1, and then all other domains are in this free space. (mesh object is a domain, thus when you ask in which domain it is it gives the upstream domain). The basis of a mesh object is in the domain of the mesh object.
+
+Object interacts with every object in the domain and with the boundary of the domain it is in.  
+
+object domain:(Physical information, test and trial bases boundary, mesh, touching information: for each object it returns the subd test and trial basis, also for the object itself!!!!)
+
+intersect(\Omega1, \Omega2) = (subd test, trial 1), (subd test,trial 2)
+
+work with strategies, 
