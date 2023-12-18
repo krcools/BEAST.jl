@@ -71,7 +71,7 @@ struct OrientedMesh{U,D1,T} <: CompScienceMeshes.AbstractMesh{U,D1,T}
 end
 struct TraceMesh{U,D1,T} <: CompScienceMeshes.AbstractMesh{U,D1,T}
     mesh::CompScienceMeshes.AbstractMesh{U,D1,T}
-    direction::SVector
+    direction
 end
 TraceMesh(a::CompScienceMeshes.AbstractMesh{U,D,T}) where {U,D,T} = TraceMesh(a,zeros(SVector{numcells(a),SVector{3,T}}))
 +(a::TraceMesh{U,D,T},b::SVector{3,T}) where {U,D,T} = TraceMesh(mesh(a),direction(a).+Ref(b))

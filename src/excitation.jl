@@ -1,6 +1,27 @@
 
-
+import Base: +,*,-
 abstract type Functional end
+
+struct LinearCombinationOfFunctionals{T} <: Functional
+    coeffs::Vector{T}
+    ops::Vector
+end
+
++(a::LinearCombinationOfFunctionals,b::LinearCombinationOfFunctionals) = LinearCombinationOfFunctionals([a.coeffs;b.coeffs],[a.ops;b.ops])
++(a::LinearCombinationOfFunctionals,b::Functional) = LinearCombinationOfFunctionals([a.coeffs;[1.0]],[a.ops;[b]])
++(b::Functional,a::LinearCombinationOfFunctionals) = a+b
++(b::Functional,a::Functional) = LinearCombinationOfFunctionals([1.0,1.0],[a,b])
+*(n::Number,a::Functional) = LinearCombinationOfFunctionals([n],[a])
+*(n::Number,a::LinearCombinationOfFunctionals) = LinearCombinationOfFunctionals(a.coeffs*n,a.ops)
+scalartype(a::LinearCombinationOfFunctionals{T}) where {T} = promote_type(T,scalartype.(a.ops)...)
+function assemble(field::LinearCombinationOfFunctionals,tfs;
+    quadstrat=defaultquadstrat(field, tfs))
+    out = []
+    for (c,func) in zip(field.coeffs,field.ops)
+        push!(out,c*assemble(func,tfs;quadstrat=quadstrat))
+    end
+    return sum(out)
+end
 
 defaultquadstrat(fn::Functional, basis) = SingleNumQStrat(8)
 quaddata(fn::Functional, refs, cells, qs::SingleNumQStrat) =
@@ -22,14 +43,14 @@ function assemble(field::Functional, tfs;
     assemble!(field, tfs, store; quadstrat)
     return b
 end
-function assemble(n::Number, tfs)
+# function assemble(n::Number, tfs)
 
-    R = scalartype(tfs)
+#     R = scalartype(tfs)
 
-    b = zeros(Complex{R}, numfunctions(tfs))
-    fill!(b,n)
-    return b
-end
+#     b = zeros(Complex{R}, numfunctions(tfs))
+#     fill!(b,n)
+#     return b
+# end
 
 function assemble!(field::Functional, tfs::DirectProductSpace, store;
     quadstrat=defaultquadstrat(field, tfs))
