@@ -560,6 +560,7 @@ function assemble!(op::TraceOperator{T,Int}, test_functions::Space, trial_functi
     store, threading = Threading{:multi}; 
     quadstrat = defaultquadstrat(op, test_functions, trial_functions)) where {T}
     println("assemble")
+    #@warn "NO MULTI TRACE YET"
     surface = geometry(test_functions)
     direction = []
     sign = op.surface
@@ -569,8 +570,12 @@ function assemble!(op::TraceOperator{T,Int}, test_functions::Space, trial_functi
         push!(direction,sign*normal(c)/3)
     end
     println("hang1")
-    surf = TraceMesh(surface,direction)
-    println("ttt")
+    if typeof(surface) <: TraceMesh
+        surf = surface + direction
+    else
+        surf = TraceMesh(surface,direction)
+    end
+    println(typeof(surf))
     test_functions = redefine_geometrie(test_functions,surf)
     println(typeof(op.operator))
     assemble!(op.operator, test_functions, trial_functions, store, threading;

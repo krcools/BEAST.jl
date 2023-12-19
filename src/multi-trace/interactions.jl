@@ -257,6 +257,7 @@ function _discretise_rhs_matrix(obj::Object{T},tesths,testb,mapt,ex,strat) where
         push!(out,array_to_linform(excitation(child,obj,child.type,ex,strat))[u])
     end
     s = sum(out)
+    println(s)
     return assemble(s,testb)
 end
 function _discretise_rhs_matrix(obj::Object{T},tesths,testb,mapt,ex,strat) where {T <: PEC}

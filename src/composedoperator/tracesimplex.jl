@@ -75,7 +75,7 @@ struct TraceMesh{U,D1,T} <: CompScienceMeshes.AbstractMesh{U,D1,T}
 end
 TraceMesh(a::CompScienceMeshes.AbstractMesh{U,D,T}) where {U,D,T} = TraceMesh(a,zeros(SVector{numcells(a),SVector{3,T}}))
 +(a::TraceMesh{U,D,T},b::SVector{3,T}) where {U,D,T} = TraceMesh(mesh(a),direction(a).+Ref(b))
-+(a::TraceMesh,b::SVector) = TraceMesh(mesh(a),a.direction+b)
++(a::TraceMesh,b::Vector) = TraceMesh(mesh(a),a.direction+b)
 +(a::SVector,b::TraceMesh) = b+a
 CompScienceMeshes.indices(t::TraceMesh,i::Int) = CompScienceMeshes.indices(mesh(t),i)
 CompScienceMeshes.numvertices(t::TraceMesh) = CompScienceMeshes.numvertices(mesh(t))

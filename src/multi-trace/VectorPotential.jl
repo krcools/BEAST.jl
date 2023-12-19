@@ -205,7 +205,7 @@ function interaction(testobj::Object, trialobj::Object, embobj::Object,
     ∇Gdotn = BEAST.build_potential(nb ⋅ (gradG*B))
     ∇Gdot = BEAST.build_potential(B ⋅ gradG)
     
-    Gr = BEAST.build_potential(G*B,bs)
+    Gr = BEAST.build_potential(G*B)
     ∇G∇B = BEAST.build_potential(gradG*div(B))
     ∇Gxn = BEAST.build_potential(gradG×(n*B))
 

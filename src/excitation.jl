@@ -43,14 +43,14 @@ function assemble(field::Functional, tfs;
     assemble!(field, tfs, store; quadstrat)
     return b
 end
-# function assemble(n::Number, tfs)
+function assemble(n::Number, tfs)
 
-#     R = scalartype(tfs)
+    R = scalartype(tfs)
 
-#     b = zeros(Complex{R}, numfunctions(tfs))
-#     fill!(b,n)
-#     return b
-# end
+    b = zeros(Complex{R}, numfunctions(tfs))
+    fill!(b,n)
+    return b
+end
 
 function assemble!(field::Functional, tfs::DirectProductSpace, store;
     quadstrat=defaultquadstrat(field, tfs))
