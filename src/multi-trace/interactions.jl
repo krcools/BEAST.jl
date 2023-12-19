@@ -316,7 +316,7 @@ function _discretise_lhs_matrix(obj::Object{<:HOM},tesths,basishs,testb,trialb,m
         bils += matrix_to_bilform(identity(child.type,strat))[u,v]
         bils -= matrix_to_bilform(interaction(obj,child,obj,Inside(obj.type),child.type,strat))[t,v]
         bils -= matrix_to_bilform(interaction(child,obj,obj,child.type,Inside(obj.type),strat))[u,b]
-        bils -= matrix_to_bilform(interaction(child,child,obj,child.type,child.typ,strat))[u,v]
+        bils -= matrix_to_bilform(interaction(child,child,obj,child.type,child.type,strat))[u,v]
     end
     if length(children(obj)) > 1
         for (c1,c2) in combinations(children(obj),2)
