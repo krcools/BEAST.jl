@@ -118,7 +118,7 @@ function interaction(testobj::Object,trialobj::Object,embobj::Object,
     0 1 0 0;
     0 0 mu(testobj)/mu(parent(testobj)) 0;
     0 0 0 epsilon(parent(testobj))/epsilon(testobj)]
-    a * interaction(testobj,trialobj,embobj,testtype.inside,trialtype,strat;sign=-sign)
+    a^-1 * interaction(testobj,trialobj,embobj,testtype.inside,trialtype,strat;sign=-sign)
 end
 
 function interaction(testobj::Object,trialobj::Object,embobj::Object,

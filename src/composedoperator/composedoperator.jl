@@ -433,7 +433,7 @@ function (op::GradGreenHH3D)(x::Union{SVector,Vector},y,g)
 end
 
 γ(op::GreenHH3D) = op
-γ(op::GradGreenHH3D) = op - 1/2*TraceDirection()
+γ(op::GradGreenHH3D) = op + 1/2*TraceDirection()
 
 grad(G::GreenHH3D) = GradGreenHH3D(G.gamma)
 
@@ -473,7 +473,7 @@ function (op::TestNormal)(x,y,g)
 end
 function (op::TraceDirection)(x,y,g)
     #println(direction(x)-direction(y))
-    Ref(approx_sign(dot(normal(x),(direction(x)-direction(y))))*normal(x))
+    Ref(approx_sign(dot(normal(x),(direction(y)-direction(x))))*normal(x))
 end
 function (op::BasisFunction)(x,y,g)
     getvalue(g)
