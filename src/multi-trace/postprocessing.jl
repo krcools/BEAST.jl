@@ -75,7 +75,7 @@ end
 function complement_error(world,solution,volume::Vector{Int},strat::T) where {T}
     @warn "not tested yet"
     newstrat = T(-strat.trace)
-    lhs = discretise_lhs(world,newstrat)
+    lhs = discretise_lhs(world,newstrat;id=0.0)
     out = lhs[volume].*Ref(solution)
     return norm(sum(out))/norm(solution)
 end
