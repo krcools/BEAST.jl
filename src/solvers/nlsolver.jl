@@ -1,8 +1,12 @@
 function newtoniterator(eq1, eq2, inc, Z, G_e, G_j)
     T = eltype(G_j)
     M,N = size(G_e)
+    #= Z0 = zeros(T, size(Z)[1:2])
+    BEAST.ConvolutionOperators.timeslice!(Z0,Z,1) =#
     V0 = zeros(M+N,M+N)
-    V0[1:M, 1:M] = 2.0*Z
+    Z0 = zeros(T, size(Z))
+    Z0 = 2.0*Z
+    V0[1:M, 1:M] = Z0
     V0[1:M, M+1:M+N] = G_e 
     V0[M+1:M+N, 1:M] = G_j
     sol = zeros(M+N)
@@ -17,6 +21,9 @@ function newtoniterator(eq1, eq2, inc, Z, G_e, G_j)
     bσ = zeros(T, N)
     iter_max = 100
     R = inc[:,50]
+    invZ = inv(Matrix(Z0))
+    C1 = G_j*invZ
+    C2 = C1*G_e
     for l in 1:iter_max
         xeprev = xe[:,1]
         update!(σ, xj, xe, 1, eq1, eq2)
@@ -29,11 +36,16 @@ function newtoniterator(eq1, eq2, inc, Z, G_e, G_j)
         V0[M+1:M+N,M+1:M+N] = -Q
         rhs1 = R
         rhs2 = bσ - Q*xeprev
+        #= rhs2 = bσ - Q*xeprev - C1*rhs1
+        iw = BEAST.GMRESSolver(-C2-Q, restart=0, reltol=1e-6)
+        u, ch = solve(iw, rhs2)
+        xe[:,1] .= u
+        xj[:,1] .= invZ*(rhs1-G_e*xe[:,1]) =#
         #b = rhs1 + rhs2         #solve |Z   -Ġ|J =|b|
         b = [rhs1; rhs2]
-        sol = inv(Matrix(V0))*b
-        #= invV0 = GMRESSolver(V0, maxiter=1000, restart=0, tol=1e-6)
-        mul!(sol, invV0, b) =#
+        #sol = inv(Matrix(V0))*b
+        invV0 = BEAST.GMRESSolver(V0, maxiter=5000, restart=0, reltol=1e-10)
+        mul!(sol, invV0, b)
         xj[:,1] = sol[1:M]                            #|G_j  Q|E =|0|
         xe[:,1] = sol[M+1:M+N]
         xe_all = hcat(xe_all, xe[:,1])
@@ -43,7 +55,7 @@ function newtoniterator(eq1, eq2, inc, Z, G_e, G_j)
             break
         end =#
         println("L_inf norm of diff of xe ", maximum(abs.((xe[:,1]-xeprev))))
-        if maximum(abs.((xe[:,1]-xeprev))) < 1e-4
+        if maximum(abs.((xe[:,1]-xeprev))) < 1e-6
             #test if the discrete ohms law is satisfied
             update!(σ, xj, xe, 1, eq1, eq2)
             bσ = BEAST.assemble(σ, eq2.test_space_dict[1].space)

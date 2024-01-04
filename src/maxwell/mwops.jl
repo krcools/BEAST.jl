@@ -150,6 +150,40 @@ function quadrule(op::MaxwellOperator3D, g::RTRefSpace, f::RTRefSpace,  i, τ, j
         qd.bpoints[1,j],)
 end
 
+
+function quadrule(op::MaxwellOperator3D, g::RT2RefSpace, f::RT2RefSpace,  i, τ, j, σ, qd,
+  qs::DoubleNumWiltonSauterQStrat)
+
+T = eltype(eltype(τ.vertices))
+hits = 0
+dtol = 1.0e3 * eps(T)
+dmin2 = floatmax(T)
+for t in τ.vertices
+    for s in σ.vertices
+        d2 = LinearAlgebra.norm_sqr(t-s)
+        dmin2 = min(dmin2, d2)
+        hits += (d2 < dtol)
+    end
+end
+
+hits == 3 && return SauterSchwabQuadrature.CommonFace(qd.gausslegendre[3])
+hits == 2 && return SauterSchwabQuadrature.CommonEdge(qd.gausslegendre[2])
+hits == 1 && return SauterSchwabQuadrature.CommonVertex(qd.gausslegendre[1])
+
+#=
+h2 = volume(σ)
+xtol2 = 0.2 * 0.2
+k2 = abs2(gamma(op))
+max(dmin2*k2, dmin2/16h2) < xtol2 && return WiltonSERule(
+    qd.tpoints[2,i],
+    DoubleQuadRule(
+        qd.tpoints[2,i],
+        qd.bpoints[2,j],),)=#
+return DoubleQuadRule(
+    qd.tpoints[1,i],
+    qd.bpoints[1,j],)
+end
+
 function quadrule(op::MaxwellOperator3D, g::BDMRefSpace, f::BDMRefSpace,  i, τ, j, σ, qd,
   qs::DoubleNumWiltonSauterQStrat)
 

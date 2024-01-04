@@ -9,7 +9,7 @@ function showfn(space,i)
     V = Dict{Int,T}()
     W = Dict{Int,T}()
     for sh in space.fns[i]
-        chrt = chart(geo, cells(geo)[sh.cellid])
+        chrt = chart(geo, sh.cellid)
         nbd = CompScienceMeshes.center(chrt)
         vals = refspace(space)(nbd)
         x,y,z = cartesian(nbd)

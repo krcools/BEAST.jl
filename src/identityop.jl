@@ -20,8 +20,10 @@ function _alloc_workspace(qd, g, f, tels, bels)
     A = Vector{typeof(a)}(undef,length(qd))
 end
 
-const LinearRefSpaceTriangle = Union{RTRefSpace, NDRefSpace, BDMRefSpace, NCrossBDMRefSpace}
-defaultquadstrat(::LocalOperator, ::LinearRefSpaceTriangle, ::LinearRefSpaceTriangle) = SingleNumQStrat(6)
+const LinearRefSpaceTriangle = Union{RTRefSpace, NDRefSpace, BDMRefSpace, NCrossBDMRefSpace, RT2RefSpace, ND2RefSpace}
+#const QuadraticRefSpaceTriangle = Union{LinearRefSpaceTriangle, RT2RefSpace}
+defaultquadstrat(::LocalOperator, ::LinearRefSpaceTriangle, ::LinearRefSpaceTriangle) = SingleNumQStrat(10)
+#defaultquadstrat(::LocalOperator, ::RT2RefSpace, ::RT2RefSpace) = SingleNumQStrat(6)
 function quaddata(op::LocalOperator, g::LinearRefSpaceTriangle, f::LinearRefSpaceTriangle, tels, bels,
         qs::SingleNumQStrat)
 
