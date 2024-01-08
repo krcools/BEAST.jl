@@ -290,7 +290,7 @@ function diag_prec(w::World, strat::Interaction)
 
 end
 
-function discretise_lhs(w::World, strat::Interaction;id=1.0)
+function discretise_lhs(w::World, strat::Interaction;id=1.0,dual=true,trace=true)
 
     l = length(w.objectarray)-1 # no bases for the free space
     tesths = w.testhilbertspace
@@ -299,24 +299,24 @@ function discretise_lhs(w::World, strat::Interaction;id=1.0)
     trialb = w.trialdirectproductspace
     maptesths = w.testhilbertspacemap
     maptrialhs = w.trialhilbertspacemap
-    out = _discretise_lhs_matrix.(w.objectarray,Ref(tesths),Ref(basishs),Ref(testb),Ref(trialb),Ref(maptesths),Ref(maptrialhs),Ref(strat);id = id)
+    out = _discretise_lhs_matrix.(w.objectarray,Ref(tesths),Ref(basishs),Ref(testb),Ref(trialb),Ref(maptesths),Ref(maptrialhs),Ref(strat);id = id,dual=dual,trace=trace)
     return out
 # returned the assambled matrices for each struct
 end
-function _discretise_lhs_matrix(obj::Object{<:HOM},tesths,basishs,testb,trialb,mapt,mapb,strat;id=1.0)
+function _discretise_lhs_matrix(obj::Object{<:HOM},tesths,basishs,testb,trialb,mapt,mapb,strat;id=1.0,dual=true, trace=true)
     t = tesths[mapt[obj.index]]
     b = basishs[mapb[obj.index]]
     # bils = BEAST.BlockDiagonalOperator(Identity())[t,b]
     bils = id*matrix_to_bilform(identity(obj.type,strat))[t,b]
     println(bils)
-    bils -= matrix_to_bilform(interaction(obj,obj,obj,Inside(obj.type),Inside(obj.type),strat))[t,b]
+    bils -= matrix_to_bilform(interaction(obj,obj,obj,Inside(obj.type),Inside(obj.type),strat;dual=dual,trace=trace))[t,b]
     for child in children(obj)
         u = tesths[mapt[child.index]]
         v = basishs[mapb[child.index]]
         bils += id*matrix_to_bilform(identity(child.type,strat))[u,v]
-        bils -= matrix_to_bilform(interaction(obj,child,obj,Inside(obj.type),child.type,strat))[t,v]
-        bils -= matrix_to_bilform(interaction(child,obj,obj,child.type,Inside(obj.type),strat))[u,b]
-        bils -= matrix_to_bilform(interaction(child,child,obj,child.type,child.type,strat))[u,v]
+        bils -= matrix_to_bilform(interaction(obj,child,obj,Inside(obj.type),child.type,strat;dual=dual,trace=trace))[t,v]
+        bils -= matrix_to_bilform(interaction(child,obj,obj,child.type,Inside(obj.type),strat;dual=dual,trace=trace))[u,b]
+        bils -= matrix_to_bilform(interaction(child,child,obj,child.type,child.type,strat;dual=dual,trace=trace))[u,v]
     end
     if length(children(obj)) > 1
         for (c1,c2) in combinations(children(obj),2)
@@ -324,8 +324,8 @@ function _discretise_lhs_matrix(obj::Object{<:HOM},tesths,basishs,testb,trialb,m
             t2 = tesths[mapt[c2.index]]
             b1 = basishs[mapb[c1.index]]
             b2 = basishs[mapb[c2.index]]
-            bils -= matrix_to_bilform(interaction(c1,c2,obj,c1.type,c2.type,strat))[t1,b2]
-            bils -= matrix_to_bilform(interaction(c2,c1,obj,c1.type,c2.type,strat))[t2,b1]
+            bils -= matrix_to_bilform(interaction(c1,c2,obj,c1.type,c2.type,strat;dual=dual,trace=trace))[t1,b2]
+            bils -= matrix_to_bilform(interaction(c2,c1,obj,c1.type,c2.type,strat;dual=dual,trace=trace))[t2,b1]
         end
     end
     println(typeof(bils.terms[1]))
@@ -351,16 +351,16 @@ function _diag_prec(obj::Object{<:PEC},tesths,basishs,testb,trialb,mapt,mapb,str
     return Zero()
 end
 
-function _discretise_lhs_matrix(obj::Object{<:PEC},tesths,basishs,testb,trialb,mapt,mapb,strat;id=1.0)
+function _discretise_lhs_matrix(obj::Object{<:PEC},tesths,basishs,testb,trialb,mapt,mapb,strat;id=1.0,dual=true,trace=true)
     return Zero()
 end
-function _discretise_lhs_matrix(obj::Object{<:FreeSpace},tesths,basishs,testb,trialb,mapt,mapb,strat;id=1.0)
+function _discretise_lhs_matrix(obj::Object{<:FreeSpace},tesths,basishs,testb,trialb,mapt,mapb,strat;id=1.0,dual=true,trace=true)
     bilslist = []
     for child in children(obj)
         u = tesths[mapt[child.index]]
         v = basishs[mapb[child.index]]
         push!(bilslist,id*matrix_to_bilform(identity(child.type,strat))[u,v])
-        push!(bilslist,-matrix_to_bilform(interaction(child,child,obj,child.type,child.type,strat))[u,v])
+        push!(bilslist,-matrix_to_bilform(interaction(child,child,obj,child.type,child.type,strat;dual=dual,trace=trace))[u,v])
     end
     bils = sum(bilslist)
     if length(children(obj)) > 1
@@ -369,8 +369,8 @@ function _discretise_lhs_matrix(obj::Object{<:FreeSpace},tesths,basishs,testb,tr
             t2 = tesths[mapt[c2.index]]
             b1 = basishs[mapb[c1.index]]
             b2 = basishs[mapb[c2.index]]
-            bils -= matrix_to_bilform(interaction(c1,c2,obj,c1.type,c2.type,strat))[t1,b2]
-            bils -= matrix_to_bilform(interaction(c2,c1,obj,c1.type,c2.type,strat))[t2,b1]
+            bils -= matrix_to_bilform(interaction(c1,c2,obj,c1.type,c2.type,strat;dual=dual,trace=trace))[t1,b2]
+            bils -= matrix_to_bilform(interaction(c2,c1,obj,c1.type,c2.type,strat;dual=dual,trace=trace))[t2,b1]
         end
     end
     return assemble(bils,testb,trialb)

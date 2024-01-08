@@ -72,10 +72,18 @@ function _calculate_field(points,operator::ZeroOperator,coeffs,basis)
 end
 
 #### complement error
-function complement_error(world,solution,volume::Vector{Int},strat::T) where {T}
-    @warn "not tested yet"
+function complement_error(world,solution,volume::Vector{Int},strat::T;trace=true) where {T}
+    @warn "exclude free space!!!"
     newstrat = T(-strat.trace)
-    lhs = discretise_lhs(world,newstrat;id=0.0)
+    @assert T <: VP
+    lhs = discretise_lhs(world,newstrat;id=0.0,dual=false,trace=trace)
     out = lhs[volume].*Ref(solution)
-    return norm(sum(out))/norm(solution)
+    g = BlockDiagonalOperator(BlockDiagonalOperator(Identity()))
+    G = assemble(g,world.testdirectproductspace,world.testdirectproductspace)
+    G2 = assemble(g,world.trialdirectproductspace,world.trialdirectproductspace)
+    println("started inversion")
+    ttt = Ref(G).\Vector.(out)
+    println("G inverted")
+    return dot.(Vector.(out),ttt)/dot(solution,G2,solution),ttt,out,G,dot(solution,G2,solution)
+   # norm(sum(out))/norm(solution)
 end

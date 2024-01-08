@@ -113,48 +113,114 @@ end
 
 
 function interaction(testobj::Object,trialobj::Object,embobj::Object,
-    testtype::Inside,trialtype,strat::Union{PRECVP,VP}; sign=1)
+    testtype::Inside,trialtype,strat::Union{PRECVP,VP}; sign=1,dual=true,trace=true)
     a = [1 0 0 0;
     0 1 0 0;
     0 0 mu(testobj)/mu(parent(testobj)) 0;
     0 0 0 epsilon(parent(testobj))/epsilon(testobj)]
-    a^-1 * interaction(testobj,trialobj,embobj,testtype.inside,trialtype,strat;sign=-sign)
+    a^-1 * interaction(testobj,trialobj,embobj,testtype.inside,trialtype,strat;sign=-sign,dual=dual,trace=trace)
 end
 
 function interaction(testobj::Object,trialobj::Object,embobj::Object,
-    testtype::PECCFIE,trialtype,strat::Union{PRECVP,VP}; sign=1)
+    testtype::PECCFIE,trialtype,strat::Union{PRECVP,VP}; sign=1,dual=true,trace=true)
 
     testtype.alpha*interaction(testobj,trialobj,embobj,testtype.inside,trialtype,strat;sign=sign)[1:2,:]+
-    (1-testtype.alpha)*interaction(testobj,trialobj,embobj,testtype.inside,trialtype,strat;sign=sign)[3:4,:]
+    (1-testtype.alpha)*interaction(testobj,trialobj,embobj,testtype.inside,trialtype,strat;sign=sign,dual=dual,trace=trace)[3:4,:]
 end
 function interaction(testobj::Object,trialobj::Object,embobj::Object,
-    testtype::PECEFIE,trialtype,strat::Union{PRECVP,VP}; sign=1)
+    testtype::PECEFIE,trialtype,strat::Union{PRECVP,VP}; sign=1,dual=true,trace=true)
 
-    interaction(testobj,trialobj,embobj,testtype.inside,trialtype,strat;sign=sign)[1:2,:]
+    interaction(testobj,trialobj,embobj,testtype.inside,trialtype,strat;sign=sign,dual=dual,trace=trace)[1:2,:]
 end
 function interaction(testobj::Object,trialobj::Object,embobj::Object,
-    testtype::PECMFIE,trialtype,strat::Union{PRECVP,VP}; sign=1)
-    interaction(testobj,trialobj,embobj,testtype.inside,trialtype,strat;sign=sign)[3:4,:]
+    testtype::PECMFIE,trialtype,strat::Union{PRECVP,VP}; sign=1,dual=true,trace=true)
+    interaction(testobj,trialobj,embobj,testtype.inside,trialtype,strat;sign=sign,dual=dual,trace=trace)[3:4,:]
 end
 function interaction(testobj::Object,trialobj::Object,embobj::Object,
-    testtype::ObjectType,trialtype::Inside,strat::Union{PRECVP,VP}; sign=1)
+    testtype::ObjectType,trialtype::Inside,strat::Union{PRECVP,VP}; sign=1,dual=true,trace=true)
     a = -[1 0 0 0;
     0 1 0 0;
     0 0 mu(trialobj)/mu(parent(trialobj)) 0;
     0 0 0 epsilon(parent(trialobj))/epsilon(trialobj)]
-    interaction(testobj,trialobj,embobj,testtype,trialtype.inside,strat;sign=sign)*a
+    interaction(testobj,trialobj,embobj,testtype,trialtype.inside,strat;sign=sign,dual=dual,trace=trace)*a
 end
 function interaction(testobj::Object,trialobj::Object,embobj::Object,
-    testtype::ObjectType,trialtype::PEC,strat::Union{PRECVP,VP}; sign=1)
-    interaction(testobj,trialobj,embobj,testtype,trialtype.inside,strat;sign=sign)[:,3:4]
+    testtype::ObjectType,trialtype::PEC,strat::Union{PRECVP,VP}; sign=1,dual=true,trace=true)
+    interaction(testobj,trialobj,embobj,testtype,trialtype.inside,strat;sign=sign,dual=dual,trace=trace)[:,3:4]
 end
 function interaction(testobj::Object,trialobj::Object,embobj::Object,
-    testtype::ObjectType,trialtype::HOM,strat::Union{PRECVP,VP}; sign=1)
-    interaction(testobj,trialobj,embobj,testtype,trialtype.inside,strat;sign=sign)
+    testtype::ObjectType,trialtype::HOM,strat::Union{PRECVP,VP}; sign=1,dual=true,trace=true)
+    interaction(testobj,trialobj,embobj,testtype,trialtype.inside,strat;sign=sign,dual=dual,trace=trace)
 end
 function interaction(testobj::Object,trialobj::Object,embobj::Object,
-    testtype::HOM,trialtype,strat::Union{PRECVP,VP}; sign=1)
-    interaction(testobj,trialobj,embobj,testtype.inside,trialtype,strat;sign=sign)
+    testtype::HOM,trialtype,strat::Union{PRECVP,VP}; sign=1,dual=true,trace=true)
+    interaction(testobj,trialobj,embobj,testtype.inside,trialtype,strat;sign=sign,dual=dual,trace=trace)
+end
+function interaction(testobj::Object, trialobj::Object, embobj::Object, 
+    testtype::ObjectType,trialtype::ObjectType,strat::VP; sign=1,dual=true,trace=true)
+    tr = sign*strat.trace
+    k = sqrt(epsilon(embobj)*mu(embobj))*omega(embobj)
+    G = BEAST.greenhh3d(wavenumber=k)
+    gradG = BEAST.∇(G)
+
+    bs = geometry(trialobj)
+    ts = geometry(testobj)
+    if trace
+        ∇Gx =  BEAST.build_potential(gradG×B,bs)
+        Gn = BEAST.build_potential(G*(n*B),bs)
+        #Gnx = BEAST.build_potential(G*(n × B),bs)
+        ∇G = BEAST.build_potential(gradG*B,bs)
+        ∇Gdotn = BEAST.build_potential(nb ⋅ (gradG*B),bs)
+        ∇Gdot = BEAST.build_potential(B ⋅ gradG,bs)
+        
+        Gr = BEAST.build_potential(G*B,bs)
+        ∇G∇B = BEAST.build_potential(gradG*div(B),bs)
+        ∇Gxn = BEAST.build_potential(gradG×(n*B),bs)
+    else
+        ∇Gx =  gradG×B
+        Gn = G*(nb*B)
+        #Gnx = G*(n × B)
+        ∇G = gradG*B
+        ∇Gdotn = nb ⋅ (gradG*B)
+        ∇Gdot = B ⋅ gradG
+        
+        Gr = G*B
+        ∇G∇B = gradG*div(B)
+        ∇Gxn = gradG×(nb*B)
+
+    end
+    #gebruik gamma^c --> sign = +
+    # #without extra ncross
+    # int = [γₛ(∇Gx,ts,trace) -γₛ(Gn,ts,trace) γₛ(Gr,ts,trace) -γₛ(∇G,ts,trace);
+    # ZeroOperator() -τ(∇Gdotn,ts,trace) τ(∇Gdot,ts,trace)  k^2*τ(Gr,ts,trace);
+    # γₛ(∇G∇B,ts,trace)+k^2*γₛ(Gr,ts,trace) -γₛ(∇Gxn,ts,trace) γₛ(∇Gx,ts,trace) ZeroOperator();
+    # γₙ(∇Gx,ts,trace) -γₙ(Gn,ts,trace) γₙ(Gr,ts,trace) -γₙ(∇G,ts,trace)]
+    # #with extra ncross
+    if dual && trace
+        int = [-γₜ(∇Gx,ts,tr) γₜ(Gn,ts,tr) -γₜ(Gr,ts,tr) γₜ(∇G,ts,tr);
+        ZeroOperator() -τ(∇Gdotn,ts,tr) τ(∇Gdot,ts,tr)  k^2*τ(Gr,ts,tr);
+        -γₜ(∇G∇B,ts,tr)-k^2*γₜ(Gr,ts,tr) γₜ(∇Gxn,ts,tr) -γₜ(∇Gx,ts,tr) ZeroOperator();
+        γₙ(∇Gx,ts,tr) -γₙ(Gn,ts,tr) γₙ(Gr,ts,tr) -γₙ(∇G,ts,tr)]
+        return int
+    elseif dual
+        int = [nt×(nt×(∇Gx)) -nt×(nt×(Gn)) nt×(nt×(Gr)) nt×(nt×(∇G));
+        ZeroOperator() -(∇Gdotn) (∇Gdot)  k^2*(Gr);
+        nt×(nt×(∇G∇B))+k^2*nt×(nt×(Gr)) -nt×(nt×(∇Gxn)) nt×(nt×(∇Gx)) ZeroOperator();
+        nt ⋅(∇Gx) -nt ⋅(Gn) nt ⋅(Gr) -nt ⋅(∇G)]
+        return int
+    elseif trace
+        int = [γₛ(∇Gx,ts,tr) -γₛ(Gn,ts,tr) γₛ(Gr,ts,tr) -γₛ(∇G,ts,tr);
+        ZeroOperator() -τ(∇Gdotn,ts,tr) τ(∇Gdot,ts,tr)  k^2*τ(Gr,ts,tr);
+        γₛ(∇G∇B,ts,tr)+k^2*γₛ(Gr,ts,tr) -γₛ(∇Gxn,ts,tr) γₛ(∇Gx,ts,tr) ZeroOperator();
+        γₙ(∇Gx,ts,tr) -γₙ(Gn,ts,tr) γₙ(Gr,ts,tr) -γₙ(∇G,ts,tr)]
+        return int
+    else
+        int = [nt×(∇Gx) -nt×(Gn) nt×(Gr) -nt×(∇G);
+        ZeroOperator() -(∇Gdotn) (∇Gdot)  k^2*(Gr);
+        nt×(∇G∇B)+k^2*nt×(Gr) -nt×(∇Gxn) nt×(∇Gx) ZeroOperator();
+        nt ⋅(∇Gx) -nt ⋅(Gn) nt ⋅(Gr) -nt ⋅(∇G)]
+        return int
+    end
 end
 # function interaction(testobj::Object, trialobj::Object, embobj::Object, 
 #     testtype::ObjectType,trialtype::ObjectType,strat::VP; sign=1)
@@ -163,19 +229,17 @@ end
 #     G = BEAST.greenhh3d(wavenumber=k)
 #     gradG = BEAST.∇(G)
 
-#     bs = geometry(trialobj)
-#     ts = geometry(testobj)
 
-#     ∇Gx =  BEAST.build_potential(gradG×B,bs)
-#     Gn = BEAST.build_potential(G*(n*B),bs)
+#     ∇Gx =  BEAST.build_potential(gradG×B)
+#     Gn = BEAST.build_potential(G*(n*B))
 #     #Gnx = BEAST.build_potential(G*(n × B),bs)
-#     ∇G = BEAST.build_potential(gradG*B,bs)
-#     ∇Gdotn = BEAST.build_potential(nb ⋅ (gradG*B),bs)
-#     ∇Gdot = BEAST.build_potential(B ⋅ gradG,bs)
+#     ∇G = BEAST.build_potential(gradG*B)
+#     ∇Gdotn = BEAST.build_potential(nb ⋅ (gradG*B))
+#     ∇Gdot = BEAST.build_potential(B ⋅ gradG)
     
-#     Gr = BEAST.build_potential(G*B,bs)
-#     ∇G∇B = BEAST.build_potential(gradG*div(B),bs)
-#     ∇Gxn = BEAST.build_potential(gradG×(n*B),bs)
+#     Gr = BEAST.build_potential(G*B)
+#     ∇G∇B = BEAST.build_potential(gradG*div(B))
+#     ∇Gxn = BEAST.build_potential(gradG×(n*B))
 
 #     #gebruik gamma^c --> sign = +
 #     # #without extra ncross
@@ -184,77 +248,45 @@ end
 #     # γₛ(∇G∇B,ts,trace)+k^2*γₛ(Gr,ts,trace) -γₛ(∇Gxn,ts,trace) γₛ(∇Gx,ts,trace) ZeroOperator();
 #     # γₙ(∇Gx,ts,trace) -γₙ(Gn,ts,trace) γₙ(Gr,ts,trace) -γₙ(∇G,ts,trace)]
 #     # #with extra ncross
-#     int = [-γₜ(∇Gx,ts,trace) γₜ(Gn,ts,trace) -γₜ(Gr,ts,trace) γₜ(∇G,ts,trace);
-#     ZeroOperator() -τ(∇Gdotn,ts,trace) τ(∇Gdot,ts,trace)  k^2*τ(Gr,ts,trace);
-#     -γₜ(∇G∇B,ts,trace)-k^2*γₜ(Gr,ts,trace) γₜ(∇Gxn,ts,trace) -γₜ(∇Gx,ts,trace) ZeroOperator();
-#     γₙ(∇Gx,ts,trace) -γₙ(Gn,ts,trace) γₙ(Gr,ts,trace) -γₙ(∇G,ts,trace)]
+#     int = [-γₜ(∇Gx,trace) γₜ(Gn,trace) -γₜ(Gr,trace) γₜ(∇G,trace);
+#     ZeroOperator() -τ(∇Gdotn,trace) τ(∇Gdot,trace)  k^2*τ(Gr,trace);
+#     -γₜ(∇G∇B,trace)-k^2*γₜ(Gr,trace) γₜ(∇Gxn,trace) -γₜ(∇Gx,trace) ZeroOperator();
+#     γₙ(∇Gx,trace) -γₙ(Gn,trace) γₙ(Gr,trace) -γₙ(∇G,trace)]
 #     return int
 # end
-function interaction(testobj::Object, trialobj::Object, embobj::Object, 
-    testtype::ObjectType,trialtype::ObjectType,strat::VP; sign=1)
-    trace = sign*strat.trace
-    k = sqrt(epsilon(embobj)*mu(embobj))*omega(embobj)
-    G = BEAST.greenhh3d(wavenumber=k)
-    gradG = BEAST.∇(G)
 
+# function interaction(testobj::Object, trialobj::Object, embobj::Object, 
+#     testtype::ObjectType,trialtype::ObjectType,strat::PRECVP; sign=1,dual=true)
+#     trace = sign*strat.trace
+#     k = sqrt(epsilon(embobj)*mu(embobj))*omega(embobj)
+#     G = BEAST.greenhh3d(wavenumber=k)
+#     gradG = BEAST.∇(G)
 
-    ∇Gx =  BEAST.build_potential(gradG×B)
-    Gn = BEAST.build_potential(G*(n*B))
-    #Gnx = BEAST.build_potential(G*(n × B),bs)
-    ∇G = BEAST.build_potential(gradG*B)
-    ∇Gdotn = BEAST.build_potential(nb ⋅ (gradG*B))
-    ∇Gdot = BEAST.build_potential(B ⋅ gradG)
-    
-    Gr = BEAST.build_potential(G*B)
-    ∇G∇B = BEAST.build_potential(gradG*div(B))
-    ∇Gxn = BEAST.build_potential(gradG×(n*B))
+#     bs = barycentric_refinement(geometry(trialobj); sort = :spacefillingcurve)
+#     ts = barycentric_refinement(geometry(testobj); sort = :spacefillingcurve)
 
-    #gebruik gamma^c --> sign = +
-    # #without extra ncross
-    # int = [γₛ(∇Gx,ts,trace) -γₛ(Gn,ts,trace) γₛ(Gr,ts,trace) -γₛ(∇G,ts,trace);
-    # ZeroOperator() -τ(∇Gdotn,ts,trace) τ(∇Gdot,ts,trace)  k^2*τ(Gr,ts,trace);
-    # γₛ(∇G∇B,ts,trace)+k^2*γₛ(Gr,ts,trace) -γₛ(∇Gxn,ts,trace) γₛ(∇Gx,ts,trace) ZeroOperator();
-    # γₙ(∇Gx,ts,trace) -γₙ(Gn,ts,trace) γₙ(Gr,ts,trace) -γₙ(∇G,ts,trace)]
-    # #with extra ncross
-    int = [-γₜ(∇Gx,trace) γₜ(Gn,trace) -γₜ(Gr,trace) γₜ(∇G,trace);
-    ZeroOperator() -τ(∇Gdotn,trace) τ(∇Gdot,trace)  k^2*τ(Gr,trace);
-    -γₜ(∇G∇B,trace)-k^2*γₜ(Gr,trace) γₜ(∇Gxn,trace) -γₜ(∇Gx,trace) ZeroOperator();
-    γₙ(∇Gx,trace) -γₙ(Gn,trace) γₙ(Gr,trace) -γₙ(∇G,trace)]
-    return int
-end
-
-function interaction(testobj::Object, trialobj::Object, embobj::Object, 
-    testtype::ObjectType,trialtype::ObjectType,strat::PRECVP; sign=1)
-    trace = sign*strat.trace
-    k = sqrt(epsilon(embobj)*mu(embobj))*omega(embobj)
-    G = BEAST.greenhh3d(wavenumber=k)
-    gradG = BEAST.∇(G)
-
-    bs = barycentric_refinement(geometry(trialobj); sort = :spacefillingcurve)
-    ts = barycentric_refinement(geometry(testobj); sort = :spacefillingcurve)
-
-    bss = geometry(trialobj)
-    tss = geometry(testobj)
+#     bss = geometry(trialobj)
+#     tss = geometry(testobj)
     
 
-    ∇Gx =  BEAST.build_potential(gradG×B,bs)#
-    Gn = BEAST.build_potential(G*(n*B),bss)#
-    #Gnx = BEAST.build_potential(G*(n × B),bs)
-    ∇G = BEAST.build_potential(gradG*B,bss)#
-    ∇Gdotn = BEAST.build_potential(nb ⋅ (gradG*B),bss)#
-    ∇Gdot = BEAST.build_potential(B ⋅ gradG,bs)#
+#     ∇Gx =  BEAST.build_potential(gradG×B,bs)#
+#     Gn = BEAST.build_potential(G*(n*B),bss)#
+#     #Gnx = BEAST.build_potential(G*(n × B),bs)
+#     ∇G = BEAST.build_potential(gradG*B,bss)#
+#     ∇Gdotn = BEAST.build_potential(nb ⋅ (gradG*B),bss)#
+#     ∇Gdot = BEAST.build_potential(B ⋅ gradG,bs)#
     
-    Gr = BEAST.build_potential(G*B,bs)#
-    Grs = BEAST.build_potential(G*B,bss)#
-    ∇G∇B = BEAST.build_potential(gradG*div(B),bs)#
-    ∇Gxn = BEAST.build_potential(gradG×(n*B),bss)#
+#     Gr = BEAST.build_potential(G*B,bs)#
+#     Grs = BEAST.build_potential(G*B,bss)#
+#     ∇G∇B = BEAST.build_potential(gradG*div(B),bs)#
+#     ∇Gxn = BEAST.build_potential(gradG×(n*B),bss)#
 
-    int = [-γₜ(∇Gx,ts,trace) γₜ(Gn,ts,trace) -γₜ(Gr,ts,trace) γₜ(∇G,ts,trace);
-    ZeroOperator() -τ(∇Gdotn,tss,trace) τ(∇Gdot,tss,trace)  k^2*τ(Grs,tss,trace);
-    -γₜ(∇G∇B,ts,trace)-k^2*γₜ(Gr,ts,trace) γₜ(∇Gxn,ts,trace) -γₜ(∇Gx,ts,trace) ZeroOperator();
-    γₙ(∇Gx,tss,trace) -γₙ(Gn,tss,trace) γₙ(Gr,tss,trace) -γₙ(∇G,tss,trace)]
-    return int
-end
+#     int = [-γₜ(∇Gx,ts,trace) γₜ(Gn,ts,trace) -γₜ(Gr,ts,trace) γₜ(∇G,ts,trace);
+#     ZeroOperator() -τ(∇Gdotn,tss,trace) τ(∇Gdot,tss,trace)  k^2*τ(Grs,tss,trace);
+#     -γₜ(∇G∇B,ts,trace)-k^2*γₜ(Gr,ts,trace) γₜ(∇Gxn,ts,trace) -γₜ(∇Gx,ts,trace) ZeroOperator();
+#     γₙ(∇Gx,tss,trace) -γₙ(Gn,tss,trace) γₙ(Gr,tss,trace) -γₙ(∇G,tss,trace)]
+#     return int
+# end
 function _identity(::ObjectType,strat::PRECVP)
     [NCross() ZeroOperator() ZeroOperator() ZeroOperator();
     ZeroOperator() Identity() ZeroOperator() ZeroOperator();
@@ -365,6 +397,7 @@ function excitation(testobj::Object,emb::Object,objtype::Inside,ex::VPExcitation
     0 1 0 0;
     0 0 mu(testobj)/mu(parent(testobj)) 0;
     0 0 0 epsilon(parent(testobj))/epsilon(testobj)]
+    
     return a*excitation(testobj,emb,objtype.inside,ex,strat)
 end
 function excitation(testobj::Object,emb::Object,objtype::PECCFIE,ex::VPExcitation,strat::VP)

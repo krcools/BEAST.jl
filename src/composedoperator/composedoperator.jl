@@ -292,7 +292,7 @@ end
 
 function γₜ(op::Potential,surface::CompScienceMeshes.AbstractMesh,sign::Int)# sign + if according to normal on surface, - otherwise
     #    check_if_coincide(op.surface,surface) || return op.operator
-        newop = -nt × (nt × γ(op.operator))
+        newop = (nt × γ(op.operator)) × nt
         direction = []
         for i in 1:numcells(surface)
             c = chart(surface,i)
@@ -302,7 +302,7 @@ function γₜ(op::Potential,surface::CompScienceMeshes.AbstractMesh,sign::Int)#
     end
     function γₜ(op::Potential,surface::TraceMesh,sign::Int)# sign + if according to normal on surface, - otherwise
     #    check_if_coincide(op.surface,surface) || return op.operator
-        newop = -nt × (nt × γ(op.operator))
+        newop =  (nt × γ(op.operator)) × nt
         direction = []
         for i in 1:numcells(surface)
             c = chart(surface,i)
@@ -502,9 +502,9 @@ kernelvals(op::ComposedOperatorIntegral, y,x) = nothing
 quaddata(op::ComposedOperatorIntegral,rs,els,qs::SingleNumQStrat) = quadpoints(rs,els,(qs.quad_rule,))
 quadrule(op::ComposedOperatorIntegral,refspace,p,y,q,el,qdata,qs::SingleNumQStrat) = qdata[1,q]
 
-defaultquadstrat(op::ComposedOperatorIntegral, basis) = SingleNumQStrat(3)
-defaultquadstrat(op::ComposedOperatorIntegral,testspace::Space,trialspace::Space) = DoubleNumSauterQstrat(7,8,6,6,5,4) 
-defaultquadstrat(op::ComposedOperatorLocal,testspace::Space,trialpsace::Space) = SingleNumQStrat(6)
+defaultquadstrat(op::ComposedOperatorIntegral, basis) = SingleNumQStrat(6)
+defaultquadstrat(op::ComposedOperatorIntegral,testspace::Space,trialspace::Space) = DoubleNumSauterQstrat(7,8,6,7,6,6) 
+defaultquadstrat(op::ComposedOperatorLocal,testspace::Space,trialpsace::Space) = SingleNumQStrat(8)
 #sign_upon_permutation(op::ComposedOperator,I,J) = Combinatorics.levicivita(I)^count_test_normals(op)*Combinatorics.levicivita(J)^count_trial_normals(op)
 
 
