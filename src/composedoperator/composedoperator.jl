@@ -503,7 +503,7 @@ quaddata(op::ComposedOperatorIntegral,rs,els,qs::SingleNumQStrat) = quadpoints(r
 quadrule(op::ComposedOperatorIntegral,refspace,p,y,q,el,qdata,qs::SingleNumQStrat) = qdata[1,q]
 
 defaultquadstrat(op::ComposedOperatorIntegral, basis) = SingleNumQStrat(6)
-defaultquadstrat(op::ComposedOperatorIntegral,testspace::Space,trialspace::Space) = DoubleNumSauterQstrat(7,8,6,7,6,6) 
+defaultquadstrat(op::ComposedOperatorIntegral,testspace::Space,trialspace::Space) = DoubleNumSauterQstrat(7,8,5,5,4,3) 
 defaultquadstrat(op::ComposedOperatorLocal,testspace::Space,trialpsace::Space) = SingleNumQStrat(8)
 #sign_upon_permutation(op::ComposedOperator,I,J) = Combinatorics.levicivita(I)^count_test_normals(op)*Combinatorics.levicivita(J)^count_trial_normals(op)
 
