@@ -44,7 +44,7 @@ function nedelec2(surface, edges=skeleton(surface,1))
 
             # i == 3 && @show s
             push!(fns[2*i-1], Shape{T}(j, 2*abs(s)+chooseref1(sign(s)), T(sgn)))
-            sgn *= -1*sgn
+            sgn *= -1
         end
 
         sgn = 1.0
@@ -56,7 +56,7 @@ function nedelec2(surface, edges=skeleton(surface,1))
 
             # i == 3 && @show s
             push!(fns[2*i], Shape{T}(j, 2*abs(s)+chooseref2(sign(s)), T(sgn)))
-            sgn*= -sgn
+            sgn *= -1
         end
     end
 

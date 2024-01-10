@@ -31,7 +31,7 @@ function (ϕ::ND2RefSpace)(nbd)
     b8 = v*b3+v*b6
 
     return SVector((
-        (value = n × -(-8*b7-8*b8+12*b3+6*b5-4*b1+6*b6)*inv_j/ j, curl = (-24*u-24*v+18)*inv_j),
+        (value = n × -(-8*b7-8*b8+12*b3+6*b5-4*b1+6*b6)*inv_j, curl = (-24*u-24*v+18)*inv_j),
         (value = n × -(8*b8-2*b3-6*b5+2*b1-4*b6)*inv_j, curl = (8*u+16*v-6)*inv_j),
         (value = n × (4*b3-8*b7+6*b4+2*b6-2*b2)*inv_j, curl = (6-24*u)*inv_j),
         (value = n × (8*b7+8*b8-6*b3-6*b4-12*b6+4*b2)*inv_j, curl = (24*u+24*v-18)*inv_j),
