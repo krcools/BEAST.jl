@@ -2,8 +2,8 @@ using CompScienceMeshes
 using BEAST
 using LinearAlgebra
 
-# G = meshsphere(1.0, 0.25)
 G = meshsphere(1.0, 0.30)
+#G = CompScienceMeshes.meshmobius(h=0.1)
 
 c = 1.0
 S = BEAST.HH3DSingleLayerTDBIO(c)
@@ -20,9 +20,9 @@ h = BEAST.gradient(e)
 
 # X = lagrangecxd0(G)
 X = lagrangecxd0(G)
-Y = duallagrangec0d1(G)
-# Y = lagrangecxd0(G)
-
+#Y = duallagrangec0d1(G)
+Y = lagrangecxd0(G)
+numfunctions(X)
 # X = duallagrangecxd0(G, boundary(G))
 # Y = lagrangec0d1(G)
 
@@ -31,7 +31,7 @@ Y = duallagrangec0d1(G)
 Δt, Nt = 0.16, 300
 # T = timebasisc0d1(Δt, Nt)
 P = timebasiscxd0(Δt, Nt)
-H = timebasisc0d1(Δt, Nt)
+#H = timebasisc0d1(Δt, Nt)
 δ = timebasisdelta(Δt, Nt)
 
 # assemble the right hand side
@@ -43,8 +43,16 @@ Zd = Z0d + (-0.5)*Z1d
 u = marchonintime(inv(Zd[:,:,1]), Zd, bd, Nt)
 
 bs = assemble(e, X ⊗ δ)
-Zs = assemble(S, X ⊗ δ, X ⊗ P, Val{:bandedstorage})
+Zs = assemble(S, X ⊗ δ, X ⊗ P)
 v = marchonintime(inv(Zs[:,:,1]), Zs, -bs, Nt)
+
+
+tdacusticsl = @discretise S[j′,j] == -1.0e[j′]   j∈ (X ⊗ P)  j′∈ (X ⊗ δ)
+xacusticsl = solve(tdacusticsl)
+
+
+import Plots
+Plots.plot(xacusticsl[1000,2900:3000])
 
 U, Δω, ω0 = fouriertransform(u, Δt, 0.0, 2)
 V, Δω, ω0 = fouriertransform(v, Δt, 0.0, 2)

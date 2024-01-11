@@ -293,6 +293,12 @@ struct WiltonInts84Strat{T,V,W}
     workspace::W
 end
 
+struct HybridZuccottiWiltonStrat{T,V,W}
+    outer_quad_points::T
+    binomials::V
+    workspace::W
+end
+
 struct ZuccottiRule{T}
 	weight::T #Allanalyticalformula
 end
