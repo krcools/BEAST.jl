@@ -9,7 +9,7 @@ kernelvals(op::ComposedOperator,a) = nothing
 function (func::FunctionExcitation)(x)
     return func.f(x)
 end
-function (func::FunctionExcitation)(x::CompScienceMeshes.MeshPointNM)
+function (func::FunctionExcitation)(x::Union{CompScienceMeshes.MeshPointNM,BEAST.TraceMeshPointNM})
     return func.f(cartesian(x))
 end
 scalartype(ff::FunctionExcitation{T}) where {T} = T

@@ -22,7 +22,7 @@ using LinearAlgebra
 Solves a variational equation by simply creating the full system matrix
 and calling a traditional lu decomposition.
 """
-function solve(eq)
+function solve(eq;Zz=false)
 
     time_domain = isa(first(eq.trial_space_dict).second, BEAST.SpaceTimeBasis)
     time_domain |= isa(first(eq.trial_space_dict).second, BEAST.StagedTimeStep)
@@ -57,6 +57,7 @@ function solve(eq)
     # return u
     # return PseudoBlockVector(u, blocksizes(Z,2))
     ax = nestedrange(Y, 1, numfunctions)
+    Zz && (return PseudoBlockVector(u, (ax,)), Z)
     return PseudoBlockVector(u, (ax,))
 end
 

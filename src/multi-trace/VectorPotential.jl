@@ -35,9 +35,9 @@ end
 function testbasis(obj::Object{T}, ::VPPMCHWT) where {T <: HOM}
     Γ =  obj.type.mesh
     x1 = raviartthomas(Γ)
-    x2 = BEAST.lagrangecxd0(Γ)
+    x2 = BEAST.lagrangec0d1(Γ)
     x3 = raviartthomas(Γ)
-    x4 = BEAST.lagrangec0d1(Γ)
+    x4 = BEAST.lagrangecxd0(Γ)
     return BEAST.DirectProductSpace([x1,x2,x3,x4])
 end
 
@@ -178,11 +178,11 @@ function interaction(testobj::Object,trialobj::Object,embobj::Object,
     interaction(testobj,trialobj,embobj,testtype,trialtype.inside,strat;sign=sign,dual=dual,trace=trace)[:,3:4]
 end
 function interaction(testobj::Object,trialobj::Object,embobj::Object,
-    testtype::ObjectType,trialtype::HOM,strat::Union{PRECVP,VP,PMCHWT}; sign=1,dual=true,trace=true)
+    testtype::ObjectType,trialtype::HOM,strat::Union{PRECVP,VP,VPPMCHWT}; sign=1,dual=true,trace=true)
     interaction(testobj,trialobj,embobj,testtype,trialtype.inside,strat;sign=sign,dual=dual,trace=trace)
 end
 function interaction(testobj::Object,trialobj::Object,embobj::Object,
-    testtype::HOM,trialtype,strat::Union{PRECVP,VP.PMCHWT}; sign=1,dual=true,trace=true)
+    testtype::HOM,trialtype,strat::Union{PRECVP,VP,VPPMCHWT}; sign=1,dual=true,trace=true)
     interaction(testobj,trialobj,embobj,testtype.inside,trialtype,strat;sign=sign,dual=dual,trace=trace)
 end
 function interaction(testobj::Object, trialobj::Object, embobj::Object, 
@@ -504,7 +504,7 @@ function excitation(testobj::Object,emb::Object,objtype::Inside,ex::VPExcitation
     
     return a^-1*excitation(testobj,emb,objtype.inside,ex,strat)
 end
-function excitation(testobj::Object,emb::Object,objtype::Inside,ex::VPExcitation,strat::VP)
+function excitation(testobj::Object,emb::Object,objtype::Inside,ex::VPExcitation,strat::VPPMCHWT)
     a = [1 0 0 0;
     0 epsilon(parent(testobj))/epsilon(testobj) 0 0;
     0 0 mu(testobj)/mu(parent(testobj)) 0;

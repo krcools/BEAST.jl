@@ -75,7 +75,7 @@ end
 function complement_error(world,solution,volume::Vector{Int},strat::T;trace=true) where {T}
     @warn "exclude free space!!!"
     newstrat = T(-strat.trace)
-    @assert T <: VP
+    
     lhs = discretise_lhs(world,newstrat;id=0.0,dual=false,trace=trace)
     out = lhs[volume].*Ref(solution)
     g = BlockDiagonalOperator(BlockDiagonalOperator(Identity()))
@@ -87,3 +87,7 @@ function complement_error(world,solution,volume::Vector{Int},strat::T;trace=true
     return dot.(Vector.(out),ttt)/dot(solution,G2,solution),ttt,out,G,dot(solution,G2,solution)
    # norm(sum(out))/norm(solution)
 end
+
+# x'Zxa = x'xb  => b andere volgorde dan a, x' is testvector, x is trialvector --> zelfde doordat b andere volgorde heeft.
+# (G-1) Z a = b , integreer b, dit geeft: b xx b 
+# finaal resultaat, ttt (G-1) ttt, componenten in volgorde van b, 
