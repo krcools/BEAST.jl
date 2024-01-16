@@ -238,11 +238,9 @@ function qr_volume(op::VolumeOperator, g::RefSpace, f::RefSpace, i, τ, j, σ, q
     hits == 2 && return SauterSchwab3D.CommonEdge6D_S(SauterSchwab3D.Singularity6DEdge(idx_t,idx_s),(qd.sing_qp[1],qd.sing_qp[2],qd.sing_qp[3],qd.sing_qp[4]))
     hits == 1 && return SauterSchwab3D.CommonVertex6D_S(SauterSchwab3D.Singularity6DPoint(idx_t,idx_s),qd.sing_qp[3])
 
-
-
     return DoubleQuadRule(
-        qd[1][1,i],
-        qd[2][1,j])
+        qd[1][i],
+        qd[2][j])
 
 end
 
@@ -280,10 +278,9 @@ function qr_boundary(op::BoundaryOperator, g::RefSpace, f::RefSpace, i, τ, j,  
     hits == 2 && return SauterSchwab3D.CommonEdge5D_S(SauterSchwab3D.Singularity5DEdge(idx_t,idx_s),(qd.sing_qp[1],qd.sing_qp[2],qd.sing_qp[3]))
     hits == 1 && return SauterSchwab3D.CommonVertex5D_S(SauterSchwab3D.Singularity5DPoint(idx_t,idx_s),(qd.sing_qp[3],qd.sing_qp[2]))
 
-
     return DoubleQuadRule(
-        qd[1][1,i],
-        qd[2][1,j])
+        qd[1][i],
+        qd[2][j])
 
 end
 
