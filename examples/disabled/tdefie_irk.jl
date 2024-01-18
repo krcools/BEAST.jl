@@ -23,8 +23,10 @@ xefie_irk = solve(tdefie_irk)
 
 j = xefie_irk[1:2:end,:]
 
-import Plots, Plotly
+import Plots
 Plots.plot(j[1,:])
+
+import Plotly
 fcr, geo = facecurrents(j[:,1], X)
 Plotly.plot(patch(geo, norm.(fcr)))
 
