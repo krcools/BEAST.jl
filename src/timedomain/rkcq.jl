@@ -35,7 +35,7 @@ end
 
 # M = H*diagm(D)*invH
 function diagonalizedmatrix(M :: SArray{Tuple{N,N},Complex{T},2,NN}) where {T,N,NN}
-	ef = eigfact(Array{Complex{T},2}(M));
+	ef = eigen(Array{Complex{T},2}(M));
 
 	efValues = SVector{N,Complex{T}}(ef.values)  :: SVector{N,Complex{T}};
 	efVectors = SArray{Tuple{N,N},Complex{T},2,NN}(ef.vectors) :: SArray{Tuple{N,N},Complex{T},2,NN};
@@ -46,55 +46,55 @@ function assemble(rkcq :: RungeKuttaConvolutionQuadrature,
                   testfns :: StagedTimeStep,
                   trialfns :: StagedTimeStep)
 
-	laplaceKernel = rkcq.laplaceKernel;
-	A = rkcq.A;
-	b = rkcq.b;
-	Δt = rkcq.Δt;
-	Q = rkcq.zTransformedTermCount;
-	rho = rkcq.contourRadius;
-	p = length(b); # stage count
+	laplaceKernel = rkcq.laplaceKernel
+	A = rkcq.A
+	b = rkcq.b
+	Δt = rkcq.Δt
+	Q = rkcq.zTransformedTermCount
+	rho = rkcq.contourRadius
+	p = length(b) # stage count
 
-	test_spatial_basis  = testfns.spatialBasis;
-	trial_spatial_basis = trialfns.spatialBasis;
+	test_spatial_basis  = testfns.spatialBasis
+	trial_spatial_basis = trialfns.spatialBasis
 
 	# Compute the Z transformed sequence.
 	# Assume that the operator applied on the conjugate of s is the same as the
 	# conjugate of the operator applied on s,
 	# so that only half of the values are computed
-	Qmax = Q>>1+1;
-	M = numfunctions(test_spatial_basis);
-	N = numfunctions(trial_spatial_basis);
-	Tz = promote_type(scalartype(rkcq), scalartype(testfns), scalartype(trialfns));
-	Zz = Vector{Array{Tz,2}}(undef,Qmax);
-	blocksEigenvalues = Vector{Array{Tz,2}}(undef,p);
-	tmpDiag = Vector{Tz}(undef,p);
+	Qmax = Q>>1+1
+	M = numfunctions(test_spatial_basis)
+	N = numfunctions(trial_spatial_basis)
+	Tz = promote_type(scalartype(rkcq), scalartype(testfns), scalartype(trialfns))
+	Zz = Vector{Array{Tz,2}}(undef,Qmax)
+	blocksEigenvalues = Vector{Array{Tz,2}}(undef,p)
+	tmpDiag = Vector{Tz}(undef,p)
 	for q = 0:Qmax-1
 		# Build a temporary matrix for each eigenvalue
-		s = laplace_to_z(rho, q, Q, Δt, A, b);
-		sFactorized = diagonalizedmatrix(s);
+		s = laplace_to_z(rho, q, Q, Δt, A, b)
+		sFactorized = diagonalizedmatrix(s)
 		for (i,sD) in enumerate(sFactorized.D)
-			blocksEigenvalues[i] = assemble(laplaceKernel(sD), test_spatial_basis, trial_spatial_basis);
+			blocksEigenvalues[i] = assemble(laplaceKernel(sD), test_spatial_basis, trial_spatial_basis)
 		end
 
 		# Compute the Z transformed matrix by block
-		Zz[q+1] = zeros(Tz, M*p, N*p);
+		Zz[q+1] = zeros(Tz, M*p, N*p)
 		for m = 1:M
 			for n = 1:N
 				for i = 1:p
-					tmpDiag[i] = blocksEigenvalues[i][m,n];
+					tmpDiag[i] = blocksEigenvalues[i][m,n]
 				end
 				D = SVector{p,Tz}(tmpDiag);
-				Zz[q+1][(m-1)*p+(1:p),(n-1)*p+(1:p)] = sFactorized.H * diagm(D) * sFactorized.invH;
+				Zz[q+1][(m-1)*p.+(1:p),(n-1)*p.+(1:p)] = sFactorized.H * diagm(D) * sFactorized.invH
 			end
 		end
 	end
 
 	# return the inverse Z transform
-	kmax = Q;
-	T = real(Tz);
+	kmax = Q
+	T = real(Tz)
 	Z = zeros(T, M*p, N*p, kmax)
 	for q = 0:kmax-1
-		Z[:,:,q+1] = real_inverse_z_transform(q, rho, Q, Zz);
+		Z[:,:,q+1] = real_inverse_z_transform(q, rho, Q, Zz)
 	end
 	return Z
 

@@ -1,21 +1,3 @@
-motsolve(eq) = td_solve(eq)
-
-function td_solve(eq)
-
-    V = eq.trial_space_dict[1]
-
-    A = assemble(eq.equation.lhs, eq.test_space_dict, eq.trial_space_dict)
-    T = eltype(A)
-    S = zeros(T, size(A)[1:2])
-    ConvolutionOperators.timeslice!(S, A, 1)
-
-    iS = inv(S)
-    b = assemble(eq.equation.rhs, eq.test_space_dict)
-
-    nt = numfunctions(temporalbasis(V))
-    marchonintime(iS, A, b, nt)
-end
-
 """
     marchonintime(W0,Z,B,I; convhist=false)
 
@@ -67,4 +49,31 @@ function marchonintime(W0,Z,B,I; convhist=false)
     end
 end
 
+function convolve(Z,x,j,k0)
+    T = promote_type(eltype(Z), eltype(x))
+    M,N,K = size(Z)
+    @assert M == size(x,1)
+    y = zeros(T,M)
+        for m in 1:M
+            for n in 1:N
+                for k in k0:min(j,K)
+                    i = j - k + 1
+                    y[m] += Z[m,n,k] * x[n,i]
+                end
+            end
+        end
+    return y
+end
 
+function marchonintime_cq(W0,Z,B,I)
+    T = eltype(Z)
+    M,N,K = size(Z)
+    @assert M == size(B,1)
+    x = zeros(T,N,I)
+    for i in 1:I
+        b = B[:,i] - convolve(Z,x,i,2)
+        x[:,i] = W0 * b
+        (i % 10 == 0) && print(i, "[", I, "] - ")
+    end
+    return x
+end
