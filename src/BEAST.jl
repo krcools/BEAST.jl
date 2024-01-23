@@ -263,6 +263,7 @@ include("utils/plotlyglue.jl")
 include("maxwell/timedomain/conductivity.jl")
 include("maxwell/timedomain/nonlinearmot.jl")
 include("solvers/nlsolver.jl")
+include("timedomain/convquadops.jl")
 
 
 

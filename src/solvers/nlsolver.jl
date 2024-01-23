@@ -5,7 +5,7 @@ function newtoniterator(eq1, eq2, inc, Z, G_e, G_j)
     BEAST.ConvolutionOperators.timeslice!(Z0,Z,1) =#
     #V0 = zeros(M+N,M+N)
     Z0 = zeros(T, size(Z))
-    Z0 = 2.0*Z
+    Z0 = 1.0*Z
     #V0[1:M, 1:M] = Z0
     #V0[1:M, M+1:M+N] = G_e 
     #V0[M+1:M+N, 1:M] = G_j
