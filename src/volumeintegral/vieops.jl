@@ -189,8 +189,8 @@ function quaddata(op::VIEOperator,
     # they result in many near singularity evaluations with any
     # resemblence of accuracy going down the drain! Simply don't!
     # (same for (5,7) btw...).
-    t_qp = quadpoints(test_local_space,  test_charts,  (qs.outer_rule))
-    b_qp = quadpoints(trial_local_space, trial_charts, (qs.inner_rule))
+    t_qp = quadpoints(test_local_space,  test_charts,  (qs.outer_rule,))
+    b_qp = quadpoints(trial_local_space, trial_charts, (qs.inner_rule,))
 
    
     sing_qp = (SauterSchwab3D._legendre(qs.sauter_schwab_1D,0,1), 
