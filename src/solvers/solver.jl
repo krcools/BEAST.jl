@@ -192,34 +192,6 @@ _righthandside_axes(x, U, N) = (U,)
 
 td_assemble(lform::LinForm, X::DirectProductSpace) = assemble(lform, X)
 
-# function td_assemble(lform::LinForm, X::DirectProductSpace)
-
-#     @assert !isempty(lform.terms)
-
-#     T = scalartype(lform, X)
-#     U = NestedUnitRanges.nestedrange(spatialbasis(X), 1, numfunctions)
-
-#     x = first(AbstractTrees.Leaves(X))
-#     N = Base.OneTo(tensordim(x,2))
-#     ax = _rigthandside_axes(x, U, N)
-
-#     B = BlockArray{T}(undef, ax)
-#     fill!(B, 0)
-
-#     for t in lform.terms
-
-#         m = t.test_id
-#         x = X[m]
-
-#         for op in reverse(t.test_ops) x = op[end](op[1:end-1]..., x) end
-
-#         b = assemble(t.functional, x)
-#         B[Block(m),Block(1)] = t.coeff * b
-#     end
-
-#     return B
-# end
-
 function assemble(bilform::BilForm, test_space_dict, trial_space_dict;
     materialize=BEAST.assemble)
 
