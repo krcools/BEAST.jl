@@ -38,7 +38,7 @@ function (igd::BEAST.Integrand{<:MWCQSingleLayer3D})(x,y,f,g)
     r = cartesian(x) - cartesian(y)
     R = norm(r)
     ξ = R/dt
-    #iR = 1 / R
+    iR = 1 / R
     w_s = cq_weightBE(0,K,ξ,dt)
     w_hs = cq_weightBE(2,K,ξ,dt)
 
