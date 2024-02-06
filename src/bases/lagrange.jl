@@ -48,6 +48,34 @@ function lagrangecxd0(mesh)
   LagrangeBasis{0,-1,NF}(geometry, fns, pos)
 end
 
+"""
+    unitfunction(mesh)
+
+Constructs a constant function with value 1 on `mesh`.
+"""
+function unitfunction(mesh)
+
+    T = coordtype(mesh)
+    geometry = mesh
+
+    # create the local shapes
+    fns = Vector{Vector{Shape{T}}}(undef, 1)
+    pos = Vector{vertextype(mesh)}(undef, 1)
+    fns[1] = [Shape(i, 1, T(1.0)) for (i, cell) in enumerate(mesh)]
+
+    # Arguably, the position is fairly meaningless
+    # in case of a global function. Might be replaced by something
+    # more useful.
+    # For now, we fill it with the average position of the shape functions
+    p = vertextype(mesh)(0.0, 0.0, 0.0)
+    for cell in mesh
+        p += cartesian(center(chart(mesh, cell)))
+    end
+    pos[1] = p ./ numcells(mesh)
+
+    NF = 1
+    LagrangeBasis{0,-1,NF}(geometry, fns, pos)
+end
 
 """
     lagrangec0d1(mesh[, bnd])

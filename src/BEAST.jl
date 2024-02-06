@@ -27,7 +27,7 @@ export dot
 
 export planewave
 export RefSpace, numfunctions, coordtype, scalartype, assemblydata, geometry, refspace, valuetype
-export lagrangecxd0, lagrangec0d1, duallagrangec0d1
+export lagrangecxd0, lagrangec0d1, duallagrangec0d1, unitfunction
 export duallagrangecxd0
 export lagdimension
 export restrict
