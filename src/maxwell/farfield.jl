@@ -18,31 +18,21 @@ struct MWDoubleLayerFarField3D{K, U} <: MWFarField
   waveimpedance::U
 end
 
+struct MWDoubleLayerRotatedFarField3D{K,U} <: MWFarField
+    gamma::K
+    waveimpedance::U
+end
+
 function MWFarField3D(;
   gamma=nothing,
   wavenumber=nothing,
   waveimpedance=nothing
 )
-    if (gamma === nothing) && (wavenumber === nothing)
-        error("Supply one of (not both) gamma or wavenumber")
-    end
-
-    if (gamma !== nothing) && (wavenumber !== nothing)
-        error("Supply one of (not both) gamma or wavenumber")
-    end
-
-    if gamma === nothing
-        if iszero(real(wavenumber))
-            gamma = -imag(wavenumber)
-        else
-            gamma = im*wavenumber
-        end
-    end
-
+    gamma, _ = gamma_wavenumber_handler(gamma, wavenumber)
     @assert gamma !== nothing
 
     waveimpedance === nothing && (waveimpedance = 1.0)
-    
+
     return MWFarField3D(gamma, waveimpedance)
 end
 
@@ -53,26 +43,12 @@ function MWDoubleLayerFarField3D(;
   wavenumber=nothing,
   waveimpedance=nothing
 )
-    if (gamma === nothing) && (wavenumber === nothing)
-        error("Supply one of (not both) gamma or wavenumber")
-    end
-
-    if (gamma !== nothing) && (wavenumber !== nothing)
-        error("Supply one of (not both) gamma or wavenumber")
-    end
-
-    if gamma === nothing
-        if iszero(real(wavenumber))
-            gamma = -imag(wavenumber)
-        else
-            gamma = im*wavenumber
-        end
-    end
+    gamma, _ = gamma_wavenumber_handler(gamma, wavenumber)
 
     @assert gamma !== nothing
 
     waveimpedance === nothing && (waveimpedance = 1.0)
-    
+
     return MWDoubleLayerFarField3D(gamma, waveimpedance)
 end
 
@@ -97,4 +73,25 @@ end
 kernelvals(op::MWFarField3DDropConstant,y,p) = expm1(op.gamma*dot(y,cartesian(p)))
 function integrand(op::MWFarField3DDropConstant,krn,y,f,p)
   op.coeff*(y × (krn * f[1])) × y
+end
+
+function MWDoubleLayerRotatedFarField3D(;
+    gamma=nothing,
+    wavenumber=nothing,
+    waveimpedance=nothing
+)
+    gamma, _ = gamma_wavenumber_handler(gamma, wavenumber)
+
+    @assert gamma !== nothing
+
+    waveimpedance === nothing && (waveimpedance = 1.0)
+
+    return MWDoubleLayerRotatedFarField3D(gamma, waveimpedance)
+end
+
+MWDoubleLayerRotatedFarField3D(op::DoubleLayerRotatedMW3D{T,U}) where {T,U} =
+MWDoubleLayerRotatedFarField3D(op.gamma, T(1))
+
+function integrand(op::MWDoubleLayerRotatedFarField3D, krn, y, f, p)
+    op.waveimpedance * (y × ((krn * f[1]) × normal(p)))
 end

@@ -190,7 +190,7 @@ end
 
 
 function (igd::Integrand{<:MWDoubleLayer3D})(x,y,f,g)
-    
+
     γ = igd.operator.gamma
 
     r = cartesian(x) - cartesian(y)
@@ -207,7 +207,7 @@ end
 
 
 function (igd::Integrand{<:MWDoubleLayer3DReg})(x,y,f,g)
-    
+
     γ = igd.operator.gamma
 
     r = cartesian(x) - cartesian(y)
@@ -231,17 +231,17 @@ end
 ################################################################################
 
 function gamma_wavenumber_handler(gamma, wavenumber)
-  if (gamma !== nothing) && (wavenumber !== nothing)
-      error("Supply one of (not both) gamma or wavenumber")
-  end
+    if !((gamma !== nothing) ⊻ (wavenumber !== nothing))
+        error("Supply one of (not both) gamma or wavenumber")
+    end
 
-  if gamma === nothing && (wavenumber !== nothing)
-      if iszero(real(wavenumber))
-          gamma = -imag(wavenumber)
-      else
-          gamma = im*wavenumber
-      end
-  end
+    if gamma === nothing && (wavenumber !== nothing)
+        if iszero(real(wavenumber))
+            gamma = -imag(wavenumber)
+        else
+            gamma = im*wavenumber
+        end
+    end
 
   return gamma, wavenumber
 end
