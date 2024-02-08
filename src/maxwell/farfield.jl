@@ -95,3 +95,6 @@ MWDoubleLayerRotatedFarField3D(op.gamma, T(1))
 function integrand(op::MWDoubleLayerRotatedFarField3D, krn, y, f, p)
     op.amplitude * (y × ((krn * f[1]) × normal(p)))
 end
+
+LinearAlgebra.cross(::NormalVector, a::MWDoubleLayerFarField3D) = MWDoubleLayerRotatedFarField3D(a.gamma, a.amplitude)
+LinearAlgebra.cross(::NormalVector, a::MWDoubleLayerRotatedFarField3D) = MWDoubleLayerFarField3D(a.gamma, -a.amplitude)

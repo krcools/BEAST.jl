@@ -57,15 +57,19 @@ for U in [Float32,Float64]
     nf_H_EFIE = potential(BEAST.MWDoubleLayerField3D(𝓚), pts, j_EFIE, X)
     ff_E_EFIE = potential(MWFarField3D(𝓣), pts, j_EFIE, X)
     ff_H_EFIE = potential(BEAST.MWDoubleLayerFarField3D(𝓚), pts, j_EFIE, X)
-    ff_H_EFIE_doublecrossed = potential(BEAST.MWDoubleLayerRotatedFarField3D(n × 𝓚), pts, -j_EFIE, n×X)
+    ff_H_EFIE_rotated = potential(n × BEAST.MWDoubleLayerFarField3D(𝓚), pts, -j_EFIE, n × X)
+    ff_H_EFIE_doublerotated = potential(n × BEAST.MWDoubleLayerRotatedFarField3D(n × 𝓚), pts, -j_EFIE, X)
 
 
     @test norm(nf_E_EFIE - E.(pts))/norm(E.(pts)) ≈ 0 atol=0.01
     @test norm(nf_H_EFIE - H.(pts))/norm(H.(pts)) ≈ 0 atol=0.01
     @test norm(ff_E_EFIE - E.(pts, isfarfield=true))/norm(E.(pts, isfarfield=true)) ≈ 0 atol=0.001
     @test norm(ff_H_EFIE - H.(pts, isfarfield=true))/norm(H.(pts, isfarfield=true)) ≈ 0 atol=0.001
-    @test norm(ff_H_EFIE_doublecrossed - H.(pts, isfarfield=true))/norm(H.(pts, isfarfield=true)) ≈ 0 atol=0.001
-    @test ff_H_EFIE ≈ ff_H_EFIE_doublecrossed rtol=1e-7
+    @test norm(ff_H_EFIE_rotated - H.(pts, isfarfield=true))/norm(H.(pts, isfarfield=true)) ≈ 0 atol=0.001
+    @test norm(ff_H_EFIE_doublerotated - H.(pts, isfarfield=true))/norm(H.(pts, isfarfield=true)) ≈ 0 atol=0.001
+    @test ff_H_EFIE ≈ ff_H_EFIE_rotated rtol=1e-7
+    @test ff_H_EFIE_rotated ≈ ff_H_EFIE_doublerotated rtol=1e-7
+
 
     K_bc = Matrix(assemble(𝓚,Y,X))
     G_nxbc_rt = Matrix(assemble(𝓝,Y,X))
