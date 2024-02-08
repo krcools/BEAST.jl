@@ -38,7 +38,7 @@ export nedelecd3d
 export nedelecc3d
 export portcells, rt_ports, getindex_rtg, subset
 export StagedTimeStep
-export subdsurface,subdBasis,assemblydata,refspace
+export subdsurface, subdBasis, assemblydata, refspace
 export spatialbasis, temporalbasis
 export ⊗
 export timebasisc0d1
@@ -48,7 +48,7 @@ export timebasisshiftedlagrange
 export TimeBasisDeltaShifted
 export ntrace
 export strace
-export ttrace 
+export ttrace
 export SingleLayer
 export DoubleLayer
 export DoubleLayerTransposed
@@ -80,7 +80,7 @@ export curl
 export gradient
 export MWSingleLayerField3D
 export SingleLayerTrace
-export DoubleLayerRotatedMW3D
+export DoubleLayerRotatedMW3D, MWDoubleLayerRotatedFarField3D
 export MWSingleLayerPotential3D
 
 export VIEOperator
@@ -259,9 +259,9 @@ include("utils/plotlyglue.jl")
 
 
 
-const x̂ = point(1,0,0)
-const ŷ = point(0,1,0)
-const ẑ = point(0,0,1)
+const x̂ = point(1, 0, 0)
+const ŷ = point(0, 1, 0)
+const ẑ = point(0, 0, 1)
 export x̂, ŷ, ẑ
 
 const n = NormalVector()
