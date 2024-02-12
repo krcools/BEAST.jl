@@ -100,7 +100,52 @@ const _dof_perms_rt = [
 ]
 
 function dof_permutation(::RTRefSpace, vert_permutation)
-    i = findfirst(==(tuple(vert_permutation...)), _vert_perms_rt)
-    @assert i != nothing
+    i = something(findfirst(==(tuple(vert_permutation...)), _vert_perms_rt),0)
+    @assert i != 0
     return _dof_perms_rt[i]
+end
+
+
+"""
+    interpolate(interpolant::RefSpace, chart1, interpolee::RefSpace, chart2)
+
+Computes by interpolation approximations of the local shape functions for
+`interpolee` on `chart2` in terms of the local shape functions for `interpolant`
+on `chart1`. The returned value is a matrix `Q` such that
+
+```math
+\\phi_i \\approx \\sum_j Q_{ij} \\psi_j
+```
+
+with ``\\phi_i`` the i-th local shape function for `interpolee` and ``\\psi_j`` the
+j-th local shape function for `interpolant`.
+"""
+function interpolate(interpolant::RTRefSpace, chart1, interpolee::RefSpace, chart2)
+    function fields(p)
+        x = cartesian(p)
+        v = carttobary(chart2, x)
+        r = neighborhood(chart2, v)
+        fieldvals = [f.value for f in interpolee(r)]
+    end
+
+    interpolate(fields, interpolant, chart1)
+end
+
+function interpolate(fields, interpolant::RTRefSpace, chart)
+    Q = map(faces(chart)) do face
+        p = center(face)
+        x = cartesian(p)
+        u = carttobary(chart, x)
+        q = neighborhood(chart, u)
+        n = normal(q)
+
+        # minus because in CSM the tangent points towards vertex[1]
+        t = -tangents(p,1)
+        m = cross(t,n)
+
+        fieldvals = fields(q)
+        q = [dot(fv,m) for fv in fieldvals]
+    end
+
+    return hcat(Q...)
 end

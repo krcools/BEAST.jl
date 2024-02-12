@@ -17,12 +17,24 @@ Base.axes(A::GMRESSolver) = reverse(axes(A.linear_operator))
 
 
 function GMRESSolver(op::L;
-    left_preconditioner::P = IterativeSolvers.Identity(),
+    left_preconditioner = nothing,
+    Pl = nothing,
     maxiter=0,
     restart=0,
     abstol::R = zero(real(eltype(op))),
     reltol::R = sqrt(eps(real(eltype(op)))),
-    verbose=true) where {L,R<:Real,P}
+    verbose=true) where {L,R<:Real}
+
+    if left_preconditioner == nothing
+        Pl == nothing && (Pl = IterativeSolvers.Identity())
+    else
+        if Pl == nothing
+            Pl = BEAST.Preconditioner(left_preconditioner)
+        else
+            error("Either supply Pl or left_preconditioner, not both.")
+        end
+    end
+    @assert Pl != nothing
 
     m, n = size(op)
     @assert m == n
@@ -30,8 +42,9 @@ function GMRESSolver(op::L;
     maxiter == 0 && (maxiter = div(n, 5))
     restart == 0 && (restart = n)
 
+    P = typeof(Pl)
     T = eltype(op)
-    GMRESSolver{T,L,R,P}(op, maxiter, restart, abstol, reltol, verbose, left_preconditioner)
+    GMRESSolver{T,L,R,P}(op, maxiter, restart, abstol, reltol, verbose, Pl)
 end
 
 
