@@ -9,7 +9,7 @@ for T in [Float32, Float64]
     @test numfunctions(X) == 16*2*3
     @test all(length.(X.fns) .== 1)
 
-    p = positions(X)
+    local p = positions(X)
 
     i = 12
     c = X.fns[i][1].cellid

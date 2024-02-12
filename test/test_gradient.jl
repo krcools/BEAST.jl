@@ -5,7 +5,7 @@ using Test
 for T in [Float32, Float64]
     local o, x, y, z = euclidianbasis(3,T)
     tet = simplex(x,y,z,o)
-    ctr = center(tet)
+    local ctr = center(tet)
 
 
     iref = BEAST.LagrangeRefSpace{T,1,4,4}()

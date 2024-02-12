@@ -6,7 +6,7 @@ using SharedArrays
 using SparseArrays
 using FillArrays
 using BlockArrays
-using SparseMatrixDicts
+using ExtendableSparse
 
 using ConvolutionOperators
 using SauterSchwabQuadrature
