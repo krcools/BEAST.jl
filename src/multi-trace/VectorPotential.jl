@@ -9,18 +9,28 @@
 struct PRECVP <: Interaction 
     trace::Int
 end
+struct PRECVPPMCHWT2 <: Interaction 
+    trace::Int
+    rows
+    cols
+end
 struct VPPMCHWT <: Interaction
     trace::Int
 end
 VPPMCHWT() = VPPMCHWT(1)
+struct VPPMCHWT2 <: Interaction
+    trace::Int
+end
+PRECVPPMCHWT2() = PRECVPPMCHWT2(1,[1,2,3,4],[1,2,3,4])
+VPPMCHWT2() = VPPMCHWT2(1)
 PRECVP() = PRECVP(1)
 
 function testbasis(obj::Object{T}, ::VP) where {T <: HOM}
     Γ =  obj.type.mesh
     x1 = raviartthomas(Γ)
-    x2 = BEAST.duallagrangecxd0(Γ)
+    x2 = BEAST.lagrangecxd0(Γ)
     x3 = raviartthomas(Γ)
-    x4 = BEAST.duallagrangec0d1(Γ)
+    x4 = BEAST.lagrangec0d1(Γ)
     return BEAST.DirectProductSpace([x1,x2,x3,x4])
 end
 
@@ -30,6 +40,40 @@ function trialbasis(obj::Object{T}, ::VP) where {T <: HOM}
     x2 = BEAST.lagrangec0d1(Γ)
     x3 = raviartthomas(Γ)
     x4 = BEAST.lagrangecxd0(Γ)
+    return BEAST.DirectProductSpace([x1,x2,x3,x4])
+end
+function testbasis(obj::Object{T}, ::PRECVP) where {T <: HOM}
+    Γ =  obj.type.mesh
+    x1 = buffachristiansen(Γ)
+    x2 = BEAST.duallagrangecxd0(Γ)
+    x3 = buffachristiansen(Γ)
+    x4 = BEAST.duallagrangec0d1(Γ)
+    return BEAST.DirectProductSpace([x1,x2,x3,x4])
+end
+
+function trialbasis(obj::Object{T}, ::PRECVP) where {T <: HOM}
+    Γ =  obj.type.mesh
+    x1 = buffachristiansen(Γ)
+    x2 = BEAST.duallagrangec0d1(Γ)
+    x3 = buffachristiansen(Γ)
+    x4 = BEAST.duallagrangecxd0(Γ)
+    return BEAST.DirectProductSpace([x1,x2,x3,x4])
+end
+function testbasis(obj::Object{T}, ::PRECVPPMCHWT2) where {T <: HOM}
+    Γ =  obj.type.mesh
+    x1 = buffachristiansen(Γ)
+    x2 = BEAST.duallagrangec0d1(Γ)
+    x3 = buffachristiansen(Γ)
+    x4 = BEAST.duallagrangecxd0(Γ)
+    return BEAST.DirectProductSpace([x1,x2,x3,x4])
+end
+
+function trialbasis(obj::Object{T}, ::PRECVPPMCHWT2) where {T <: HOM}
+    Γ =  obj.type.mesh
+    x1 = buffachristiansen(Γ)
+    x2 = BEAST.duallagrangec0d1(Γ)
+    x3 = buffachristiansen(Γ)
+    x4 = BEAST.duallagrangecxd0(Γ)
     return BEAST.DirectProductSpace([x1,x2,x3,x4])
 end
 function testbasis(obj::Object{T}, ::VPPMCHWT) where {T <: HOM}
@@ -49,23 +93,40 @@ function trialbasis(obj::Object{T}, ::VPPMCHWT) where {T <: HOM}
     x4 = BEAST.lagrangecxd0(Γ)
     return BEAST.DirectProductSpace([x1,x2,x3,x4])
 end
-function testbasis(obj::Object{T}, ::PRECVP) where {T <: HOM}
+function testbasis(obj::Object{T}, ::VPPMCHWT2) where {T <: HOM}
     Γ =  obj.type.mesh
-    x1 = buffachristiansen(Γ)
+    x1 = raviartthomas(Γ)
     x2 = BEAST.lagrangec0d1(Γ)
-    x3 = buffachristiansen(Γ)
-    x4 = BEAST.lagrangec0d1(Γ)
+    x3 = raviartthomas(Γ)
+    x4 = BEAST.lagrangecxd0(Γ)
     return BEAST.DirectProductSpace([x1,x2,x3,x4])
 end
 
-function trialbasis(obj::Object{T}, ::PRECVP) where {T <: HOM}
+function trialbasis(obj::Object{T}, ::VPPMCHWT2) where {T <: HOM}
     Γ =  obj.type.mesh
-    x1 = buffachristiansen(Γ)
+    x1 = raviartthomas(Γ)
     x2 = BEAST.lagrangec0d1(Γ)
-    x3 = buffachristiansen(Γ)
-    x4 = BEAST.lagrangec0d1(Γ)
+    x3 = raviartthomas(Γ)
+    x4 = BEAST.lagrangecxd0(Γ)
     return BEAST.DirectProductSpace([x1,x2,x3,x4])
 end
+# function testbasis(obj::Object{T}, ::PRECVP) where {T <: HOM}
+#     Γ =  obj.type.mesh
+#     x1 = buffachristiansen(Γ)
+#     x2 = BEAST.lagrangec0d1(Γ)
+#     x3 = buffachristiansen(Γ)
+#     x4 = BEAST.lagrangec0d1(Γ)
+#     return BEAST.DirectProductSpace([x1,x2,x3,x4])
+# end
+
+# function trialbasis(obj::Object{T}, ::PRECVP) where {T <: HOM}
+#     Γ =  obj.type.mesh
+#     x1 = buffachristiansen(Γ)
+#     x2 = BEAST.lagrangec0d1(Γ)
+#     x3 = buffachristiansen(Γ)
+#     x4 = BEAST.lagrangec0d1(Γ)
+#     return BEAST.DirectProductSpace([x1,x2,x3,x4])
+# end
 
 function testbasis(obj::Object{T}, ::VP) where {T <: PECEFIE}
     Γ =  obj.type.mesh
@@ -134,7 +195,7 @@ end
 
 
 function interaction(testobj::Object,trialobj::Object,embobj::Object,
-    testtype::Inside,trialtype,strat::Union{PRECVP,VP}; sign=1,dual=true,trace=true)
+    testtype::Inside,trialtype,strat::Union{PRECVP,VP,PRECVPPMCHWT2}; sign=1,dual=true,trace=true)
     a = [1 0 0 0;
     0 1 0 0;
     0 0 mu(testobj)/mu(parent(testobj)) 0;
@@ -146,6 +207,14 @@ function interaction(testobj::Object,trialobj::Object,embobj::Object,
     a = [1 0 0 0;
     0 epsilon(parent(testobj))/epsilon(testobj) 0 0;
     0 0 mu(testobj)/mu(parent(testobj)) 0;
+    0 0 0 1]
+    a^-1 * interaction(testobj,trialobj,embobj,testtype.inside,trialtype,strat;sign=-sign,dual=dual,trace=trace)
+end
+function interaction(testobj::Object,trialobj::Object,embobj::Object,
+    testtype::Inside,trialtype,strat::Union{VPPMCHWT2}; sign=1,dual=true,trace=true)
+    a = [mu(testobj)/mu(parent(testobj)) 0 0 0;
+    0 epsilon(parent(testobj))/epsilon(testobj) 0 0;
+    0 0 1 0;
     0 0 0 1]
     a^-1 * interaction(testobj,trialobj,embobj,testtype.inside,trialtype,strat;sign=-sign,dual=dual,trace=trace)
 end
@@ -166,7 +235,7 @@ function interaction(testobj::Object,trialobj::Object,embobj::Object,
     interaction(testobj,trialobj,embobj,testtype.inside,trialtype,strat;sign=sign,dual=dual,trace=trace)[3:4,:]
 end
 function interaction(testobj::Object,trialobj::Object,embobj::Object,
-    testtype::ObjectType,trialtype::Inside,strat::Union{PRECVP,VP,VPPMCHWT}; sign=1,dual=true,trace=true)
+    testtype::ObjectType,trialtype::Inside,strat::Union{PRECVP,VP,VPPMCHWT,VPPMCHWT2}; sign=1,dual=true,trace=true)
     a = -[1 0 0 0;
     0 1 0 0;
     0 0 mu(trialobj)/mu(parent(trialobj)) 0;
@@ -174,19 +243,27 @@ function interaction(testobj::Object,trialobj::Object,embobj::Object,
     interaction(testobj,trialobj,embobj,testtype,trialtype.inside,strat;sign=sign,dual=dual,trace=trace)*a
 end
 function interaction(testobj::Object,trialobj::Object,embobj::Object,
+    testtype::ObjectType,trialtype::Inside,strat::Union{PRECVPPMCHWT2}; sign=1,dual=true,trace=true)
+    a = -[mu(trialobj)/mu(parent(trialobj)) 0 0 0;
+    0 epsilon(parent(trialobj))/epsilon(trialobj) 0 0;
+    0 0 1 0;
+    0 0 0 1]
+    interaction(testobj,trialobj,embobj,testtype,trialtype.inside,strat;sign=sign,dual=dual,trace=trace)*a
+end
+function interaction(testobj::Object,trialobj::Object,embobj::Object,
     testtype::ObjectType,trialtype::PEC,strat::Union{PRECVP,VP}; sign=1,dual=true,trace=true)
     interaction(testobj,trialobj,embobj,testtype,trialtype.inside,strat;sign=sign,dual=dual,trace=trace)[:,3:4]
 end
 function interaction(testobj::Object,trialobj::Object,embobj::Object,
-    testtype::ObjectType,trialtype::HOM,strat::Union{PRECVP,VP,VPPMCHWT}; sign=1,dual=true,trace=true)
+    testtype::ObjectType,trialtype::HOM,strat::Union{PRECVP,VP,VPPMCHWT,VPPMCHWT2,PRECVPPMCHWT2}; sign=1,dual=true,trace=true)
     interaction(testobj,trialobj,embobj,testtype,trialtype.inside,strat;sign=sign,dual=dual,trace=trace)
 end
 function interaction(testobj::Object,trialobj::Object,embobj::Object,
-    testtype::HOM,trialtype,strat::Union{PRECVP,VP,VPPMCHWT}; sign=1,dual=true,trace=true)
+    testtype::HOM,trialtype,strat::Union{PRECVP,VP,VPPMCHWT,VPPMCHWT2,PRECVPPMCHWT2}; sign=1,dual=true,trace=true)
     interaction(testobj,trialobj,embobj,testtype.inside,trialtype,strat;sign=sign,dual=dual,trace=trace)
 end
 function interaction(testobj::Object, trialobj::Object, embobj::Object, 
-    testtype::ObjectType,trialtype::ObjectType,strat::VP; sign=1,dual=true,trace=true)
+    testtype::ObjectType,trialtype::ObjectType,strat::Union{PRECVP,VP}; sign=1,dual=true,trace=true)
     tr = sign*strat.trace
     k = sqrt(epsilon(embobj)*mu(embobj))*omega(embobj)
     G = BEAST.greenhh3d(wavenumber=k)
@@ -250,6 +327,80 @@ function interaction(testobj::Object, trialobj::Object, embobj::Object,
         nt ⋅(∇Gx) -nt ⋅(Gn) nt ⋅(Gr) -nt ⋅(∇G)]
         return int
     end
+end
+function interaction(testobj::Object, trialobj::Object, embobj::Object, 
+    testtype::ObjectType,trialtype::ObjectType,strat::Union{PRECVPPMCHWT2}; sign=1,dual=true,trace=true)
+    tr = sign*strat.trace
+    k = sqrt(epsilon(embobj)*mu(embobj))*omega(embobj)
+    G = BEAST.greenhh3d(wavenumber=k)
+    gradG = BEAST.∇(G)
+    switch_collums(mat) = [mat[:,3:4] mat[:,1:2]]
+
+    zer = Matrix{AbstractOperator}(undef,4,4)
+    fill!(zer,ZeroOperator())
+    rows = strat.rows
+    cols = strat.cols
+    
+    bs = geometry(trialobj)
+    ts = geometry(testobj)
+    if trace
+        ∇Gx =  BEAST.build_potential(gradG×B,bs)
+        Gn = BEAST.build_potential(G*(n*B),bs)
+        #Gnx = BEAST.build_potential(G*(n × B),bs)
+        ∇G = BEAST.build_potential(gradG*B,bs)
+        ∇Gdotn = BEAST.build_potential(nb ⋅ (gradG*B),bs)
+        ∇Gdot = BEAST.build_potential(B ⋅ gradG,bs)
+        
+        Gr = BEAST.build_potential(G*B,bs)
+        ∇G∇B = BEAST.build_potential(gradG*div(B),bs)
+        ∇Gxn = BEAST.build_potential(gradG×(n*B),bs)
+    else
+        ∇Gx =  gradG×B
+        Gn = G*(nb*B)
+        #Gnx = G*(n × B)
+        ∇G = gradG*B
+        ∇Gdotn = nb ⋅ (gradG*B)
+        ∇Gdot = B ⋅ gradG
+        
+        Gr = G*B
+        ∇G∇B = gradG*div(B)
+        ∇Gxn = gradG×(nb*B)
+
+    end
+    #gebruik gamma^c --> sign = +
+    # #without extra ncross
+    # int = [γₛ(∇Gx,ts,trace) -γₛ(Gn,ts,trace) γₛ(Gr,ts,trace) -γₛ(∇G,ts,trace);
+    # ZeroOperator() -τ(∇Gdotn,ts,trace) τ(∇Gdot,ts,trace)  k^2*τ(Gr,ts,trace);
+    # γₛ(∇G∇B,ts,trace)+k^2*γₛ(Gr,ts,trace) -γₛ(∇Gxn,ts,trace) γₛ(∇Gx,ts,trace) ZeroOperator();
+    # γₙ(∇Gx,ts,trace) -γₙ(Gn,ts,trace) γₙ(Gr,ts,trace) -γₙ(∇G,ts,trace)]
+    # #with extra ncross
+    if dual && trace
+        int = [-γₜ(∇Gx,ts,tr) γₜ(Gn,ts,tr) -γₜ(Gr,ts,tr) γₜ(∇G,ts,tr);
+        ZeroOperator() -τ(∇Gdotn,ts,tr) τ(∇Gdot,ts,tr)  k^2*τ(Gr,ts,tr);
+        -γₜ(∇G∇B,ts,tr)-k^2*γₜ(Gr,ts,tr) γₜ(∇Gxn,ts,tr) -γₜ(∇Gx,ts,tr) ZeroOperator();
+        γₙ(∇Gx,ts,tr) -γₙ(Gn,ts,tr) γₙ(Gr,ts,tr) -γₙ(∇G,ts,tr)]
+        out = switch_collums(int)
+    elseif dual
+        int = [nt×(nt×(∇Gx)) -nt×(nt×(Gn)) nt×(nt×(Gr)) nt×(nt×(∇G));
+        ZeroOperator() -(∇Gdotn) (∇Gdot)  k^2*(Gr);
+        nt×(nt×(∇G∇B))+k^2*nt×(nt×(Gr)) -nt×(nt×(∇Gxn)) nt×(nt×(∇Gx)) ZeroOperator();
+        nt ⋅(∇Gx) -nt ⋅(Gn) nt ⋅(Gr) -nt ⋅(∇G)]
+        out = switch_collums(int)
+    elseif trace
+        int = [γₛ(∇Gx,ts,tr) -γₛ(Gn,ts,tr) γₛ(Gr,ts,tr) -γₛ(∇G,ts,tr);
+        ZeroOperator() -τ(∇Gdotn,ts,tr) τ(∇Gdot,ts,tr)  k^2*τ(Gr,ts,tr);
+        γₛ(∇G∇B,ts,tr)+k^2*γₛ(Gr,ts,tr) -γₛ(∇Gxn,ts,tr) γₛ(∇Gx,ts,tr) ZeroOperator();
+        γₙ(∇Gx,ts,tr) -γₙ(Gn,ts,tr) γₙ(Gr,ts,tr) -γₙ(∇G,ts,tr)]
+        out = switch_collums(int)
+    else
+        int = [nt×(∇Gx) -nt×(Gn) nt×(Gr) -nt×(∇G);
+        ZeroOperator() -(∇Gdotn) (∇Gdot)  k^2*(Gr);
+        nt×(∇G∇B)+k^2*nt×(Gr) -nt×(∇Gxn) nt×(∇Gx) ZeroOperator();
+        nt ⋅(∇Gx) -nt ⋅(Gn) nt ⋅(Gr) -nt ⋅(∇G)]
+        out = switch_collums(int)
+    end
+    zer[rows,cols] .+= out[rows,cols]
+    return zer
 end
 function interaction(testobj::Object, trialobj::Object, embobj::Object, 
     testtype::ObjectType,trialtype::ObjectType,strat::VPPMCHWT; sign=1,dual=true,trace=true)
@@ -317,6 +468,72 @@ function interaction(testobj::Object, trialobj::Object, embobj::Object,
         return int
     end
 end
+function interaction(testobj::Object, trialobj::Object, embobj::Object, 
+    testtype::ObjectType,trialtype::ObjectType,strat::VPPMCHWT2; sign=1,dual=true,trace=true)
+    tr = sign*strat.trace
+    k = sqrt(epsilon(embobj)*mu(embobj))*omega(embobj)
+    G = BEAST.greenhh3d(wavenumber=k)
+    gradG = BEAST.∇(G)
+
+    bs = geometry(trialobj)
+    ts = geometry(testobj)
+    if trace
+        ∇Gx =  BEAST.build_potential(gradG×B,bs)
+        Gn = BEAST.build_potential(G*(n*B),bs)
+        #Gnx = BEAST.build_potential(G*(n × B),bs)
+        ∇G = BEAST.build_potential(gradG*B,bs)
+        ∇Gdotn = BEAST.build_potential(nb ⋅ (gradG*B),bs)
+        ∇Gdot = BEAST.build_potential(B ⋅ gradG,bs)
+        
+        Gr = BEAST.build_potential(G*B,bs)
+        ∇G∇B = BEAST.build_potential(gradG*div(B),bs)
+        ∇Gxn = BEAST.build_potential(gradG×(n*B),bs)
+    else
+        ∇Gx =  gradG×B
+        Gn = G*(nb*B)
+        #Gnx = G*(n × B)
+        ∇G = gradG*B
+        ∇Gdotn = nb ⋅ (gradG*B)
+        ∇Gdot = B ⋅ gradG
+        
+        Gr = G*B
+        ∇G∇B = gradG*div(B)
+        ∇Gxn = gradG×(nb*B)
+
+    end
+    #gebruik gamma^c --> sign = +
+    # #without extra ncross
+    # int = [γₛ(∇Gx,ts,trace) -γₛ(Gn,ts,trace) γₛ(Gr,ts,trace) -γₛ(∇G,ts,trace);
+    # ZeroOperator() -τ(∇Gdotn,ts,trace) τ(∇Gdot,ts,trace)  k^2*τ(Gr,ts,trace);
+    # γₛ(∇G∇B,ts,trace)+k^2*γₛ(Gr,ts,trace) -γₛ(∇Gxn,ts,trace) γₛ(∇Gx,ts,trace) ZeroOperator();
+    # γₙ(∇Gx,ts,trace) -γₙ(Gn,ts,trace) γₙ(Gr,ts,trace) -γₙ(∇G,ts,trace)]
+    # #with extra ncross
+    if dual && trace
+        int = [-γₜ(∇G∇B,ts,tr)-k^2*γₜ(Gr,ts,tr) γₜ(∇Gxn,ts,tr) -γₜ(∇Gx,ts,tr) ZeroOperator();
+        γₙ(∇Gx,ts,tr) -γₙ(Gn,ts,tr) γₙ(Gr,ts,tr) -γₙ(∇G,ts,tr);
+        -γₜ(∇Gx,ts,tr) γₜ(Gn,ts,tr) -γₜ(Gr,ts,tr) γₜ(∇G,ts,tr);
+        ZeroOperator() -τ(∇Gdotn,ts,tr) τ(∇Gdot,ts,tr)  k^2*τ(Gr,ts,tr)]
+        return int
+    elseif dual
+        int = [nt×(nt×(∇G∇B))+k^2*nt×(nt×(Gr)) -nt×(nt×(∇Gxn)) nt×(nt×(∇Gx)) ZeroOperator();
+        nt ⋅(∇Gx) -nt ⋅(Gn) nt ⋅(Gr) -nt ⋅(∇G);
+        nt×(nt×(∇Gx)) -nt×(nt×(Gn)) nt×(nt×(Gr)) nt×(nt×(∇G));
+        ZeroOperator() -(∇Gdotn) (∇Gdot)  k^2*(Gr)]
+        return int
+    elseif trace
+        int = [γₛ(∇G∇B,ts,tr)+k^2*γₛ(Gr,ts,tr) -γₛ(∇Gxn,ts,tr) γₛ(∇Gx,ts,tr) ZeroOperator();
+        γₙ(∇Gx,ts,tr) -γₙ(Gn,ts,tr) γₙ(Gr,ts,tr) -γₙ(∇G,ts,tr);
+        γₛ(∇Gx,ts,tr) -γₛ(Gn,ts,tr) γₛ(Gr,ts,tr) -γₛ(∇G,ts,tr);
+        ZeroOperator() -τ(∇Gdotn,ts,tr) τ(∇Gdot,ts,tr)  k^2*τ(Gr,ts,tr)]
+        return int
+    else
+        int = [nt×(∇G∇B)+k^2*nt×(Gr) -nt×(∇Gxn) nt×(∇Gx) ZeroOperator();
+        nt ⋅(∇Gx) -nt ⋅(Gn) nt ⋅(Gr) -nt ⋅(∇G);
+        nt×(∇Gx) -nt×(Gn) nt×(Gr) -nt×(∇G);
+        ZeroOperator() -(∇Gdotn) (∇Gdot)  k^2*(Gr)]
+        return int
+    end
+end
 # function interaction(testobj::Object, trialobj::Object, embobj::Object, 
 #     testtype::ObjectType,trialtype::ObjectType,strat::VP; sign=1)
 #     trace = sign*strat.trace
@@ -362,7 +579,6 @@ end
 
 #     bss = geometry(trialobj)
 #     tss = geometry(testobj)
-    
 
 #     ∇Gx =  BEAST.build_potential(gradG×B,bs)#
 #     Gn = BEAST.build_potential(G*(n*B),bss)#
@@ -390,14 +606,14 @@ function _identity(::ObjectType,strat::PRECVP)
 end
 _identity(p::PEC,strat::PRECVP) = _identity(p.inside,strat)[1:2,1:2]
 
-function identity(objtype::ObjectType,strat::Union{VP,VPPMCHWT})
+function identity(objtype::ObjectType,strat::Union{VP,VPPMCHWT,VPPMCHWT2,PRECVPPMCHWT2})
     [NCross() ZeroOperator() ZeroOperator() ZeroOperator();
     ZeroOperator() Identity() ZeroOperator() ZeroOperator();
     ZeroOperator() ZeroOperator() NCross() ZeroOperator();
     ZeroOperator() ZeroOperator() ZeroOperator() Identity()]
 end
 function identity(objtype::ObjectType,strat::PRECVP)
-    -[NCross() ZeroOperator() ZeroOperator() ZeroOperator();
+    [NCross() ZeroOperator() ZeroOperator() ZeroOperator();
     ZeroOperator() Identity() ZeroOperator() ZeroOperator();
     ZeroOperator() ZeroOperator() NCross() ZeroOperator();
     ZeroOperator() ZeroOperator() ZeroOperator() Identity()]
@@ -412,7 +628,7 @@ function identity(objtype::PECEFIE,strat::Union{PRECVP,VP})
     [ZeroOperator() ZeroOperator();
     ZeroOperator() ZeroOperator()]
 end
-identity(o::HOM,strat::Union{PRECVP,VP,VPPMCHWT}) = identity(o.inside,strat)
+identity(o::HOM,strat::Union{PRECVP,VP,VPPMCHWT,VPPMCHWT2,PRECVPPMCHWT2}) = identity(o.inside,strat)
 # function interaction(testobj::Inside{Object{<:Union{FreeSpace,HOM}}}, 
 #     trialobj::Object, embobj::Object, 
 #     strat::VP)
@@ -496,6 +712,15 @@ function excitation(obj::Object,emb::Object,objtype::ObjectType,ex::VPExcitation
     @warn "fix this type"
     return a
 end
+function excitation(obj::Object,emb::Object,objtype::ObjectType,ex::VPExcitation,strat::VPPMCHWT2)
+    emb.index ∉ ex.objectids && return [0,0,0,0]
+    a = [-1* ((n × FunctionExcitation{ComplexF64}(ex.curlA))×n),
+    NDotTrace{ComplexF64}(FunctionExcitation{ComplexF64}(ex.A)),
+    -1* ((n × FunctionExcitation{ComplexF64}(ex.A))×n),
+    FunctionExcitation{ComplexF64}(ex.divA)]
+    @warn "fix this type"
+    return a
+end
 function excitation(testobj::Object,emb::Object,objtype::Inside,ex::VPExcitation,strat::VP)
     a = [1 0 0 0;
     0 1 0 0;
@@ -508,6 +733,14 @@ function excitation(testobj::Object,emb::Object,objtype::Inside,ex::VPExcitation
     a = [1 0 0 0;
     0 epsilon(parent(testobj))/epsilon(testobj) 0 0;
     0 0 mu(testobj)/mu(parent(testobj)) 0;
+    0 0 0 1]
+    
+    return a^-1*excitation(testobj,emb,objtype.inside,ex,strat)
+end
+function excitation(testobj::Object,emb::Object,objtype::Inside,ex::VPExcitation,strat::VPPMCHWT2)
+    a = [mu(testobj)/mu(parent(testobj)) 0 0 0;
+    0 epsilon(parent(testobj))/epsilon(testobj) 0 0;
+    0 0 1 0;
     0 0 0 1]
     
     return a^-1*excitation(testobj,emb,objtype.inside,ex,strat)
@@ -525,7 +758,7 @@ function excitation(testobj::Object,emb::Object,objtype::PECMFIE,ex::VPExcitatio
 
     excitation(testobj,emb,objtype.inside,ex,strat)[3:4]
 end
-excitation(testobj::Object,emb::Object,objtype::HOM,ex::VPExcitation,strat::Union{VP,VPPMCHWT}) = excitation(testobj,emb,objtype.inside,ex,strat)
+excitation(testobj::Object,emb::Object,objtype::HOM,ex::VPExcitation,strat::Union{VP,VPPMCHWT,VPPMCHWT2}) = excitation(testobj,emb,objtype.inside,ex,strat)
 
 
 ### Post Processing
