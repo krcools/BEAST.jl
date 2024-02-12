@@ -62,6 +62,8 @@ struct DirectProductSpace{T,S<:AbstractSpace} <: AbstractSpace
     factors::Vector{S}
 end
 
+
+
 function DirectProductSpace(factors::Vector{S}) where {S<:AbstractSpace}
     @assert !isempty(factors)
     T = scalartype(factors...)
