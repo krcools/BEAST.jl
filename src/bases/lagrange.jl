@@ -48,6 +48,13 @@ function lagrangecxd0(mesh)
   LagrangeBasis{0,-1,NF}(geometry, fns, pos)
 end
 
+function single_unknown(mesh)
+    space = lagrangecxd0(mesh)
+    NF = numfunctions(space)
+    pos = space.pos[1:1]
+    fns = [[i[1] for i in space.fns]]
+    LagrangeBasis{0,-1,NF}(space.geo,fns,pos)
+end
 
 """
     lagrangec0d1(mesh[, bnd])
