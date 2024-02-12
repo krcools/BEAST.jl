@@ -233,3 +233,13 @@ function assemble(bf::BilForm, X::DirectProductSpace, Y::DirectProductSpace;
         lift(z, Block(term.test_id), Block(term.trial_id), U, V)
     end
 end
+
+function assemble(bf::BilForm, X::Space, Y::Space)
+    @assert length(bf.terms) == 1
+    assemble(bf, BEAST.DirectProductSpace([X]), BEAST.DirectProductSpace([Y]))
+end
+
+function assemble(bf::BilForm, pairs::Pair...)
+    dbf = discretise(bf, pairs...)
+    assemble(dbf)
+end
