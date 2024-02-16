@@ -109,15 +109,59 @@ function momintegrals!(op::Operator,
     G = SauterSchwabQuadrature.sauterschwab_parameterized(igd, rule)
     σ = sign_upon_permutation(op, I, J)
 
-    K = dof_permutation(test_local_space, I)
+    #= K = dof_permutation(test_local_space, I)
     L = dof_permutation(trial_local_space, J)
+    println(size(out))
     for i in 1:numfunctions(test_local_space)
         for j in 1:numfunctions(trial_local_space)
             out[i,j] = σ * G[K[i],L[j]]
-    end end
+    end end =#
+    QTest = dof_perm_matrix(test_local_space, I)
+    QTrial = dof_perm_matrix(trial_local_space, J)
+    out2 = zeros(eltype(out), numfunctions(test_local_space),numfunctions(trial_local_space))
+    out2 = σ*QTest*G*QTrial'
+    #= if !(out[1:3,1:3] ≈ out2)
+        println(out, out2)
+    end =#
+    out[1:numfunctions(test_local_space),1:numfunctions(trial_local_space)] = out2
 
     nothing
 end
+
+#= function momintegrals!(op::Operator,
+    test_local_space::RTRefSpace, trial_local_space::RTRefSpace,
+    test_chart, trial_chart, out, rule::SauterSchwabStrategy)
+
+    I, J, _, _ = SauterSchwabQuadrature.reorder(
+        test_chart.vertices,
+        trial_chart.vertices, rule)
+
+    test_chart  = simplex(
+        test_chart.vertices[I[1]],
+        test_chart.vertices[I[2]],
+        test_chart.vertices[I[3]])
+
+    trial_chart = simplex(
+        trial_chart.vertices[J[1]],
+        trial_chart.vertices[J[2]],
+        trial_chart.vertices[J[3]])
+
+    igd = Integrand(op, test_local_space, trial_local_space, test_chart, trial_chart)
+    G = SauterSchwabQuadrature.sauterschwab_parameterized(igd, rule)
+    σ = sign_upon_permutation(op, I, J)
+
+    #K = dof_permutation(test_local_space, I)
+    #L = dof_permutation(trial_local_space, J)
+    QTest = dof_perm_matrix(test_local_space, I)
+    QTrial = dof_perm_matrix(trial_local_space, J)
+    out2 = zeros(eltype(out), numfunctions(test_local_space),numfunctions(trial_local_space))
+    out2 = σ.*QTest*G*QTrial'
+    #= if !(out[1:3,1:3] ≈ out2)
+        println(out, out2)
+    end =#
+    out[1:numfunctions(test_local_space),1:numfunctions(trial_local_space)] = out2
+    nothing
+end =#
 
 
 function momintegrals_test_refines_trial!(out, op,
