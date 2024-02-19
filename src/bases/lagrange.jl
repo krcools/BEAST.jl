@@ -49,11 +49,11 @@ function lagrangecxd0(mesh)
 end
 
 """
-    unitfunction(mesh)
+    unitfunctioncxd0(mesh)
 
 Constructs a constant function with value 1 on `mesh`.
 """
-function unitfunction(mesh)
+function unitfunctioncxd0(mesh)
 
     T = coordtype(mesh)
     geometry = mesh
@@ -75,6 +75,102 @@ function unitfunction(mesh)
 
     NF = 1
     LagrangeBasis{0,-1,NF}(geometry, fns, pos)
+end
+
+"""
+    unitfunctionc0d1(mesh)
+
+Constructs a constant function with value 1 on `mesh` consisting of linear shapes. For dirichlet=true goes to zero on the boundary.
+"""
+function unitfunctionc0d1(mesh; dirichlet=true)
+    if dirichlet == false
+        return unitfunctionc0d1(mesh, skeleton(mesh,0))
+    else
+        return unitfunctionc0d1_dirichlet(mesh)
+    end
+end
+
+function unitfunctionc0d1_dirichlet(mesh)
+
+    T = coordtype(mesh)
+    
+    verts = skeleton(mesh, 0)
+    detached = trues(numvertices(mesh))
+    for v in cells(verts)
+        detached[v] = false
+    end
+
+    bnd = boundary(mesh)
+    bndverts = skeleton(bnd, 0)
+    notonbnd = trues(numvertices(mesh))
+    for v in cells(bndverts)
+        notonbnd[v] = false
+    end
+
+    vertexlist = findall(notonbnd .& .!detached)
+
+    cellids, ncells = vertextocellmap(mesh)
+
+    Cells = cells(mesh)
+    Verts = vertices(mesh)
+
+    # create the local shapes
+    fns = Vector{Vector{Shape{T}}}(undef, 1)
+    pos = Vector{vertextype(mesh)}(undef, 1)
+
+    numshapes = sum(ncells[vertexlist])
+    shapes = Vector{Shape{T}}(undef,numshapes)
+    n = 0
+    for v in vertexlist
+        nshapes = ncells[v]
+        nshapes == 0 && continue
+
+        for s in 1: nshapes
+            c = cellids[v,s]
+
+            cell = Cells[c]
+
+            localid = something(findfirst(isequal(v), cell),0)
+            @assert localid != 0
+
+            shapes[s+n] = Shape(c, localid, T(1.0))
+
+        end
+        n += nshapes
+    end
+    fns[1] = shapes
+    p = sum(mesh.vertices[vertexlist])/length(vertexlist)
+    pos[1] = p
+
+    NF = 3
+    LagrangeBasis{1,0,NF}(mesh, fns, pos)
+end
+
+function unitfunctionc0d1(mesh, nodes::CompScienceMeshes.AbstractMesh{U,1} where {U})
+    Conn = connectivity(nodes, mesh, abs)
+    rows = rowvals(Conn)
+    vals = nonzeros(Conn)
+
+    T = coordtype(mesh)
+    P = vertextype(mesh)
+    S = Shape{T}
+
+    fns = Vector{Vector{Shape{T}}}(undef, 1)
+    pos = Vector{vertextype(mesh)}(undef, 1)
+    fn = Vector{S}()
+    for (i,node) in enumerate(nodes)
+        for k in nzrange(Conn,i)
+            cellid = rows[k]
+            refid  = vals[k]
+            push!(fn, Shape(cellid, refid, T(1.0)))
+        end
+    end
+    fns[1] = fn
+    p = sum(nodes.vertices)/length(nodes.vertices)
+    pos[1] = p
+
+    NF = dimension(mesh) + 1
+    LagrangeBasis{1,0,NF}(mesh, fns, pos)
 end
 
 """
