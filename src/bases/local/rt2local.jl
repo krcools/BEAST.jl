@@ -26,14 +26,16 @@ function (ϕ::RT2RefSpace)(mp)
     b8 = v*b3+v*b6
 
     return SVector((
-        (value=-(-8*b7-8*b8+12*b3+6*b5-4*b1+6*b6)*inv_j, divergence=(-24*u-24*v+18)*inv_j),
-        (value=-(8*b8-2*b3-6*b5+2*b1-4*b6)*inv_j, divergence=(8*u+16*v-6)*inv_j),
+        (value=-(-8*b7-8*b8+12*b3+6*b5-4*b1+6*b6)*inv_j, divergence=(24*u+24*v-18)*inv_j),
+        (value=-(8*b8-2*b3-6*b5+2*b1-4*b6)*inv_j, divergence=(6-24*v)*inv_j),
         (value=(4*b3-8*b7+6*b4+2*b6-2*b2)*inv_j, divergence=(6-24*u)*inv_j),
         (value=(8*b7+8*b8-6*b3-6*b4-12*b6+4*b2)*inv_j, divergence=(24*u+24*v-18)*inv_j),
         (value=(2*b3-8*b8+4*b6)*inv_j, divergence=(6-24*v)),
         (value=(4*b3-8*b7+2*b6)*inv_j, divergence=(6-24*u)*inv_j),
         (value=(-16*b7-8*b8+16*b3+8*b6)*inv_j, divergence=(-48*u-24*v+24)*inv_j),
-        (value=(-8*b7-16*b8+8*b3+16*b6)*inv_j, divergence=(-32*u-48*v+24)*inv_j)
+        (value=(-8*b7-16*b8+8*b3+16*b6)*inv_j, divergence=(-24*u-48*v+24)*inv_j)
+        #= (value=(-16*b7-8*b8+16*b3+8*b6)*inv_j-(-8*b7-16*b8+8*b3+16*b6)*inv_j, divergence=(-48*u-24*v+24)*inv_j+(-32*u-48*v+24)*inv_j),
+        (value=-(-8*b7-16*b8+8*b3+16*b6)*inv_j+(-16*b7-8*b8+16*b3+8*b6)*inv_j, divergence=-(-32*u-48*v+24)*inv_j-(-48*u-24*v+24)*inv_j) =#
     ))
 end
 
@@ -102,15 +104,21 @@ const _vert_perms_rt2 = [
 ]
 const _dof_perms_rt2 = [
     (1,2,3,4,5,6,7,8),
-    (1,2,3,4,5,6,7,8),
-    (1,2,3,4,5,6,7,8),
-    (1,2,3,4,5,6,7,8),
-    (1,2,3,4,5,6,7,8),
-    (1,2,3,4,5,6,7,8),
+    (5,6,1,2,3,4,7,8),
+    (3,4,5,6,1,2,7,8),
+    (4,3,2,1,6,5,7,8),
+    (2,1,6,5,4,3,7,8),
+    (6,5,4,3,2,1,7,8),
 ]
 
 function dof_permutation(::RT2RefSpace, vert_permutation)
     i = findfirst(==(tuple(vert_permutation...)), _vert_perms_rt2)
     @assert i != nothing
     return _dof_perms_rt2[i]
+end
+
+function dof_perm_matrix(::RT2RefSpace, vert_permutation)
+    i = findfirst(==(tuple(vert_permutation...)), _vert_perms_rt2)
+    @assert i != nothing
+    return _dof_rt2perm_matrix[i]
 end
