@@ -104,6 +104,11 @@ function dof_permutation(::RTRefSpace, vert_permutation)
     return _dof_perms_rt[i]
 end
 
+function dof_perm_matrix(::RTRefSpace, vert_permutation)
+    i = findfirst(==(tuple(vert_permutation...)), _vert_perms_rt)
+    @assert i != nothing
+    return _dof_rtperm_matrix[i]
+end
 
 """
     interpolate(interpolant::RefSpace, chart1, interpolee::RefSpace, chart2)
