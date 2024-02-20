@@ -30,7 +30,7 @@ function (ϕ::RT2RefSpace)(mp)
         (value=-(8*b8-2*b3-6*b5+2*b1-4*b6)*inv_j, divergence=(6-24*v)*inv_j),
         (value=(4*b3-8*b7+6*b4+2*b6-2*b2)*inv_j, divergence=(6-24*u)*inv_j),
         (value=(8*b7+8*b8-6*b3-6*b4-12*b6+4*b2)*inv_j, divergence=(24*u+24*v-18)*inv_j),
-        (value=(2*b3-8*b8+4*b6)*inv_j, divergence=(6-24*v)),
+        (value=(2*b3-8*b8+4*b6)*inv_j, divergence=(6-24*v)*inv_j),
         (value=(4*b3-8*b7+2*b6)*inv_j, divergence=(6-24*u)*inv_j),
         (value=(-16*b7-8*b8+16*b3+8*b6)*inv_j, divergence=(-48*u-24*v+24)*inv_j),
         (value=(-8*b7-16*b8+8*b3+16*b6)*inv_j, divergence=(-24*u-48*v+24)*inv_j)
