@@ -145,6 +145,7 @@ include("bases/divergence.jl")
 
 include("bases/local/laglocal.jl")
 include("bases/local/rtlocal.jl")
+include("bases/local/rt2local.jl")
 include("bases/local/ndlocal.jl")
 include("bases/local/bdmlocal.jl")
 include("bases/local/ncrossbdmlocal.jl")
