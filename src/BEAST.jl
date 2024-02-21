@@ -163,6 +163,7 @@ include("bases/ndlccspace.jl")
 include("bases/ndlcdspace.jl")
 include("bases/dual3d.jl")
 include("bases/bdm3dspace.jl")
+include("bases/perm_matrices.jl")
 
 
 include("bases/subdbasis.jl")

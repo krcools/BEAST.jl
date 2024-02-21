@@ -98,12 +98,11 @@ function momintegrals!(op::Operator,
     igd = Integrand(op, test_local_space, trial_local_space, test_chart, trial_chart)
     G = SauterSchwabQuadrature.sauterschwab_parameterized(igd, rule)
 
-    K = dof_permutation(test_local_space, I)
-    L = dof_permutation(trial_local_space, J)
-    for i in 1:numfunctions(test_local_space)
-        for j in 1:numfunctions(trial_local_space)
-            out[i,j] = G[K[i],L[j]]
-    end end
+    QTest = dof_perm_matrix(test_local_space, I)
+    QTrial = dof_perm_matrix(trial_local_space, J)
+    out_temp = zeros(eltype(out), numfunctions(test_local_space),numfunctions(trial_local_space))
+    out_temp = QTest*G*QTrial'
+    out[1:numfunctions(test_local_space),1:numfunctions(trial_local_space)] = out_temp
 
     nothing
 end

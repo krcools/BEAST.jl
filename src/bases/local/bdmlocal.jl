@@ -43,5 +43,10 @@ function dof_permutation(::BDMRefSpace, vert_permutation)
     return _dof_perms_bdm[i]
 end
 
+function dof_perm_matrix(::BDMRefSpace, vert_permutation)
+    i = findfirst(==(tuple(vert_permutation...)), _vert_perms_bdm)
+    return _dof_bdmperm_matrix[i]
+end
+
 dimtype(::BDMRefSpace, ::CompScienceMeshes.Simplex{U,2}) where {U} = Val{6}
 
