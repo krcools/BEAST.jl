@@ -15,10 +15,10 @@ end
 *(n::Number,a::LinearCombinationOfFunctionals) = LinearCombinationOfFunctionals(a.coeffs*n,a.ops)
 scalartype(a::LinearCombinationOfFunctionals{T}) where {T} = promote_type(T,scalartype.(a.ops)...)
 function assemble(field::LinearCombinationOfFunctionals,tfs;
-    quadstrat=defaultquadstrat(field, tfs))
+    kwargs...)
     out = []
     for (c,func) in zip(field.coeffs,field.ops)
-        push!(out,c*assemble(func,tfs;quadstrat=quadstrat))
+        push!(out,c*assemble(func,tfs;kwargs...))
     end
     return sum(out)
 end
@@ -35,12 +35,12 @@ Assemble the vector of test coefficients corresponding to functional
 `fn` and test functions `tfs`.
 """
 function assemble(field::Functional, tfs;
-    quadstrat=defaultquadstrat(field, tfs))
+    kwargs...)
     
     R = scalartype(tfs)
     b = zeros(Complex{R}, numfunctions(tfs))
     store(v,m) = (b[m] += v)
-    assemble!(field, tfs, store; quadstrat)
+    assemble!(field, tfs, store; kwargs...)
     return b
 end
 function assemble(n::Number, tfs)
@@ -53,18 +53,19 @@ function assemble(n::Number, tfs)
 end
 
 function assemble!(field::Functional, tfs::DirectProductSpace, store;
-    quadstrat=defaultquadstrat(field, tfs))
+    kwargs...)
 
     I = Int[0]
     for s in tfs.factors push!(I, last(I) + numfunctions(s)) end
     for (i,s) in enumerate(tfs.factors)
         store1(v,m) = store(v, m + I[i])
-        assemble!(field, s, store1; quadstrat)
+        assemble!(field, s, store1; kwargs...)
     end
 end
 
 function assemble!(field::Functional, tfs::Space, store;
-    quadstrat=defaultquadstrat(field, tfs))
+    quadstratfunction = defaultquadstrat,
+    quadstrat=quadstratfunction(field, tfs))
 
     tels, tad = assemblydata(tfs)
 
@@ -88,7 +89,8 @@ function assemble!(field::Functional, tfs::Space, store;
 end
 
 function assemble!(field::Functional, tfs::subdBasis, store;
-    quadstrat=defaultquadstrat(field, tfs))
+    quadstratfunction = defaultquadstrat,
+    quadstrat=quadstratfunction(field, tfs))
 
     tels, tad = assemblydata(tfs)
 

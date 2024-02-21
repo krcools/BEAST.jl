@@ -67,7 +67,8 @@ elements(sp::Space) = elements(geometry(sp))
 Computes the matrix of operator biop wrt the finite element spaces tfs and bfs
 """
 function assemblechunk!(biop::IntegralOperator, tfs::Space, bfs::Space, store;
-        quadstrat=defaultquadstrat(biop, tfs, bfs))
+        quadstratfunction = defaultquadstrat,
+        quadstrat=quadstratfunction(biop, tfs, bfs))
 
     # test_elements, tad, tcells = assemblydata(tfs)
     # bsis_elements, bad, bcells = assemblydata(bfs)
@@ -295,16 +296,17 @@ end
 
 
 function assembleblock(operator::AbstractOperator, test_functions, trial_functions;
-        quadstrat=defaultquadstrat(operator, test_functions, trial_functions))
+        kwargs...)
 
     Z, store = allocatestorage(operator, test_functions, trial_functions)
-    assembleblock!(operator, test_functions, trial_functions, store; quadstrat)
+    assembleblock!(operator, test_functions, trial_functions, store; kwargs...)
 
     sdata(Z)
 end
 
 function assembleblock!(biop::IntegralOperator, tfs::Space, bfs::Space, store;
-        quadstrat=defaultquadstrat(biop, tfs, bfs))
+        quadstratfunction = defualtquadstrat,
+        quadstrat=quadstratfunction(biop, tfs, bfs))
 
     test_elements, tad, trial_elements, bad, quadrature_data, zlocals =
         assembleblock_primer(biop, tfs, bfs; quadstrat)
@@ -320,7 +322,8 @@ end
 
 
 function assembleblock_primer(biop, tfs, bfs;
-        quadstrat=defaultquadstrat(biop, tfs, bfs))
+        quadstratfunction=defaultquadstrat,
+        quadstrat=quadstratfunction(biop, tfs, bfs))
 
     test_elements, tad = assemblydata(tfs; onlyactives=false)
     bsis_elements, bad = assemblydata(bfs; onlyactives=false)
@@ -544,7 +547,8 @@ end end end end end end end
 
 
 function assemblerow!(biop::IntegralOperator, test_functions::Space, trial_functions::Space, store;
-        quadstrat=defaultquadstrat(biop, test_functions, trial_functions))
+        quadstratfunction = defaultquadstrat,
+        quadstrat=quadstratfunction(biop, test_functions, trial_functions))
 
     test_elements = elements(geometry(test_functions))
     trial_elements, trial_assembly_data = assemblydata(trial_functions)
@@ -594,7 +598,8 @@ end end end end end
 
 
 function assemblecol!(biop::IntegralOperator, test_functions::Space, trial_functions::Space, store;
-        quadstrat=defaultquadstrat(biop, test_functions, trial_functions))
+        quadstratfunction = defaultquadstrat,
+        quadstrat=quadstratfunction(biop, test_functions, trial_functions))
 
     test_elements, test_assembly_data = assemblydata(test_functions)
     trial_elements = elements(geometry(trial_functions))

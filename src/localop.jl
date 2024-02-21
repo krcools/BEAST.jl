@@ -79,38 +79,39 @@ end
 
 function assemble!(biop::LocalOperator, tfs::Space, bfs::Space, store,
         threading::Type{Threading{:multi}};
-        quadstrat=defaultquadstrat(biop, tfs, bfs))
+        kwargs...)
 
     if geometry(tfs) == geometry(bfs)
         @warn "Function cannot be used for infinitely thin surfaces!!!"
-        return assemble_local_matched!(biop, tfs, bfs, store; quadstrat)
+        return assemble_local_matched!(biop, tfs, bfs, store; kwargs...)
     end
 
     if CompScienceMeshes.refines(geometry(tfs), geometry(bfs))
-        return assemble_local_refines!(biop, tfs, bfs, store; quadstrat)
+        return assemble_local_refines!(biop, tfs, bfs, store; kwargs...)
     end
 
-    return assemble_local_mixed!(biop, tfs, bfs, store; quadstrat)
+    return assemble_local_mixed!(biop, tfs, bfs, store; kwargs...)
 end
 
 function assemble!(biop::LocalOperator, tfs::Space, bfs::Space, store,
     threading::Type{Threading{:single}};
-    quadstrat=defaultquadstrat(biop, tfs, bfs))
+    kwargs...)
 
     if geometry(tfs) == geometry(bfs)
         @warn "Function cannot be used for infinitely thin surfaces!!!"
-        return assemble_local_matched!(biop, tfs, bfs, store; quadstrat)
+        return assemble_local_matched!(biop, tfs, bfs, store; kwargs...)
     end
 
     if CompScienceMeshes.refines(geometry(tfs), geometry(bfs))
-        return assemble_local_refines!(biop, tfs, bfs, store; quadstrat)
+        return assemble_local_refines!(biop, tfs, bfs, store; kwargs...)
     end
 
-    return assemble_local_mixed!(biop, tfs, bfs, store; quadstrat)
+    return assemble_local_mixed!(biop, tfs, bfs, store; kwargs...)
 end
 
 function assemble_local_matched!(biop::LocalOperator, tfs::Space, bfs::Space, store;
-    quadstrat=defaultquadstrat(biop, tfs, bfs))
+    quadstratfunction = defaultquadstrat,
+    quadstrat=quadstratfunction(biop, tfs, bfs))
 
     tels, tad, ta2g = assemblydata(tfs)
     bels, bad, ba2g = assemblydata(bfs)
@@ -156,7 +157,8 @@ end
 
 
 function assemble_local_refines!(biop::LocalOperator, tfs::Space, bfs::Space, store;
-    quadstrat=defaultquadstrat(biop, tfs, bfs))
+    quadstratfunction = defaultquadstrat,
+    quadstrat=quadstratfunction(biop, tfs, bfs))
 
     println("Using 'refines' algorithm for local assembly:")
 
@@ -221,7 +223,8 @@ function assemble_local_refines!(biop::LocalOperator, tfs::Space, bfs::Space, st
 end
 
 function assemble_local_matched!(biop::LocalOperator, tfs::subdBasis, bfs::subdBasis, store;
-    quadstrat=defaultquadstrat(biop, tfs, bfs))
+    quadstratfunction = defaultquadstrat,
+    quadstrat=quadstratfunction(biop, tfs, bfs))
 
     @assert !(typeof(biop) <: ComposedOperator)
 
@@ -283,7 +286,8 @@ end
 For use when basis and test functions are defined on different meshes
 """
 function assemble_local_mixed!(biop::LocalOperator, tfs::Space{T}, bfs::Space{T}, store;
-    quadstrat=defaultquadstrat(biop, tfs, bfs)) where {T}
+    quadstratfunction = defaultquadstrat,
+    quadstrat=quadstratfunction(biop, tfs, bfs)) where {T}
 
     tol = sqrt(eps(T))
 

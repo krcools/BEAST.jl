@@ -137,15 +137,15 @@ function _spacedict_to_directproductspace(spacedict)
     X = DirectProductSpace(xfactors)
 end
 
-function assemble(lform::LinForm, test_space_dict)
+function assemble(lform::LinForm, test_space_dict;kwargs...)
     X = _spacedict_to_directproductspace(test_space_dict)
-    return assemble(lform, X)
+    return assemble(lform, X;kwargs...)
 end
 
 scalartype(lf::LinForm) = scalartype(lf.terms...)
 scalartype(lt::LinTerm) = scalartype(lt.coeff, lt.functional)
 
-function assemble(lform::LinForm, X::DirectProductSpace)
+function assemble(lform::LinForm, X::DirectProductSpace;kwargs...)
 
     @assert !isempty(lform.terms)
 
@@ -166,7 +166,7 @@ function assemble(lform::LinForm, X::DirectProductSpace)
 
         for op in reverse(t.test_ops) x = op[end](op[1:end-1]..., x) end
 
-        b = assemble(t.functional, x)
+        b = assemble(t.functional, x;kwargs...)
         B[Block(m),Block(1)] = t.coeff * b
     end
 
@@ -192,12 +192,12 @@ _righthandside_axes(x, U, N) = (U,)
 td_assemble(lform::LinForm, X::DirectProductSpace) = assemble(lform, X)
 
 function assemble(bilform::BilForm, test_space_dict, trial_space_dict;
-    materialize=BEAST.assemble)
+    kwargs...)
 
     X = _spacedict_to_directproductspace(test_space_dict)
     Y = _spacedict_to_directproductspace(trial_space_dict)
 
-    return assemble(bilform, X, Y; materialize)
+    return assemble(bilform, X, Y; kwargs...)
 end
 
 lift(a,I,J,U,V) = LiftedMaps.LiftedMap(a,I,J,U,V)
@@ -205,7 +205,7 @@ lift(a::ConvolutionOperators.AbstractConvOp ,I,J,U,V) =
     ConvolutionOperators.LiftedConvOp(a, U, V, I, J)
 
 function assemble(bf::BilForm, X::DirectProductSpace, Y::DirectProductSpace;
-    materialize=BEAST.assemble)
+    materialize=BEAST.assemble,kwargs...)
 
     @assert !isempty(bf.terms)
 
@@ -228,19 +228,19 @@ function assemble(bf::BilForm, X::DirectProductSpace, Y::DirectProductSpace;
         end
 
         a = term.coeff * term.kernel
-        z = materialize(a, x, y)
+        z = materialize(a, x, y;kwargs...)
         lift(z, Block(term.test_id), Block(term.trial_id), U, V)
     end
 end
 
-function assemble(bf::BilForm, X::Space, Y::Space)
+function assemble(bf::BilForm, X::Space, Y::Space;kwargs...)
     @assert length(bf.terms) == 1
-    assemble(bf, BEAST.DirectProductSpace([X]), BEAST.DirectProductSpace([Y]))
+    assemble(bf, BEAST.DirectProductSpace([X]), BEAST.DirectProductSpace([Y]);kwargs...)
 end
 
-function assemble(bf::BilForm, pairs::Pair...)
+function assemble(bf::BilForm, pairs::Pair...;kwargs...)
     dbf = discretise(bf, pairs...)
-    assemble(dbf)
+    assemble(dbf;kwargs...)
 end
 # struct BilFormDirectProductSpace
 # test_space

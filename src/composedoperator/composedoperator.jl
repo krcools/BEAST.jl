@@ -519,7 +519,7 @@ defaultquadstrat(op::Potential,test,trial) = defaultquadstrat(op.operator,test,t
 # end
 function assemble!(op::Potential, test_functions::Space, trial_functions::Space,
     store, threading = Threading{:multi};
-    quadstrat = defaultquadstrat(op, test_functions, trial_functions))
+    kwargs...)
     # checks if surface given in basis is the same as surface given in potential
     dsurf = surface(op)
     surf = geometry(trial_functions)
@@ -528,7 +528,7 @@ function assemble!(op::Potential, test_functions::Space, trial_functions::Space,
     trial_functions = redefine_geometrie(trial_functions,TraceMesh(surf,direction(dsurf)))
 
     assemble!(op.operator, test_functions, trial_functions, store, threading;
-    quadstrat = quadstrat)
+    kwargs...)
 end
 # function assemble!(op::Potential{T,Nothing}, test_functions::Space, trial_functions::Space,
 #     store, threading = Threading{:multi};
@@ -542,13 +542,13 @@ end
 # end
 function assemble!(op::Potential{T,Nothing}, test_functions::Space, trial_functions::Space,
     store, threading = Threading{:multi};
-    quadstrat = defaultquadstrat(op, test_functions, trial_functions)) where {T}
+    kwargs...) where {T}
 
     surf = geometry(trial_functions)
     trial_functions = redefine_geometrie(trial_functions,TraceMesh(surf))
 
     assemble!(op.operator, test_functions, trial_functions, store, threading;
-    quadstrat = quadstrat)
+    kwargs...)
 end
 
 # function assemble!(op::TraceOperator, test_functions::Space, trial_functions::Space,
@@ -570,7 +570,7 @@ end
 
 function assemble!(op::TraceOperator, test_functions::Space, trial_functions::Space,
     store, threading = Threading{:multi}; 
-    quadstrat = defaultquadstrat(op, test_functions, trial_functions))
+    kwargs...)
 
     dsurf = surface(op)
     surf = geometry(test_functions)
@@ -582,11 +582,11 @@ function assemble!(op::TraceOperator, test_functions::Space, trial_functions::Sp
     test_functions = redefine_geometrie(test_functions,TraceMesh(surf,direction(dsurf)))
 
     assemble!(op.operator, test_functions, trial_functions, store, threading;
-    quadstrat = quadstrat)
+    kwargs...)
 end
 function assemble!(op::TraceOperator{T,Int}, test_functions::Space, trial_functions::Space,
     store, threading = Threading{:multi}; 
-    quadstrat = defaultquadstrat(op, test_functions, trial_functions)) where {T}
+   kwargs...) where {T}
 
     surface = geometry(test_functions)
 
@@ -602,5 +602,5 @@ function assemble!(op::TraceOperator{T,Int}, test_functions::Space, trial_functi
     test_functions = redefine_geometrie(test_functions,surf)
     
     assemble!(op.operator, test_functions, trial_functions, store, threading;
-    quadstrat = quadstrat)
+   kwargs...)
 end
