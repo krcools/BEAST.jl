@@ -3,7 +3,7 @@ using .LinearSpace
 struct LongDelays{T} end
 struct Threading{T} end
 
-import Base: transpose, +, -, *
+import Base: transpose, +, -, *, zero
 
 abstract type AbstractOperator end
 
@@ -17,8 +17,8 @@ abstract type Operator <: AbstractOperator end
 
 struct ZeroOperator <: AbstractOperator end
 
-
-
+export ZeroOperator
+Base.zero(op::Type{<:AbstractOperator}) = ZeroOperator()
 mutable struct TransposedOperator <: AbstractOperator
     op::AbstractOperator
 end

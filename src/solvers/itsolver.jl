@@ -119,6 +119,17 @@ function gmres_ch(eq::DiscreteEquation; maxiter=0, restart=0, tol=0)
     ax = nestedrange(Y, 1, numfunctions)
     return PseudoBlockVector(x, (ax,)), ch
 end
+function assemble(eq::DiscreteEquation;kwargs...)
+    lhs = eq.equation.lhs
+    rhs = eq.equation.rhs
+
+    X = _spacedict_to_directproductspace(eq.test_space_dict)
+    Y = _spacedict_to_directproductspace(eq.trial_space_dict)
+
+    b = assemble(rhs, X;kwargs...)
+    Z = assemble(lhs, X, Y;kwargs...)
+    return Z,b,X,Y
+end
 function gmres_ch(b,Z,trial_direct_product_space; maxiter=0, restart=0, tol=0)
 
     if tol == 0

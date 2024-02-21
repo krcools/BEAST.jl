@@ -1,5 +1,5 @@
 module Variational
-
+import Base.zero
 using BlockArrays
 import BEAST
 # import Base: start, done, next
@@ -140,7 +140,7 @@ mutable struct BilForm
   trial_space
   terms
 end
-
+Base.copy(b::BilForm) = BilForm(b.test_space,b.trial_space,copy(b.terms))
 mutable struct BilTerm
   test_id
   trial_id
@@ -149,7 +149,11 @@ mutable struct BilTerm
   coeff
   kernel
 end
-
+Base.copy(b::BilTerm) = BilTerm(b.test_id,b.trial_id,b.test_ops,b.trial_ops,b.coeff,b.kernel)
+mutable struct ProdBilTerm
+    terms
+    coeff
+end
 mutable struct Equation
     lhs
     rhs
@@ -162,7 +166,10 @@ Build an equation from a left hand and right hand side
 """
 ==(lhs::BilForm, rhs::LinForm) = Equation(lhs, rhs)
 
-
+function ==(lhs::BilForm, rhs::Number)
+    @assert rhs == Base.zero(rhs)
+    return Equation(lhs,ZeroLinForm())
+end
 
 # """
 #     hilbert_space(type, g1, g2, ...)
@@ -361,11 +368,11 @@ function *(α::Number, a::LinForm)
     return b
 end
 
--(a::BilForm) = (-1 * a)
--(a::BilForm, b::BilForm) = a + (-b)
+#-(a::BilForm) = (-1 * a)
+# -(a::BilForm, b::BilForm) = a + (-b)
 
--(a::LinForm) = (-1 * a)
--(a::LinForm, b::LinForm) = a + (-b)
+# -(a::LinForm) = (-1 * a)
+# -(a::LinForm, b::LinForm) = a + (-b)
 
 
 function print(io::IO, v::HilbertVector)
@@ -485,5 +492,77 @@ function getindex(op::OffDiagKernel, V::Vector{HilbertVector}, U::Vector{Hilbert
     end
     return BilForm(first(V).space, first(U).space, terms)
 end
+
+
+
+
+#### suport to use diagonal matrix multiplications with bilforms 
+function *(a::Number,b::BilTerm) 
+    out = copy(b)
+    out.coeff *= a
+    return out
+end
+function *(a::Matrix,b::BilForm)
+    n = length(b.test_space)
+    m = length(b.trial_space)
+    @assert (n,m)==size(a)
+    @assert sum([abs(a[i,j]) for i in 1:n for j in 1:m if i≠j]) == 0.0
+    out = [a[term.test_id,term.test_id]*term for term in b.terms]
+    return BilForm(b.test_space,b.trial_space,out)
+end
+function *(b::BilForm,a::Matrix)
+    n = length(b.test_space)
+    m = length(b.trial_space)
+    @assert (n,m)==size(a)
+    @assert sum([abs(a[i,j]) for i in 1:n for j in 1:m if i≠j]) == 0.0
+    out = [a[term.trial_id,term.trial_id]*term for term in b.terms]
+    return BilForm(b.test_space,b.trial_space,out)
+end
+# mutable struct ProdBilTerm
+#     bilterm1
+#     bilterm2
+#     betweenspace
+# end
+# function *(a::BilForm,b::BilForm)
+#     @assert a.trial_space == b.test_space
+#     r = [[term.trial_id for term in a.terms];[term.test_id for term in b.terms]...]
+#     @assert allequal(r)
+#     return BilForm(a.test_space,b.trial_space,ProdBilTerm(a.terms,b.terms,a.trial_space))
+# end
+
+struct ZeroBilForm end
+struct ZeroLinForm end
++(a::Union{BilForm,ZeroBilForm},b::ZeroBilForm) = a
++(a::ZeroBilForm,b::BilForm) = b
+*(a,b::ZeroBilForm) = b
+*(a::ZeroBilForm,b) = a
+-(a::Union{BilForm,ZeroBilForm}) = (-1)*a
+-(a::Union{BilForm,ZeroBilForm},b::Union{BilForm,ZeroBilForm}) = a+ (-1)*b
+Base.zero(::Type{BilForm}) = ZeroBilForm()
+
++(a::Union{LinForm,ZeroLinForm},b::ZeroLinForm) = a
++(a::ZeroLinForm,b::LinForm) = b
+*(a,b::ZeroLinForm) = b
+*(a::ZeroLinForm,b) = a
+-(a::Union{LinForm,ZeroLinForm}) = (-1)*a
+-(a::Union{LinForm,ZeroLinForm},b::Union{LinForm,ZeroLinForm}) = a+ (-1)*b
+Base.zero(::Type{LinForm}) = ZeroLinForm()
+
+
++(a::Equation,b::Equation) = Equation(a.lhs+b.lhs,a.rhs+b.rhs)
+*(a::Number,b::Equation) = Equation(a*b.lhs,a*b.rhs)
+-(a::Equation,b::Equation) = a + (-1)*b
+-(a::Equation) = (-1)*a
+
+Base.zero(::Type{Equation}) = Equation(ZeroBilForm(),ZeroLinForm())
+struct ZeroEquation end
+
++(a::Union{Equation,ZeroEquation},b::ZeroEquation) = a
++(a::ZeroEquation,b::Equation) = b
+*(a,b::ZeroEquation) = b
+*(a::ZeroEquation,b) = a
+-(a::Union{Equation,ZeroEquation}) = (-1)*a
+-(a::Union{Equation,ZeroEquation},b::Union{Equation,ZeroEquation}) = a+ (-1)*b
+Base.zero(::Type{Equation}) = ZeroEquation()
 
 end

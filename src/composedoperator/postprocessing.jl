@@ -1,7 +1,7 @@
 struct FunctionExcitation{T} <: Functional
     f
 end
-
+export FunctionExcitation
 kernelvals(op::ComposedOperator,a) = nothing
 
 

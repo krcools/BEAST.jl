@@ -40,3 +40,18 @@ function solve(eq;Zz=false)
 end
 
 
+function solve(b,Z,Y;Zz=true)
+
+    
+    print("Converting system to Matrix...")
+    M = Matrix(Z)
+    println("done.")
+
+    print("LU solution of the linear system...")
+    u = M \ Vector(b)
+    println("done.")
+
+    ax = nestedrange(Y, 1, numfunctions)
+    Zz && (return PseudoBlockVector(u, (ax,)), Z)
+    return PseudoBlockVector(u, (ax,))
+end

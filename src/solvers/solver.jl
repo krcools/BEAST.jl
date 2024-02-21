@@ -103,7 +103,6 @@ function discretise(eq, space_mappings::Pair...)
     DiscreteEquation(eq, trial_space_dict, test_space_dict)
 end
 
-
 """
     discr(eq, pairs...)
 

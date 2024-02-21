@@ -187,7 +187,6 @@ function buffachristiansen(Γ, γ=mesh(coordtype(Γ),1,3); ibscaled=false, sort=
     return RTBasis(fine, bcs, pos)
 end
 
-
 """
     buildhalfbc(fine, supp::Array{SVector{3,Int},1}, v, p)
 """

@@ -1,4 +1,5 @@
 import Base.sign
+import Base.getindex
 struct TraceSimplex{T,U}
     simp::T
     direction::SVector{3,U}
@@ -29,6 +30,7 @@ CompScienceMeshes.tangents(a::TraceSimplex,i::Int) = tangents(simplex(a),i)
 CompScienceMeshes.carttobary(a::TraceSimplex,b::SVector{T}) where {T} = carttobary(simplex(a),b)
 CompScienceMeshes.center(a::TraceSimplex) = TraceMeshPointNM(center(simplex(a)),direction(a))
 CompScienceMeshes.normal(a::TraceSimplex) = normal(simplex(a))
+CompScienceMeshes.barytocart(a::TraceSimplex,b) = barytocart(simplex(a),b)
 function CompScienceMeshes.quadpoints(chart::TraceSimplex, rule)
     PV = quadpoints(CompScienceMeshes.domain(chart), rule)
     map(PV) do pv
@@ -73,10 +75,11 @@ struct TraceMesh{U,D1,T} <: CompScienceMeshes.AbstractMesh{U,D1,T}
     mesh::CompScienceMeshes.AbstractMesh{U,D1,T}
     direction::Vector{SVector{3,T}}
 end
-TraceMesh(a::CompScienceMeshes.AbstractMesh{U,D,T}) where {U,D,T} = TraceMesh(a,zeros(SVector{numcells(a),SVector{3,T}}))
+TraceMesh(a::TraceMesh,b::Vector{SVector{3,T}}) where {T} = a+b
+TraceMesh(a::CompScienceMeshes.AbstractMesh{U,D,T}) where {U,D,T} = TraceMesh(a,zeros(SVector{3,T},(numcells(a))))
 +(a::TraceMesh{U,D,T},b::SVector{3,T}) where {U,D,T} = TraceMesh(mesh(a),direction(a).+Ref(b))
-+(a::TraceMesh,b::SVector) = TraceMesh(mesh(a),a.direction+b)
-+(a::SVector,b::TraceMesh) = b+a
++(a::TraceMesh{U,D,T},b::Vector{SVector{3,T}}) where {U,D,T} = TraceMesh(mesh(a),a.direction+b)
++(a::Union{SVector,Vector},b::TraceMesh) = b+a
 CompScienceMeshes.indices(t::TraceMesh,i::Int) = CompScienceMeshes.indices(mesh(t),i)
 CompScienceMeshes.numvertices(t::TraceMesh) = CompScienceMeshes.numvertices(mesh(t))
 CompScienceMeshes.vertextype(t::TraceMesh) = CompScienceMeshes.vertextype(mesh(t))
@@ -112,4 +115,19 @@ CompScienceMeshes.cells(p::TraceMesh) = cells(mesh(p))
 CompScienceMeshes.vertices(p::TraceMesh) = vertices(mesh(p))
 
 
+# function buffachristiansen(Γ::TraceMesh,γ=mesh(coordtype(Γ),1,3);kwargs...)
+#     rtspace = buffachristiansen(mesh(Γ),γ;kwargs...)
+#     geo = geometry(rtspace)
 
+#     direction = [Γ.direction[CompScienceMeshes.parent(geo,i)] for i in 1:length(geo)]
+#    redefine_geometrie(rtspace,TraceMesh(geo,direction))
+# end
+
+function CompScienceMeshes.barycentric_refinement(m::TraceMesh;kwargs...)
+    geo = mesh(m)
+    fine = barycentric_refinement(geo)
+    direction = [m.direction[CompScienceMeshes.parent(fine,i)] for i in 1:length(fine)]
+    return TraceMesh(fine,direction)
+end
+CompScienceMeshes.vertextocellmap(m::TraceMesh) = vertextocellmap(mesh(m))
+Base.getindex(m::TraceMesh,i::Vector{Int}) = mesh(m)[i]
