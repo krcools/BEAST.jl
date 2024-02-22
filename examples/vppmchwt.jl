@@ -62,7 +62,7 @@ end
 function Zp(κ;rows=[1,2,3,4],cols=[1,2,3,4],trace=true,dual=true,tr=1) # build to test with nxt in dual true
     G = BEAST.greenhh3d(wavenumber=κ)
     gradG = BEAST.∇(G)
-    tr *=-1
+    tr *=1
     if trace
         ∇Gx =  BEAST.build_potential(gradG×B)
         Gn = BEAST.build_potential(G*(n*B))
@@ -141,15 +141,15 @@ children(ind,tree) = findall(==(ind),tree)
 
 #### define meshes
 hh = 0.3
-Γ1 = meshcuboid(1.0, 1.0, 1.0, hh)
+Γ1 = meshcuboid(1.1, 1.0, 1.1, hh)
 Γ2 =  (@SVector [-1.0,0.0,0.0]) + BEAST.TraceMesh(-Mesh([point(-x,y,z) for (x,y,z) in vertices(Γ1)], deepcopy(cells(Γ1))))
-Γ3 = (@SVector [0.0,0.0,-1.0]) + BEAST.TraceMesh(-Mesh([point(x,y,-z) for (x,y,z) in vertices(Γ1)], deepcopy(cells(Γ1))))
+Γ3 = (@SVector [0.0,0.0,-1.0]) + BEAST.TraceMesh(-translate(Mesh([point(x,y,-z-1.1) for (x,y,z) in vertices(Γ1)], deepcopy(cells(Γ1))),[0.0,0.0,0.0]))
 
 Γ = [Γ1,Γ2,Γ3]
 Tree = [0,0,0] # give index in which material is
 
 HOM = [1,2,3] #indices of homogeneous domains (without free space)
-HomPars = Dict(0=>(ϵ0,μ0),1=>(ϵ0,μ0*3),2=>(ϵ0*6,μ0*4),3=>(ϵ0*2,μ0*3))#index --> (eps,mu)
+HomPars = Dict(0=>(ϵ0,μ0),1=>(ϵ0,μ0*3),2=>(ϵ0*2,μ0*2),3=>(ϵ0*3,μ0))#index --> (eps,mu)
 κ = Dict(i => ω*sqrt(prod(HomPars[i])) for i in HOM)
 EFIE = [] #indices of pec domains modeled with efie
 MFIE = [] #indices of pec domains modeled with mfie
@@ -296,6 +296,10 @@ outnew = solve(Zunprec,bunprec,yy;strat=solvestrat,solveargs...)
 peqs1 = BEAST.Equation[(Q[i]*Zp(κ[i];tr=-1)*(Qp[i]^-1))[t[i],b[i]] +
         -sum(BEAST.BilForm[(Q[i]*Zp(κ[i];tr=-1))[t[i],b[j]] for j in HOM ∩ children(i,Tree)]) +
         -sum(BEAST.BilForm[(Q[i]*Zp(κ[i];cols=[3,4],tr=-1))[t[i],b[j]] for j in [EFIE...,CFIE...,MFIE...] ∩ children(i,Tree)]) ==0 for i in HOM]
+pdeqs1 = BEAST.Equation[(Q[i]*Zp(κ[i];tr=-1)*(Qp[i]^-1))[t[i],b[i]] ==0 for i in HOM]
+pnuleqs1 = BEAST.Equation[(Q[i]*Zp(κ[i];tr=0)*(Qp[i]^-1))[t[i],b[i]] +
+-sum(BEAST.BilForm[(Q[i]*Zp(κ[i];tr=0))[t[i],b[j]] for j in HOM ∩ children(i,Tree)]) +
+-sum(BEAST.BilForm[(Q[i]*Zp(κ[i];cols=[3,4],tr=0))[t[i],b[j]] for j in [EFIE...,CFIE...,MFIE...] ∩ children(i,Tree)]) ==0 for i in HOM]
 
 # deqs1 = BEAST.discretise.(eqs1, Ref.((t .∈ X))..., Ref.((b .∈ X))...)
 
@@ -303,9 +307,15 @@ peqs1 = BEAST.Equation[(Q[i]*Zp(κ[i];tr=-1)*(Qp[i]^-1))[t[i],b[i]] +
 peqs2hom = begin BEAST.Equation[-sum(BEAST.BilForm[Zp(κ0)[t[ci],b[j]] for j in HOM ∩ children(i,Tree)])+
            -sum(BEAST.BilForm[Zp(κ0;cols=[3,4])[t[ci],b[j]] for j in [EFIE...,MFIE...,CFIE...] ∩ children(i,Tree)]) ==-Xin[t[ci]]
            for i in [0], ci in 1:N if ci ∈ children(i,Tree) ∩ HOM] end
+
+pdeqs2hom = begin BEAST.Equation[-sum(BEAST.BilForm[Zp(κ0)[t[ci],b[ci]] for j in [HOM ∩ [ci]]])+
+        -sum(BEAST.BilForm[Zp(κ0;cols=[3,4])[t[ci],b[j]] for j in [EFIE...,MFIE...,CFIE...] ∩ [ci]]) ==-Xin[t[ci]]
+        for i in [0], ci in 1:N if ci ∈ children(i,Tree) ∩ HOM] end
+
+
 peqs2efie = begin BEAST.Equation[-sum(BEAST.BilForm[Zp(κ0;rows=[3,4])[t[ci],b[j]] for j in HOM ∩ children(i,Tree)])+
-            -sum(BEAST.BilForm[Zp(κ0;rows=[3,4],cols=[3,4])[t[ci],b[j]] for j in [EFIE...,MFIE...,CFIE...] ∩ children(i,Tree)]) ==-Xind[t[ci]]
-            for i in [0], ci in 1:N if ci ∈ children(i,Tree) ∩ EFIE] end
+        -sum(BEAST.BilForm[Zp(κ0;rows=[3,4],cols=[3,4])[t[ci],b[j]] for j in [EFIE...,MFIE...,CFIE...] ∩ children(i,Tree)]) ==-Xind[t[ci]]
+        for i in [0], ci in 1:N if ci ∈ children(i,Tree) ∩ EFIE] end
 # peqs2mfie = begin BEAST.Equation[-sum(BEAST.BilForm[Zp(κ0;rows=[1,2])[t[ci],b[j]] for j in HOM ∩ children(i,Tree)])+
 #             -sum(BEAST.BilForm[Zp(κ0;rows=[1,2],cols=[3,4])[t[ci],b[j]] for j in [EFIE...,MFIE...,CFIE...] ∩ children(i,Tree)]) +
 #             -idN()[t[ci],b[ci]] ==-Xinn[t[ci]]
@@ -352,11 +362,15 @@ peqs3cefie = begin BEAST.Equation[α[ci]*(Zp(κ[i];rows=[3,4])*(Qp[i]^-1))[t[ci]
 
 #discretise system
 psymeq = -sum(peqs1)+sum(peqs2cefie)+sum(peqs2efie)+sum(peqs2hom)+sum(peqs3cefie)+sum(peqs3efie)+sum(peqs3hom)
-
-
+pdsymeq = -sum(pdeqs1)+sum(pdeqs2hom)
+pnulsymeq = sum(pnuleqs1)
 Dsymeq = BEAST.discretise(psymeq, (t.∈Y)..., (b.∈Y)...)
+# quadstrat
+qs(::BEAST.LocalOperator, a, b) = BEAST.SingleNumQStrat(3)
+qs(op::BEAST.ComposedOperatorIntegral,testspace,trialspace) = BEAST.DoubleNumSauterQstrat(5,5,5,5,2,2) 
+qs(op::BEAST.ComposedOperatorLocal,testspace,trialpsace) = BEAST.SingleNumQStrat(3)
 
-Pyy = assemble(Dsymeq.equation.lhs,BEAST.DirectProductSpace(Y),BEAST.DirectProductSpace(Y))
+Pyy = assemble(Dsymeq.equation.lhs,BEAST.DirectProductSpace(Y),BEAST.DirectProductSpace(Y);quadstratfunction=qs)
 
 
 # construct gramm matrix
