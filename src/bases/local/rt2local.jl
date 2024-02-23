@@ -61,9 +61,9 @@ function interpolate(fields, interpolant::BEAST.RT2RefSpace, chart)
 
             nxq0ref = point(-q0ref[2], q0ref[1])
             nxq1ref = point(-q1ref[2], q1ref[1])
-            @show u
+            # @show u
             p_chart = neighborhood(chart, u)
-            @show p_chart
+            # @show p_chart
             n_chart = normal(p_chart)
             J_chart = jacobian(p_chart)
             t1 = tangents(p_chart,1)
@@ -110,4 +110,11 @@ function interpolate(fields, interpolant::BEAST.RT2RefSpace, chart)
     push!(Q,l7)
 
     return hcat(Q...)
+end
+
+
+function dof_perm_matrix(::RT2RefSpace, vert_permutation)
+    i = findfirst(==(tuple(vert_permutation...)), _vert_perms_rt)
+    @assert i != nothing
+    return _dof_rt2perm_matrix[i]
 end
