@@ -115,11 +115,18 @@ function Zp(κ;rows=[1,2,3,4],cols=[1,2,3,4],trace=true,dual=true,tr=1) # build 
     end
     return BEAST.matrix_to_bilform(int[rows,cols])
 end
-function excitation(A,curlA,divA;rows=[1,2,3,4])
+function excitation(A,curlA,divA;rows=[1,2,3,4],dual=true)
+    if dual
     out = [((n × FunctionExcitation{ComplexF64}(curlA))×n),
     BEAST.NDotTrace{ComplexF64}(FunctionExcitation{ComplexF64}(A)),
     ((n × FunctionExcitation{ComplexF64}(A))×n),
     FunctionExcitation{ComplexF64}(divA)]
+    else
+        out = [((n × FunctionExcitation{ComplexF64}(curlA))),
+        BEAST.NDotTrace{ComplexF64}(FunctionExcitation{ComplexF64}(A)),
+        ((n × FunctionExcitation{ComplexF64}(A))),
+        FunctionExcitation{ComplexF64}(divA)]
+    end
     return BEAST.array_to_linform(out[rows])
 end
 function solve(Z,b,X;strat,kwargs...)
@@ -148,18 +155,20 @@ hh = 0.3
 Γ = [Γ1,Γ2,Γ3]
 Tree = [0,0,0] # give index in which material is
 
-HOM = [1,2,3] #indices of homogeneous domains (without free space)
-HomPars = Dict(0=>(ϵ0,μ0),1=>(ϵ0,μ0*3),2=>(ϵ0*2,μ0*2),3=>(ϵ0*3,μ0))#index --> (eps,mu)
+HOM = [1,2] #indices of homogeneous domains (without free space)
+HomPars = Dict(0=>(ϵ0,μ0),1=>(ϵ0,μ0*3),2=>(ϵ0*2,μ0*2))#,3=>(ϵ0*3,μ0))#index --> (eps,mu)
 κ = Dict(i => ω*sqrt(prod(HomPars[i])) for i in HOM)
+κ[0]=κ0
 EFIE = [] #indices of pec domains modeled with efie
 MFIE = [] #indices of pec domains modeled with mfie
-CFIE = [] #indices of pec domains modeled with cfie
-CFIEPars = Dict()#index --> alpha
+CFIE = [3] #indices of pec domains modeled with cfie
+α = Dict(3=>0.2)#index --> alpha
 
 #### Incident field
 A(x) = x[1]*[0.0,0.0,1.0]*sqrt(ϵ0*μ0)*exp(-1.0im*κ0*x[3])
 curlA(x) = -[0.0,1.0,0.0]*sqrt(ϵ0*μ0)*exp(-1.0im*κ0 *x[3])
 divA(x) = -im*κ0 *x[1]*sqrt(ϵ0*μ0)*exp(-1.0im*κ0 *x[3])
+graddivA(x) = -im*κ0 *sqrt(ϵ0*μ0)*exp(-1.0im*κ0 *x[3])*[1.0,0.0,-im*κ0*x[1]]
 #### spaces
 Xdi(Γ) = BEAST.DirectProductSpace([raviartthomas(Γ),lagrangec0d1(Γ)])
 Xni(Γ) = BEAST.DirectProductSpace([raviartthomas(Γ),lagrangecxd0(Γ)])
@@ -172,11 +181,16 @@ Yi(Γ) = BEAST.DirectProductSpace([BEAST.buffachristiansen(Γ),duallagrangecxd0(
 Xin = excitation(A,curlA,divA)
 Xind = excitation(A,curlA,divA;rows = [3,4])
 Xinn = excitation(A,curlA,divA; rows = [1,2])
+#### incident field trace non dual
+Xin_notdual = excitation(A,curlA,divA;dual=false)
+Xind_notdual = excitation(A,curlA,divA;rows = [3,4],dual=false)
+Xinn_notdual = excitation(A,curlA,divA; rows = [1,2],dual=false)
 #@error "check if correct order of traces"
 ##### identities
 id() = BEAST.matrix_to_bilform(diagm([-NCross(),Identity(),-NCross(),Identity()]))
 idN() = BEAST.matrix_to_bilform(diagm([-NCross(),Identity()]))
-
+idnotdual() = BEAST.matrix_to_bilform(diagm([Identity(),Identity(),Identity(),Identity()]))
+idNnotdual() = BEAST.matrix_to_bilform(diagm([Identity(),Identity()]))
 ##### from here do nothing anymore.
 N = length(Γ)
 Q = Dict(i=>diagm([1,1,HomPars[parent(i,Tree)][2]/HomPars[i][2],HomPars[i][1]/HomPars[parent(i,Tree)][1]]) for i in HOM)
@@ -392,3 +406,253 @@ solveargs = Dict(
     :restart => 20000,
     :tol => real(sqrt(eps())))
 outnewprec = solve(Zprec,bprec,yy;strat=solvestrat,solveargs...)
+
+u = outnewprec[1]
+
+###### exit dict: mesh, number of iterations, inputdata, cond number both, eigenvalue distribution both cases
+
+
+##### post processing
+
+
+##### nearfield
+using BlockArrays
+function nearfield_B(u,X,κ,points;sign=1,HOM=true,Q=diagm([1.0,1.0,1.0,1.0]))#nearfield of single volume
+    G = BEAST.greenhh3d(wavenumber=κ)
+    gradG = BEAST.∇(G)
+    ∇Gx =  gradG×B
+    Gn = G*(nb*B)
+    #Gnx = G*(n × B)
+    ∇G = gradG*B
+    ∇Gdotn = nb ⋅ (gradG*B)
+    ∇Gdot = B ⋅ gradG
+    
+    Gr = G*B
+    ∇G∇B = gradG*BEAST.div(B)
+    ∇Gxn = gradG×(nb*B)
+    
+
+    if HOM
+        @hilbertspace T D R N
+        B = -Q[1,1]*potential(∇G∇B, points, u[T], X.factors[1])-Q[1,1]*potential(κ^2*Gr, points, u[T], X.factors[1])
+        B .+= Q[2,2]*potential(∇Gxn, points, u[D], X.factors[2])
+        B .+= -Q[3,3]*potential(∇Gx, points, u[R], X.factors[3])
+        
+    else
+        @hilbertspace R N
+        B = -potential(∇Gx, points, u[R], X.factors[1])
+        
+    end
+
+    return sign*B
+end
+
+function nearfield_A(u,X,κ,points;sign=1,HOM=true,Q=diagm([1.0,1.0,1.0,1.0]))#nearfield of single volume
+    G = BEAST.greenhh3d(wavenumber=κ)
+    gradG = BEAST.∇(G)
+    ∇Gx =  gradG×B
+    Gn = G*(nb*B)
+    #Gnx = G*(n × B)
+    ∇G = gradG*B
+    ∇Gdotn = nb ⋅ (gradG*B)
+    ∇Gdot = B ⋅ gradG
+    
+    Gr = G*B
+    ∇G∇B = gradG*BEAST.div(B)
+    ∇Gxn = gradG×(nb*B)
+    
+
+    if HOM
+        @hilbertspace T D R N
+        A = -Q[1,1]*potential(∇Gx, points, u[T], X.factors[1])
+        A .+= Q[2,2]*potential(Gn, points, u[D], X.factors[2])
+        A .+= -Q[3,3]*potential(Gr, points, u[R], X.factors[3])
+        A .+= Q[4,4]*potential(∇G, points, u[N], X.factors[4])
+    else
+        @hilbertspace R N
+        A = -potential(Gr, points, u[R], X.factors[1])
+        A .+= potential(∇G, points, u[N], X.factors[2])
+    end
+
+    return sign*A
+end
+function nearfield_phi(u,X,κ,ω,points;sign=1,HOM=true,Q=diagm([1.0,1.0,1.0,1.0]))#nearfield of single volume
+    G = BEAST.greenhh3d(wavenumber=κ)
+    gradG = BEAST.∇(G)
+    ∇Gx =  gradG×B
+    Gn = G*(nb*B)
+    #Gnx = G*(n × B)
+    ∇G = gradG*B
+    ∇Gdotn = nb ⋅ (gradG*B)
+    ∇Gdot = B ⋅ gradG
+    
+    Gr = G*B
+    ∇G∇B = gradG*BEAST.div(B)
+    ∇Gxn = gradG×(nb*B)
+    
+
+    if HOM
+        @hilbertspace T D R N
+        A = Q[2,2]*potential(∇Gdotn, points, u[D], X.factors[2])
+        A .+= -Q[3,3]*potential(∇Gdot, points, u[R], X.factors[3])
+        A .+= -κ^2* Q[4,4]*potential(Gr, points, u[N], X.factors[4])
+    else
+        @hilbertspace R N
+        A = -potential(∇Gdot, points, u[R], X.factors[1])
+        A .+= -κ^2* potential(Gr, points, u[N], X.factors[2])
+    end
+
+    return sign*A/κ^2*im*ω
+end
+function nearfield_E(u,X,κ,ω,points;sign=1,HOM=true,Q=diagm([1.0,1.0,1.0,1.0]))#nearfield of single volume
+    G = BEAST.greenhh3d(wavenumber=κ)
+    gradG = BEAST.∇(G)
+    graddivG = BEAST.graddiv(G)
+    ∇Gx =  gradG×B
+    Gn = G*(nb*B)
+    #Gnx = G*(n × B)
+    ∇G = gradG*B
+    ∇Gdotn = nb ⋅ (gradG*B)
+    graddivGdotn = graddivG*(nb*B)
+    graddivGdot = graddivG*B
+    ∇Gdot = B ⋅ gradG
+    
+    Gr = G*B
+    ∇G∇B = gradG*BEAST.div(B)
+    ∇Gxn = gradG×(nb*B)
+    
+
+    if HOM
+        @hilbertspace T D R N
+        p = Q[2,2]*potential(graddivGdotn, points, u[D], X.factors[2])
+        p .+= -Q[3,3]*potential(graddivGdot, points, u[R], X.factors[3])
+        p .+= -κ^2* Q[4,4]*potential(∇G, points, u[N], X.factors[4])
+    else
+        @hilbertspace R N
+        p = -potential(graddivGdot, points, u[R], X.factors[1])
+        p .+= -κ^2* potential(∇G, points, u[N], X.factors[2])
+    end
+    if HOM
+        @hilbertspace T D R N
+        A = -Q[1,1]*potential(∇Gx, points, u[T], X.factors[1])
+        A .+= Q[2,2]*potential(Gn, points, u[D], X.factors[2])
+        A .+= -Q[3,3]*potential(Gr, points, u[R], X.factors[3])
+        A .+= Q[4,4]*potential(∇G, points, u[N], X.factors[4])
+    else
+        @hilbertspace R N
+        A = -potential(Gr, points, u[R], X.factors[1])
+        A .+= potential(∇G, points, u[N], X.factors[2])
+    end
+    return -sign*A/κ^2*im*ω-sign*im*ω*A
+end
+Xs = range(-2.0,2.0,length=150)
+Zs = range(-1.5,2.5,length=100)
+pts = [point(x,0.5,z) for z in Zs, x in Xs]
+
+A1 = [nearfield_A(u[Block(i)],X[i],κ[parent(i,Tree)],pts) for i in HOM]
+A2 = [nearfield_A(u[Block(i)],X[i],κ[i],pts;sign=-1,Q=Q[i]^-1) for i in HOM]
+A3 = [nearfield_A(u[Block(i)],X[i],κ[parent(i,Tree)],pts;HOM=false) for i in [EFIE...,MFIE...,CFIE...]]
+Atot = sum(A1)+sum(A2)+sum(A3)+A.(pts)
+
+B1 = [nearfield_B(u[Block(i)],X[i],κ[parent(i,Tree)],pts) for i in HOM]
+B2 = [nearfield_B(u[Block(i)],X[i],κ[i],pts;sign=-1,Q=Q[i]^-1) for i in HOM]
+B3 = [nearfield_B(u[Block(i)],X[i],κ[parent(i,Tree)],pts;HOM=false) for i in [EFIE...,MFIE...,CFIE...]]
+Btot = sum(B1)+sum(B2)+sum(B3)+curlA.(pts)
+
+H1 = [1/HomPars[parent(i,Tree)][2]*nearfield_B(u[Block(i)],X[i],κ[parent(i,Tree)],pts) for i in HOM]
+H2 = [1/HomPars[i][2]*nearfield_B(u[Block(i)],X[i],κ[i],pts;sign=-1,Q=Q[i]^-1) for i in HOM]
+H3 = [1/HomPars[parent(i,Tree)][2]*nearfield_B(u[Block(i)],X[i],κ[parent(i,Tree)],pts;HOM=false) for i in [EFIE...,MFIE...,CFIE...]]
+Htot = sum(H1)+sum(H2)+sum(H3)+1/μ0*curlA.(pts)
+
+E1 = [nearfield_E(u[Block(i)],X[i],κ[parent(i,Tree)],ω,pts) for i in HOM]
+E2 = [nearfield_E(u[Block(i)],X[i],κ[i],ω,pts;sign=-1,Q=Q[i]^-1) for i in HOM]
+E3 = [nearfield_E(u[Block(i)],X[i],κ[parent(i,Tree)],ω,pts;HOM=false) for i in [EFIE...,MFIE...,CFIE...]]
+Etot = sum(E1)+sum(E2)+sum(E3)-im*ω*A.(pts)-graddivA.(pts)/κ^2*im*ω
+
+##### complement error, different from aps paper, traces from inside are compared, for the reset same formula as in aps paper, for pec all are treated with mfie, as efie yields zero traces in denominator.
+
+
+
+
+
+
+##### define equation
+ceqs2hom = begin BEAST.Equation[-sum(BEAST.BilForm[Z(κ0;tr=-1,dual=false)[t[ci],b[j]] for j in HOM ∩ children(i,Tree)])+
+           -sum(BEAST.BilForm[Z(κ0;cols=[3,4],tr=-1,dual=false)[t[ci],b[j]] for j in [EFIE...,MFIE...,CFIE...] ∩ children(i,Tree)]) ==-Xin_notdual[t[ci]]
+           for i in [0], ci in 1:N if ci ∈ children(i,Tree) ∩ HOM] end
+# ceqs2efie = begin BEAST.Equation[-sum(BEAST.BilForm[Z(κ0;rows=[3,4],tr=-1,dual=false)[t[ci],b[j]] for j in HOM ∩ children(i,Tree)])+
+#             -sum(BEAST.BilForm[Z(κ0;rows=[3,4],cols=[3,4],tr=-1,dual=false)[t[ci],b[j]] for j in [EFIE...,MFIE...,CFIE...] ∩ children(i,Tree)]) ==-Xind_notdual[t[ci]]
+#             for i in [0], ci in 1:N if ci ∈ children(i,Tree) ∩ EFIE] end
+ceqs2mfie = begin BEAST.Equation[-sum(BEAST.BilForm[Z(κ0;rows=[1,2],tr=-1,dual=false)[t[ci],b[j]] for j in HOM ∩ children(i,Tree)])+
+            -sum(BEAST.BilForm[Z(κ0;rows=[1,2],cols=[3,4],tr=-1,dual=false)[t[ci],b[j]] for j in [EFIE...,MFIE...,CFIE...] ∩ children(i,Tree)]) +
+             ==-Xinn_notdual[t[ci]]
+            for i in [0], ci in 1:N if ci ∈ children(i,Tree) ∩ [MFIE...,EFIE...]]end
+# ceqs2cefie =begin  BEAST.Equation[-α[ci]*sum(BEAST.BilForm[Z(κ0;rows=[3,4],tr=-1,dual=false)[t[ci],b[j]] for j in HOM ∩ children(i,Tree)])+
+#             -α[ci]*sum(BEAST.BilForm[Z(κ0;rows=[3,4],cols=[3,4],tr=-1,dual=false)[t[ci],b[j]] for j in [EFIE...,MFIE...,CFIE...] ∩ children(i,Tree)]) ==
+#             -α[ci]*Xind_notdual[t[ci]] for i in [0], ci in 1:N if ci ∈ children(i,Tree) ∩ CFIE] end
+ceqs2cmfie = begin BEAST.Equation[-(1-α[ci])* sum(BEAST.BilForm[Z(κ0;rows=[1,2],tr=-1,dual=false)[t[ci],b[j]] for j in HOM ∩ children(i,Tree)])+
+            -(1-α[ci])*sum(BEAST.BilForm[Z(κ0;rows=[1,2],cols=[3,4],tr=-1,dual=false)[t[ci],b[j]] for j in [EFIE...,MFIE...,CFIE...] ∩ children(i,Tree)]) +
+            == -(1-α[ci])*Xinn_notdual[t[ci]]
+            for i in [0], ci in 1:N if ci ∈ children(i,Tree) ∩ CFIE] end
+
+# deqs2hom = BEAST.discretise(eqs2hom, (t.∈X),(b.∈X))    
+# deqs2efie = BEAST.discretise(eqs2efie, (t.∈X),(b.∈X))    
+# deqs2mfie = BEAST.discretise(eqs2mfie, (t.∈Y),(b.∈X))    
+# deqs2cefie = BEAST.discretise(eqs2cefie, (t.∈X),(b.∈X))    
+# deqs2cmfie = BEAST.discretise(eqs2cmfie, (t.∈Y),(b.∈X))    
+
+
+##### define equation
+ceqs3hom = begin BEAST.Equation[(Z(κ[i];tr=-1,dual=false)*(Q[i]^-1))[t[ci],b[i]]+
+            -sum(BEAST.BilForm[Z(κ[i];tr=-1,dual=false)[t[ci],b[j]] for j in HOM ∩ children(i,Tree)])+
+           -sum(BEAST.BilForm[Z(κ[i];cols=[3,4],tr=-1,dual=false)[t[ci],b[j]] for j in [EFIE...,MFIE...,CFIE...] ∩ children(i,Tree)]) == 0
+           for i in HOM, ci in 1:N if ci ∈ children(i,Tree) ∩ HOM] end
+# ceqs3efie = begin BEAST.Equation[(Z(κ[i];rows=[3,4],tr=-1,dual=false)*(Q[i]^-1))[t[ci],b[i]]+
+#             -sum(BEAST.BilForm[Z(κ[i];rows=[3,4],tr=-1,dual=false)[t[ci],b[j]] for j in HOM ∩ children(i,Tree)])+
+#             -sum(BEAST.BilForm[Z(κ[i];rows=[3,4],cols=[3,4],tr=-1,dual=false)[t[ci],b[j]] for j in [EFIE...,MFIE...,CFIE...] ∩ children(i,Tree)]) == 0
+#             for i in HOM, ci in 1:N if ci ∈ children(i,Tree) ∩ EFIE] end
+ceqs3mfie = begin BEAST.Equation[(Z(κ[i];rows=[1,2],tr=-1,dual=false)*(Q[i]^-1))[t[ci],b[i]]+
+            -sum(BEAST.BilForm[Z(κ[i];rows=[1,2],tr=-1,dual=false)[t[ci],b[j]] for j in HOM ∩ children(i,Tree)])+
+            -sum(BEAST.BilForm[Z(κ[i];rows=[1,2],cols=[3,4],tr=-1,dual=false)[t[ci],b[j]] for j in [EFIE...,MFIE...,CFIE...] ∩ children(i,Tree)])  ==0
+            for i in [0], ci in 1:N if ci ∈ children(i,Tree) ∩ [MFIE...,EFIE...]]end
+# ceqs3cefie = begin BEAST.Equation[α[ci]*(Z(κ[i];rows=[3,4],tr=-1,dual=false)*(Q[i]^-1))[t[ci],b[i]]+
+#             -α[ci]*sum(BEAST.BilForm[Z(κ[i];rows=[3,4],tr=-1,dual=false)[t[ci],b[j]] for j in HOM ∩ children(i,Tree)])+
+#             -α[ci]*sum(BEAST.BilForm[Z(κ[i];rows=[3,4],cols=[3,4],tr=-1,dual=false)[t[ci],b[j]] for j in [EFIE...,MFIE...,CFIE...] ∩ children(i,Tree)]) ==0
+#             for i in HOM, ci in 1:N if ci ∈ children(i,Tree) ∩ CFIE] end
+ceqs3cmfie = begin BEAST.Equation[(1-α[ci])*(Z(κ[i];rows=[1,2],tr=-1,dual=false)*(Q[i]^-1))[t[ci],b[i]]+
+            -(1-α[ci])* sum(BEAST.BilForm[Z(κ[i];rows=[1,2],tr=-1,dual=false)[t[ci],b[j]] for j in HOM ∩ children(i,Tree)])+
+            -(1-α[ci])*sum(BEAST.BilForm[Z(κ[i];rows=[1,2],cols=[3,4],tr=-1,dual=false)[t[ci],b[j]] for j in [EFIE...,MFIE...,CFIE...] ∩ children(i,Tree)]) == 0
+            for i in HOM, ci in 1:N if ci ∈ children(i,Tree) ∩ CFIE] end
+
+
+
+ceq = sum(ceqs2hom)+sum(ceqs3hom)
+cmeq = sum(ceqs2cmfie)+sum(ceqs2mfie)+sum(ceqs3cmfie)+sum(ceqs3mfie)
+
+Dseq = BEAST.discretise(ceq, (t.∈X)..., (b.∈X)...)
+
+F,bsa,_,_ = assemble(Dseq)
+
+u_error = F*u-bsa
+
+#select in u_error en in u
+
+function select_trace(u,trace_ind)
+    usub = 0*deepcopy(u)
+    N = length(blocks(u))
+    for i in 1:N
+        if i ∈ HOM
+            usub[Block(i)][Block(trace_ind)] += u[Block(i)][Block(trace_ind)]
+        elseif i∈ [EFIE...,MFIE...,CFIE...] && trace_ind ∈ [3,4]
+            usub[Block(i)][Block(trace_ind)] += u[Block(i)][Block(trace_ind)]
+        end
+    end
+    return usub
+end
+
+Gsym = assemble(diag(diag(Identity())),BEAST.DirectProductSpace(X),BEAST.DirectProductSpace(X))
+Ginvsym = inv(Matrix(Gsym))
+
+nom = sqrt.([Array(select_trace(u_error,i))'*Ginvsym*Array(select_trace(u_error,i))  for i in 1:4])
+denom = sqrt.([Array(select_trace(u,i))'*Matrix(Gsym)*Array(select_trace(u,i))  for i in 1:4])
+error = 1/4*sum(nom./denom)

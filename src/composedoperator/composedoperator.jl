@@ -369,6 +369,9 @@ struct GradGreenHH3D{T} <: Kernel
     gamma::T
 end
 
+struct GradDivGreenHH3D{T} <: Kernel
+    gamma::T
+end
 
 function (op::GreenHH3D)(x,y,g)
     gamma = op.gamma
@@ -387,6 +390,30 @@ function (op::GreenHH3D)(x::Union{SVector,Vector},y,g)
     iR = 1/R
     green = exp(-gamma*R)*(i4pi*iR)
     Ref(green)
+end
+
+function (op::GradDivGreenHH3D)(x,y,g)
+    gamma = op.gamma
+
+    r = cartesian(x) - cartesian(y)
+    R = norm(r)
+    iR = 1/R
+    green = exp(-gamma*R)*(i4pi*iR)
+    f = -(gamma + iR) * green * iR 
+    df = (3*iR^2-gamma*iR+gamma^2)*green*iR
+    Ref(df*(r*r')+f*I)
+
+end
+function (op::GradDivGreenHH3D)(x::Union{SVector,Vector},y,g)
+    gamma = op.gamma
+
+    r = x - cartesian(y)
+    R = norm(r)
+    iR = 1/R
+    green = exp(-gamma*R)*(i4pi*iR)
+    f = -(gamma + iR) * green * iR 
+    df = (3*iR^2-gamma*iR+gamma^2)*green*iR
+    Ref(df*(r*r')+f*I)
 end
 
 function (op::GradGreenHH3D)(x,y,g)
@@ -421,16 +448,18 @@ function (op::GradGreenHH3D)(x::Union{SVector,Vector},y,g)
 end
 
 γ(op::GreenHH3D) = op
+γ(op::GradDivGreenHH3D) = op
 γ(op::GradGreenHH3D) = op + 1/2*TraceDirection()
 
 grad(G::GreenHH3D) = GradGreenHH3D(G.gamma)
-
+graddiv(G::GreenHH3D) = GradDivGreenHH3D(G.gamma)
 function (::Nabla)(G::Kernel)
     grad(G)
 end
 
 scalartype(G::GreenHH3D{T}) where {T} = T
 scalartype(G::GradGreenHH3D{T}) where {T} = T
+scalartype(G::GradDivGreenHH3D{T}) where {T} = T
 
 
 struct DoubleIntegralR{T} <: Kernel end
