@@ -48,11 +48,12 @@ function interpolate(fields, interpolant::BEAST.RT2RefSpace, chart)
         qps = CompScienceMeshes.quadpoints(edge,4)
         for (p_edge,w) in qps
             s = parametric(p_edge)
-            x = cartesian(p_edge)
-            u = carttobary(chart, x)
+            # x = cartesian(p_edge)
+            # u = carttobary(chart, x)
 
-            p_refchart = neighborhood(refchart, u)
             p_refedge = neighborhood(refedge,s)
+            u = cartesian(p_refedge)
+            p_refchart = neighborhood(refchart, u)
             t_refedge = tangents(p_refedge,1)
             m_refedge = point(-t_refedge[2], t_refedge[1])
             m_refedge /= norm(m_refedge)
@@ -61,9 +62,7 @@ function interpolate(fields, interpolant::BEAST.RT2RefSpace, chart)
 
             nxq0ref = point(-q0ref[2], q0ref[1])
             nxq1ref = point(-q1ref[2], q1ref[1])
-            # @show u
             p_chart = neighborhood(chart, u)
-            # @show p_chart
             n_chart = normal(p_chart)
             J_chart = jacobian(p_chart)
             t1 = tangents(p_chart,1)
