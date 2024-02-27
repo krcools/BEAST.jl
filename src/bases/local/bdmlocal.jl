@@ -1,9 +1,5 @@
 struct BDMRefSpace{T} <: RefSpace{T,6} end
 
-function valuetype(ref::BDMRefSpace{T}, charttype::Type) where {T}
-    SVector{universedimension(charttype),T}
-end
-
 function (f::BDMRefSpace)(p)
 
     u,v = parametric(p)

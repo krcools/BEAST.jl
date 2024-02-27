@@ -152,7 +152,6 @@ include("bases/local/ncrossbdmlocal.jl")
 include("bases/local/ndlcclocal.jl")
 include("bases/local/ndlcdlocal.jl")
 include("bases/local/bdm3dlocal.jl")
-include("bases/local/rt2local.jl")
 
 include("bases/lagrange.jl")
 include("bases/rtspace.jl")
@@ -166,7 +165,6 @@ include("bases/ndlcdspace.jl")
 include("bases/dual3d.jl")
 include("bases/bdm3dspace.jl")
 include("bases/perm_matrices.jl")
-include("bases/rt2space.jl")
 
 
 include("bases/subdbasis.jl")
