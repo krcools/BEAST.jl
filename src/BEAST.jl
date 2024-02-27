@@ -155,6 +155,7 @@ include("bases/local/bdm3dlocal.jl")
 
 include("bases/lagrange.jl")
 include("bases/rtspace.jl")
+include("bases/rt2space.jl")
 include("bases/rtxspace.jl")
 include("bases/bcspace.jl")
 include("bases/ndspace.jl")
