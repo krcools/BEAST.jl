@@ -44,41 +44,41 @@ function ntrace(x::RTRefSpace, el, q, fc)
     return t
 end
 
-function restrict(ϕ::RTRefSpace{T}, dom1, dom2) where T
+# function restrict(ϕ::RTRefSpace{T}, dom1, dom2) where T
 
-    K = numfunctions(ϕ)
-    D = dimension(dom1)
+#     K = numfunctions(ϕ)
+#     D = dimension(dom1)
 
-    @assert K == 3
-    @assert D == 2
-    @assert D == dimension(dom2)
+#     @assert K == 3
+#     @assert D == 2
+#     @assert D == dimension(dom2)
 
-    Q = zeros(T,K,K)
-    for i in 1:K
+#     Q = zeros(T,K,K)
+#     for i in 1:K
 
-        # find the center of edge i of dom2
-        a = dom2.vertices[mod1(i+1,D+1)]
-        b = dom2.vertices[mod1(i+2,D+1)]
-        c = (a + b) / 2
+#         # find the center of edge i of dom2
+#         a = dom2.vertices[mod1(i+1,D+1)]
+#         b = dom2.vertices[mod1(i+2,D+1)]
+#         c = (a + b) / 2
 
-        # find the outer binormal there
-        t = b - a
-        l = norm(t)
-        n = dom2.normals[1]
-        m = cross(t, n) / l
+#         # find the outer binormal there
+#         t = b - a
+#         l = norm(t)
+#         n = dom2.normals[1]
+#         m = cross(t, n) / l
 
-        u = carttobary(dom1, c)
-        x = neighborhood(dom1, u)
+#         u = carttobary(dom1, c)
+#         x = neighborhood(dom1, u)
 
-        y = ϕ(x)
+#         y = ϕ(x)
 
-        for j in 1:K
-            Q[j,i] = dot(y[j][1], m) * l
-        end
-    end
+#         for j in 1:K
+#             Q[j,i] = dot(y[j][1], m) * l
+#         end
+#     end
 
-    return Q
-end
+#     return Q
+# end
 
 
 const _vert_perms_rt = [
@@ -124,7 +124,7 @@ on `chart1`. The returned value is a matrix `Q` such that
 with ``\\phi_i`` the i-th local shape function for `interpolee` and ``\\psi_j`` the
 j-th local shape function for `interpolant`.
 """
-function interpolate(interpolant::RTRefSpace, chart1, interpolee::RefSpace, chart2)
+function interpolate(interpolant::RefSpace, chart1, interpolee::RefSpace, chart2)
     function fields(p)
         x = cartesian(p)
         v = carttobary(chart2, x)
@@ -152,4 +152,9 @@ function interpolate(fields, interpolant::RTRefSpace, chart)
     end
 
     return hcat(Q...)
+end
+
+
+function restrict(ϕ::RefSpace, dom1, dom2)
+    interpolate(ϕ, dom2, ϕ, dom1)
 end
