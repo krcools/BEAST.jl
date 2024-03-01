@@ -17,13 +17,13 @@ subset(rt::RT2Basis,I) = RT2Basis(rt.geo, rt.fns[I], rt.pos[I])
 
 
 """
-    raviartthomas(mesh, cellpairs::Array{Int,2})
+    raviartthomas2(mesh, cellpairs::Array{Int,2})
 
-Constructs the RT basis on the input `mesh`. The i-th RT basis function will
+Constructs the RT2 basis on the input `mesh`. The i-th RT2 basis function will
     represent a current distribution flowing from cell `cellpairs[1,i]` to
     `cellpairs[2,i]` on the mesh.
 
-Returns an object of type `RTBasis`, which comprises both the mesh and pairs of
+Returns an object of type `RT2Basis`, which comprises both the mesh and pairs of
     Shape objects which corresponds to the cell pairs, containing the necsessary
     coefficients and indices to compute the exact basis functions when required
     by the solver.
@@ -102,15 +102,15 @@ end
 
 
 """
-    raviartthomas(mesh)
+    raviartthomas2(mesh)
 
 Conducts pre-processing on the input `mesh` by extracting the cell edges, cell pairs
-    and indices required to construct the RT basis on the `mesh`.
+    and indices required to construct the RT2 basis on the `mesh`.
 
-Calls raviartthomas(mesh::Mesh, cellpairs::Array{Int,2}), which constructs
-    the RT basis on the `mesh`, using the cell pairs identified.
+Calls raviartthomas2(mesh::Mesh, cellpairs::Array{Int,2}), which constructs
+    the RT2 basis on the `mesh`, using the cell pairs identified.
 
-Returns the RT basis object.
+Returns the RT2 basis object.
 """
 function raviartthomas2(mesh; sort=:spacefillingcurve)
     edges = skeleton(mesh, 1; sort)
@@ -119,15 +119,15 @@ function raviartthomas2(mesh; sort=:spacefillingcurve)
     raviartthomas2(mesh, cps[:,ids])
 end
 
-divergence(X::RT2Basis, geo, fns) = LagrangeBasis{0,-1,1}(geo, fns, deepcopy(positions(X)))
-ntrace(X::RT2Basis, geo, fns) = LagrangeBasis{0,-1,1}(geo, fns, deepcopy(positions(X)))
+#= divergence(X::RT2Basis, geo, fns) = LagrangeBasis{0,-1,1}(geo, fns, deepcopy(positions(X)))
+ntrace(X::RT2Basis, geo, fns) = LagrangeBasis{0,-1,1}(geo, fns, deepcopy(positions(X))) =#
 
 
-function LinearAlgebra.cross(::NormalVector, s::RT2Basis)
+#= function LinearAlgebra.cross(::NormalVector, s::RT2Basis)
     @assert CompScienceMeshes.isoriented(s.geo)
     fns = similar(s.fns)
     for (i,fn) in pairs(s.fns)
         fns[i] = [Shape(sh.cellid, sh.refid, -sh.coeff) for sh in fn]
     end
-    NDBasis(s.geo, fns, s.pos)
-end
+    ND2Basis(s.geo, fns, s.pos)
+end =#
