@@ -31,7 +31,7 @@ end #of the module
 
 export TDAcustic3D
 
-defaultquadstrat(::AcusticSingleLayerTDIO, tfs, bfs) = #=nothing=# AllAnalyticalQStrat(1)
+defaultquadstrat(::AcusticSingleLayerTDIO, tfs, bfs) = nothing # AllAnalyticalQStrat(1)
 #nothing goes in hybrid qr, allanalytical goes in zuccottirule
 
 
@@ -233,10 +233,26 @@ function momintegrals!(z, op::AcusticSingleLayerTDIO, g::LagrangeRefSpace{T,0,3}
 
         if hits==3 
             #print("\np1=",τ[1],"\np2=",τ[2],"\np3=",τ[3],"\nt1=",t1,"\nt2=",t2)
-        
-            z[1,1,1]+=(TimeDomainBEMInt.intcoinctriangles(τ[1],τ[2],τ[3],t1,t2))/(4*π)
+            entry=(TimeDomainBEMInt.intcoinctriangles(τ[1],τ[2],τ[3],t1,t2))/(4*π)
+            if norm(entry)>10.0 || entry<-0.0001
+                println("quadrature ",τ[1]," ",τ[2]," ",τ[3]," ", t1," ",t2," ",entry)
+                XW = qr.outer_quad_points
+                for p in 1 : length(XW)
+                    x = XW[p].point
+                    w = XW[p].weight
+                    innerintegrals!(z, op, x, g, f, t, τ, σ, ι, qr, w)
+                end 
+            else
+                z[1,1,1]+=max(entry,0.0)
+            end
         elseif hits==2
-            #pay attention with double layer and index permutation or in whatever case has nx 
+           #= XW = qr.outer_quad_points
+            for p in 1 : length(XW)
+                x = XW[p].point
+                w = XW[p].weight
+                innerintegrals!(z, op, x, g, f, t, τ, σ, ι, qr, w)
+            end=#
+             #pay attention with double layer and index permutation or whatever case has n cross product
             if mod1(a1index +1,3)==a2index
                 a3index=mod1(a1index-1,3)
             else
@@ -250,22 +266,55 @@ function momintegrals!(z, op::AcusticSingleLayerTDIO, g::LagrangeRefSpace{T,0,3}
             end
             #print("\np1=",τ[a1index],"\np2=",τ[a2index],"\np3=",τ[a3index],"\nv1=",σ[b1index],"\nv2=",σ[b2index],"\nv3=",σ[b3index],"\nt1=",t1,"\nt2=",t2)
                 
-
-            z[1,1,1]+=(TimeDomainBEMInt.inttriangletriangleadjacent(τ[a1index],τ[a2index],τ[a3index],σ[b1index],σ[b2index],σ[b3index],t1,t2,qpc))/(4*π)
+                entry=(TimeDomainBEMInt.inttriangletriangleadjacent(τ[a1index],τ[a2index],τ[a3index],σ[b1index],σ[b2index],σ[b3index],t1,t2,qpc))/(4*π)
+                if norm(entry)>10.0 || entry<-0.0001
+                    println("quadrature ",τ[a1index]," ",τ[a2index]," ",τ[a3index]," ",σ[b1index]," ",σ[b2index]," ",σ[b3index], t1," ",t2," ",entry)
+                    XW = qr.outer_quad_points
+                    for p in 1 : length(XW)
+                        x = XW[p].point
+                        w = XW[p].weight
+                        innerintegrals!(z, op, x, g, f, t, τ, σ, ι, qr, w)
+                    end 
+                else
+                    z[1,1,1]+=max(0.0,entry)
+                end
         elseif hits==1
-                a2index,a3index=mod1(a1index+1,3),mod1(a1index+2,3)
-                b2index,b3index=mod1(b1index+1,3),mod1(b1index+2,3)
-                #print("\np1=",τ[a1index],"\np2=",τ[a2index],"\np3=",τ[a3index],"\nv1=",σ[b1index],"\nv2=",σ[b2index],"\nv3=",σ[b3index],"\nt1=",t1,"\nt2=",t2)
-                z[1,1,1]+=(TimeDomainBEMInt.intcommonvertex(τ[a1index],τ[a2index],τ[a3index],σ[b2index],σ[b3index],t1,t2,qpc))/(4*π)
-        else
-            #print("\np1=",τ[1],"\np2=",τ[2],"\np3=",τ[3],"\nv1=",σ[1],"\nv2=",σ[2],"\nv3=",σ[3],"\nt1=",t1,"\nt2=",t2)
-            XW = qr.outer_quad_points
+            #=XW = qr.outer_quad_points
             for p in 1 : length(XW)
                 x = XW[p].point
                 w = XW[p].weight
                 innerintegrals!(z, op, x, g, f, t, τ, σ, ι, qr, w)
+            end=#
+               a2index,a3index=mod1(a1index+1,3),mod1(a1index+2,3)
+                b2index,b3index=mod1(b1index+1,3),mod1(b1index+2,3)
+                #print("\np1=",τ[a1index],"\np2=",τ[a2index],"\np3=",τ[a3index],"\nv1=",σ[b1index],"\nv2=",σ[b2index],"\nv3=",σ[b3index],"\nt1=",t1,"\nt2=",t2)
+                entry=(TimeDomainBEMInt.intcommonvertex(τ[a1index],τ[a2index],τ[a3index],σ[b2index],σ[b3index],t1,t2,qpc))/(4*π)
+                if norm(entry)>10.0 || entry<-0.0001
+                    println("quadrature ",τ[a1index]," ",τ[a2index]," ",τ[a3index]," ",σ[b2index]," ",σ[b3index], t1," ",t2," ",entry)
+                    
+                    XW = qr.outer_quad_points
+                    for p in 1 : length(XW)
+                        x = XW[p].point
+                        w = XW[p].weight
+                        innerintegrals!(z, op, x, g, f, t, τ, σ, ι, qr, w)
+                    end 
+                else
+                    z[1,1,1]+=max(0.0,entry)
+                end
+        else
+            entry=0.1#(inttriangletriangle(τ[1],τ[2],τ[3],σ[1],σ[2],σ[3],t1,t2,qpc))/(4*π)
+            #print("\np1=",τ[1],"\np2=",τ[2],"\np3=",τ[3],"\nv1=",σ[1],"\nv2=",σ[2],"\nv3=",σ[3],"\nt1=",t1,"\nt2=",t2)
+            if norm(entry)>0.0 || entry<-0.0001
+                XW = qr.outer_quad_points
+                for p in 1 : length(XW)
+                    x = XW[p].point
+                    w = XW[p].weight
+                    innerintegrals!(z, op, x, g, f, t, τ, σ, ι, qr, w)
+                end
+                
+            else
+                z[1,1,1]+=max(0.0,entry)
             end
-        
         end
       #for the moment sos=1 but I will correct this
 end

@@ -2,8 +2,8 @@ using CompScienceMeshes
 using BEAST
 using LinearAlgebra
 
-G = meshsphere(1.0, 0.30)
-#G = CompScienceMeshes.meshmobius(h=0.1)
+#G = meshsphere(1.0, 0.30)
+G = CompScienceMeshes.meshmobius(h=0.2)
 
 c = 1.0
 S = BEAST.HH3DSingleLayerTDBIO(c)
@@ -37,8 +37,8 @@ P = timebasiscxd0(Δt, Nt)
 # assemble the right hand side
 
 bd  = assemble(n⋅h,     X ⊗ P)
-Z1d = assemble(Id ⊗ Id, X ⊗ P, X ⊗ P, Val{:bandedstorage})
-Z0d = assemble(D,       X ⊗ P, X ⊗ P, Val{:bandedstorage})
+Z1d = assemble(Id ⊗ Id, X ⊗ P, X ⊗ P)
+Z0d = assemble(D,       X ⊗ P, X ⊗ P)
 Zd = Z0d + (-0.5)*Z1d
 u = marchonintime(inv(Zd[:,:,1]), Zd, bd, Nt)
 
@@ -47,7 +47,7 @@ Zs = assemble(S, X ⊗ δ, X ⊗ P)
 v = marchonintime(inv(Zs[:,:,1]), Zs, -bs, Nt)
 
 
-tdacusticsl = @discretise S[j′,j] == -1.0e[j′]   j∈ (X ⊗ P)  j′∈ (X ⊗ δ)
+tdacusticsl = @discretise D[j′,j] == 1.0(n⋅h)[j′]   j∈ (X ⊗ P)  j′∈ (X ⊗ δ)
 xacusticsl = solve(tdacusticsl)
 
 
