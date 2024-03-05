@@ -21,6 +21,8 @@ include("test_raviartthomas.jl")
 include("test_rt.jl")
 include("test_rtx.jl")
 include("test_subd_basis.jl")
+include("test_rt2.jl")
+include("test_nd2.jl")
 
 include("test_dvg.jl")
 include("test_bcspace.jl")

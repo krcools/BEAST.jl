@@ -32,6 +32,7 @@ export duallagrangecxd0
 export lagdimension
 export restrict
 export raviartthomas, raowiltonglisson, positions
+export raviartthomas2, nedelec2, nedelec
 export brezzidouglasmarini
 export brezzidouglasmarini3d
 export nedelecd3d
@@ -147,6 +148,7 @@ include("bases/local/laglocal.jl")
 include("bases/local/rtlocal.jl")
 include("bases/local/rt2local.jl")
 include("bases/local/ndlocal.jl")
+include("bases/local/nd2local.jl")
 include("bases/local/bdmlocal.jl")
 include("bases/local/ncrossbdmlocal.jl")
 include("bases/local/ndlcclocal.jl")
@@ -159,13 +161,13 @@ include("bases/rt2space.jl")
 include("bases/rtxspace.jl")
 include("bases/bcspace.jl")
 include("bases/ndspace.jl")
+include("bases/nd2space.jl")
 include("bases/bdmdiv.jl")
 include("bases/ncrossbdmspace.jl")
 include("bases/ndlccspace.jl")
 include("bases/ndlcdspace.jl")
 include("bases/dual3d.jl")
 include("bases/bdm3dspace.jl")
-include("bases/perm_matrices.jl")
 
 
 include("bases/subdbasis.jl")
