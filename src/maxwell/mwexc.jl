@@ -27,7 +27,7 @@ function planewavemw3d(;
     )
 
     gamma, wavenumber = gamma_wavenumber_handler(gamma, wavenumber)
-    gamma === nothing && (gamma = zero(eltype(direction)))
+    isstatic(gamma) && (gamma = zero(eltype(direction)))
 
     return PlaneWaveMW(direction, polarization, gamma, amplitude)
 
@@ -98,7 +98,7 @@ function dipolemw3d(;
     )
 
     gamma, wavenumber = gamma_wavenumber_handler(gamma, wavenumber)
-    gamma === nothing && (gamma = zero(eltype(orientation)))
+    isstatic(gamma) && (gamma = zero(eltype(orientation)))
 
     return DipoleMW(location, orientation, gamma)
 

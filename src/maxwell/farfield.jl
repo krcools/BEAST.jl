@@ -28,8 +28,8 @@ function MWFarField3D(;
   wavenumber=nothing,
   amplitude=nothing
 )
-    gamma, _ = gamma_wavenumber_handler(gamma, wavenumber)
-    @assert gamma !== nothing
+    gamma, _ = gamma_wavenumber_handler(gamma, wavenumber) 
+    @assert !isstatic(gamma)
 
     amplitude === nothing && (amplitude = 1.0)
 
@@ -44,8 +44,7 @@ function MWDoubleLayerFarField3D(;
   amplitude=nothing
 )
     gamma, _ = gamma_wavenumber_handler(gamma, wavenumber)
-
-    @assert gamma !== nothing
+    @assert !isstatic(gamma)
 
     amplitude === nothing && (amplitude = 1.0)
 
@@ -81,8 +80,7 @@ function MWDoubleLayerRotatedFarField3D(;
     amplitude=nothing
 )
     gamma, _ = gamma_wavenumber_handler(gamma, wavenumber)
-
-    @assert gamma !== nothing
+    @assert !isstatic(gamma)
 
     amplitude === nothing && (amplitude = 1.0)
 

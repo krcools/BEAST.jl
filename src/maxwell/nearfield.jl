@@ -22,7 +22,8 @@ function MWSingleLayerField3D(;
     beta=nothing
 )
     gamma, _ = gamma_wavenumber_handler(gamma, wavenumber)
-    @assert gamma !== nothing
+
+    @assert !isstatic(gamma)
 
     alpha === nothing && (alpha = -gamma)
     beta  === nothing && (beta  = -1/gamma)
@@ -42,7 +43,7 @@ function MWDoubleLayerField3D(;
     wavenumber=nothing
 )
     gamma, _ = gamma_wavenumber_handler(gamma, wavenumber)
-    @assert gamma !== nothing
+    @assert !isstatic(gamma)
 
     MWDoubleLayerField3D(gamma)
 end

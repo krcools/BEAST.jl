@@ -73,6 +73,8 @@ include("test_td_tensoroperator.jl")
 
 include("test_variational.jl")
 
+include("test_handlers.jl")
+
 
 try
     Pkg.installed("BogaertInts10")
