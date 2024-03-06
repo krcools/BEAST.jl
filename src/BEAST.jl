@@ -32,7 +32,6 @@ export duallagrangecxd0
 export lagdimension
 export restrict
 export raviartthomas, raowiltonglisson, positions
-export raviartthomas2, nedelec2, nedelec
 export brezzidouglasmarini
 export brezzidouglasmarini3d
 export nedelecd3d
