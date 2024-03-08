@@ -337,7 +337,23 @@ function getindex(op::Any, V::Vector{HilbertVector}, U::Vector{HilbertVector})
     end
     return BilForm(first(V).space, first(U).space, terms)
 end
+function getindex(op::Any, V::Vector{HilbertVector}, u::Hilbertvector)
+    terms = Vector{BilTerm}()
+    for v in V
+        term = BilTerm(v.idx, u.idx, v.opstack, u.opstack, 1, op)
+        push!(terms, term)
+    end
+    return BilForm(first(V).space, u.space, terms)
+end
 
+function getindex(op::Any, v::HilbertVector, U::Vector{HilbertVector})
+    terms = Vector{BilTerm}()
+    for u in U
+        term = BilTerm(v.idx, u.idx, v.opstack, u.opstack, 1, op)
+        push!(terms, term)
+    end
+    return BilForm(v.space, first(U).space, terms)
+end
 function getindex(A::Matrix, v::HilbertVector, u::HilbertVector)
     terms = [ BilTerm(v.idx, u.idx, v.opstack, u.opstack, 1, A) ]
     BilForm(v.space, u.space, terms)
