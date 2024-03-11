@@ -25,41 +25,41 @@ const nt = TestNormal()
 const nb = TrialNormal()
 export nt
 export nb
-struct Potential{T,M} <: AbstractOperator
+struct Potential{T} <: AbstractOperator
     operator::T
-    surface::M
+   # surface::M
 end
-Potential(a) = Potential(a,nothing)
-surface(p::Potential) = p.surface
+#Potential(a) = Potential(a,nothing)
+#surface(p::Potential) = p.surface
 
 
-function Potential(linop::LinearCombinationOfOperators,surface::TraceMesh)
+function Potential(linop::LinearCombinationOfOperators)#,surface::TraceMesh)
     out = ZeroOperator()
     for (op,coeff) in zip(linop.ops,linop.coeffs)
-        out += coeff*Potential(op,surface)
+        out += coeff*Potential(op)#,surface)
     end
     return out
 end
 
-struct TraceOperator{T,M} <: AbstractOperator
+struct TraceOperator{T} <: AbstractOperator
     operator::T
-    surface::M
+    direction::Int
 end
-function TraceOperator(linop::LinearCombinationOfOperators,surf::TraceMesh)
+function TraceOperator(linop::LinearCombinationOfOperators,direction::Int)
     out = ZeroOperator()
     for (op,coeff) in zip(linop.ops,linop.coeffs)
-        out += coeff*TraceOperator(op,surf)
+        out += coeff*TraceOperator(op,direction)
     end
     return out
 end
-function TraceOperator(linop::LinearCombinationOfOperators)
-    out = ZeroOperator()
-    for (op,coeff) in zip(linop.ops,linop.coeffs)
-        out += coeff*TraceOperator(op)
-    end
-    return out
-end
-surface(p::TraceOperator) = p.surface
+# function TraceOperator(linop::LinearCombinationOfOperators)
+#     out = ZeroOperator()
+#     for (op,coeff) in zip(linop.ops,linop.coeffs)
+#         out += coeff*TraceOperator(op)
+#     end
+#     return out
+# end
+direction(p::TraceOperator) = p.direction
 
 struct TimesLocal{U,V} <: ComposedOperatorLocal
     lhs::U
@@ -204,19 +204,30 @@ replace_normal_by_trialnormal(op::NormalVector) = TrialNormal()
 
 
 
+# function build_potential(op::ComposedOperator,surface::CompScienceMeshes.AbstractMesh)
+#     newop = replace_normal_by_trialnormal(op)
+#     Potential(newop,TraceMesh(surface))
+# end
+# function build_potential(op::ComposedOperator,surface::TraceMesh)
+#     newop = replace_normal_by_trialnormal(op)
+#     Potential(newop,surface)
+# end
+# function build_potential(op::ComposedOperator)
+#     newop = replace_normal_by_trialnormal(op)
+#     Potential(newop,nothing)
+# end
 function build_potential(op::ComposedOperator,surface::CompScienceMeshes.AbstractMesh)
     newop = replace_normal_by_trialnormal(op)
-    Potential(newop,TraceMesh(surface))
+    Potential(newop)
 end
 function build_potential(op::ComposedOperator,surface::TraceMesh)
     newop = replace_normal_by_trialnormal(op)
-    Potential(newop,surface)
+    Potential(newop)
 end
 function build_potential(op::ComposedOperator)
     newop = replace_normal_by_trialnormal(op)
-    Potential(newop,nothing)
+    Potential(newop)
 end
-
 
 function γ(op::Operations)
     return get_constructor(op)(γ(op.lhs),γ(op.rhs))
@@ -230,65 +241,72 @@ end
 # end
 
 
-function γₜ(op::Potential,sign::Int)# sign + if according to normal on surface, - otherwise
-#    check_if_coincide(op.surface,surface) || return op.operator
-    newop = nt × (γ(op.operator) × nt)
-    return TraceOperator(Potential(newop,op.surface),sign)
-end
-function γₛ(op::Potential,sign::Int)# sign + if according to normal on surface, - otherwise
-#    check_if_coincide(op.surface,surface) || return op.operator
-    newop = nt × γ(op.operator)
-    return TraceOperator(Potential(newop,op.surface),sign)
-end
-function γₙ(op::Potential,sign::Int)# sign + if according to normal on surface, - otherwise
-#    check_if_coincide(op.surface,surface) || return op.operator
-    newop = nt ⋅ γ(op.operator)
-    return TraceOperator(Potential(newop,op.surface),sign)
-end
-function τ(op::Potential,sign::Int)# sign + if according to normal on surface, - otherwise
-#    check_if_coincide(op.surface,surface) || return op.operator
-    newop = γ(op.operator)
-    return TraceOperator(Potential(newop,op.surface),sign)
-end
-
-function γ(op::Potential,surface::CompScienceMeshes.AbstractMesh,sign::Int)# sign + if according to normal on surface, - otherwise
-#    check_if_coincide(op.surface,surface) || return op.operator
-    newop = nt × (γ(op.operator) × nt)
-    # direction = []
-    # for i in 1:numcells(surface)
-    #     c = chart(surface,i)
-    #     push!(direction,sign*normal(c)/3)
-    # end
-    charts = chart.(Ref(surface),1:numcells(surface))
-    direction = sign/3*normal.(charts)
-    return TraceOperator(Potential(newop,op.surface),TraceMesh(surface,direction))
-end
-
-# function γ(op::Potential,surface::TraceMesh,sign::Int)# sign + if according to normal on surface, - otherwise
+# function γₜ(op::Potential,sign::Int)# sign + if according to normal on surface, - otherwise
 # #    check_if_coincide(op.surface,surface) || return op.operator
 #     newop = nt × (γ(op.operator) × nt)
-#     direction = []
-#     for i in 1:numcells(surface)
-#         c = chart(surface,i)
-#         push!(direction,sign*normal(c)/3)
-#     end
-#     return TraceOperator(Potential(newop,op.surface),SVector{length(direction),typeof(direction[1])}(direction)+surface)
+#     return TraceOperator(Potential(newop,op.surface),sign)
+# end
+# function γₛ(op::Potential,sign::Int)# sign + if according to normal on surface, - otherwise
+# #    check_if_coincide(op.surface,surface) || return op.operator
+#     newop = nt × γ(op.operator)
+#     return TraceOperator(Potential(newop,op.surface),sign)
+# end
+# function γₙ(op::Potential,sign::Int)# sign + if according to normal on surface, - otherwise
+# #    check_if_coincide(op.surface,surface) || return op.operator
+#     newop = nt ⋅ γ(op.operator)
+#     return TraceOperator(Potential(newop,op.surface),sign)
+# end
+# function τ(op::Potential,sign::Int)# sign + if according to normal on surface, - otherwise
+# #    check_if_coincide(op.surface,surface) || return op.operator
+#     newop = γ(op.operator)
+#     return TraceOperator(Potential(newop,op.surface),sign)
+# end
+function γₜ(op::Potential,sign::Int)# sign + if according to normal on surface, - otherwise
+    #    check_if_coincide(op.surface,surface) || return op.operator
+        newop = nt × (γ(op.operator) × nt)
+        return TraceOperator(Potential(newop),sign)
+    end
+    function γₛ(op::Potential,sign::Int)# sign + if according to normal on surface, - otherwise
+    #    check_if_coincide(op.surface,surface) || return op.operator
+        newop = nt × γ(op.operator)
+        return TraceOperator(Potential(newop),sign)
+    end
+    function γₙ(op::Potential,sign::Int)# sign + if according to normal on surface, - otherwise
+    #    check_if_coincide(op.surface,surface) || return op.operator
+        newop = nt ⋅ γ(op.operator)
+        return TraceOperator(Potential(newop),sign)
+    end
+    function τ(op::Potential,sign::Int)# sign + if according to normal on surface, - otherwise
+    #    check_if_coincide(op.surface,surface) || return op.operator
+        newop = γ(op.operator)
+        return TraceOperator(Potential(newop),sign)
+    end
+# function γ(op::Potential,surface::CompScienceMeshes.AbstractMesh,sign::Int)# sign + if according to normal on surface, - otherwise
+# #    check_if_coincide(op.surface,surface) || return op.operator
+#     newop = nt × (γ(op.operator) × nt)
+#     # direction = []
+#     # for i in 1:numcells(surface)
+#     #     c = chart(surface,i)
+#     #     push!(direction,sign*normal(c)/3)
+#     # end
+#     charts = chart.(Ref(surface),1:numcells(surface))
+#     direction = sign/3*normal.(charts)
+#     return TraceOperator(Potential(newop,op.surface),TraceMesh(surface,direction))
 # end
 
+# # function γ(op::Potential,surface::TraceMesh,sign::Int)# sign + if according to normal on surface, - otherwise
+# # #    check_if_coincide(op.surface,surface) || return op.operator
+# #     newop = nt × (γ(op.operator) × nt)
+# #     direction = []
+# #     for i in 1:numcells(surface)
+# #         c = chart(surface,i)
+# #         push!(direction,sign*normal(c)/3)
+# #     end
+# #     return TraceOperator(Potential(newop,op.surface),SVector{length(direction),typeof(direction[1])}(direction)+surface)
+# # end
 
-function γₛ(op::Potential,surface::CompScienceMeshes.AbstractMesh,sign::Int)# sign + if according to normal on surface, - otherwise
-#    check_if_coincide(op.surface,surface) || return op.operator
-    newop = nt × γ(op.operator)
-    # direction = []
-    # for i in 1:numcells(surface)
-    #     c = chart(surface,i)
-    #     push!(direction,sign*normal(c)/3)
-    # end
-    charts = chart.(Ref(surface),1:numcells(surface))
-    direction = sign/3*normal.(charts)
-    return TraceOperator(Potential(newop,op.surface),TraceMesh(surface,direction))
-end
-# function γₛ(op::Potential,surface::TraceMesh,sign::Int)# sign + if according to normal on surface, - otherwise
+
+# function γₛ(op::Potential,surface::CompScienceMeshes.AbstractMesh,sign::Int)# sign + if according to normal on surface, - otherwise
 # #    check_if_coincide(op.surface,surface) || return op.operator
 #     newop = nt × γ(op.operator)
 #     # direction = []
@@ -298,53 +316,65 @@ end
 #     # end
 #     charts = chart.(Ref(surface),1:numcells(surface))
 #     direction = sign/3*normal.(charts)
-#     return TraceOperator(Potential(newop,op.surface),direction+surface)
+#     return TraceOperator(Potential(newop,op.surface),TraceMesh(surface,direction))
 # end
+# # function γₛ(op::Potential,surface::TraceMesh,sign::Int)# sign + if according to normal on surface, - otherwise
+# # #    check_if_coincide(op.surface,surface) || return op.operator
+# #     newop = nt × γ(op.operator)
+# #     # direction = []
+# #     # for i in 1:numcells(surface)
+# #     #     c = chart(surface,i)
+# #     #     push!(direction,sign*normal(c)/3)
+# #     # end
+# #     charts = chart.(Ref(surface),1:numcells(surface))
+# #     direction = sign/3*normal.(charts)
+# #     return TraceOperator(Potential(newop,op.surface),direction+surface)
+# # end
 
-function γₜ(op::Potential,surface::CompScienceMeshes.AbstractMesh,sign::Int)# sign + if according to normal on surface, - otherwise
-    #    check_if_coincide(op.surface,surface) || return op.operator
-        newop = (nt × γ(op.operator)) × nt
-        charts = chart.(Ref(surface),1:numcells(surface))
-        direction = sign/3*normal.(charts)
-        return TraceOperator(Potential(newop,op.surface),TraceMesh(surface,direction))
-    end
-    # function γₜ(op::Potential,surface::TraceMesh,sign::Int)# sign + if according to normal on surface, - otherwise
-    # #    check_if_coincide(op.surface,surface) || return op.operator
-    #     newop =  (nt × γ(op.operator)) × nt
-    #     charts = chart.(Ref(surface),1:numcells(surface))
-    #     direction = sign/3*normal.(charts)
-    #     return TraceOperator(Potential(newop,op.surface),direction+surface)
-    # end
+# function γₜ(op::Potential,surface::CompScienceMeshes.AbstractMesh,sign::Int)# sign + if according to normal on surface, - otherwise
+#     #    check_if_coincide(op.surface,surface) || return op.operator
+#         newop = (nt × γ(op.operator)) × nt
+#         charts = chart.(Ref(surface),1:numcells(surface))
+#         direction = sign/3*normal.(charts)
+#         return TraceOperator(Potential(newop,op.surface),TraceMesh(surface,direction))
+#     end
+#     # function γₜ(op::Potential,surface::TraceMesh,sign::Int)# sign + if according to normal on surface, - otherwise
+#     # #    check_if_coincide(op.surface,surface) || return op.operator
+#     #     newop =  (nt × γ(op.operator)) × nt
+#     #     charts = chart.(Ref(surface),1:numcells(surface))
+#     #     direction = sign/3*normal.(charts)
+#     #     return TraceOperator(Potential(newop,op.surface),direction+surface)
+#     # end
 
-function γₙ(op::Potential,surface::CompScienceMeshes.AbstractMesh,sign::Int)# sign + if according to normal on surface, - otherwise
-#    check_if_coincide(op.surface,surface) || return op.operator
-    newop = nt ⋅ γ(op.operator)
-    charts = chart.(Ref(surface),1:numcells(surface))
-    direction = sign/3*normal.(charts)
-    return TraceOperator(Potential(newop,op.surface),TraceMesh(surface,direction))
-end
-# function γₙ(op::Potential,surface::TraceMesh,sign::Int)# sign + if according to normal on surface, - otherwise
+# function γₙ(op::Potential,surface::CompScienceMeshes.AbstractMesh,sign::Int)# sign + if according to normal on surface, - otherwise
 # #    check_if_coincide(op.surface,surface) || return op.operator
 #     newop = nt ⋅ γ(op.operator)
 #     charts = chart.(Ref(surface),1:numcells(surface))
 #     direction = sign/3*normal.(charts)
-#     return TraceOperator(Potential(newop,op.surface),direction+surface)
+#     return TraceOperator(Potential(newop,op.surface),TraceMesh(surface,direction))
 # end
+# # function γₙ(op::Potential,surface::TraceMesh,sign::Int)# sign + if according to normal on surface, - otherwise
+# # #    check_if_coincide(op.surface,surface) || return op.operator
+# #     newop = nt ⋅ γ(op.operator)
+# #     charts = chart.(Ref(surface),1:numcells(surface))
+# #     direction = sign/3*normal.(charts)
+# #     return TraceOperator(Potential(newop,op.surface),direction+surface)
+# # end
 
-function τ(op::Potential,surface::CompScienceMeshes.AbstractMesh,sign::Int)# sign + if according to normal on surface, - otherwise
-#    check_if_coincide(op.surface,surface) || return op.operator
-    newop = γ(op.operator)
-    charts = chart.(Ref(surface),1:numcells(surface))
-    direction = sign/3*normal.(charts)
-    return TraceOperator(Potential(newop,op.surface),TraceMesh(surface,direction))
-end
-# function τ(op::Potential,surface::TraceMesh,sign::Int)# sign + if according to normal on surface, - otherwise
+# function τ(op::Potential,surface::CompScienceMeshes.AbstractMesh,sign::Int)# sign + if according to normal on surface, - otherwise
 # #    check_if_coincide(op.surface,surface) || return op.operator
 #     newop = γ(op.operator)
 #     charts = chart.(Ref(surface),1:numcells(surface))
 #     direction = sign/3*normal.(charts)
-#     return TraceOperator(Potential(newop,op.surface),direction+surface)
+#     return TraceOperator(Potential(newop,op.surface),TraceMesh(surface,direction))
 # end
+# # function τ(op::Potential,surface::TraceMesh,sign::Int)# sign + if according to normal on surface, - otherwise
+# # #    check_if_coincide(op.surface,surface) || return op.operator
+# #     newop = γ(op.operator)
+# #     charts = chart.(Ref(surface),1:numcells(surface))
+# #     direction = sign/3*normal.(charts)
+# #     return TraceOperator(Potential(newop,op.surface),direction+surface)
+# # end
 
 export γₛ, γₜ, γₙ, γ, τ
 #### Define kernel functions below
@@ -603,11 +633,11 @@ function assemble!(op::Potential, test_functions::Space, trial_functions::Space,
     store, threading = Threading{:multi};
     kwargs...)
     # checks if surface given in basis is the same as surface given in potential
-    dsurf = surface(op)
-    surf = geometry(trial_functions)
-    @assert same_geometry(dsurf,surf)
-    nsurf = mesh(dsurf)
-    trial_functions = redefine_geometrie(trial_functions,TraceMesh(surf,direction(dsurf)))
+    # dsurf = surface(op)
+    # surf = geometry(trial_functions)
+    # @assert same_geometry(dsurf,surf)
+    # nsurf = mesh(dsurf)
+    trial_functions = redefine_geometrie(trial_functions,TraceMesh(surf))
 
     assemble!(op.operator, test_functions, trial_functions, store, threading;
     kwargs...)
@@ -622,16 +652,16 @@ end
 #     assemble!(op.operator, test_functions, trial_functions, store, threading;
 #     quadstrat = quadstrat)
 # end
-function assemble!(op::Potential{T,Nothing}, test_functions::Space, trial_functions::Space,
-    store, threading = Threading{:multi};
-    kwargs...) where {T}
+# function assemble!(op::Potential{T,Nothing}, test_functions::Space, trial_functions::Space,
+#     store, threading = Threading{:multi};
+#     kwargs...) where {T}
 
-    surf = geometry(trial_functions)
-    trial_functions = redefine_geometrie(trial_functions,TraceMesh(surf))
+#     surf = geometry(trial_functions)
+#     trial_functions = redefine_geometrie(trial_functions,TraceMesh(surf))
 
-    assemble!(op.operator, test_functions, trial_functions, store, threading;
-    kwargs...)
-end
+#     assemble!(op.operator, test_functions, trial_functions, store, threading;
+#     kwargs...)
+# end
 
 # function assemble!(op::TraceOperator, test_functions::Space, trial_functions::Space,
 #     store, threading = Threading{:multi}; 
@@ -650,37 +680,50 @@ end
 #     quadstrat = quadstrat)
 # end
 
+# function assemble!(op::TraceOperator, test_functions::Space, trial_functions::Space,
+#     store, threading = Threading{:multi}; 
+#     kwargs...)
+
+#     dsurf = surface(op)
+#     surf = geometry(test_functions)
+#     println(typeof(surf))
+#     println(typeof(mesh(dsurf)))
+#     @assert same_geometry(dsurf,surf)
+#     nsurf = mesh(dsurf)
+    
+#     test_functions = redefine_geometrie(test_functions,TraceMesh(surf,direction(dsurf)))
+
+#     assemble!(op.operator, test_functions, trial_functions, store, threading;
+#     kwargs...)
+# end
+# function assemble!(op::TraceOperator{T,Int}, test_functions::Space, trial_functions::Space,
+#     store, threading = Threading{:multi}; 
+#    kwargs...) where {T}
+
+#     surface = geometry(test_functions)
+
+#     sign = op.surface
+#     direction = [sign*normal(c)/3 for c in chart.(Ref(surface),1:numcells(surface))]
+
+#     if typeof(surface) <: TraceMesh
+#         surf = surface + direction
+#     else
+#         surf = TraceMesh(surface,direction)
+#     end
+    
+#     test_functions = redefine_geometrie(test_functions,surf)
+    
+#     assemble!(op.operator, test_functions, trial_functions, store, threading;
+#    kwargs...)
+# end
 function assemble!(op::TraceOperator, test_functions::Space, trial_functions::Space,
     store, threading = Threading{:multi}; 
-    kwargs...)
-
-    dsurf = surface(op)
-    surf = geometry(test_functions)
-    println(typeof(surf))
-    println(typeof(mesh(dsurf)))
-    @assert same_geometry(dsurf,surf)
-    nsurf = mesh(dsurf)
-    
-    test_functions = redefine_geometrie(test_functions,TraceMesh(surf,direction(dsurf)))
-
-    assemble!(op.operator, test_functions, trial_functions, store, threading;
-    kwargs...)
-end
-function assemble!(op::TraceOperator{T,Int}, test_functions::Space, trial_functions::Space,
-    store, threading = Threading{:multi}; 
-   kwargs...) where {T}
+   kwargs...) 
 
     surface = geometry(test_functions)
-
-    sign = op.surface
+    sign = direction(op)
     direction = [sign*normal(c)/3 for c in chart.(Ref(surface),1:numcells(surface))]
-
-    if typeof(surface) <: TraceMesh
-        surf = surface + direction
-    else
-        surf = TraceMesh(surface,direction)
-    end
-    
+    surf = TraceMesh(surface,direction)
     test_functions = redefine_geometrie(test_functions,surf)
     
     assemble!(op.operator, test_functions, trial_functions, store, threading;
