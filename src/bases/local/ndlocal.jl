@@ -16,7 +16,7 @@ function (ϕ::NDRefSpace)(nbd)
 
     tu = tangents(nbd,1)
     tv = tangents(nbd,2)
-    n = normalize(tu×tv)
+    n = normal(nbd)
     d = 2/j
 
     return SVector((
@@ -66,4 +66,26 @@ function restrict(ϕ::NDRefSpace{T}, dom1, dom2) where T
     end
 
     return Q
+end
+
+const _vert_perms_nd = [
+    (1,2,3),
+    (2,3,1),
+    (3,1,2),
+    (2,1,3),
+    (1,3,2),
+    (3,2,1),
+]
+const _dof_perms_nd = [
+    (1,2,3),
+    (3,1,2),
+    (2,3,1),
+    (2,1,3),
+    (1,3,2),
+    (3,2,1),
+]
+function dof_permutation(::Union{NDRefSpace}, vert_permutation)
+    i = something(findfirst(==(tuple(vert_permutation...)), _vert_perms_nd),0)
+    @assert i != 0
+    return _dof_perms_nd[i]
 end

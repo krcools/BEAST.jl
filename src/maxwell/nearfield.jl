@@ -21,23 +21,7 @@ function MWSingleLayerField3D(;
     alpha=nothing,
     beta=nothing
 )
-
-    if (gamma === nothing) && (wavenumber === nothing)
-        error("Supply one of (not both) gamma or wavenumber")
-    end
-
-    if (gamma !== nothing) && (wavenumber !== nothing)
-        error("Supply one of (not both) gamma or wavenumber")
-    end
-
-    if gamma === nothing
-        if iszero(real(wavenumber))
-            gamma = -imag(wavenumber)
-        else
-            gamma = im*wavenumber
-        end
-    end
-
+    gamma, _ = gamma_wavenumber_handler(gamma, wavenumber)
     @assert gamma !== nothing
 
     alpha === nothing && (alpha = -gamma)
@@ -52,28 +36,12 @@ MWSingleLayerField3D(op::MWSingleLayer3D{T,U}) where {T,U} = MWSingleLayerField3
     MWDoubleLayerField3D(; gamma, wavenumber)
 
 Create the double layer near field operator, for use with `potential`.
-"""    
+"""
 function MWDoubleLayerField3D(;
     gamma=nothing,
     wavenumber=nothing
-) 
-
-    if (gamma === nothing) && (wavenumber === nothing)
-        error("Supply one of (not both) gamma or wavenumber")
-    end
-
-    if (gamma !== nothing) && (wavenumber !== nothing)
-        error("Supply one of (not both) gamma or wavenumber")
-    end
-
-    if gamma === nothing
-        if iszero(real(wavenumber))
-            gamma = -imag(wavenumber)
-        else
-            gamma = im*wavenumber
-        end
-    end
-
+)
+    gamma, _ = gamma_wavenumber_handler(gamma, wavenumber)
     @assert gamma !== nothing
 
     MWDoubleLayerField3D(gamma)

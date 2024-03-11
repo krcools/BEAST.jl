@@ -67,7 +67,8 @@ elements(sp::Space) = elements(geometry(sp))
 Computes the matrix of operator biop wrt the finite element spaces tfs and bfs
 """
 function assemblechunk!(biop::IntegralOperator, tfs::Space, bfs::Space, store;
-        quadstrat=defaultquadstrat(biop, tfs, bfs))
+        quadstratfunction = defaultquadstrat,
+        quadstrat=quadstratfunction(biop, tfs, bfs))
 
     # test_elements, tad, tcells = assemblydata(tfs)
     # bsis_elements, bad, bcells = assemblydata(bfs)
@@ -138,43 +139,43 @@ function assemblechunk_body!(biop,
     end end
     myid == 1 && println("")
 end
-function assemblechunk_body!(biop,
-    test_shapes, test_elements::Vector{CompScienceMeshes.Simplex{3,2,1,3,U}}, test_assembly_data,
-    trial_shapes, trial_elements::Vector{CompScienceMeshes.Simplex{3,2,1,3,V}}, trial_assembly_data,
-    qd, zlocal, store; quadstrat) where {U,V}
+# function assemblechunk_body!(biop,
+#     test_shapes, test_elements::Vector{CompScienceMeshes.Simplex{3,2,1,3,U}}, test_assembly_data,
+#     trial_shapes, trial_elements::Vector{CompScienceMeshes.Simplex{3,2,1,3,V}}, trial_assembly_data,
+#     qd, zlocal, store; quadstrat) where {U,V}
 
-    @info "triangle assemblechunk_body used"
-    myid = Threads.threadid()
-    myid == 1 && print(string(typeof(biop))*" dots out of 10: ")
-    todo, done, pctg = length(test_elements), 0, 0
-    for (p,tcell) in enumerate(test_elements)
-        for (q,bcell) in enumerate(trial_elements)
+#     @info "triangle assemblechunk_body used"
+#     myid = Threads.threadid()
+#     myid == 1 && print(string(typeof(biop))*" dots out of 10: ")
+#     todo, done, pctg = length(test_elements), 0, 0
+#     for (p,tcell) in enumerate(test_elements)
+#         for (q,bcell) in enumerate(trial_elements)
 
-        fill!(zlocal, 0)
-        if overlap(tcell,bcell)
-            momintegrals_overlap!(biop, test_shapes, trial_shapes, tcell, bcell, zlocal, quadstrat)
-        else
-            qrule = quadrule(biop, test_shapes, trial_shapes, p, tcell, q, bcell, qd, quadstrat)
-            momintegrals!(biop, test_shapes, trial_shapes, tcell, bcell, zlocal, qrule)
-        end
-        I = length(test_assembly_data[p])
-        J = length(trial_assembly_data[q])
-        for j in 1 : J, i in 1 : I
-            zij = zlocal[i,j]
-            for (n,b) in trial_assembly_data[q][j]
-                zb = zij*b
-                for (m,a) in test_assembly_data[p][i]
-                    store(a*zb, m, n)
-        end end end end
+#         fill!(zlocal, 0)
+#         if overlap(tcell,bcell)
+#             momintegrals_overlap!(biop, test_shapes, trial_shapes, tcell, bcell, zlocal, quadstrat)
+#         else
+#             qrule = quadrule(biop, test_shapes, trial_shapes, p, tcell, q, bcell, qd, quadstrat)
+#             momintegrals!(biop, test_shapes, trial_shapes, tcell, bcell, zlocal, qrule)
+#         end
+#         I = length(test_assembly_data[p])
+#         J = length(trial_assembly_data[q])
+#         for j in 1 : J, i in 1 : I
+#             zij = zlocal[i,j]
+#             for (n,b) in trial_assembly_data[q][j]
+#                 zb = zij*b
+#                 for (m,a) in test_assembly_data[p][i]
+#                     store(a*zb, m, n)
+#         end end end end
 
-        done += 1
-        new_pctg = round(Int, done / todo * 100)
-        if new_pctg > pctg + 9
-            myid == 1 && print(".")
-            pctg = new_pctg
-    end end
-    myid == 1 && println("")
-end
+#         done += 1
+#         new_pctg = round(Int, done / todo * 100)
+#         if new_pctg > pctg + 9
+#             myid == 1 && print(".")
+#             pctg = new_pctg
+#     end end
+#     myid == 1 && println("")
+# end
 
 function assemblechunk_body_test_refines_trial!(biop,
     test_functions, test_charts, test_assembly_data, test_cells,
@@ -295,16 +296,17 @@ end
 
 
 function assembleblock(operator::AbstractOperator, test_functions, trial_functions;
-        quadstrat=defaultquadstrat(operator, test_functions, trial_functions))
+        kwargs...)
 
     Z, store = allocatestorage(operator, test_functions, trial_functions)
-    assembleblock!(operator, test_functions, trial_functions, store; quadstrat)
+    assembleblock!(operator, test_functions, trial_functions, store; kwargs...)
 
     sdata(Z)
 end
 
 function assembleblock!(biop::IntegralOperator, tfs::Space, bfs::Space, store;
-        quadstrat=defaultquadstrat(biop, tfs, bfs))
+        quadstratfunction = defualtquadstrat,
+        quadstrat=quadstratfunction(biop, tfs, bfs))
 
     test_elements, tad, trial_elements, bad, quadrature_data, zlocals =
         assembleblock_primer(biop, tfs, bfs; quadstrat)
@@ -320,7 +322,8 @@ end
 
 
 function assembleblock_primer(biop, tfs, bfs;
-        quadstrat=defaultquadstrat(biop, tfs, bfs))
+        quadstratfunction=defaultquadstrat,
+        quadstrat=quadstratfunction(biop, tfs, bfs))
 
     test_elements, tad = assemblydata(tfs; onlyactives=false)
     bsis_elements, bad = assemblydata(bfs; onlyactives=false)
@@ -544,7 +547,8 @@ end end end end end end end
 
 
 function assemblerow!(biop::IntegralOperator, test_functions::Space, trial_functions::Space, store;
-        quadstrat=defaultquadstrat(biop, test_functions, trial_functions))
+        quadstratfunction = defaultquadstrat,
+        quadstrat=quadstratfunction(biop, test_functions, trial_functions))
 
     test_elements = elements(geometry(test_functions))
     trial_elements, trial_assembly_data = assemblydata(trial_functions)
@@ -594,7 +598,8 @@ end end end end end
 
 
 function assemblecol!(biop::IntegralOperator, test_functions::Space, trial_functions::Space, store;
-        quadstrat=defaultquadstrat(biop, test_functions, trial_functions))
+        quadstratfunction = defaultquadstrat,
+        quadstrat=quadstratfunction(biop, test_functions, trial_functions))
 
     test_elements, test_assembly_data = assemblydata(test_functions)
     trial_elements = elements(geometry(trial_functions))

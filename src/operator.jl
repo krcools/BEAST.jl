@@ -3,7 +3,7 @@ using .LinearSpace
 struct LongDelays{T} end
 struct Threading{T} end
 
-import Base: transpose, +, -, *
+import Base: transpose, +, -, *, zero
 
 abstract type AbstractOperator end
 
@@ -17,8 +17,8 @@ abstract type Operator <: AbstractOperator end
 
 struct ZeroOperator <: AbstractOperator end
 
-
-
+export ZeroOperator
+Base.zero(op::Type{<:AbstractOperator}) = ZeroOperator()
 mutable struct TransposedOperator <: AbstractOperator
     op::AbstractOperator
 end
@@ -97,13 +97,13 @@ defaultquadstrat(lc::LinearCombinationOfOperators, tfs, bfs) =
 
 function assemble(operator::AbstractOperator, test_functions, trial_functions;
     storage_policy = Val{:bandedstorage},
-    long_delays_policy = LongDelays{:compress},
+    # long_delays_policy = LongDelays{:compress},
     threading = Threading{:multi},
-    quadstrat=defaultquadstrat(operator, test_functions, trial_functions))
+    kwargs...)
 
     Z, store = allocatestorage(operator, test_functions, trial_functions,
-        storage_policy, long_delays_policy)
-    assemble!(operator, test_functions, trial_functions, store, threading; quadstrat)
+        storage_policy)
+    assemble!(operator, test_functions, trial_functions, store, threading; kwargs...)
     return Z()
 end
 
@@ -117,11 +117,11 @@ end
 function assemblerow(operator::AbstractOperator, test_functions, trial_functions,
     storage_policy = Val{:bandedstorage},
     long_delays_policy = LongDelays{:ignore};
-    quadstrat=defaultquadstrat(operator, test_functions, trial_functions))
+    kwargs...)
 
     Z, store = allocatestorage(operator, test_functions, trial_functions,
         storage_policy, long_delays_policy)
-    assemblerow!(operator, test_functions, trial_functions, store; quadstrat)
+    assemblerow!(operator, test_functions, trial_functions, store; kwargs...)
 
     Z()
 end
@@ -129,17 +129,17 @@ end
 function assemblecol(operator::AbstractOperator, test_functions, trial_functions,
     storage_policy = Val{:bandestorage},
     long_delays_policy = LongDelays{:ignore};
-    quadstrat=defaultquadstrat(operator, test_functions, trial_functions))
+    kwargs...)
 
     Z, store = allocatestorage(operator, test_functions, trial_functions,
         storage_policy, long_delays_policy)
-    assemblecol!(operator, test_functions, trial_functions, store; quadstrat)
+    assemblecol!(operator, test_functions, trial_functions, store; kwargs...)
 
     Z()
 end
 
 function allocatestorage(operator::AbstractOperator, test_functions, trial_functions,
-    storage_trait, longdelays_trait)
+    storage_trait=nothing, longdelays_trait=nothing)
 
     T = promote_type(
         scalartype(operator)       ,
@@ -187,7 +187,7 @@ end
 
 function assemble!(operator::Operator, test_functions::Space, trial_functions::Space,
     store, threading::Type{Threading{:multi}};
-    quadstrat=defaultquadstrat(operator, test_functions, trial_functions))
+    kwargs...)
 
     # @info "Multi-threaded assembly:"
 
@@ -203,18 +203,18 @@ function assemble!(operator::Operator, test_functions::Space, trial_functions::S
         test_functions_p = subset(test_functions, lo:hi)
         # store1 = (v,m,n) -> store(v,lo+m-1,n)
         store1 = _OffsetStore(store, lo-1, 0)
-        assemblechunk!(operator, test_functions_p, trial_functions, store1, quadstrat=quadstrat)
+        assemblechunk!(operator, test_functions_p, trial_functions, store1; kwargs...)
     end
 
 end
 
 function assemble!(operator::Operator, test_functions::Space, trial_functions::Space,
     store, threading::Type{Threading{:single}};
-    quadstrat=defaultquadstrat(operator, test_functions, trial_functions))
+    kwargs...)
 
     # @info "Single-threaded assembly"
 
-    assemblechunk!(operator, test_functions, trial_functions, store; quadstrat)
+    assemblechunk!(operator, test_functions, trial_functions, store; kwargs...)
 end
 # defaultquadstrat(op::BasisOperatorLeft,tfs,bfs) = defaultquadstrat(op.operator,op.left_function(tfs),bfs)
 # defaultquadstrat(op::BasisOperatorRight,tfs,bfs) = defaultquadstrat(op.operator,tfs,op.right_function(bfs))
@@ -222,14 +222,14 @@ end
 
 function assemble!(op::TransposedOperator, tfs::Space, bfs::Space,
     store, threading = Threading{:multi};
-    quadstrat=defaultquadstrat(op, tfs, bfs))
+    kwargs...)
 
     store1(v,m,n) = store(v,n,m)
-    assemble!(op.op, bfs, tfs, store1, threading; quadstrat)
+    assemble!(op.op, bfs, tfs, store1, threading; kwargs...)
 end
 function assemble!(op::ZeroOperator, tfs::Space, bfs::Space, 
     store, threading = Threading{:multi};
-    quadstrat=nothing)
+    kwargs...)
 end
 
 # function assemble!(op::BasisOperatorLeft, tfs::Space, bfs::Space, store,threading = Threading{:multi};
@@ -247,11 +247,11 @@ end
 
 function assemble!(op::LinearCombinationOfOperators, tfs::AbstractSpace, bfs::AbstractSpace,
     store, threading = Threading{:multi};
-    quadstrat=defaultquadstrat(op, tfs, bfs))
+    kwargs...)
 
-    for (a,A,qs) in zip(op.coeffs, op.ops, quadstrat)
+    for (a,A) in zip(op.coeffs, op.ops)
         store1(v,m,n) = store(a*v,m,n)
-        assemble!(A, tfs, bfs, store1, threading; quadstrat=qs)
+        assemble!(A, tfs, bfs, store1, threading; kwargs...)
     end
 end
 
@@ -259,38 +259,38 @@ end
 # Support for direct product spaces
 function assemble!(op::AbstractOperator, tfs::DirectProductSpace, bfs::Space,
     store, threading = Threading{:multi};
-    quadstrat=defaultquadstrat(op, tfs[1], bfs))
+    kwargs...)
 
     I = Int[0]
     for s in tfs.factors push!(I, last(I) + numfunctions(s)) end
     for (i,s) in enumerate(tfs.factors)
         store1(v,m,n) = store(v,m + I[i], n)
-        assemble!(op, s, bfs, store1, threading; quadstrat)
+        assemble!(op, s, bfs, store1, threading; kwargs...)
     end
 end
 
 
 function assemble!(op::AbstractOperator, tfs::Space, bfs::DirectProductSpace,
     store, threading=Threading{:multi};
-    quadstrat=defaultquadstrat(op, tfs, bfs[1]))
+    kwargs...)
 
     J = Int[0]
     for s in bfs.factors push!(J, last(J) + numfunctions(s)) end
     for (j,s) in enumerate(bfs.factors)
         store1(v,m,n) = store(v,m,n + J[j])
-        assemble!(op, tfs, s, store1, threading; quadstrat)
+        assemble!(op, tfs, s, store1, threading; kwargs...)
     end
 end
 
 function assemble!(op::AbstractOperator, tfs::DirectProductSpace, bfs::DirectProductSpace,
     store, threading=Threading{:multi};
-    quadstrat=defaultquadstrat(op, tfs[1], bfs[1]))
+    kwargs...)
     
     I = Int[0]
     for s in tfs.factors push!(I, last(I) + numfunctions(s)) end
     for (i,s) in enumerate(tfs.factors)
         store1(v,m,n) = store(v,m + I[i],n)
-        assemble!(op, s, bfs, store1, threading; quadstrat)
+        assemble!(op, s, bfs, store1, threading; kwargs...)
     end
 end
 
@@ -310,7 +310,7 @@ allocatestorage(op::BlockDiagonalOperator, X, Y, storage_trait, longdelays_trait
 
 function assemble!(op::BlockDiagonalOperator, U::DirectProductSpace, V::DirectProductSpace,
     store, threading=Threading{:multi};
-    quadstrat = defaultquadstrat(op, U, V))
+   kwargs...)
     
     @assert length(U.factors) == length(V.factors)
     I = Int[0]; for u in U.factors push!(I, last(I) + numfunctions(u)) end
@@ -318,7 +318,7 @@ function assemble!(op::BlockDiagonalOperator, U::DirectProductSpace, V::DirectPr
 
     for (k,(u,v)) in enumerate(zip(U.factors, V.factors))
         store1(v,m,n) = store(v, I[k] + m, J[k] + n)
-        assemble!(op.op, u, v, store1, threading; quadstrat)
+        assemble!(op.op, u, v, store1, threading; kwargs...)
     end
 end
 
@@ -335,7 +335,7 @@ defaultquadstrat(op::BlockFullOperators, U::DirectProductSpace, V::DirectProduct
 
 function assemble!(op::BlockFullOperators, U::DirectProductSpace, V::DirectProductSpace,
     store, threading;
-    quadstrat = defaultquadstrat(op, U, V))
+    kwargs...)
     
     # @assert length(U.factors) == length(V.factors)
     I = Int[0]; for u in U.factors push!(I, last(I) + numfunctions(u)) end
@@ -351,7 +351,7 @@ function assemble!(op::BlockFullOperators, U::DirectProductSpace, V::DirectProdu
     for (k,u) in enumerate(U.factors)
         for (l,v) in enumerate(V.factors)
             store1(x,m,n) = store(x, I[k]+m, J[l]+n)
-            assemble!(op.op, u, v, store1, threading; quadstrat)
+            assemble!(op.op, u, v, store1, threading; kwargs...)
         end
     end
 end
@@ -371,3 +371,24 @@ Base.zero(op::AbstractOperator) = ZeroOperator()
 -(a::ZeroOperator,b::AbstractOperator) = -b
 *(a::Number,b::ZeroOperator) = b
 
+function matrix_to_bilform(mat;dims=size(mat),kwargs...)
+    nrows,ncols = size(mat)
+    tin = BEAST.hilbertspace(:tin,dims[1])
+    bin = BEAST.hilbertspace(:bin,dims[2])
+    terms = [mat[i,j][tin[i],bin[j]] for i in 1:minimum([nrows,dims[1]]), j in 1:minimum([ncols,dims[2]]) if typeof(mat[i,j]) != ZeroOperator]
+    if length(terms) > 0
+        return sum(terms)
+    else
+        return  ZeroOperator()[tin[1],bin[1]]
+    end
+end
+
+function array_to_linform(array;dim=length(array))
+    nrows = length(array)
+    tin = BEAST.hilbertspace(:tin,dim)
+    println(sum([array[i][tin[i]] for i in 1:minimum([nrows,dim])]))
+    return sum([array[i][tin[i]] for i in 1:minimum([nrows,dim])])
+end
+
+export matrix_to_bilform
+export array_to_linform

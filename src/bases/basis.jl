@@ -2,6 +2,10 @@ abstract type RefSpace{T,D} end
 abstract type AbstractSpace end
 abstract type Space{T} <: AbstractSpace end
 
+struct EmptySpace{Nothing} <: Space{Nothing} end
+numfunctions(::EmptySpace) = 0
+
+
 Base.length(s::AbstractSpace) = numfunctions(s)
 Base.in(x, s::AbstractSpace) = (x => s)
 
@@ -43,8 +47,6 @@ function scalartype end
 scalartype(x1, xs...) = Base.promote_type(scalartype(x1), scalartype(xs...))
 scalartype(x1::Number) = typeof(x1)
 scalartype(T::Type, x) = Base.promote_type(T, scalartype(x))
-
-
 """
     geometry(basis)
 
@@ -59,6 +61,8 @@ numfunctions(space::Space) = length(space.fns)
 struct DirectProductSpace{T,S<:AbstractSpace} <: AbstractSpace
     factors::Vector{S}
 end
+
+
 
 function DirectProductSpace(factors::Vector{S}) where {S<:AbstractSpace}
     @assert !isempty(factors)
@@ -84,9 +88,10 @@ function Base.:+(x::AbstractSpace...)
     T = scalartype(x...)
     return DirectProductSpace{T, AbstractSpace}([x...])
 end
+#cross(a::Nothing,b::AbstractSpace) = b
 cross(a::Space{T}, b::Space{T}) where {T} = DirectProductSpace{T,Space{T}}(Space{T}[a,b])
 cross(a::DirectProductSpace{T}, b::Space{T}) where {T} = DirectProductSpace{T,Space{T}}([a.factors; b])
-cross(a::DirectProductSpace{T}, b::DirectProductSpace{T}) where {T} = DirectProductSpace{T,Space{T}}([a.factors; b.factors])
+#cross(a::DirectProductSpace{T}, b::DirectProductSpace{T}) where {T} = DirectProductSpace{T,Space{T}}([a.factors; b.factors])
 numfunctions(S::DirectProductSpace) = sum([numfunctions(s) for s in S.factors])
 Base.length(S::DirectProductSpace) = numfunctions(S)
 scalartype(s::DirectProductSpace{T}) where {T} = T

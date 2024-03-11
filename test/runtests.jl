@@ -32,6 +32,7 @@ include("test_ndjunction.jl")
 include("test_ndspace.jl")
 include("test_restrict.jl")
 include("test_ndlcd_restrict.jl")
+include("test_interpolate_and_restrict.jl")
 include("test_rt3d.jl")
 include("test_gradient.jl")
 include("test_mult.jl")
@@ -74,6 +75,7 @@ include("test_variational.jl")
 include("test_composed_operator.jl")
 
 include("test_momintegrals_overlap.jl")
+inlcude("test_multi-trace_VP.jl")
 
 try
     Pkg.installed("BogaertInts10")

@@ -187,7 +187,6 @@ function buffachristiansen(Γ, γ=mesh(coordtype(Γ),1,3); ibscaled=false, sort=
     return RTBasis(fine, bcs, pos)
 end
 
-
 """
     buildhalfbc(fine, supp::Array{SVector{3,Int},1}, v, p)
 """
@@ -534,7 +533,7 @@ function buildhalfbc2(patch, port, dirichlet, prt_fluxes)
 
 end
 
-
+# Use the algebraic construction also used in dual3d
 function buffachristiansen2(Faces::CompScienceMeshes.AbstractMesh{U,D1,T}) where {U,D1,T}
 
     faces = barycentric_refinement(Faces)
@@ -626,7 +625,7 @@ function buffachristiansen2(Faces::CompScienceMeshes.AbstractMesh{U,D1,T}) where
     RTBasis(faces, bfs, pos)
 end
 
-
+# Extend into both dual faces in a single call to buildhalfbc2 (aka extend_2_form)
 function buffachristiansen3(Faces::CompScienceMeshes.AbstractMesh{U,D1,T}) where {U,D1,T}
 
     faces = barycentric_refinement(Faces)
@@ -686,28 +685,28 @@ function buffachristiansen3(Faces::CompScienceMeshes.AbstractMesh{U,D1,T}) where
             end
         end
 
-    #     # Build the minus-patch
-    #     ptch_vert_idx = Edge[2]
-    #     ptch_face_idcs = [i for (i,face) in enumerate(cells(faces)) if ptch_vert_idx in face]
-    #     patch = Mesh(vertices(faces), cells(faces)[ptch_face_idcs])
-    #     port = Mesh(vertices(faces), filter(c->port_vertex_idx in c, cells(boundary(patch))))
-    #     @assert numcells(patch) >= 6
-    #     @assert numcells(port) == 2
-    #     RT_int, RT_prt, x_int, x_prt = buildhalfbc2(patch, port, nothing)
-    #
-    #     for (m,bf) in enumerate(RT_int.fns)
-    #         for sh in bf
-    #             cellid = ptch_face_idcs[sh.cellid]
-    #             BEAST.add!(bfs[E], cellid, sh.refid, -1.0 * sh.coeff * x_int[m])
-    #         end
-    #     end
-    #
-    #     for (m,bf) in enumerate(RT_prt.fns)
-    #         for sh in bf
-    #             cellid = ptch_face_idcs[sh.cellid]
-    #             BEAST.add!(bfs[E],cellid, sh.refid, -1.0 * sh.coeff * x_prt[m])
-    #         end
-    #     end
+        # # Build the minus-patch
+        # ptch_vert_idx = Edge[2]
+        # ptch_face_idcs = [i for (i,face) in enumerate(cells(faces)) if ptch_vert_idx in face]
+        # patch = Mesh(vertices(faces), cells(faces)[ptch_face_idcs])
+        # port = Mesh(vertices(faces), filter(c->port_vertex_idx in c, cells(boundary(patch))))
+        # @assert numcells(patch) >= 6
+        # @assert numcells(port) == 2
+        # RT_int, RT_prt, x_int, x_prt = buildhalfbc2(patch, port, nothing)
+    
+        # for (m,bf) in enumerate(RT_int.fns)
+        #     for sh in bf
+        #         cellid = ptch_face_idcs[sh.cellid]
+        #         BEAST.add!(bfs[E], cellid, sh.refid, -1.0 * sh.coeff * x_int[m])
+        #     end
+        # end
+    
+        # for (m,bf) in enumerate(RT_prt.fns)
+        #     for sh in bf
+        #         cellid = ptch_face_idcs[sh.cellid]
+        #         BEAST.add!(bfs[E],cellid, sh.refid, -1.0 * sh.coeff * x_prt[m])
+        #     end
+        # end
 
     end
 

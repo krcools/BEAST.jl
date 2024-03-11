@@ -1,10 +1,22 @@
 import Base.sign
+import Base.getindex
+
+
+"""
+TraceSimplex(simplex,direction::SVector)
+    simplex plus infinitesimal direction d, for each point p on the simplex, the trace is taken in the p-d direction
+"""
 struct TraceSimplex{T,U}
     simp::T
     direction::SVector{3,U}
 end
+TraceSimplex(t::TraceSimplex,d::SVector{3,U}) where {U} = TraceSimplex(simplex(t),direction(t)+d)
 simplex(t::TraceSimplex) = t.simp
 direction(t::TraceSimplex) = t.direction
+"""
+TraceMeshPointNM(neighborhood,direction::SVector)
+    neighborhood p plus infinitesimal direction d, the trace is taken in the p-d direction
+"""
 struct TraceMeshPointNM{T,U}
     neighborhood::T
     direction::SVector{3,U}
@@ -26,7 +38,9 @@ CompScienceMeshes.volume(a::TraceSimplex) = volume(simplex(a))
 CompScienceMeshes.dimension(a::TraceSimplex) = dimension(simplex(a))
 CompScienceMeshes.tangents(a::TraceSimplex,i::Int) = tangents(simplex(a),i)
 CompScienceMeshes.carttobary(a::TraceSimplex,b::SVector{T}) where {T} = carttobary(simplex(a),b)
-
+CompScienceMeshes.center(a::TraceSimplex) = TraceMeshPointNM(center(simplex(a)),direction(a))
+CompScienceMeshes.normal(a::TraceSimplex) = normal(simplex(a))
+CompScienceMeshes.barytocart(a::TraceSimplex,b) = barytocart(simplex(a),b)
 function CompScienceMeshes.quadpoints(chart::TraceSimplex, rule)
     PV = quadpoints(CompScienceMeshes.domain(chart), rule)
     map(PV) do pv
@@ -63,33 +77,39 @@ CompScienceMeshes.barycentric(a::TraceMeshPointNM) = barycentric(a.neighborhood)
 
 
 
-struct OrientedMesh{U,D1,T} <: CompScienceMeshes.AbstractMesh{U,D1,T}
-    mesh::CompScienceMeshes.AbstractMesh{U,D1,T}
-    normalmesh::CompScienceMeshes.AbstractMesh{U,D1,T}
-end
+# struct OrientedMesh{U,D1,T} <: CompScienceMeshes.AbstractMesh{U,D1,T}
+#     mesh::CompScienceMeshes.AbstractMesh{U,D1,T}
+#     normalmesh::CompScienceMeshes.AbstractMesh{U,D1,T}
+# end
 struct TraceMesh{U,D1,T} <: CompScienceMeshes.AbstractMesh{U,D1,T}
     mesh::CompScienceMeshes.AbstractMesh{U,D1,T}
-    direction::SVector
+    direction::Vector{SVector{3,T}}
 end
-TraceMesh(a::CompScienceMeshes.AbstractMesh{U,D,T}) where {U,D,T} = TraceMesh(a,zeros(SVector{numcells(a),SVector{3,T}}))
-+(a::TraceMesh{U,D,T},b::SVector{3,T}) where {U,D,T} = TraceMesh(mesh(a),direction(a).+Ref(b))
-+(a::TraceMesh,b::SVector) = TraceMesh(mesh(a),a.direction+b)
-+(a::SVector,b::TraceMesh) = b+a
 
-mesh(p::OrientedMesh) = p.mesh
+TraceMesh(a::TraceMesh,b::Vector{SVector{3,T}}) where {T} = a+b
+TraceMesh(a::CompScienceMeshes.AbstractMesh{U,D,T}) where {U,D,T} = TraceMesh(a,zeros(SVector{3,T},(numcells(a))))
++(a::TraceMesh{U,D,T},b::SVector{3,T}) where {U,D,T} = TraceMesh(mesh(a),direction(a).+Ref(b))
++(a::TraceMesh{U,D,T},b::Vector{SVector{3,T}}) where {U,D,T} = TraceMesh(mesh(a),a.direction+b)
++(a::Union{SVector,Vector},b::TraceMesh) = b+a
+CompScienceMeshes.indices(t::TraceMesh,i::Int) = CompScienceMeshes.indices(mesh(t),i)
+CompScienceMeshes.numvertices(t::TraceMesh) = CompScienceMeshes.numvertices(mesh(t))
+CompScienceMeshes.vertextype(t::TraceMesh) = CompScienceMeshes.vertextype(mesh(t))
+CompScienceMeshes.universedimension(t::TraceMesh) = CompScienceMeshes.universedimension(mesh(t))
+
+# mesh(p::OrientedMesh) = p.mesh
 mesh(p::TraceMesh) = p.mesh
-CompScienceMeshes.normal(p::OrientedMesh) = p.normalmesh
+# CompScienceMeshes.normal(p::OrientedMesh) = p.normalmesh
 direction(p::TraceMesh) = p.direction
 
-function CompScienceMeshes.chart(p::OrientedMesh,i)
-    c = chart(mesh(p),i)
-    n1 = normal(c)
-    n2 = normal(chart(normal(p),i))
-    d = dot(n1,n2)
-    @assert abs(d) ≈ 1.0
-    sign(d) == 1 && return c
-    return mirror(c)
-end
+# function CompScienceMeshes.chart(p::OrientedMesh,i)
+#     c = chart(mesh(p),i)
+#     n1 = normal(c)
+#     n2 = normal(chart(normal(p),i))
+#     d = dot(n1,n2)
+#     @assert abs(d) ≈ 1.0
+#     sign(d) == 1 && return c
+#     return mirror(c)
+# end
 function CompScienceMeshes.chart(p::TraceMesh,i)
     c = chart(mesh(p),i)
     d = direction(p)[i]
@@ -101,9 +121,24 @@ function same_geometry(m1,m2)
 end
 
 _ispermutation(a,b) = sort(a)==sort(b)
-CompScienceMeshes.cells(p::OrientedMesh) = cells(mesh(p))
+# CompScienceMeshes.cells(p::OrientedMesh) = cells(mesh(p))
 CompScienceMeshes.cells(p::TraceMesh) = cells(mesh(p))
 CompScienceMeshes.vertices(p::TraceMesh) = vertices(mesh(p))
 
 
+# function buffachristiansen(Γ::TraceMesh,γ=mesh(coordtype(Γ),1,3);kwargs...)
+#     rtspace = buffachristiansen(mesh(Γ),γ;kwargs...)
+#     geo = geometry(rtspace)
 
+#     direction = [Γ.direction[CompScienceMeshes.parent(geo,i)] for i in 1:length(geo)]
+#    redefine_geometrie(rtspace,TraceMesh(geo,direction))
+# end
+
+function CompScienceMeshes.barycentric_refinement(m::TraceMesh;kwargs...)
+    geo = mesh(m)
+    fine = barycentric_refinement(geo)
+    direction = [m.direction[CompScienceMeshes.parent(fine,i)] for i in 1:length(fine)]
+    return TraceMesh(fine,direction)
+end
+CompScienceMeshes.vertextocellmap(m::TraceMesh) = vertextocellmap(mesh(m))
+Base.getindex(m::TraceMesh,i::Vector{Int}) = mesh(m)[i]

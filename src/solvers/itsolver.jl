@@ -17,12 +17,24 @@ Base.axes(A::GMRESSolver) = reverse(axes(A.linear_operator))
 
 
 function GMRESSolver(op::L;
-    left_preconditioner::P = IterativeSolvers.Identity(),
+    left_preconditioner = nothing,
+    Pl = nothing,
     maxiter=0,
     restart=0,
     abstol::R = zero(real(eltype(op))),
     reltol::R = sqrt(eps(real(eltype(op)))),
-    verbose=true) where {L,R<:Real,P}
+    verbose=true) where {L,R<:Real}
+
+    if left_preconditioner == nothing
+        Pl == nothing && (Pl = IterativeSolvers.Identity())
+    else
+        if Pl == nothing
+            Pl = BEAST.Preconditioner(left_preconditioner)
+        else
+            error("Either supply Pl or left_preconditioner, not both.")
+        end
+    end
+    @assert Pl != nothing
 
     m, n = size(op)
     @assert m == n
@@ -30,8 +42,9 @@ function GMRESSolver(op::L;
     maxiter == 0 && (maxiter = div(n, 5))
     restart == 0 && (restart = n)
 
+    P = typeof(Pl)
     T = eltype(op)
-    GMRESSolver{T,L,R,P}(op, maxiter, restart, abstol, reltol, verbose, left_preconditioner)
+    GMRESSolver{T,L,R,P}(op, maxiter, restart, abstol, reltol, verbose, Pl)
 end
 
 
@@ -78,8 +91,8 @@ function LinearAlgebra.mul!(y::AbstractVecOrMat, solver::GMRESSolver, x::Abstrac
     return y
 end
 
-LinearAlgebra.adjoint(A::GMRESSolver) = GMRESSolver(adjoint(A.linear_operator), A.maxiter, A.restart, A.abstol, A.reltol, A.verbose)
-LinearAlgebra.transpose(A::GMRESSolver) = GMRESSolver(transpose(A.linear_operator), A.maxiter, A.restart, A.abstol, A.reltol, A.verbose)
+LinearAlgebra.adjoint(A::GMRESSolver) = GMRESSolver(adjoint(A.linear_operator); A.left_preconditioner, A.maxiter, A.restart, A.abstol, A.reltol, A.verbose)
+LinearAlgebra.transpose(A::GMRESSolver) = GMRESSolver(transpose(A.linear_operator); A.left_preconditioner, A.maxiter, A.restart, A.abstol, A.reltol, A.verbose)
 
 
 
@@ -97,7 +110,8 @@ function gmres_ch(eq::DiscreteEquation; maxiter=0, restart=0, tol=0)
     if tol == 0
         invZ = GMRESSolver(Z, maxiter=maxiter, restart=restart)
     else
-        invZ = GMRESSolver(Z, maxiter=maxiter, restart=restart, tol=tol)
+        T = real(eltype(Z))
+        invZ = GMRESSolver(Z, maxiter=maxiter, restart=restart, reltol=T(tol))
     end
     x, ch = solve(invZ, b)
     # x = invZ * b
@@ -105,12 +119,23 @@ function gmres_ch(eq::DiscreteEquation; maxiter=0, restart=0, tol=0)
     ax = nestedrange(Y, 1, numfunctions)
     return PseudoBlockVector(x, (ax,)), ch
 end
+function assemble(eq::DiscreteEquation;kwargs...)
+    lhs = eq.equation.lhs
+    rhs = eq.equation.rhs
+
+    X = _spacedict_to_directproductspace(eq.test_space_dict)
+    Y = _spacedict_to_directproductspace(eq.trial_space_dict)
+
+    b = assemble(rhs, X;kwargs...)
+    Z = assemble(lhs, X, Y;kwargs...)
+    return Z,b,X,Y
+end
 function gmres_ch(b,Z,trial_direct_product_space; maxiter=0, restart=0, tol=0)
 
     if tol == 0
         invZ = GMRESSolver(Z, maxiter=maxiter, restart=restart)
     else
-        invZ = GMRESSolver(Z, maxiter=maxiter, restart=restart, tol=tol)
+        invZ = GMRESSolver(Z, maxiter=maxiter, restart=restart, reltol=tol)
     end
     x, ch = solve(invZ, b)
     # x = invZ * b

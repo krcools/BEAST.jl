@@ -34,6 +34,7 @@ function (f::LagrangeRefSpace{T,1,3})(t) where T
     tv = tangents(t,2)
     j = jacobian(t)*sign(dot(normal(t),tu×tv))
     p = chart(t)
+    σ = sign(dot(normal(t), cross(p[1]-p[3],p[2]-p[3])))
     SVector(
         (value=u, curl=σ*(p[3]-p[2])/j),
         (value=v, curl=σ*(p[1]-p[3])/j),
