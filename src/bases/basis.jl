@@ -88,7 +88,7 @@ function Base.:+(x::AbstractSpace...)
     T = scalartype(x...)
     return DirectProductSpace{T, AbstractSpace}([x...])
 end
-cross(a::Nothing,b::AbstractSpace) = b
+#cross(a::Nothing,b::AbstractSpace) = b
 cross(a::Space{T}, b::Space{T}) where {T} = DirectProductSpace{T,Space{T}}(Space{T}[a,b])
 cross(a::DirectProductSpace{T}, b::Space{T}) where {T} = DirectProductSpace{T,Space{T}}([a.factors; b])
 #cross(a::DirectProductSpace{T}, b::DirectProductSpace{T}) where {T} = DirectProductSpace{T,Space{T}}([a.factors; b.factors])
