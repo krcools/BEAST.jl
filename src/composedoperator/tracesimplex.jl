@@ -1,5 +1,11 @@
 import Base.sign
 import Base.getindex
+
+
+"""
+TraceSimplex(simplex,direction::SVector)
+    simplex plus infinitesimal direction d, for each point p on the simplex, the trace is taken in the p-d direction
+"""
 struct TraceSimplex{T,U}
     simp::T
     direction::SVector{3,U}
@@ -7,6 +13,10 @@ end
 TraceSimplex(t::TraceSimplex,d::SVector{3,U}) where {U} = TraceSimplex(simplex(t),direction(t)+d)
 simplex(t::TraceSimplex) = t.simp
 direction(t::TraceSimplex) = t.direction
+"""
+TraceMeshPointNM(neighborhood,direction::SVector)
+    neighborhood p plus infinitesimal direction d, the trace is taken in the p-d direction
+"""
 struct TraceMeshPointNM{T,U}
     neighborhood::T
     direction::SVector{3,U}
@@ -67,10 +77,10 @@ CompScienceMeshes.barycentric(a::TraceMeshPointNM) = barycentric(a.neighborhood)
 
 
 
-struct OrientedMesh{U,D1,T} <: CompScienceMeshes.AbstractMesh{U,D1,T}
-    mesh::CompScienceMeshes.AbstractMesh{U,D1,T}
-    normalmesh::CompScienceMeshes.AbstractMesh{U,D1,T}
-end
+# struct OrientedMesh{U,D1,T} <: CompScienceMeshes.AbstractMesh{U,D1,T}
+#     mesh::CompScienceMeshes.AbstractMesh{U,D1,T}
+#     normalmesh::CompScienceMeshes.AbstractMesh{U,D1,T}
+# end
 struct TraceMesh{U,D1,T} <: CompScienceMeshes.AbstractMesh{U,D1,T}
     mesh::CompScienceMeshes.AbstractMesh{U,D1,T}
     direction::Vector{SVector{3,T}}
@@ -85,20 +95,20 @@ CompScienceMeshes.numvertices(t::TraceMesh) = CompScienceMeshes.numvertices(mesh
 CompScienceMeshes.vertextype(t::TraceMesh) = CompScienceMeshes.vertextype(mesh(t))
 CompScienceMeshes.universedimension(t::TraceMesh) = CompScienceMeshes.universedimension(mesh(t))
 
-mesh(p::OrientedMesh) = p.mesh
+# mesh(p::OrientedMesh) = p.mesh
 mesh(p::TraceMesh) = p.mesh
-CompScienceMeshes.normal(p::OrientedMesh) = p.normalmesh
+# CompScienceMeshes.normal(p::OrientedMesh) = p.normalmesh
 direction(p::TraceMesh) = p.direction
 
-function CompScienceMeshes.chart(p::OrientedMesh,i)
-    c = chart(mesh(p),i)
-    n1 = normal(c)
-    n2 = normal(chart(normal(p),i))
-    d = dot(n1,n2)
-    @assert abs(d) ≈ 1.0
-    sign(d) == 1 && return c
-    return mirror(c)
-end
+# function CompScienceMeshes.chart(p::OrientedMesh,i)
+#     c = chart(mesh(p),i)
+#     n1 = normal(c)
+#     n2 = normal(chart(normal(p),i))
+#     d = dot(n1,n2)
+#     @assert abs(d) ≈ 1.0
+#     sign(d) == 1 && return c
+#     return mirror(c)
+# end
 function CompScienceMeshes.chart(p::TraceMesh,i)
     c = chart(mesh(p),i)
     d = direction(p)[i]
@@ -110,7 +120,7 @@ function same_geometry(m1,m2)
 end
 
 _ispermutation(a,b) = sort(a)==sort(b)
-CompScienceMeshes.cells(p::OrientedMesh) = cells(mesh(p))
+# CompScienceMeshes.cells(p::OrientedMesh) = cells(mesh(p))
 CompScienceMeshes.cells(p::TraceMesh) = cells(mesh(p))
 CompScienceMeshes.vertices(p::TraceMesh) = vertices(mesh(p))
 
