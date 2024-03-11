@@ -371,3 +371,24 @@ Base.zero(op::AbstractOperator) = ZeroOperator()
 -(a::ZeroOperator,b::AbstractOperator) = -b
 *(a::Number,b::ZeroOperator) = b
 
+function matrix_to_bilform(mat;dims=size(mat),kwargs...)
+    nrows,ncols = size(mat)
+    tin = BEAST.hilbertspace(:tin,dims[1])
+    bin = BEAST.hilbertspace(:bin,dims[2])
+    terms = [mat[i,j][tin[i],bin[j]] for i in 1:minimum([nrows,dims[1]]), j in 1:minimum([ncols,dims[2]]) if typeof(mat[i,j]) != ZeroOperator]
+    if length(terms) > 0
+        return sum(terms)
+    else
+        return  ZeroOperator()[tin[1],bin[1]]
+    end
+end
+
+function array_to_linform(array;dim=length(array))
+    nrows = length(array)
+    tin = BEAST.hilbertspace(:tin,dim)
+    println(sum([array[i][tin[i]] for i in 1:minimum([nrows,dim])]))
+    return sum([array[i][tin[i]] for i in 1:minimum([nrows,dim])])
+end
+
+export matrix_to_bilform
+export array_to_linform
