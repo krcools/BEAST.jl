@@ -2,6 +2,7 @@ module Variational
 import Base.zero
 using BlockArrays
 import BEAST
+using StaticArrays
 # import Base: start, done, next
 
 export transposecalls!
@@ -337,23 +338,23 @@ function getindex(op::Any, V::Vector{HilbertVector}, U::Vector{HilbertVector})
     end
     return BilForm(first(V).space, first(U).space, terms)
 end
-function getindex(op::Any, V::Vector{HilbertVector}, u::Hilbertvector)
-    terms = Vector{BilTerm}()
-    for v in V
-        term = BilTerm(v.idx, u.idx, v.opstack, u.opstack, 1, op)
-        push!(terms, term)
-    end
-    return BilForm(first(V).space, u.space, terms)
-end
+# function getindex(op::Any, V::Vector{HilbertVector}, u::Hilbertvector)
+#     terms = Vector{BilTerm}()
+#     for v in V
+#         term = BilTerm(v.idx, u.idx, v.opstack, u.opstack, 1, op)
+#         push!(terms, term)
+#     end
+#     return BilForm(first(V).space, u.space, terms)
+# end
 
-function getindex(op::Any, v::HilbertVector, U::Vector{HilbertVector})
-    terms = Vector{BilTerm}()
-    for u in U
-        term = BilTerm(v.idx, u.idx, v.opstack, u.opstack, 1, op)
-        push!(terms, term)
-    end
-    return BilForm(v.space, first(U).space, terms)
-end
+# function getindex(op::Any, v::HilbertVector, U::Vector{HilbertVector})
+#     terms = Vector{BilTerm}()
+#     for u in U
+#         term = BilTerm(v.idx, u.idx, v.opstack, u.opstack, 1, op)
+#         push!(terms, term)
+#     end
+#     return BilForm(v.space, first(U).space, terms)
+# end
 function getindex(A::Matrix, v::HilbertVector, u::HilbertVector)
     terms = [ BilTerm(v.idx, u.idx, v.opstack, u.opstack, 1, A) ]
     BilForm(v.space, u.space, terms)
@@ -367,7 +368,7 @@ function +(a::BilForm, b::BilForm)
     BilForm(a.test_space, a.trial_space, [a.terms; b.terms])
 end
 
-function+(a::LinForm, b::LinForm)
+function +(a::LinForm, b::LinForm)
     @assert a.test_space == b.test_space
     LinForm(a.test_space, [a.terms; b.terms])
 end
@@ -383,7 +384,8 @@ function *(α::Number, a::LinForm)
     for t in b.terms t.coeff *= α end
     return b
 end
-
+*(a,b::BilTerm) = BilTerm(b.test_id,b.trial_id,b.test_ops,b.trial_ops,b.coeff,a*b.kernel)
+*(b::BilTerm,a) = BilTerm(b.test_id,b.trial_id,b.test_ops,b.trial_ops,b.coeff,b.kernel*a)
 #-(a::BilForm) = (-1 * a)
 # -(a::BilForm, b::BilForm) = a + (-b)
 
@@ -518,20 +520,22 @@ function *(a::Number,b::BilTerm)
     out.coeff *= a
     return out
 end
-function *(a::Matrix,b::BilForm)
+function *(a::Union{Matrix,SMatrix},b::BilForm)
     n = length(b.test_space)
     m = length(b.trial_space)
     @assert (n,m)==size(a)
-    @assert sum([abs(a[i,j]) for i in 1:n for j in 1:m if i≠j]) == 0.0
+    @warn "use only with diagonal matrices"
+#    @assert sum([abs(a[i,j]) for i in 1:n for j in 1:m if i≠j]) == 0.0
+println(typeof(b.terms[1]))
     out = [a[term.test_id,term.test_id]*term for term in b.terms]
     return BilForm(b.test_space,b.trial_space,out)
 end
-function *(b::BilForm,a::Matrix)
+function *(b::BilForm,a::Union{Matrix,SMatrix})
     n = length(b.test_space)
     m = length(b.trial_space)
     @assert (n,m)==size(a)
-    @assert sum([abs(a[i,j]) for i in 1:n for j in 1:m if i≠j]) == 0.0
-    out = [a[term.trial_id,term.trial_id]*term for term in b.terms]
+   # @assert sum([abs(a[i,j]) for i in 1:n for j in 1:m if i≠j]) == 0.0
+    out = [term*a[term.trial_id,term.trial_id] for term in b.terms]
     return BilForm(b.test_space,b.trial_space,out)
 end
 # mutable struct ProdBilTerm

@@ -186,11 +186,11 @@ geometry(o::Object) = geometry(o.type)
 geometry(o::Union{HOM,FreeSpace,PEC}) = o.mesh
 geometry(o::Inside) = geometry(o.inside)
 
-function matrix_to_bilform(mat)
+function matrix_to_bilform(mat;dims=size(mat),kwargs...)
     nrows,ncols = size(mat)
-    tin = BEAST.hilbertspace(:tin,nrows)
-    bin = BEAST.hilbertspace(:bin,ncols)
-    terms = [mat[i,j][tin[i],bin[j]] for i in 1:nrows, j in 1:ncols if typeof(mat[i,j]) != ZeroOperator]
+    tin = BEAST.hilbertspace(:tin,dims[1])
+    bin = BEAST.hilbertspace(:bin,dims[2])
+    terms = [mat[i,j][tin[i],bin[j]] for i in 1:minimum([nrows,dims[1]]), j in 1:minimum([ncols,dims[2]]) if typeof(mat[i,j]) != ZeroOperator]
     if length(terms) > 0
         return sum(terms)
     else
@@ -198,11 +198,11 @@ function matrix_to_bilform(mat)
     end
 end
 
-function array_to_linform(array)
+function array_to_linform(array;dim=length(array))
     nrows = length(array)
-    tin = BEAST.hilbertspace(:tin,nrows)
-    println(sum([array[i][tin[i]] for i in 1:nrows]))
-    return sum([array[i][tin[i]] for i in 1:nrows])
+    tin = BEAST.hilbertspace(:tin,dim)
+    println(sum([array[i][tin[i]] for i in 1:minimum([nrows,dim])]))
+    return sum([array[i][tin[i]] for i in 1:minimum([nrows,dim])])
 end
 
 # function discretise_rhs(w::World, ex::Excitation, strat::Interaction)

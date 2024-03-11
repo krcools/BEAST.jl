@@ -1,4 +1,4 @@
-function Base.:*(A::AbstractArray, s::Space) where {Space}
+function Base.:*(A::AbstractArray, s::Space) 
 
     @assert ndims(A) == 2
     @assert size(A,2) == numfunctions(s)
