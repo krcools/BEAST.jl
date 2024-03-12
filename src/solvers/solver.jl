@@ -139,6 +139,9 @@ function _spacedict_to_directproductspace(spacedict)
 end
 
 function assemble(lform::LinForm, test_space_dict)
+    if typeof(test_space_dict[1]) <: T where T <: StagedTimeStep{SB, M, N} where {SB, M, N}
+        return assemble(lform.terms[1].functional, test_space_dict[1])
+    end
     X = _spacedict_to_directproductspace(test_space_dict)
     return assemble(lform, X)
 end
@@ -195,10 +198,22 @@ td_assemble(lform::LinForm, X::DirectProductSpace) = assemble(lform, X)
 function assemble(bilform::BilForm, test_space_dict, trial_space_dict;
     materialize=BEAST.assemble)
 
+    if typeof(test_space_dict[1]) <: T where T <: StagedTimeStep{SB, M, N} where {SB, M, N}
+        return assemble(bilform::BilForm, test_space_dict[1], trial_space_dict[1])
+    end
+
     X = _spacedict_to_directproductspace(test_space_dict)
     Y = _spacedict_to_directproductspace(trial_space_dict)
 
     return assemble(bilform, X, Y; materialize)
+end
+
+function assemble(bilform::BilForm, test_space::StagedTimeStep, trial_space::StagedTimeStep)
+
+	X = test_space
+	Y = trial_space
+
+    return assemble(bilform.terms[1].kernel, X, Y)
 end
 
 lift(a,I,J,U,V) = LiftedMaps.LiftedMap(a,I,J,U,V)

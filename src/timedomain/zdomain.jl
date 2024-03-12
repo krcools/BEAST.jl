@@ -8,7 +8,7 @@ variable z = rho*exp(2*im*pi*n/N) for a given Butcher tableau (A,b,c) and a time
 """
 function laplace_to_z(rho, n, N, dt, A, b)
 	z = rho * exp(2*im*pi*n/N);
-	s = inv(dt * (A + ones(b) * b' / (z-1)));
+	s = inv(dt * (A + ones(size(b,1)) * b' / (z-1)));
 	return s;
 end
 

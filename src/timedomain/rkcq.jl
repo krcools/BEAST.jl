@@ -35,11 +35,17 @@ end
 
 # M = H*diagm(D)*invH
 function diagonalizedmatrix(M :: SArray{Tuple{N,N},Complex{T},2,NN}) where {T,N,NN}
-	ef = eigfact(Array{Complex{T},2}(M));
+	#= ef = eigfact(Array{Complex{T},2}(M));
 
 	efValues = SVector{N,Complex{T}}(ef.values)  :: SVector{N,Complex{T}};
-	efVectors = SArray{Tuple{N,N},Complex{T},2,NN}(ef.vectors) :: SArray{Tuple{N,N},Complex{T},2,NN};
+	efVectors = SArray{Tuple{N,N},Complex{T},2,NN}(ef.vectors) :: SArray{Tuple{N,N},Complex{T},2,NN}; =#
+	A = Array{Complex{T},2}(M)
+	egvals = eigvals(A)
+	egvecs = eigvecs(A)
+	efValues = SVector{N, Complex{T}}(egvals) :: SVector{N, Complex{T}};
+	efVectors = SArray{Tuple{N,N}, Complex{T},2,NN}(egvecs) :: SArray{Tuple{N,N}, Complex{T},2,NN};
 	return DiagonalizedMatrix(efVectors, inv(efVectors), efValues);
+	#return DiagonalizedMatrix(egvecs, inv(egvecs), egvals)
 end
 
 function assemble(rkcq :: RungeKuttaConvolutionQuadrature,
@@ -84,7 +90,7 @@ function assemble(rkcq :: RungeKuttaConvolutionQuadrature,
 					tmpDiag[i] = blocksEigenvalues[i][m,n];
 				end
 				D = SVector{p,Tz}(tmpDiag);
-				Zz[q+1][(m-1)*p+(1:p),(n-1)*p+(1:p)] = sFactorized.H * diagm(D) * sFactorized.invH;
+				Zz[q+1][(m-1)*p.+(1:p),(n-1)*p.+(1:p)] = sFactorized.H * diagm(D) * sFactorized.invH;
 			end
 		end
 	end
@@ -96,6 +102,14 @@ function assemble(rkcq :: RungeKuttaConvolutionQuadrature,
 	for q = 0:kmax-1
 		Z[:,:,q+1] = real_inverse_z_transform(q, rho, Q, Zz);
 	end
-	return Z
+	return ConvolutionOperators.DenseConvOp(Z)
 
+end
+
+function Base.eltype(x::ConvolutionOperators.DenseConvOp)
+	return eltype(x.data)
+end
+
+function marchonintime(is, A, b, nt, V::StagedTimeStep)
+	println("convolution quadrature")
 end
