@@ -240,6 +240,15 @@ function assemble!(op::LinearCombinationOfOperators, tfs::AbstractSpace, bfs::Ab
         assemble!(A, tfs, bfs, store1, threading; kwargs...)
     end
 end
+function assemble!(op::LinearCombinationOfOperators, tfs::DirectProductSpace, bfs::DirectProductSpace,
+    store, threading = Threading{:multi};
+    kwargs...)
+
+    for (a,A) in zip(op.coeffs, op.ops)
+        store1(v,m,n) = store(a*v,m,n)
+        assemble!(A, tfs, bfs, store1, threading; kwargs...)
+    end
+end
 
 
 # Support for direct product spaces

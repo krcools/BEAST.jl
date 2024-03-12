@@ -238,6 +238,9 @@ idnd = BEAST.matrix_to_bilform(diagm([Identity(),Identity()]))
 @hilbertspace t1 t2
 @hilbertspace b1 b2
 id = idnd[t1,b1]+idnd[t2,b2]
+@hilbertspace t1
+@hilbertspace b1
+idnd2 = idnd[t1,b1]
 
 N = length(Γ)
 Q = Dict(i=>diagm([diagm(@SVector [1.0,1.0]),diagm(SVector{2,Float64}([HomPars[parent(i,Tree)][2]/HomPars[i][2],HomPars[i][1]/HomPars[parent(i,Tree)][1]]))]) for i in HOM)
@@ -269,14 +272,14 @@ eqs2efie = begin BEAST.Equation[-sum(BEAST.BilForm[Z(κ0;rows=[2])[t[ci],b[j]] f
             for i in [0], ci in 1:N if ci ∈ children(i,Tree) ∩ EFIE] end
 eqs2mfie = begin BEAST.Equation[-sum(BEAST.BilForm[Z(κ0;rows=[1])[t[ci],b[j]] for j in HOM ∩ children(i,Tree)])+
             -sum(BEAST.BilForm[Z(κ0;rows=[1],cols=[2])[t[ci],b[j]] for j in [EFIE...,MFIE...,CFIE...] ∩ children(i,Tree)]) +
-            -idnd[t[ci],b[ci]] ==-Xinn[t[ci]]
+            -idnd2[t[ci],b[ci]] ==-Xinn[t[ci]]
             for i in [0], ci in 1:N if ci ∈ children(i,Tree) ∩ MFIE]end
 eqs2cefie =begin  BEAST.Equation[-α[ci]*sum(BEAST.BilForm[Z(κ0;rows=[2])[t[ci],b[j]] for j in HOM ∩ children(i,Tree)])+
             -α[ci]*sum(BEAST.BilForm[Z(κ0;rows=[2],cols=[2])[t[ci],b[j]] for j in [EFIE...,MFIE...,CFIE...] ∩ children(i,Tree)]) ==
             -α[ci]*Xind[t[ci]] for i in [0], ci in 1:N if ci ∈ children(i,Tree) ∩ CFIE] end
 eqs2cmfie = begin BEAST.Equation[-(1-α[ci])* sum(BEAST.BilForm[Z(κ0;rows=[1])[t[ci],b[j]] for j in HOM ∩ children(i,Tree)])+
             -(1-α[ci])*sum(BEAST.BilForm[Z(κ0;rows=[1],cols=[2])[t[ci],b[j]] for j in [EFIE...,MFIE...,CFIE...] ∩ children(i,Tree)]) +
-            -(1-α[ci])*idnd[t[ci],b[ci]] == -(1-α[ci])*Xinn[t[ci]]
+            -(1-α[ci])*idnd2[t[ci],b[ci]] == -(1-α[ci])*Xinn[t[ci]]
             for i in [0], ci in 1:N if ci ∈ children(i,Tree) ∩ CFIE] end
 
 
@@ -291,7 +294,7 @@ eqs3efie = begin BEAST.Equation[(Z(κ[i];rows=[2])*(Qinv[i]))[t[ci],b[i]]+
 eqs3mfie = begin BEAST.Equation[(Z(κ[i];rows=[1])*(Qinv[i]))[t[ci],b[i]]+
             -sum(BEAST.BilForm[Z(κ[i];rows=[1])[t[ci],b[j]] for j in HOM ∩ children(i,Tree)])+
             -sum(BEAST.BilForm[Z(κ[i];rows=[1],cols=[2])[t[ci],b[j]] for j in [EFIE...,MFIE...,CFIE...] ∩ children(i,Tree)]) +
-            -idnd[t[ci],b[ci]] ==0
+            -idnd2[t[ci],b[ci]] ==0
             for i in [0], ci in 1:N if ci ∈ children(i,Tree) ∩ MFIE]end
 eqs3cefie = begin BEAST.Equation[α[ci]*(Z(κ[i];rows=[2])*(Qinv[i]))[t[ci],b[i]]+
             -α[ci]*sum(BEAST.BilForm[Z(κ[i];rows=[2])[t[ci],b[j]] for j in HOM ∩ children(i,Tree)])+
@@ -300,7 +303,7 @@ eqs3cefie = begin BEAST.Equation[α[ci]*(Z(κ[i];rows=[2])*(Qinv[i]))[t[ci],b[i]
 eqs3cmfie = begin BEAST.Equation[(1-α[ci])*(Z(κ[i];rows=[1])*(Qinv[i]))[t[ci],b[i]]+
             -(1-α[ci])* sum(BEAST.BilForm[Z(κ[i];rows=[1])[t[ci],b[j]] for j in HOM ∩ children(i,Tree)])+
             -(1-α[ci])*sum(BEAST.BilForm[Z(κ[i];rows=[1],cols=[2])[t[ci],b[j]] for j in [EFIE...,MFIE...,CFIE...] ∩ children(i,Tree)]) +
-            -(1-α[ci])*idnd[t[ci],b[ci]] == 0
+            -(1-α[ci])*idnd2[t[ci],b[ci]] == 0
             for i in HOM, ci in 1:N if ci ∈ children(i,Tree) ∩ CFIE] end
 
 ## sum the equations in the two parts in a pmchwt fassion,
@@ -331,7 +334,7 @@ Zunprec = Za*I+Zs*I
 
 bunprec = ba .+ bs 
 
-uz = solve(Zunprec,bunprec,BEAST.DirectProductSpace(Xb);strat=solvestrat,tol=abstol_Z, maxiter=maxiter_Z, restart=restart_Z)
+uz = solve(Zunprec,bunprec,BEAST.DirectProductSpace(Xb);strat=:GMRES,tol=real(sqrt(eps())), maxiter=20000, restart=20000)
 
 
 
