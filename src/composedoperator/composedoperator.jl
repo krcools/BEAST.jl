@@ -12,8 +12,8 @@ struct DivBasisFunction <: ComposedOperatorLocal end
 const B = BasisFunction()
 Base.div(::BasisFunction) = DivBasisFunction()
 
-export B
-export BasisFunction
+# export B
+# export BasisFunction
 
 
 struct TestNormal <: ComposedOperatorLocal end
@@ -23,8 +23,8 @@ struct TraceDirection <: ComposedOperatorLocal end
 
 const nt = TestNormal()
 const nb = TrialNormal()
-export nt
-export nb
+# export nt
+# export nb
 struct Potential{T} <: AbstractOperator
     operator::T
 end
@@ -453,7 +453,7 @@ end
 struct FunctionExcitation{T} <: Functional
     f
 end
-export FunctionExcitation
+# export FunctionExcitation
 
 
 
@@ -466,4 +466,3 @@ end
 scalartype(ff::FunctionExcitation{T}) where {T} = T
 cross(::NormalVector, p::FunctionExcitation) = CrossTraceMW(p)
 integrand(::FunctionExcitation,tval,fval) = tval[1]*fval
-export FunctionExcitation

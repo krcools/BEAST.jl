@@ -17,7 +17,7 @@ abstract type Operator <: AbstractOperator end
 
 struct ZeroOperator <: AbstractOperator end
 
-export ZeroOperator
+# export ZeroOperator
 Base.zero(op::Type{<:AbstractOperator}) = ZeroOperator()
 mutable struct TransposedOperator <: AbstractOperator
     op::AbstractOperator
@@ -377,5 +377,5 @@ function array_to_linform(array;dim=length(array))
     return sum([array[i][tin[i]] for i in 1:minimum([nrows,dim])])
 end
 
-export matrix_to_bilform
-export array_to_linform
+# export matrix_to_bilform
+# export array_to_linform
