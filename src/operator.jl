@@ -216,8 +216,6 @@ function assemble!(operator::Operator, test_functions::Space, trial_functions::S
 
     assemblechunk!(operator, test_functions, trial_functions, store; kwargs...)
 end
-# defaultquadstrat(op::BasisOperatorLeft,tfs,bfs) = defaultquadstrat(op.operator,op.left_function(tfs),bfs)
-# defaultquadstrat(op::BasisOperatorRight,tfs,bfs) = defaultquadstrat(op.operator,tfs,op.right_function(bfs))
 
 
 function assemble!(op::TransposedOperator, tfs::Space, bfs::Space,
@@ -231,18 +229,6 @@ function assemble!(op::ZeroOperator, tfs::Space, bfs::Space,
     store, threading = Threading{:multi};
     kwargs...)
 end
-
-# function assemble!(op::BasisOperatorLeft, tfs::Space, bfs::Space, store,threading = Threading{:multi};
-#     quadstrat=defaultquadstrat(op, tfs, bfs))
-#     #quadstrat = defaultquadstrat(op.operator,op.left_function(tfs),bfs)
-#     assemble!(op.operator,op.left_function(tfs),bfs,store,threading;quadstrat)
-# end
-
-# function assemble!(op::BasisOperatorRight, tfs::Space, bfs::Space, store,threading = Threading{:multi};
-#     quadstrat=defaultquadstrat(op, tfs, bfs))
-#     #quadstrat = defaultquadstrat(op.operator,tfs,op.right_function(bfs))
-#     assemble!(op.operator,tfs,op.right_function(bfs),store,threading;quadstrat)
-# end
 
 
 function assemble!(op::LinearCombinationOfOperators, tfs::AbstractSpace, bfs::AbstractSpace,
@@ -341,12 +327,6 @@ function assemble!(op::BlockFullOperators, U::DirectProductSpace, V::DirectProdu
     I = Int[0]; for u in U.factors push!(I, last(I) + numfunctions(u)) end
     J = Int[0]; for v in V.factors push!(J, last(J) + numfunctions(v)) end
 
-    # k = 1
-    # for (u,v) in zip(U.factors, V.factors)
-    #     store1(v,m,n) = store(v, I[k] + m, J[k] + n)
-    #     assemble!(op.op, u, v, store1; quadstrat)
-    #     k += 1
-    # end
 
     for (k,u) in enumerate(U.factors)
         for (l,v) in enumerate(V.factors)
@@ -357,8 +337,6 @@ function assemble!(op::BlockFullOperators, U::DirectProductSpace, V::DirectProdu
 end
 
 
-# strace(op::Operator,orientation::Orientation) = Strace(op,orientation)
-# ttrace(op::Operator,orientation::Orientation) = Ttrace(op,orientation)
 
 
 

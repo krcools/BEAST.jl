@@ -74,8 +74,6 @@ include("test_td_tensoroperator.jl")
 include("test_variational.jl")
 include("test_composed_operator.jl")
 
-#include("test_momintegrals_overlap.jl")
-#inlcude("test_multi-trace_VP.jl")
 
 try
     Pkg.installed("BogaertInts10")

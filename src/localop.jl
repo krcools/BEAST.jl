@@ -1,25 +1,3 @@
-####### designing neighborhood object which can save 2 normals
-# using ReusePatterns
-# using CompScienceMeshes
-# struct MeshPointNormals
-#     meshpoint::CompScienceMeshes.MeshPointNM
-#     testnormal
-#     trialnormal
-# end
-#ReusePatterns.@forward (MeshPointNormals, :meshpoint) CompScienceMeshes.MeshPointNM
-
-# code = forward((MeshPointNormals, :meshpoint),CompScienceMeshes.MeshPointNM)
-# uit = [code[1]]
-# for line in code[2:length(code)]
-#     push!(uit,replace(line, " CompScienceMeshes " => " "))
-# end
-# eval.(Meta.parse.(uit))
-
-# function extendedneighborhood(p::CompScienceMeshes.Simplex, bary,nt,nb)
-#     MeshPointNormals(CompScienceMeshes.neighborhood(p,bary),nt,nb)
-# end
-
-# normals(m::MeshPointNormals) = (m.testnormal,m.trialnormal)
 using CollisionDetection
 
 
@@ -123,7 +101,7 @@ function assemble_local_matched!(biop::LocalOperator, tfs::Space, bfs::Space, st
     qd = quaddata(biop, trefs, brefs, tels, bels, quadstrat)
 
     verbose = length(tels) > 10_000
-    verbose && print(" dots out of 20: ")
+    verbose && print("dots out of 20: ")
     todo, done, pctg = length(tels), 0, 0
 
     locmat = zeros(scalartype(biop, trefs, brefs), numfunctions(trefs), numfunctions(brefs))
@@ -174,7 +152,7 @@ function assemble_local_refines!(biop::LocalOperator, tfs::Space, bfs::Space, st
 
     qd = quaddata(biop, trefs, brefs, tels, bels, quadstrat)
 
-    print(" dots out of 10: ")
+    print("dots out of 10: ")
     todo, done, pctg = length(tels), 0, 0
     for (p,tcell) in enumerate(tels)
 
@@ -299,7 +277,7 @@ function assemble_local_mixed!(biop::LocalOperator, tfs::Space{T}, bfs::Space{T}
     # store the bcells in an octree
     tree = elementstree(bels)
 
-    print(" dots out of 10: ")
+    print("dots out of 10: ")
     todo, done, pctg = length(tels), 0, 0
     for (p,tcell) in enumerate(tels)
 
@@ -350,31 +328,6 @@ function assemble_local_mixed!(biop::LocalOperator, tfs::Space{T}, bfs::Space{T}
 end
 
 
-# function cellinteractions_matched!(zlocal, biop, trefs, brefs, cell, qr,tcell=nothing,bcell=nothing)
-
-#     num_tshs = length(qr[1][3])
-#     num_bshs = length(qr[1][4])
-
-#     # zlocal = zeros(Float64, num_tshs, num_bshs)
-#     for q in qr
-
-#         w, mp, tvals, bvals = q[1], q[2], q[3], q[4]
-#         j = w * jacobian(mp)
-#         kernel = kernelvals(biop, mp)
-        
-#         for n in 1 : num_bshs
-#             bval = bvals[n]
-#             for m in 1 : num_tshs
-#                 tval = tvals[m]
-
-#                 igd = integrand(biop, kernel, mp, tval, bval)
-#                 zlocal[m,n] += j * igd
-#             end
-#         end
-#     end
-
-#     return zlocal
-# end
 
 function cellinteractions_matched!(zlocal, biop, trefs, brefs, cellt,cellb, qr)
 
@@ -393,34 +346,6 @@ function cellinteractions_matched!(zlocal, biop, trefs, brefs, cellt,cellb, qr)
     return zlocal
 end
 
-# function cellinteractions(biop, trefs::U, brefs::V, cell,qr,tcell,bcell) where {U<:RefSpace{T},V<:RefSpace{T}} where {T}
-    
-#     num_tshs = length(qr[1][3])
-#     num_bshs = length(qr[1][4])
-
-#     zlocal = zeros(T, num_tshs, num_bshs)
-     
-#     for q in qr
-
-#         w, mp, tvals, bvals = q[1], q[2], q[3], q[4]
-#         j = w * jacobian(mp)
-#         kernel = kernelvals(biop, mp)
-
-#         for m in 1 : num_tshs
-#             tval = tvals[m]
-
-#             for n in 1 : num_bshs
-#                 bval = bvals[n]
-
-#                 igd = integrand(biop, kernel, mp, tval, bval)
-#                 zlocal[m,n] += j * igd
-
-#             end
-#         end
-#     end
-
-#     return zlocal
-# end
 
 function cellinteractions(biop, trefs::U, brefs::V, cellt,cellb,qr) where {U<:RefSpace{T},V<:RefSpace{T}} where {T}
     
@@ -445,32 +370,4 @@ function cellinteractions(biop, trefs::U, brefs::V, cellt,cellb,qr) where {U<:Re
 end
 getvalue(list::Matrix{T}) where {T} = SVector{length(list),T}([i for i in list])
 
-# function cellinteractions(biop, trefs::U, brefs::V, cell,qr) where {U<:RefSpace{T},V<:RefSpace{T}} where {T}
-    
-#     num_tshs = length(qr[1][3])
-#     num_bshs = length(qr[1][4])
-
-#     zlocal = zeros(T, num_tshs, num_bshs)
-     
-#     for q in qr
-
-#         w, mp, tvals, bvals = q[1], q[2], q[3], q[4]
-#         j = w * jacobian(mp)
-#         kernel = kernelvals(biop, mp)
-
-#         for m in 1 : num_tshs
-#             tval = tvals[m]
-
-#             for n in 1 : num_bshs
-#                 bval = bvals[n]
-
-#                 igd = integrand(biop, kernel, mp, tval, bval)
-#                 zlocal[m,n] += j * igd
-
-#             end
-#         end
-#     end
-
-#     return zlocal
-# end
 

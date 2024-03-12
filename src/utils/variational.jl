@@ -538,17 +538,7 @@ function *(b::BilForm,a::Union{Matrix,SMatrix})
     out = [term*a[term.trial_id,term.trial_id] for term in b.terms]
     return BilForm(b.test_space,b.trial_space,out)
 end
-# mutable struct ProdBilTerm
-#     bilterm1
-#     bilterm2
-#     betweenspace
-# end
-# function *(a::BilForm,b::BilForm)
-#     @assert a.trial_space == b.test_space
-#     r = [[term.trial_id for term in a.terms];[term.test_id for term in b.terms]...]
-#     @assert allequal(r)
-#     return BilForm(a.test_space,b.trial_space,ProdBilTerm(a.terms,b.terms,a.trial_space))
-# end
+
 
 struct ZeroBilForm end
 struct ZeroLinForm end

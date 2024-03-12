@@ -20,7 +20,14 @@ function nearfield(um,uj,Xm,Xj,κ,η,points,
     return E, H
 end
 
+ϵ0 = 8.854e-12
+μ0 = 4π*1e-7
+c = 1/√(ϵ0*μ0)
 
+λ = 2.9979563769321627
+ω = 2π*c/λ
+
+Ω = CompScienceMeshes.tetmeshsphere(λ,0.1*λ)
 Ω = CompScienceMeshes.tetmeshsphere(λ,0.3*λ)
 Γ = boundary(Ω)
 X = raviartthomas(Γ)
@@ -93,7 +100,7 @@ Plotly.plot(patch(Γ, norm.(fcrm)))
 
 Z = range(-6,6,length=200)
 Y = range(-4,4,length=200)
-nfpoints = [point(0,y,z) for y in Y, z in Z]
+nfpoints = [point(0,y,z) for z in Z, y in Y]
 
 import Base.Threads: @spawn
 task1 = @spawn nearfield(u[m],u[j],X,X,κ,η,nfpoints,E,H)
@@ -110,8 +117,8 @@ Plots.contour(real.(getindex.(H_tot,2)))
 
 Plots.heatmap(Z, Y, clamp.(real.(getindex.(E_tot,1)),-1.5,1.5))
 Plots.heatmap(Z, Y, clamp.(imag.(getindex.(E_tot,1)),-1.5,1.5))
-display(Plots.heatmap(Y, Z, real.(getindex.(H_tot,2))))
-display(Plots.heatmap(Y, Z, imag.(getindex.(H_tot,2))))
+Plots.heatmap(Z, Y, real.(getindex.(H_tot,2)))
+Plots.heatmap(Z, Y, imag.(getindex.(H_tot,2)))
 
 Plots.plot(real.(getindex.(E_tot[:,51],1)))
 Plots.plot(real.(getindex.(H_tot[:,51],2)))

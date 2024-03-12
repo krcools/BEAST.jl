@@ -264,17 +264,6 @@ include("utils/plotlyglue.jl")
 
 include("composedoperator/tracesimplex.jl")
 include("composedoperator/composedoperator.jl")
-# include("composedoperator/postprocessing.jl")
-
-# include("multi-trace/interactions.jl")
-# include("multi-trace/postprocessing.jl")
-# include("multi-trace/VectorPotential.jl")
-
-
-# include("multi-trace/multi-trace-old/interactions.jl")
-# include("multi-trace/multi-trace-old/configuration.jl")
-
-# include("multi-trace/multi-trace-old/postprocessing.jl")
 
 const x̂ = point(1, 0, 0)
 const ŷ = point(0, 1, 0)
