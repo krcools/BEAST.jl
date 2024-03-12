@@ -103,6 +103,7 @@ function discretise(eq, space_mappings::Pair...)
     DiscreteEquation(eq, trial_space_dict, test_space_dict)
 end
 
+
 """
     discr(eq, pairs...)
 
@@ -248,25 +249,25 @@ end
 # terms
 # end
 
-function LinearAlgebra.dot(test::DirectProductSpace,op::Matrix{AbstractOperator},trial::DirectProductSpace)
-    test_length = length(test.factors)
-    trial_length = length(trial.factors)
-    @assert size(op)==(test_length,trial_length)
-    terms = Vector{BilTerm}()
-    test_space_dict = Dict()
-    trial_space_dict = Dict()
-    for (i,space) in enumerate(test.factors)
-        test_space_dict[i]=space
-    end
-    for (i,space) in enumerate(trial.factors)
-        trial_space_dict[i]=space
-    end
+# function LinearAlgebra.dot(test::DirectProductSpace,op::Matrix{AbstractOperator},trial::DirectProductSpace)
+#     test_length = length(test.factors)
+#     trial_length = length(trial.factors)
+#     @assert size(op)==(test_length,trial_length)
+#     terms = Vector{BilTerm}()
+#     test_space_dict = Dict()
+#     trial_space_dict = Dict()
+#     for (i,space) in enumerate(test.factors)
+#         test_space_dict[i]=space
+#     end
+#     for (i,space) in enumerate(trial.factors)
+#         trial_space_dict[i]=space
+#     end
 
-    for i in 1:test_length
-        for j in 1:trial_length
-            push!(terms,BilTerm(i,j,[],[],1.0,op[i,j]))
-        end
-    end
-    BilForm([],[],terms)
-end
+#     for i in 1:test_length
+#         for j in 1:trial_length
+#             push!(terms,BilTerm(i,j,[],[],1.0,op[i,j]))
+#         end
+#     end
+#     BilForm([],[],terms)
+# end
 

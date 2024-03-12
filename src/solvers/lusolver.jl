@@ -6,7 +6,7 @@ lusolve(eq) = solve(eq)
 Solves a variational equation by simply creating the full system matrix
 and calling a traditional lu decomposition.
 """
-function solve(eq;Zz=false)
+function solve(eq)
 
     time_domain = isa(first(eq.trial_space_dict).second, BEAST.SpaceTimeBasis)
     time_domain |= isa(first(eq.trial_space_dict).second, BEAST.StagedTimeStep)
@@ -35,12 +35,11 @@ function solve(eq;Zz=false)
     println("done.")
 
     ax = nestedrange(Y, 1, numfunctions)
-    Zz && (return PseudoBlockVector(u, (ax,)), Z)
     return PseudoBlockVector(u, (ax,))
 end
 
 
-function solve(b,Z,Y;Zz=true)
+function solve(b,Z,Y)
 
     
     print("Converting system to Matrix...")
@@ -52,6 +51,5 @@ function solve(b,Z,Y;Zz=true)
     println("done.")
 
     ax = nestedrange(Y, 1, numfunctions)
-    Zz && (return PseudoBlockVector(u, (ax,)), Z)
     return PseudoBlockVector(u, (ax,))
 end

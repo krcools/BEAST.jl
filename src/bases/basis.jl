@@ -2,8 +2,8 @@ abstract type RefSpace{T,D} end
 abstract type AbstractSpace end
 abstract type Space{T} <: AbstractSpace end
 
-struct EmptySpace{Nothing} <: Space{Nothing} end
-numfunctions(::EmptySpace) = 0
+# struct EmptySpace{Nothing} <: Space{Nothing} end
+# numfunctions(::EmptySpace) = 0
 
 
 Base.length(s::AbstractSpace) = numfunctions(s)

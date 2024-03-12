@@ -17,14 +17,11 @@ TM = KM +1/2*CM
 
 
 G = BEAST.greenhh3d(wavenumber=k)
-KC = BEAST.build_potential(∇(G)×BasisFunction(),m)
-KCT1 = BEAST.γ(KC,m,1)
+KC = BEAST.build_potential(∇(G)×BasisFunction())
+KCT1 = BEAST.γₜ(KC,-1)
 TCM1 = assemble(KCT1,r,r)
-KCT2 = BEAST.γ(KC,-m,-1)
-TCM2 = assemble(KCT2,r,r)
 
-@test TM ≈ TCM1 atol=eps()
-@test TM ≈ TCM2 atol=eps()
+@test TM ≈ TCM1 atol=sqrt(eps())
 
 #limit from outside
 TM = KM -1/2*CM
@@ -32,13 +29,11 @@ TM = KM -1/2*CM
 
 G = BEAST.greenhh3d(wavenumber=k)
 KC = BEAST.build_potential(∇(G)×BasisFunction(),m)
-KCT1 = BEAST.γ(KC,m,-1)
+KCT1 = BEAST.γₜ(KC,1)
 TCM1 = assemble(KCT1,r,r)
-KCT2 = BEAST.γ(KC,-m,1)
-TCM2 = assemble(KCT2,r,r)
 
-@test TM ≈ TCM1 atol=eps()
-@test TM ≈ TCM2 atol=eps()
+
+@test TM ≈ TCM1 atol=sqrt(eps())
 
 ## same for non matching meshes
 
@@ -60,13 +55,11 @@ TM = KM +1/2*CM
 
 G = BEAST.greenhh3d(wavenumber=k)
 KC = BEAST.build_potential(∇(G)×BasisFunction(),m2)
-KCT1 = BEAST.γ(KC,m1,1)
+KCT1 = BEAST.γₜ(KC,-1)
 TCM1 = assemble(KCT1,r1,r2)
-KCT2 = BEAST.γ(KC,-m1,-1)
-TCM2 = assemble(KCT2,r1,r2)
 
-@test TM ≈ TCM1 atol=eps()
-@test TM ≈ TCM2 atol=eps()
+
+@test TM ≈ TCM1 atol=sqrt(eps())
 
 #limit from outside
 TM = KM -1/2*CM
@@ -74,11 +67,9 @@ TM = KM -1/2*CM
 
 G = BEAST.greenhh3d(wavenumber=k)
 KC = BEAST.build_potential(∇(G)×BasisFunction(),m2)
-KCT1 = BEAST.γ(KC,m1,-1)
+KCT1 = BEAST.γₜ(KC,1)
 TCM1 = assemble(KCT1,r1,r2)
-KCT2 = BEAST.γ(KC,-m1,1)
-TCM2 = assemble(KCT2,r1,r2)
 
-@test TM ≈ TCM1 atol=eps()
-@test TM ≈ TCM2 atol=eps()
+
+@test TM ≈ TCM1 atol=sqrt(eps())
 

@@ -142,7 +142,6 @@ include("utils/combinatorics.jl")
 include("utils/linearspace.jl")
 include("utils/zeromap.jl")
 include("utils/rank1map.jl")
-include("utils/geometrie.jl")
 
 include("bases/basis.jl")
 include("bases/lincomb.jl")
@@ -265,11 +264,11 @@ include("utils/plotlyglue.jl")
 
 include("composedoperator/tracesimplex.jl")
 include("composedoperator/composedoperator.jl")
-include("composedoperator/postprocessing.jl")
+# include("composedoperator/postprocessing.jl")
 
-include("multi-trace/interactions.jl")
-include("multi-trace/postprocessing.jl")
-include("multi-trace/VectorPotential.jl")
+# include("multi-trace/interactions.jl")
+# include("multi-trace/postprocessing.jl")
+# include("multi-trace/VectorPotential.jl")
 
 
 # include("multi-trace/multi-trace-old/interactions.jl")

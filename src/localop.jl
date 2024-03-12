@@ -81,12 +81,11 @@ function assemble!(biop::LocalOperator, tfs::Space, bfs::Space, store,
         threading::Type{Threading{:multi}};
         kwargs...)
 
-    if geometry(tfs) == geometry(bfs)
-        @warn "Function cannot be used for infinitely thin surfaces!!!"
+    if geometry(tfs) == geometry(bfs) && !(typeof(biop) <: ComposedOperatorLocal)
         return assemble_local_matched!(biop, tfs, bfs, store; kwargs...)
     end
 
-    if CompScienceMeshes.refines(geometry(tfs), geometry(bfs))
+    if CompScienceMeshes.refines(geometry(tfs), geometry(bfs)) && !(typeof(biop) <: ComposedOperatorLocal)
         return assemble_local_refines!(biop, tfs, bfs, store; kwargs...)
     end
 
@@ -97,12 +96,11 @@ function assemble!(biop::LocalOperator, tfs::Space, bfs::Space, store,
     threading::Type{Threading{:single}};
     kwargs...)
 
-    if geometry(tfs) == geometry(bfs)
-        @warn "Function cannot be used for infinitely thin surfaces!!!"
+    if geometry(tfs) == geometry(bfs) && !(typeof(biop) <: ComposedOperatorLocal)
         return assemble_local_matched!(biop, tfs, bfs, store; kwargs...)
     end
 
-    if CompScienceMeshes.refines(geometry(tfs), geometry(bfs))
+    if CompScienceMeshes.refines(geometry(tfs), geometry(bfs)) && !(typeof(biop) <: ComposedOperatorLocal)
         return assemble_local_refines!(biop, tfs, bfs, store; kwargs...)
     end
 
@@ -125,10 +123,10 @@ function assemble_local_matched!(biop::LocalOperator, tfs::Space, bfs::Space, st
     qd = quaddata(biop, trefs, brefs, tels, bels, quadstrat)
 
     verbose = length(tels) > 10_000
-    verbose && print(string(typeof(biop))*" dots out of 20: ")
+    verbose && print(" dots out of 20: ")
     todo, done, pctg = length(tels), 0, 0
 
-   # locmat = zeros(scalartype(biop, trefs, brefs), numfunctions(trefs), numfunctions(brefs))
+    locmat = zeros(scalartype(biop, trefs, brefs), numfunctions(trefs), numfunctions(brefs))
     for (p,tcell) in enumerate(tels)
 
         P = ta2g[p]
@@ -140,12 +138,11 @@ function assemble_local_matched!(biop::LocalOperator, tfs::Space, bfs::Space, st
 
 
         qr = quadrule(biop, trefs, brefs, tcell, bcell,qd, quadstrat)
-  #      fill!(locmat, 0)
-        locmat = cellinteractions(biop, trefs, brefs, tcell, bcell, qr)
+        fill!(locmat, 0)
+        cellinteractions_matched!(locmat,biop, trefs, brefs, tcell, bcell, qr)
 
         for i in 1 : size(locmat, 1), j in 1 : size(locmat, 2)
             for (m,a) in tad[p,i], (n,b) in bad[q,j]
-                
                 store(a * locmat[i,j] * b, m, n)
         
         end end
@@ -177,7 +174,7 @@ function assemble_local_refines!(biop::LocalOperator, tfs::Space, bfs::Space, st
 
     qd = quaddata(biop, trefs, brefs, tels, bels, quadstrat)
 
-    print(string(typeof(biop))*" dots out of 10: ")
+    print(" dots out of 10: ")
     todo, done, pctg = length(tels), 0, 0
     for (p,tcell) in enumerate(tels)
 
@@ -246,7 +243,7 @@ function assemble_local_matched!(biop::LocalOperator, tfs::subdBasis, bfs::subdB
                 store(a * locmat[i,j] * b, m, n)
 end end end end
 function same_cell(a,b)
-sort(verticeslist(a)) ≈ sort(verticeslist(b))
+    sort(verticeslist(a)) ≈ sort(verticeslist(b))
 end
 
 function elementstree(elements)
@@ -302,7 +299,7 @@ function assemble_local_mixed!(biop::LocalOperator, tfs::Space{T}, bfs::Space{T}
     # store the bcells in an octree
     tree = elementstree(bels)
 
-    print(string(typeof(biop))*" dots out of 10: ")
+    print(" dots out of 10: ")
     todo, done, pctg = length(tels), 0, 0
     for (p,tcell) in enumerate(tels)
 
@@ -391,7 +388,7 @@ function cellinteractions_matched!(zlocal, biop, trefs, brefs, cellt,cellb, qr)
         j = w * jacobian(tp)
         kernel = kernelvals(biop, tp)
         
-        zlocal += j * integrand(biop, kernel, tp, bp, tvals, bvals)
+        zlocal .+= j * integrand(biop, kernel, tp, bp, tvals, bvals)
     end
     return zlocal
 end
@@ -446,10 +443,8 @@ function cellinteractions(biop, trefs::U, brefs::V, cellt,cellb,qr) where {U<:Re
 
     return zlocal
 end
-function getvalue(list::Matrix{T}) where {T}
-    display(list)
-    return SVector{length(list),T}([i for i in list])
-end
+getvalue(list::Matrix{T}) where {T} = SVector{length(list),T}([i for i in list])
+
 # function cellinteractions(biop, trefs::U, brefs::V, cell,qr) where {U<:RefSpace{T},V<:RefSpace{T}} where {T}
     
 #     num_tshs = length(qr[1][3])

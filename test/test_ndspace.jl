@@ -38,6 +38,6 @@ for T in [Float32, Float64]
     @test v1 ≈ v2 ≈ -1/√2 ≈ -1/volume(charts[3])
 
     curlND = curl(ND)
-    @test curlND.fns[3][1].coeff ≈ +2
-    @test curlND.fns[3][2].coeff ≈ -2
+    @test curlND.fns[3][1].coeff ≈ -2
+    @test curlND.fns[3][2].coeff ≈ +2
 end

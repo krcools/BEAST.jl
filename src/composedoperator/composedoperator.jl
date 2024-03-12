@@ -597,7 +597,7 @@ end
 #     out = quote _krondot(getvalue(f),$exp) end
 #     return out
 # end
-
+kernelvals(op::ComposedOperatorLocal,x) = nothing
 kernelvals(op::ComposedOperatorIntegral, y,x) = nothing
 quaddata(op::ComposedOperatorIntegral,rs,els,qs::SingleNumQStrat) = quadpoints(rs,els,(qs.quad_rule,))
 quadrule(op::ComposedOperatorIntegral,refspace,p,y,q,el,qdata,qs::SingleNumQStrat) = qdata[1,q]
@@ -634,7 +634,7 @@ function assemble!(op::Potential, test_functions::Space, trial_functions::Space,
     kwargs...)
     # checks if surface given in basis is the same as surface given in potential
     # dsurf = surface(op)
-    # surf = geometry(trial_functions)
+    surf = geometry(trial_functions)
     # @assert same_geometry(dsurf,surf)
     # nsurf = mesh(dsurf)
     trial_functions = redefine_geometrie(trial_functions,TraceMesh(surf))
@@ -722,8 +722,8 @@ function assemble!(op::TraceOperator, test_functions::Space, trial_functions::Sp
 
     surface = geometry(test_functions)
     sign = direction(op)
-    direction = [sign*normal(c)/3 for c in chart.(Ref(surface),1:numcells(surface))]
-    surf = TraceMesh(surface,direction)
+    dir = [sign*normal(c)/3 for c in chart.(Ref(surface),1:numcells(surface))]
+    surf = TraceMesh(surface,dir)
     test_functions = redefine_geometrie(test_functions,surf)
     
     assemble!(op.operator, test_functions, trial_functions, store, threading;

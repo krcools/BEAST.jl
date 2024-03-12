@@ -37,5 +37,5 @@ nd = BEAST.nedelec(G,E)
 nd1 = BEAST.nedelec(G1,E1)
 @test numfunctions(nd1) == numcells(E1)
 Z_direct = assemble(BEAST.Identity(), nd1, nd)
-Z_expand = assemble(BEAST.Identity(), nd1, nd1) * A1
+Z_expand = -assemble(BEAST.Identity(), nd1, nd1) * A1 #minus sign because nd and nd1 are defined on opposite oriented meshes
 @test norm(Z_direct - Z_expand, Inf) ≤ √(eps(1.0))

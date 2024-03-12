@@ -11,12 +11,11 @@ mutable struct NDRefSpace{T} <: RefSpace{T,3} end
 function (ϕ::NDRefSpace)(nbd)
 
     u, v = parametric(nbd)
-    #n = normal(nbd)
+    n = normal(nbd)
     j = jacobian(nbd)
 
     tu = tangents(nbd,1)
     tv = tangents(nbd,2)
-    n = normal(nbd)
     d = 2/j
 
     return SVector((

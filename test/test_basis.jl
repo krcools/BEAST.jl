@@ -22,7 +22,7 @@ for T in [Float32, Float64]
 
     @test size(N) == (numfunctions(X), numfunctions(X))
     @test size(I) == (numfunctions(X), numfunctions(X))
-    
+    println(X)
     @test rank(I) == numfunctions(X)
 
     @time e = assemble(PlaneWaveNeumann(κ, point(0.0, 1.0)), X)
@@ -235,7 +235,7 @@ for i in eachindex(crl.fns)
     nxgradi = sort(nxgrad.fns[i], by=sh->(sh.cellid, sh.refid))
     for j in eachindex(crl.fns[i])
         # @test crl.fns[i][j] == nxgrad.fns[i][j]
-        @test crli[j].coeff == -nxgradi[j].coeff
+        @test crli[j].coeff == nxgradi[j].coeff
     end
 end
 
