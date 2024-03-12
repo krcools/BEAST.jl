@@ -32,7 +32,7 @@ function (f::LagrangeRefSpace{T,1,3})(t) where T
     #     (value=w,))
 
     j = jacobian(t)
-    p = t.patch
+    p = chart(t)
     σ = sign(dot(normal(t), cross(p[1]-p[3],p[2]-p[3])))
     SVector(
         (value=u, curl=σ*(p[3]-p[2])/j),

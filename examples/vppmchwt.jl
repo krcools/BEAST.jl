@@ -78,7 +78,7 @@ function T2(κ;trace=true,tr=1,kwargs...)
     end
     return BEAST.matrix_to_bilform(int)
 end
-function A(κ;trace=true,tr=1,kwargs...)
+function Aa(κ;trace=true,tr=1,kwargs...)
     G = BEAST.greenhh3d(wavenumber=κ)
     gradG = BEAST.∇(G)
     if trace
@@ -154,8 +154,8 @@ function Bb(κ;trace=true,tr=1,kwargs...)
     return BEAST.matrix_to_bilform(int)
 end
 
-Z(κ;rows = [1,2],cols = [1,2],kwargs...) = BEAST.matrix_to_bilform([Bb(κ;kwargs...) T2(κ;kwargs...);T1(κ;kwargs...) A(κ;kwargs...)][rows,cols];kwargs...)
-Zp(κ;rows = [1,2],cols = [1,2],kwargs...) = BEAST.matrix_to_bilform([A(κ;kwargs...) T1(κ;kwargs...);T2(κ;kwargs...) Bb(κ;kwargs...)][rows,cols];kwargs...)
+Z(κ;rows = [1,2],cols = [1,2],kwargs...) = BEAST.matrix_to_bilform([Bb(κ;kwargs...) T2(κ;kwargs...);T1(κ;kwargs...) Aa(κ;kwargs...)][rows,cols];kwargs...)
+Zp(κ;rows = [1,2],cols = [1,2],kwargs...) = BEAST.matrix_to_bilform([Aa(κ;kwargs...) T1(κ;kwargs...);T2(κ;kwargs...) Bb(κ;kwargs...)][rows,cols];kwargs...)
 
 
 function excitation_dirichlet(A,curlA,divA)
@@ -200,7 +200,7 @@ end
 hh = 0.3
 Γ1 = meshcuboid(1.0, 1.0, 1.0, hh)
 Γ2 =  (@SVector [-1.0,0.0,0.0]) + BEAST.TraceMesh(-Mesh([point(-x,y,z) for (x,y,z) in vertices(Γ1)], deepcopy(cells(Γ1))))
-Γ3 = (@SVector [0.0,0.0,-1.0]) + BEAST.TraceMesh(-translate(Mesh([point(x,y,-z) for (x,y,z) in vertices(Γ1)], deepcopy(cells(Γ1))),[0.0,0.0,0.0]))
+Γ3 = (@SVector [0.0,0.0,-1.0]) + BEAST.TraceMesh(-CompScienceMeshes.translate(Mesh([point(x,y,-z) for (x,y,z) in vertices(Γ1)], deepcopy(cells(Γ1))),[0.0,0.0,0.0]))
 
 Γ = [Γ1,Γ2,Γ3]
 Tree = [0,0,0] # give index in which volume material is
@@ -276,7 +276,7 @@ eqs2cefie =begin  BEAST.Equation[-α[ci]*sum(BEAST.BilForm[Z(κ0;rows=[2])[t[ci]
             -α[ci]*Xind[t[ci]] for i in [0], ci in 1:N if ci ∈ children(i,Tree) ∩ CFIE] end
 eqs2cmfie = begin BEAST.Equation[-(1-α[ci])* sum(BEAST.BilForm[Z(κ0;rows=[1])[t[ci],b[j]] for j in HOM ∩ children(i,Tree)])+
             -(1-α[ci])*sum(BEAST.BilForm[Z(κ0;rows=[1],cols=[2])[t[ci],b[j]] for j in [EFIE...,MFIE...,CFIE...] ∩ children(i,Tree)]) +
-            -(1-α[ci])*idnd()[t[ci],b[ci]] == -(1-α[ci])*Xinn[t[ci]]
+            -(1-α[ci])*idnd[t[ci],b[ci]] == -(1-α[ci])*Xinn[t[ci]]
             for i in [0], ci in 1:N if ci ∈ children(i,Tree) ∩ CFIE] end
 
 
@@ -291,7 +291,7 @@ eqs3efie = begin BEAST.Equation[(Z(κ[i];rows=[2])*(Qinv[i]))[t[ci],b[i]]+
 eqs3mfie = begin BEAST.Equation[(Z(κ[i];rows=[1])*(Qinv[i]))[t[ci],b[i]]+
             -sum(BEAST.BilForm[Z(κ[i];rows=[1])[t[ci],b[j]] for j in HOM ∩ children(i,Tree)])+
             -sum(BEAST.BilForm[Z(κ[i];rows=[1],cols=[2])[t[ci],b[j]] for j in [EFIE...,MFIE...,CFIE...] ∩ children(i,Tree)]) +
-            -idnd()[t[ci],b[ci]] ==0
+            -idnd[t[ci],b[ci]] ==0
             for i in [0], ci in 1:N if ci ∈ children(i,Tree) ∩ MFIE]end
 eqs3cefie = begin BEAST.Equation[α[ci]*(Z(κ[i];rows=[2])*(Qinv[i]))[t[ci],b[i]]+
             -α[ci]*sum(BEAST.BilForm[Z(κ[i];rows=[2])[t[ci],b[j]] for j in HOM ∩ children(i,Tree)])+
@@ -300,7 +300,7 @@ eqs3cefie = begin BEAST.Equation[α[ci]*(Z(κ[i];rows=[2])*(Qinv[i]))[t[ci],b[i]
 eqs3cmfie = begin BEAST.Equation[(1-α[ci])*(Z(κ[i];rows=[1])*(Qinv[i]))[t[ci],b[i]]+
             -(1-α[ci])* sum(BEAST.BilForm[Z(κ[i];rows=[1])[t[ci],b[j]] for j in HOM ∩ children(i,Tree)])+
             -(1-α[ci])*sum(BEAST.BilForm[Z(κ[i];rows=[1],cols=[2])[t[ci],b[j]] for j in [EFIE...,MFIE...,CFIE...] ∩ children(i,Tree)]) +
-            -(1-α[ci])*idnd()[t[ci],b[ci]] == 0
+            -(1-α[ci])*idnd[t[ci],b[ci]] == 0
             for i in HOM, ci in 1:N if ci ∈ children(i,Tree) ∩ CFIE] end
 
 ## sum the equations in the two parts in a pmchwt fassion,
@@ -317,7 +317,7 @@ asymfilled && (Dasymeq = BEAST.discretise(asymeq, (t.∈Xtmfie)..., (b.∈Xb)...
 #assemble system
 
 
-
+qsZ = [8,8,7,8,5,5,4,3]
 qs(::BEAST.LocalOperator, a, b) = BEAST.SingleNumQStrat(qsZ[1])
 qs(op::BEAST.ComposedOperatorLocal,testspace,trialpsace) = BEAST.SingleNumQStrat(qsZ[2])
 qs(op::BEAST.ComposedOperatorIntegral,testspace,trialspace) = BEAST.DoubleNumSauterQstrat(qsZ[3:end]...) 
@@ -332,9 +332,7 @@ Zunprec = Za*I+Zs*I
 bunprec = ba .+ bs 
 
 uz = solve(Zunprec,bunprec,BEAST.DirectProductSpace(Xb);strat=solvestrat,tol=abstol_Z, maxiter=maxiter_Z, restart=restart_Z)
-save_uZ && (out[:uZ] = uz[1])
-save_uZ && (out[:basis] = Xb)
-save_itterZ && (out[:itter_Z] = uz[2])
+
 
 
 

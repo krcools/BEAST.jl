@@ -163,20 +163,4 @@ function celltestvalues(tshs::subReferenceSpace{T,D}, tcell, field, qr) where {T
 
     return interactions
 end
-struct FunctionExcitation{T} <: Functional
-    f
-end
-export FunctionExcitation
 
-
-
-function (func::FunctionExcitation)(x)
-    return func.f(x)
-end
-function (func::FunctionExcitation)(x::Union{CompScienceMeshes.MeshPointNM,BEAST.TraceMeshPointNM})
-    return func.f(cartesian(x))
-end
-scalartype(ff::FunctionExcitation{T}) where {T} = T
-cross(::NormalVector, p::FunctionExcitation) = CrossTraceMW(p)
-integrand(::FunctionExcitation,tval,fval) = tval[1]*fval
-export FunctionExcitation

@@ -449,3 +449,21 @@ function assemble!(op::TraceOperator, test_functions::Space, trial_functions::Sp
     assemble!(op.operator, test_functions, trial_functions, store, threading;
    kwargs...)
 end
+
+struct FunctionExcitation{T} <: Functional
+    f
+end
+export FunctionExcitation
+
+
+
+function (func::FunctionExcitation)(x)
+    return func.f(x)
+end
+function (func::FunctionExcitation)(x::Union{CompScienceMeshes.MeshPointNM,BEAST.TraceMeshPointNM})
+    return func.f(cartesian(x))
+end
+scalartype(ff::FunctionExcitation{T}) where {T} = T
+cross(::NormalVector, p::FunctionExcitation) = CrossTraceMW(p)
+integrand(::FunctionExcitation,tval,fval) = tval[1]*fval
+export FunctionExcitation
