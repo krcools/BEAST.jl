@@ -3,7 +3,7 @@ using CompScienceMeshes
 using LinearAlgebra
 using AbstractTrees
 using StaticArrays
-import BEAST: FunctionExcitation, matrix_to_bilform, B, nb, nt, ZeroOperator
+import BEAST: FunctionExcitation, matrix_to_bilform, B, nb, nt, ZeroOperator, ∇
 function T1(κ;trace=true,tr=1,kwargs...)
     G = BEAST.greenhh3d(wavenumber=κ)
     gradG = BEAST.∇(G)

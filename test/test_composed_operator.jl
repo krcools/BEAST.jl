@@ -1,6 +1,7 @@
 using CompScienceMeshes
 using BEAST
 using Test
+import BEAST: BasisFunction, ∇ 
 
 m = meshrectangle(1.0, 1.0, 0.5, 3)
 k = 1.2

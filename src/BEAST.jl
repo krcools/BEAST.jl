@@ -274,6 +274,5 @@ const n = NormalVector()
 export n
 
 const ∇ = Nabla()
-export ∇
 
 end # module
