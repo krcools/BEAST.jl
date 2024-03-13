@@ -158,3 +158,29 @@ end
 function restrict(ϕ::RefSpace, dom1, dom2)
     interpolate(ϕ, dom2, ϕ, dom1)
 end
+
+const _dof_rtperm_matrix = [
+    @SMatrix[1 0 0;         # 1. {1,2,3}
+                0 1 0;
+                0 0 1],
+
+    @SMatrix[0 0 1;         # 2. {2,3,1}
+                1 0 0;
+                0 1 0],
+
+    @SMatrix[0 1 0;         # 3. {3,1,2}
+                0 0 1;
+                1 0 0],
+
+    @SMatrix[0 1 0;         # 4. {2,1,3}
+                1 0 0;
+                0 0 1],
+
+    @SMatrix[1 0 0;         # 5. {1,3,2}
+                0 0 1;
+                0 1 0],
+
+    @SMatrix[0 0 1;         # 6. {3,2,1}
+                0 1 0;
+                1 0 0]
+]
