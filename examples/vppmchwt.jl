@@ -253,9 +253,9 @@ b = BEAST.hilbertspace(:b, length(Γ))
 ##### define space
 perm = sortperm([HOM...,EFIE...,CFIE...,MFIE...])
 Xt = [BEAST.DirectProductSpace[BEAST.DirectProductSpace([Xnt(Γ[i]),Xdt(Γ[i])]) for i in HOM];BEAST.DirectProductSpace[BEAST.DirectProductSpace([Xdt(Γ[i])]) for i in [EFIE...,CFIE...,MFIE...]]][perm]
-Yt = [BEAST.DirectProductSpace[BEAST.DirectProductSpace([Ydt(Γ[i]),Ynt(Γ[i])]) for i in HOM];BEAST.DirectProductSpace[BEAST.DirectProductSpace([Ydt(Γ[i])]) for i in [EFIE...,CFIE...,MFIE...]]][perm]
+Yt = [BEAST.DirectProductSpace[BEAST.DirectProductSpace([Ydt(Γ[i]),Ynt(Γ[i])]) for i in HOM];BEAST.DirectProductSpace[BEAST.DirectProductSpace([Ynt(Γ[i])]) for i in [EFIE...,CFIE...,MFIE...]]][perm]
 Xb = [BEAST.DirectProductSpace[BEAST.DirectProductSpace([Xdb(Γ[i]),Xnb(Γ[i])]) for i in HOM];BEAST.DirectProductSpace[BEAST.DirectProductSpace([Xnb(Γ[i])]) for i in [EFIE...,CFIE...,MFIE...]]][perm]
-Yb = [BEAST.DirectProductSpace[BEAST.DirectProductSpace([Ynb(Γ[i]),Ydb(Γ[i])]) for i in HOM];BEAST.DirectProductSpace[BEAST.DirectProductSpace([Ynb(Γ[i])]) for i in [EFIE...,CFIE...,MFIE...]]][perm]
+Yb = [BEAST.DirectProductSpace[BEAST.DirectProductSpace([Ynb(Γ[i]),Ydb(Γ[i])]) for i in HOM];BEAST.DirectProductSpace[BEAST.DirectProductSpace([Ydb(Γ[i])]) for i in [EFIE...,CFIE...,MFIE...]]][perm]
 Xtmfie = [BEAST.DirectProductSpace[BEAST.DirectProductSpace([Xnt(Γ[i]),Xdt(Γ[i])]) for i in HOM];BEAST.DirectProductSpace[BEAST.DirectProductSpace([Ynt(Γ[i])]) for i in [EFIE...,CFIE...,MFIE...]]][perm]
 ##### define equation
 
