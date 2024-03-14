@@ -22,14 +22,14 @@ function (f::RT2RefSpace)(p)
     # )
 
     return SVector(
-        (value=(8*u*v-2*u-6*v+2)*tu + (4*v*(2*v-1))*tv, divergence=inv_j),
-        (value=(-8*u^2-8*u*v+12*u+6*v-4)*tu + (2*v*(-4*u-4*v+3))*tv, divergence=inv_j),
-        (value=-(2*u*(4*u+4*v-3))*tu - (8*u*v-6*u+8*v^2-12*v+4)*tv, divergence=inv_j),
-        (value=-(4*u*(1-2*u))*tu - (-8*u*v+6*u+2*v-2)*tv, divergence=inv_j),
-        (value=-(4u*(1-2u))*tu - (2v*(1-4u))*tv, divergence=inv_j),
-        (value=-(2u*(1-4v))*tu - (4v*(1-2v))*tv, divergence=inv_j),
-        (value=(8*u*(-2*u-v+2))*tu + (8*v*(-2*u-v+1))*tv, divergence=inv_j),
-        (value=(8*u*(-u-2*v+1))*tu + (8*v*(-u-2*v+2))*tv, divergence=inv_j),
+        (value=((8*u^2+8*u*v-12*u-6*v+4)*tu + (2*v*(4*u+4*v-3))*tv)*inv_j, divergence=(24*u+24*v-18)*inv_j),
+        (value=((-8*u*v+2*u+6*v-2)*tu + (4*v*(-2*v+1))*tv)*inv_j, divergence=(6-24*v)*inv_j),
+        (value=((4*u*(1-2*u))*tu + (-8*u*v+6*u+2*v-2)*tv)*inv_j, divergence=(6-24*u)*inv_j),
+        (value=((2*u*(4*u+4*v-3))*tu + (8*u*v-6*u+8*v^2-12*v+4)*tv)*inv_j, divergence=(24*u+24*v-18)*inv_j),
+        (value=((2u*(1-4v))*tu + (4v*(1-2v))*tv)*inv_j, divergence=(6-24*v)*inv_j),
+        (value=((4u*(1-2u))*tu + (2v*(1-4u))*tv)*inv_j, divergence=(6-24*u)*inv_j),
+        (value=((8*u*(-2*u-v+2))*tu + (8*v*(-2*u-v+1))*tv)*inv_j, divergence=(-48*u-24*v+24)*inv_j),
+        (value=((8*u*(-u-2*v+1))*tu + (8*v*(-u-2*v+2))*tv)*inv_j, divergence=(-24*u-48*v+24)*inv_j)
     )
 end
 
@@ -117,3 +117,60 @@ function dof_perm_matrix(::RT2RefSpace, vert_permutation)
     @assert i != nothing
     return _dof_rt2perm_matrix[i]
 end
+
+const _dof_rt2perm_matrix = [
+    @SMatrix[1 0 0 0 0 0 0 0;  #1. {1,2,3}
+                0 1 0 0 0 0 0 0;
+                0 0 1 0 0 0 0 0;
+                0 0 0 1 0 0 0 0;
+                0 0 0 0 1 0 0 0;
+                0 0 0 0 0 1 0 0;
+                0 0 0 0 0 0 1 0;
+                0 0 0 0 0 0 0 1],
+
+    @SMatrix[0 0 0 0 1 0 0 0;  #2. {2,3,1}
+                0 0 0 0 0 1 0 0;
+                1 0 0 0 0 0 0 0;
+                0 1 0 0 0 0 0 0;
+                0 0 1 0 0 0 0 0;
+                0 0 0 1 0 0 0 0;
+                0 0 0 0 0 0 0 -1;
+                0 0 0 0 0 0 1 -1],
+
+    @SMatrix[0 0 1 0 0 0 0 0;  #3. {3,1,2}
+                0 0 0 1 0 0 0 0;
+                0 0 0 0 1 0 0 0;
+                0 0 0 0 0 1 0 0;
+                1 0 0 0 0 0 0 0;
+                0 1 0 0 0 0 0 0;
+                0 0 0 0 0 0 -1 1;
+                0 0 0 0 0 0 -1 0],
+
+    @SMatrix[0 0 0 1 0 0 0 0;  #4. {2,1,3}
+                0 0 1 0 0 0 0 0;
+                0 1 0 0 0 0 0 0;
+                1 0 0 0 0 0 0 0;
+                0 0 0 0 0 1 0 0;
+                0 0 0 0 1 0 0 0;
+                0 0 0 0 0 0 0 1;
+                0 0 0 0 0 0 1 0],
+
+    @SMatrix[0 1 0 0 0 0 0 0;  #5. {1,3,2}
+                1 0 0 0 0 0 0 0;
+                0 0 0 0 0 1 0 0;
+                0 0 0 0 1 0 0 0;
+                0 0 0 1 0 0 0 0;
+                0 0 1 0 0 0 0 0;
+                0 0 0 0 0 0 1 -1;
+                0 0 0 0 0 0 0 -1],
+
+    @SMatrix[0 0 0 0 0 1 0 0;  #6. {3,2,1}
+                0 0 0 0 1 0 0 0;
+                0 0 0 1 0 0 0 0;
+                0 0 1 0 0 0 0 0;
+                0 1 0 0 0 0 0 0;
+                1 0 0 0 0 0 0 0;
+                0 0 0 0 0 0 -1 0;
+                0 0 0 0 0 0 -1 1]
+]
+
