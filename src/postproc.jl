@@ -281,6 +281,21 @@ function farfieldlocal!(zlocal,op,refspace,y,el,qr)
     end
 
 end
+function farfieldlocal!(zlocal,op::ComposedOperator,refspace,y,el,qr)
+
+    for q in qr
+        x = q.point
+        F = q.value
+        dx = q.weight
+
+        krn = kernelvals(op, y, x)
+
+        zlocal .+= integrand(op,krn,y,F,x) * dx
+
+
+    end
+
+end
 
 function farfieldlocal!(zlocal,op,trialrefs, timerefs,
         p, testel, q, trialel, k, timeel, tb,quadrule)
