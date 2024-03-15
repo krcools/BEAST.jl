@@ -55,12 +55,12 @@ function restrict(ϕ::NDRefSpace{T}, dom1, dom2) where T
 
         u = carttobary(dom1, c)
         x = neighborhood(dom1, u)
-
+        σ = sign(dot(normalize(tangents(dom2,1)×tangents(dom2,2)),normal(dom2)))
         y = ϕ(x)
 
         for j in 1:K
             # Q[j,i] = dot(y[j][1], m) * l
-            Q[j,i] = dot(y[j][1], t)
+            Q[j,i] = dot(y[j][1], t)*σ
         end
     end
 

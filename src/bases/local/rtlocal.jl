@@ -64,7 +64,8 @@ function restrict(ϕ::RTRefSpace{T}, dom1, dom2) where T
         # find the outer binormal there
         t = b - a
         l = norm(t)
-        n = normal(dom2)
+
+        n = normalize(tangents(dom2,1)×tangents(dom2,2))
         m = cross(t, n) / l
 
         u = carttobary(dom1, c)
