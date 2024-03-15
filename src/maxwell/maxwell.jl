@@ -21,10 +21,12 @@ module Maxwell3D
             alpha=nothing,
             beta=nothing)
 
-        
+
         gamma, wavenumber = Mod.gamma_wavenumber_handler(gamma, wavenumber)
 
-        @assert gamma !== nothing
+        if Mod.isstatic(gamma) # static case
+            @assert !(isnothing(alpha)) && !(isnothing(beta))
+        end
 
         alpha === nothing && (alpha = -gamma)
         beta  === nothing && (beta  = -1/gamma)
@@ -54,15 +56,15 @@ module Maxwell3D
 
         gamma, wavenumber = Mod.gamma_wavenumber_handler(gamma, wavenumber)
 
-        if alpha === nothing
-            if gamma !== nothing
-                alpha = one(gamma)
-            else
+        if isnothing(alpha)
+            if Mod.isstatic(gamma) # static case
                 alpha = 1.0 # Default to double precision
+            else
+                alpha = one(gamma)
             end
         end
 
-        Mod.MWDoubleLayer3D(gamma)
+        Mod.MWDoubleLayer3D(alpha, gamma)
     end
 
     planewave(;

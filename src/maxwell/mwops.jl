@@ -4,9 +4,8 @@ abstract type MaxwellOperator3DReg{T,K} <: MaxwellOperator3D{T,K} end
 scalartype(op::MaxwellOperator3D{T,K}) where {T, K <: Nothing} = T
 scalartype(op::MaxwellOperator3D{T,K}) where {T, K} = promote_type(T, K)
 
-gamma(op::MaxwellOperator3D{T,K}) where {T, K <: Nothing} = T(0)
+gamma(op::MaxwellOperator3D{T,Val{0}}) where {T} = zero(T)
 gamma(op::MaxwellOperator3D{T,K}) where {T, K} = op.gamma
-
 
 
 struct MWSingleLayer3D{T,U} <: MaxwellOperator3D{T,U}
@@ -14,6 +13,8 @@ struct MWSingleLayer3D{T,U} <: MaxwellOperator3D{T,U}
   α::U
   β::U
 end
+
+gamma(op::MWSingleLayer3D{Val{0}, U}) where {U} = zero(U)
 
 scalartype(op::MWSingleLayer3D{T,U}) where {T,U} = promote_type(T,U)
 # sign_upon_permutation(op::MWSingleLayer3D, I, J) = 1
@@ -230,12 +231,30 @@ end
 #
 ################################################################################
 
+"""
+    gamma_wavenumber_handler(gamma, wavenumber)
+
+This function handles the input of `gamma` and `wavenumber`. It throws an error if both `gamma` and
+`wavenumber` are provided. If neither is provided, it assumes a static problem and returns `Val(0)`
+for `gamma` and `wavenumber`.
+
+# Arguments
+- `gamma`: `im` * `wavenumber` or `nothing`.
+- `wavenumber`: `wavenumber` or `nothing`.
+
+# Returns
+- `gamma` and `wavenumber`: Appropriate pair `gamma` and `wavenumber`.
+"""
 function gamma_wavenumber_handler(gamma, wavenumber)
-    if !((gamma !== nothing) ⊻ (wavenumber !== nothing))
-        error("Supply one of (not both) gamma or wavenumber")
+    if !isnothing(gamma) && !isnothing(wavenumber)
+        error("Supplying both gamma and wavenumber is not supported.")
+
+    elseif isnothing(gamma) && isnothing(wavenumber)
+        # if neither gamma nor wavenumber is supplied, we are assuming a static problem
+        return Val(0), Val(0)
     end
 
-    if gamma === nothing && (wavenumber !== nothing)
+    if isnothing(gamma) && !isnothing(wavenumber)
         if iszero(real(wavenumber))
             gamma = -imag(wavenumber)
         else
@@ -243,21 +262,40 @@ function gamma_wavenumber_handler(gamma, wavenumber)
         end
     end
 
-  return gamma, wavenumber
+    return gamma, wavenumber
+end
+
+"""
+    isstatic(gamma)
+
+This function checks if the provided `gamma` value represents a static problem.
+It returns true if `gamma` is of type `Val{0}` indicating a static problem.
+
+# Arguments
+- `gamma`: `gamma` value.
+
+# Returns
+- A boolean indicating whether the problem is static or not.
+"""
+function isstatic(gamma)
+    return typeof(gamma) == Val{0}
+end
+
+function isstatic(op::MaxwellOperator3D)
+    return isstatic(op.gamma)
 end
 
 function operator_parameter_handler(alpha, gamma, wavenumber)
 
-  gamma, wavenumber = gamma_wavenumber_handler(gamma, wavenumber)
+gamma, wavenumber = gamma_wavenumber_handler(gamma, wavenumber)
 
-  if alpha === nothing
-      if gamma !== nothing
-          alpha = one(real(typeof(gamma)))
-      else
-          # We are dealing with a static problem. Default to double precision.
-          alpha = 1.0
-      end
-  end
+    if alpha === nothing
+        if isstatic(gamma) # static problem
+            alpha = 1.0 # default to double precision
+        else
+            alpha = one(real(typeof(gamma)))
+        end
+    end
 
-  return alpha, gamma
+return alpha, gamma
 end
