@@ -154,11 +154,16 @@ CrossLocal(a::ComposedOperatorIntegral,b::Union{ComposedOperatorLocal,NormalVect
 CrossLocal(a::Union{ComposedOperatorLocal,NormalVector},b::ComposedOperatorIntegral) = CrossIntegral(a,b)
 CrossLocal(a::ComposedOperatorIntegral,b::ComposedOperatorIntegral) = CrossIntegral(a,b)
 
-×(a::Union{ComposedOperator,NormalVector,LinearCombinationOfOperators},b::Union{ComposedOperator,NormalVector,LinearCombinationOfOperators}) = CrossLocal(a,b)
-⋅(a::Union{ComposedOperator,NormalVector,LinearCombinationOfOperators},b::Union{ComposedOperator,NormalVector,LinearCombinationOfOperators}) = DotLocal(a,b)
-*(a::Union{ComposedOperator,NormalVector,LinearCombinationOfOperators},b::Union{ComposedOperator,NormalVector,LinearCombinationOfOperators}) = TimesLocal(a,b)
+×(a::Union{ComposedOperator,NormalVector,LinearCombinationOfOperators,ZeroOperator},b::Union{ComposedOperator,NormalVector,LinearCombinationOfOperators,ZeroOperator}) = CrossLocal(a,b)
+⋅(a::Union{ComposedOperator,NormalVector,LinearCombinationOfOperators,ZeroOperator},b::Union{ComposedOperator,NormalVector,LinearCombinationOfOperators,ZeroOperator}) = DotLocal(a,b)
+*(a::Union{ComposedOperator,NormalVector,LinearCombinationOfOperators,ZeroOperator},b::Union{ComposedOperator,NormalVector,LinearCombinationOfOperators,ZeroOperator}) = TimesLocal(a,b)
 
-
+TimesLocal(a,b::ZeroOperator) = ZeroOperator()
+TimesLocal(a::ZeroOperator,b) = ZeroOperator()
+DotLocal(a,b::ZeroOperator) = ZeroOperator()
+CrossLocal(a,b::ZeroOperator) = ZeroOperator()
+DotLocal(a::ZeroOperator,b) = ZeroOperator()
+CrossLocal(a::ZeroOperator,b) = ZeroOperator()
 
 scalartype(op::Union{TestNormal,TrialNormal,BasisFunction,DivBasisFunction,TraceDirection}) = Float16
 scalartype(op::Operations) = promote_type(scalartype(op.lhs),scalartype(op.rhs))
@@ -343,6 +348,7 @@ end
 γ(op::GradDivGreenHH3D) = op
 γ(op::GradGreenHH3D) = op + 1/2*TraceDirection()
 
+
 grad(G::GreenHH3D) = GradGreenHH3D(G.gamma)
 graddiv(G::GreenHH3D) = GradDivGreenHH3D(G.gamma)
 function (::Nabla)(G::Kernel)
@@ -393,6 +399,7 @@ function (op::DivBasisFunction)(x,y,g)
     getdivergence(g)
 end
 function approx_sign(a::T; tol=eps(T)) where {T <: Number}
+    @assert abs(a) > tol
     abs(a) < tol && return zero(T)
     return sign(a)
 end
@@ -445,7 +452,7 @@ function assemble!(op::TraceOperator, test_functions::Space, trial_functions::Sp
     dir = [sign*normal(c)/3 for c in chart.(Ref(surface),1:numcells(surface))]
     surf = TraceMesh(surface,dir)
     test_functions = redefine_geometrie(test_functions,surf)
-    
+    println(norm(surf.direction[1]))
     assemble!(op.operator, test_functions, trial_functions, store, threading;
    kwargs...)
 end
@@ -466,3 +473,20 @@ end
 scalartype(ff::FunctionExcitation{T}) where {T} = T
 cross(::NormalVector, p::FunctionExcitation) = CrossTraceMW(p)
 integrand(::FunctionExcitation,tval,fval) = tval[1]*fval
+
+
+function farfieldlocal!(zlocal,op::ComposedOperator,refspace,y,el,qr)
+
+    for q in qr
+        x = q.point
+        F = q.value
+        dx = q.weight
+
+        krn = kernelvals(op, y, x)
+
+        zlocal .+= integrand(op,krn,y,F,x) * dx
+
+
+    end
+
+end
