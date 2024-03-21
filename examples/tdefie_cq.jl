@@ -1,5 +1,3 @@
-using DrWatson
-quickactivate("nonlinearmodeling")
 using CompScienceMeshes, BEAST
 
 Γ = meshsphere(1.0, 0.2)
