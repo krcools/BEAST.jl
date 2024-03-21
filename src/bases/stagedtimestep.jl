@@ -18,3 +18,9 @@ end
 
 scalartype(sts :: StagedTimeStep{SB, T, N}) where {SB, T, N} = T;
 temporalbasis(sts :: StagedTimeStep{SB, T, N}) where {SB, T, N} = timebasisdelta(sts.Δt, sts.Nt)
+
+struct FiniteDiffTimeStep{SB, T}
+	spatialBasis :: SB
+	Δt :: T
+	Nt :: Int
+end

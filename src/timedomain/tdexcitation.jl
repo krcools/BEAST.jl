@@ -67,6 +67,19 @@ function assemble(exc::TDFunctional, testST::StagedTimeStep;
     return Z;
 end
 
+function assemble(exc::TDFunctional, testST::FiniteDiffTimeStep; 
+    quaddata=quaddata, quadrule=quadrule)
+
+    spatialBasis = testST.spatialBasis
+    Nt = testST.Nt
+    Δt = testST.Δt
+    Z = zeros(eltype(exc), numfunctions(spatialBasis), Nt)
+    store(v,m,k) = (Z[m,k] += v)
+    tbs = timebasisdelta(Δt, Nt)
+    assemble!(exc, spatialBasis ⊗ tbs, store, quaddata=quaddata, quadrule=quadrule)
+    return Z
+end
+
 function assemble!(exc::TDFunctional, testST, store;
     quaddata=quaddata, quadrule=quadrule)
 

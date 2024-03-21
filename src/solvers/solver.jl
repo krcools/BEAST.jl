@@ -142,6 +142,11 @@ function assemble(lform::LinForm, test_space_dict)
     if typeof(test_space_dict[1]) <: T where T <: StagedTimeStep{SB, M, N} where {SB, M, N}
         return assemble(lform.terms[1].functional, test_space_dict[1])
     end
+
+    if typeof(test_space_dict[1]) <: T where T <: FiniteDiffTimeStep{SB, M} where {SB, M}
+        return assemble(lform.terms[1].functional, test_space_dict[1])
+    end
+    
     X = _spacedict_to_directproductspace(test_space_dict)
     return assemble(lform, X)
 end
@@ -202,6 +207,10 @@ function assemble(bilform::BilForm, test_space_dict, trial_space_dict;
         return assemble(bilform::BilForm, test_space_dict[1], trial_space_dict[1])
     end
 
+    if typeof(test_space_dict[1]) <: T where T <: FiniteDiffTimeStep{SB, M} where {SB, M}
+        return assemble(bilform::BilForm, test_space_dict[1], trial_space_dict[1])
+    end
+
     X = _spacedict_to_directproductspace(test_space_dict)
     Y = _spacedict_to_directproductspace(trial_space_dict)
 
@@ -214,6 +223,12 @@ function assemble(bilform::BilForm, test_space::StagedTimeStep, trial_space::Sta
 	Y = trial_space
 
     return assemble(bilform.terms[1].kernel, X, Y)
+end
+
+function assemble(bilform::BilForm, test_space::FiniteDiffTimeStep, trial_space::FiniteDiffTimeStep)
+
+    return assemble(bilform.terms[1].kernel, test_space, trial_space)
+
 end
 
 lift(a,I,J,U,V) = LiftedMaps.LiftedMap(a,I,J,U,V)

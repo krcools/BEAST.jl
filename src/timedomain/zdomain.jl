@@ -12,6 +12,13 @@ function laplace_to_z(rho, n, N, dt, A, b)
 	return s;
 end
 
+function laplace_to_z(rho, n, N, dt, method::FiniteDiffMethod)
+	iz = (1/rho)*exp(-2*im*pi*n/N)
+	@assert dt ≈ method.dt
+	s = method.p(iz)
+	return s
+end
+
 """
     inverse_z_transform(k, rho, N, X)
 
