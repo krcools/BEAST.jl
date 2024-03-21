@@ -67,8 +67,8 @@ function interpolate(fields, interpolant::BEAST.RT2RefSpace, chart)
             J_chart = jacobian(p_chart)
             t1 = tangents(p_chart,1)
             t2 = tangents(p_chart,2)
-            q0 = -n_chart × (nxq0ref[1]*t1 + nxq0ref[2]*t2) / J_chart^2
-            q1 = -n_chart × (nxq1ref[1]*t1 + nxq1ref[2]*t2) / J_chart^2
+            q0 = -n_chart × (nxq0ref[1]*t1 + nxq0ref[2]*t2) / J_chart
+            q1 = -n_chart × (nxq1ref[1]*t1 + nxq1ref[2]*t2) / J_chart
             
             vals = fields(p_chart)
             J_edge = jacobian(p_edge)
@@ -97,8 +97,8 @@ function interpolate(fields, interpolant::BEAST.RT2RefSpace, chart)
         t1 = tangents(p,1)
         t2 = tangents(p,2)
 
-        q6 = -n_chart × (nxq6ref[1] * t1 + nxq6ref[2] * t2) / J_chart^2
-        q7 = -n_chart × (nxq7ref[1] * t1 + nxq7ref[2] * t2) / J_chart^2
+        q6 = -n_chart × (nxq6ref[1] * t1 + nxq6ref[2] * t2) / J_chart
+        q7 = -n_chart × (nxq7ref[1] * t1 + nxq7ref[2] * t2) / J_chart
 
         vals = fields(p)
         l6 .+= [w * dot(f,q6) for f in vals]
