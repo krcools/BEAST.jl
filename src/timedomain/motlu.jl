@@ -66,32 +66,3 @@ function marchonintime(W0,Z,B,I; convhist=false)
         return x
     end
 end
-
-function convolve(Z,x,j,k0)
-    T = promote_type(eltype(Z), eltype(x))
-    M,N,K = size(Z)
-    @assert M == size(x,1)
-    y = zeros(T,M)
-        for m in 1:M
-            for n in 1:N
-                for k in k0:min(j,K)
-                    i = j - k + 1
-                    y[m] += Z[m,n,k] * x[n,i]
-                end
-            end
-        end
-    return y
-end
-
-function marchonintime_cq(W0,Z,B,I)
-    T = eltype(Z)
-    M,N,K = size(Z)
-    @assert M == size(B,1)
-    x = zeros(T,N,I)
-    for i in 1:I
-        b = B[:,i] - convolve(Z,x,i,2)
-        x[:,i] = W0 * b
-        (i % 10 == 0) && print(i, "[", I, "] - ")
-    end
-    return x
-end

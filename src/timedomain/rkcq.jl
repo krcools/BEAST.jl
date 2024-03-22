@@ -16,15 +16,11 @@ A, b: Coefficient matrix and vectors from the Butcher tableau.
 zTransformedTermCount: Number of terms in the inverse Z-transform.
 contourRadius: radius of circle used as integration contour for the inverse Z-transform.
 """
-struct RungeKuttaConvolutionQuadrature{LK, T, N, NN}
-	laplaceKernel         :: LK # function of s that returns an IntegralOperator
-	A                     :: SArray{Tuple{N,N},T,2,NN}
-	b                     :: SVector{N,T}
-	Δt                    :: T
-	zTransformedTermCount :: Int
-	contourRadius         :: T
+struct RungeKuttaConvolutionQuadrature{}
+	timedomainKernel :: AbstractSpaceTimeOperator # function of s that returns an IntegralOperator
 end
-scalartype(rkcq::RungeKuttaConvolutionQuadrature{LK, T, N, NN}) where {LK, T, N, NN} = Complex{T};
+#scalartype(rkcq::RungeKuttaConvolutionQuadrature{LK}) where {LK} = Complex
+
 
 # M = H*diagm(D)*invH
 struct DiagonalizedMatrix{T,N,NN}
@@ -43,19 +39,27 @@ function diagonalizedmatrix(M :: SArray{Tuple{N,N},Complex{T},2,NN}) where {T,N,
 end
 
 function assemble(rkcq :: RungeKuttaConvolutionQuadrature,
-                  testfns :: StagedTimeStep,
-                  trialfns :: StagedTimeStep)
+                  testfns :: SpaceTimeBasis,
+                  trialfns :: SpaceTimeBasis)
 
-	laplaceKernel = rkcq.laplaceKernel
-	A = rkcq.A
-	b = rkcq.b
-	Δt = rkcq.Δt
-	Q = rkcq.zTransformedTermCount
-	rho = rkcq.contourRadius
+	@warn "staged assemble of the left-hand side"
+	sol = rkcq.timedomainKernel.speed_of_light
+	numdiffweak = rkcq.timedomainKernel.ws_diffs
+	numdiffhyper = rkcq.timedomainKernel.hs_diffs
+
+	@info "converting time-domain kernel to Laplace-domain kernel"
+	LaplaceEFIO(s::T) where {T}= MWSingleLayer3D(s/sol, -s^(numdiffweak)/sol, s^(numdiffhyper)*T(sol))
+	laplaceKernel = LaplaceEFIO
+	
+	A = testfns.time.A
+	b = testfns.time.b
+	Δt = testfns.time.Δt
+	Q = testfns.time.zTransformedTermCount
+	rho = testfns.time.contourRadius
 	p = length(b) # stage count
 
-	test_spatial_basis  = testfns.spatialBasis
-	trial_spatial_basis = trialfns.spatialBasis
+	test_spatial_basis  = testfns.space
+	trial_spatial_basis = trialfns.space
 
 	# Compute the Z transformed sequence.
 	# Assume that the operator applied on the conjugate of s is the same as the
@@ -64,7 +68,9 @@ function assemble(rkcq :: RungeKuttaConvolutionQuadrature,
 	Qmax = Q>>1+1
 	M = numfunctions(test_spatial_basis)
 	N = numfunctions(trial_spatial_basis)
-	Tz = promote_type(scalartype(rkcq), scalartype(testfns), scalartype(trialfns))
+	#Tz = promote_type(scalartype(rkcq), scalartype(testfns), scalartype(trialfns))
+	#Tz = promote_type(scalartype(testfns), scalartype(trialfns))
+	Tz = ComplexF64
 	Zz = Vector{Array{Tz,2}}(undef,Qmax)
 	blocksEigenvalues = Vector{Array{Tz,2}}(undef,p)
 	tmpDiag = Vector{Tz}(undef,p)
@@ -96,6 +102,7 @@ function assemble(rkcq :: RungeKuttaConvolutionQuadrature,
 	for q = 0:kmax-1
 		Z[:,:,q+1] = real_inverse_z_transform(q, rho, Q, Zz)
 	end
-	return Z
+	ZC = ConvolutionOperators.DenseConvOp(Z)
+	return ZC
 
 end

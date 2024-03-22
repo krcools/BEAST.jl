@@ -3,12 +3,17 @@ using WiltonInts84
 abstract type AbstractSpaceTimeOperator end
 abstract type SpaceTimeOperator <: AbstractSpaceTimeOperator end # atomic operator
 
+#TODO RKCQ multithreading
+
 function assemble(operator::AbstractSpaceTimeOperator, test_functions, trial_functions;
     storage_policy = Val{:bandedstorage},
     long_delays_policy = LongDelays{:compress},
     threading = Threading{:multi},
     quadstrat=defaultquadstrat(operator, test_functions, trial_functions))
-
+    stagedtimestep = isa(test_functions.time, StagedTimeStep)
+    if stagedtimestep
+        return assemble(RungeKuttaConvolutionQuadrature(operator), test_functions, trial_functions)
+    end
     Z, store = allocatestorage(operator, test_functions, trial_functions,
         storage_policy, long_delays_policy)
     assemble!(operator, test_functions, trial_functions, store, threading; quadstrat)

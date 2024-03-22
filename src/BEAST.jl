@@ -37,8 +37,10 @@ export brezzidouglasmarini3d
 export nedelecd3d
 export nedelecc3d
 export portcells, rt_ports, getindex_rtg, subset
-export StagedTimeStep
+
+export StagedTimeStep, numstages
 export subdsurface, subdBasis, assemblydata, refspace
+
 export spatialbasis, temporalbasis
 export ⊗
 export timebasisc0d1

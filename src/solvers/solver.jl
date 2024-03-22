@@ -151,9 +151,16 @@ function assemble(lform::LinForm, X::DirectProductSpace)
     @assert !isempty(lform.terms)
 
     T = scalartype(lform, X)
-    U = NestedUnitRanges.nestedrange(spatialbasis(X), 1, numfunctions)
-    
     x = first(AbstractTrees.Leaves(X))
+    stagedtimestep = isa(x.time, BEAST.StagedTimeStep)
+    if stagedtimestep
+        stages = numstages(x.time)
+        stagednumfunctions(X) = stages * numfunctions(X)
+        U = NestedUnitRanges.nestedrange(spatialbasis(X), 1, stagednumfunctions)
+    else 
+        U = NestedUnitRanges.nestedrange(spatialbasis(X), 1, numfunctions)
+    end
+    
     N = Base.OneTo(tensordim(x,2))
     ax = _righthandside_axes(x, U, N)
 
@@ -166,7 +173,6 @@ function assemble(lform::LinForm, X::DirectProductSpace)
         x = X.factors[m]
 
         for op in reverse(t.test_ops) x = op[end](op[1:end-1]..., x) end
-
         b = assemble(t.functional, x)
         B[Block(m),Block(1)] = t.coeff * b
     end
@@ -210,9 +216,10 @@ function assemble(bf::BilForm, X::DirectProductSpace, Y::DirectProductSpace;
 
     @assert !isempty(bf.terms)
 
-    M = numfunctions.(spatialbasis(X).factors)
-    N = numfunctions.(spatialbasis(Y).factors)
-
+    M = numfunctions.(spatialbasis(X).factors) .* numstages(X)
+    N = numfunctions.(spatialbasis(Y).factors) .* numstages(X)
+    MN = numfunctions(X)
+    
     U = BlockArrays.blockedrange(M)
     V = BlockArrays.blockedrange(N)
 
@@ -227,7 +234,7 @@ function assemble(bf::BilForm, X::DirectProductSpace, Y::DirectProductSpace;
         for op in reverse(term.trial_ops)
             y = op[end](op[1:end-1]..., y)
         end
-
+        
         a = term.coeff * term.kernel
         z = materialize(a, x, y)
         lift(z, Block(term.test_id), Block(term.trial_id), U, V)
