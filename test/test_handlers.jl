@@ -50,6 +50,7 @@ for T in [Float16, Float32, Float64]
     @test operator.alpha === T(1)
     @test operator.beta === T(2)
     @test BEAST.gamma(operator) === T(0)
+    @test scalartype(operator) == T
 
     pwave = Helmholtz3D.planewave(; direction=SVector(T(0), T(0), T(1)))
     @test pwave.direction == SVector(T(0), T(0), T(1))

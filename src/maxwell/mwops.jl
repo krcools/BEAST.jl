@@ -1,7 +1,7 @@
 abstract type MaxwellOperator3D{T,K} <: IntegralOperator end
 abstract type MaxwellOperator3DReg{T,K} <: MaxwellOperator3D{T,K} end
 
-scalartype(op::MaxwellOperator3D{T,K}) where {T, K <: Nothing} = T
+scalartype(op::MaxwellOperator3D{T,K}) where {T, K <: Val{0}} = T
 scalartype(op::MaxwellOperator3D{T,K}) where {T, K} = promote_type(T, K)
 
 gamma(op::MaxwellOperator3D{T,Val{0}}) where {T} = zero(T)
