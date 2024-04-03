@@ -57,8 +57,8 @@ function interpolate(fields, interpolant::BEAST.RT2RefSpace, chart)
             t_refedge = tangents(p_refedge,1)
             m_refedge = point(-t_refedge[2], t_refedge[1])
             m_refedge /= norm(m_refedge)
-            q0ref = s[1] * m_refedge
-            q1ref = (1-s[1]) * m_refedge
+            q0ref = (-1) * (1-s[1]) * m_refedge
+            q1ref = (-1) * s[1] * m_refedge
 
             nxq0ref = point(-q0ref[2], q0ref[1])
             nxq1ref = point(-q1ref[2], q1ref[1])

@@ -46,32 +46,13 @@ function scalartype(A::TensorOperator)
         scalartype(A.temporal_factor))
 end
 
-
-
-# function allocatestorage(op::TensorOperator, test_functions, trial_functions,
-#     ::Type{Val{:bandedstorage}}, ::Type{LongDelays{:ignore}},)
-
-#     M = numfunctions(spatialbasis(test_functions))
-#     N = numfunctions(spatialbasis(trial_functions))
-
-#     time_basis_function = BEAST.convolve(
-#         temporalbasis(test_functions),
-#         temporalbasis(trial_functions))
-
-#     space_operator = op.spatial_factor
-#     A = assemble(space_operator, spatialbasis(test_functions), spatialbasis(trial_functions))
-
-#     K0 = ones(M,N)
-#     bandwidth = numintervals(time_basis_function) - 1
-#     data = zeros(scalartype(op), bandwidth, M, N)
-#     maxk1 = bandwidth
-#     Z = SparseND.Banded3D(K0, data, maxk1)
-#     return ()->Z, (v,m,n,k)->(Z[m,n,k] += v)
-# end
+function Base.:*(alpha::Number, A::TensorOperator)
+    return TensorOperator(alpha*A.spatial_factor, A.temporal_factor)
+end
 
 
 function allocatestorage(op::TensorOperator, test_functions, trial_functions,
-    ::Type{Val{:bandedstorage}}, ::Type{LongDelays{:compress}},)
+    ::Type{Val{:bandedstorage}}, long_delay_traits::Any)
 
     M = numfunctions(spatialbasis(test_functions))
     N = numfunctions(spatialbasis(trial_functions))
@@ -102,34 +83,7 @@ function allocatestorage(op::TensorOperator, test_functions, trial_functions,
     return ()->Z, store1
 end
 
-# function allocatestorage(op::TensorOperator, test_functions, trial_functions)
 
-#     M = numfunctions(spatialbasis(test_functions))
-#     N = numfunctions(spatialbasis(trial_functions))
-
-#     time_basis_function = BEAST.convolve(
-#         temporalbasis(test_functions),
-#         temporalbasis(trial_functions))
-
-#     tbf = time_basis_function
-#     has_zero_tail = all(tbf.polys[end].data .== 0)
-#     @show has_zero_tail
-
-#     if has_zero_tail
-#         K = numintervals(time_basis_function)-1
-#     else
-#         speedoflight = 1.0
-#         @warn "Assuming speed of light to be equal to 1!"
-#         Δt = timestep(tbf)
-#         ct, hs = boundingbox(geometry(spatialbasis(trial_functions)).vertices)
-#         diam = 2 * sqrt(3) * hs
-#         K = ceil(Int, (numintervals(tbf)-1) + diam/speedoflight/Δt)+1
-#     end
-#     @assert K > 0
-
-#     Z = zeros(M, N, K)
-#     return MatrixConvolution(Z), (v,m,n,k)->(Z[m,n,k] += v)
-# end
 
 function assemble!(operator::TensorOperator, testfns::SpaceTimeBasis, trialfns::SpaceTimeBasis,
     store, threading::Type{Threading{:multi}};

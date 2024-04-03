@@ -26,7 +26,7 @@ SL = TDMaxwell3D.singlelayer(speedoflight=1.0, numdiffs=1)
 # BEAST.@defaultquadstrat (SL, W, V) BEAST.OuterNumInnerAnalyticQStrat(7)
 
 tdefie = @discretise SL[j′,j] == -1.0E[j′]   j∈V  j′∈W
-xefie = motsolve(tdefie)
+xefie = BEAST.motsolve(tdefie)
 
 import Plots
 Plots.plot(xefie[1,:])
