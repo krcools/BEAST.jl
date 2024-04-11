@@ -22,10 +22,6 @@ function spatialbasis(s::DirectProductSpace)
 end
 
 temporalbasis(s::SpaceTimeBasis) = s.time
-function numstages(s::DirectProductSpace)
-    r = [numstages(temporalbasis(ch)) for ch in s.factors]
-    return r
-end
 
 ⊗(a, b) = SpaceTimeBasis(a,b)
 numfunctions(S::SpaceTimeBasis) = numfunctions(S.space) * numfunctions(S.time)

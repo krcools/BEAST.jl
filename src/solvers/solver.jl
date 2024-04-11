@@ -152,11 +152,16 @@ function assemble(lform::LinForm, X::DirectProductSpace)
 
     T = scalartype(lform, X)
     x = first(AbstractTrees.Leaves(X))
-    stagedtimestep = isa(x.time, BEAST.StagedTimeStep)
-    if stagedtimestep
-        stages = numstages(x.time)
-        stagednumfunctions(X) = stages * numfunctions(X)
-        U = NestedUnitRanges.nestedrange(spatialbasis(X), 1, stagednumfunctions)
+    spaceTimeBasis = isa(x, BEAST.SpaceTimeBasis)
+    if spaceTimeBasis
+        stagedtimestep = isa(x.time, BEAST.StagedTimeStep)
+        if stagedtimestep
+            stages = numstages(x.time)
+            stagednumfunctions(X) = stages * numfunctions(X)
+            U = NestedUnitRanges.nestedrange(spatialbasis(X), 1, stagednumfunctions)
+        else
+            U = NestedUnitRanges.nestedrange(spatialbasis(X), 1, numfunctions)
+        end
     else 
         U = NestedUnitRanges.nestedrange(spatialbasis(X), 1, numfunctions)
     end
@@ -216,8 +221,17 @@ function assemble(bf::BilForm, X::DirectProductSpace, Y::DirectProductSpace;
 
     @assert !isempty(bf.terms)
 
-    M = numfunctions.(spatialbasis(X).factors) .* numstages(X)
-    N = numfunctions.(spatialbasis(Y).factors) .* numstages(X)
+    spaceTimeBasis = isa(X.factors[1], BEAST.SpaceTimeBasis)
+
+    if spaceTimeBasis
+        p = [numstages(temporalbasis(ch)) for ch in X.factors]
+    else
+        p = 1
+    end
+
+    M = numfunctions.(spatialbasis(X).factors) .* p
+    N = numfunctions.(spatialbasis(Y).factors) .* p
+
     MN = numfunctions(X)
     
     U = BlockArrays.blockedrange(M)
