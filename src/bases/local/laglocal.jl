@@ -137,6 +137,23 @@ function strace(x::LagrangeRefSpace, cell, localid, face)
     Q
 end
 
+function strace(x::LagrangeRefSpace{T, 1, 4, 4}, cell, localid, face) where {T}
+
+    #T = scalartype(x)
+    t = zeros(T, 3, 4)
+    for (k,fvert) in enumerate(face.vertices)
+        for (l,cvert) in enumerate(cell.vertices)
+            nrm = norm(fvert - cvert)
+            if isapprox(nrm, 0, atol=sqrt(eps(T)))
+                t[k,l] = T(1.0)
+                break
+            end
+        end
+    end
+
+    return t
+end
+
 
 function restrict(refs::LagrangeRefSpace{T,0}, dom1, dom2) where T
     #Q = eye(T, numfunctions(refs))
@@ -288,3 +305,28 @@ const _dof_lag0perm_matrix = [
     @SMatrix[1]         # 6. {3,2,1}
     
 ]
+
+function (ϕ::LagrangeRefSpace{T, 1, 4, 4})(lag) where T
+
+    u, v, w = parametric(lag)
+
+    tu = tangents(lag, 1)
+    tv = tangents(lag, 2)
+    tw = tangents(lag, 3)
+
+    B = [tu tv tw]
+    A = inv(transpose(B))
+
+    # gradient in u,v,w (unit tetrahedron)
+    gr1=SVector{3, T}(1.0, 0.0, 0.0)
+    gr2=SVector{3, T}(0.0, 1.0, 0.0)
+    gr3=SVector{3, T}(0.0, 0.0, 1.0)
+    gr4=SVector{3, T}(-1.0, -1.0, -1.0)
+
+    return SVector((
+        (value = u, gradient = A*gr1),
+        (value = v, gradient = A*gr2),
+        (value = w, gradient = A*gr3),
+        (value = T(1.0)-u-v-w, gradient = A*gr4)
+    ))
+end
