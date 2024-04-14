@@ -19,7 +19,7 @@ function kernelvals(viop::VIEOperator, p ,q)
 
     expn = exp(-yR)
     green = expn / (4*pi*R)
-    gradgreen = - (Y +1/R)*green/R*r
+    gradgreen = - (Y +1/R)*green/R*r  # Derivation after p (test variable)
     
 
     tau = viop.tau(cartesian(q))
@@ -59,6 +59,32 @@ struct VIEDoubleLayer{T,U,P} <: VolumeOperator
     α::U
     tau::P
 end
+
+
+struct VIEhhVolume{T,U,P} <: VolumeOperator
+    gamma::T
+    α::U
+    tau::P
+end
+
+struct VIEhhBoundary{T,U,P} <: BoundaryOperator
+    gamma::T
+    α::U
+    tau::P
+end
+
+struct VIEhhVolumegradG{T,U,P} <: VolumeOperator
+    gamma::T
+    α::U
+    tau::P
+end
+
+struct VIEhhVolumek0{T,U,P} <: VolumeOperator
+    gamma::T
+    α::U
+    tau::P
+end
+
 
 scalartype(op::VIEOperator) = typeof(op.gamma)
 
@@ -161,7 +187,6 @@ function integrand(viop::VIEBoundary2, kerneldata, tvals, tgeo, bvals, bgeo)
     α = viop.α
 
     @SMatrix[α * dot(gx[i] , cross(gradG, Ty*fy[j])) for i in 1:3, j in 1:6]
- 
 end
 
 function integrand(viop::VIEDoubleLayer, kerneldata, tvals, tgeo, bvals, bgeo)
@@ -176,6 +201,81 @@ function integrand(viop::VIEDoubleLayer, kerneldata, tvals, tgeo, bvals, bgeo)
 
     t = α * dot(gx, cross(gradG, Ty*fy))
 end
+
+
+# Integrands for the operators of the Lippmann Schwinger Volume Integral Equation:
+
+function integrand(viop::VIEhhVolume, kerneldata, tvals, tgeo, bvals, bgeo)
+
+    gx = @SVector[tvals[i].value for i in 1:4]
+    fy = @SVector[bvals[i].value for i in 1:4]
+
+    dgx = @SVector[tvals[i].gradient for i in 1:4]
+    dfy = @SVector[bvals[i].gradient for i in 1:4]
+
+    G = kerneldata.green
+    gradG = kerneldata.gradgreen
+
+    Ty = kerneldata.tau
+
+    α = viop.α
+
+    return @SMatrix[α * dot(dgx[i], G*Ty*dfy[j]) for i in 1:4, j in 1:4]
+end
+
+
+function integrand(viop::VIEhhBoundary, kerneldata, tvals, tgeo, bvals, bgeo)
+
+    gx = @SVector[tvals[i].value for i in 1:3]
+    dfy = @SVector[bvals[i].gradient for i in 1:4]
+
+    G = kerneldata.green
+    gradG = kerneldata.gradgreen
+
+    Ty = kerneldata.tau
+
+    α = viop.α
+
+    return @SMatrix[α * dot( tgeo.patch.normals[1]*gx[i],G*Ty*dfy[j]) for i in 1:3, j in 1:4]
+end
+
+function integrand(viop::VIEhhVolumek0, kerneldata, tvals, tgeo, bvals, bgeo)
+
+    gx = @SVector[tvals[i].value for i in 1:4]
+    fy = @SVector[bvals[i].value for i in 1:4]
+
+    dgx = @SVector[tvals[i].gradient for i in 1:4]
+    dfy = @SVector[bvals[i].gradient for i in 1:4]
+
+    G = kerneldata.green
+    gradG = kerneldata.gradgreen
+
+    Ty = kerneldata.tau
+
+    α = viop.α
+
+    return @SMatrix[α * gx[i]*G*Ty*fy[j] for i in 1:4, j in 1:4]
+end
+
+function integrand(viop::VIEhhVolumegradG, kerneldata, tvals, tgeo, bvals, bgeo)
+
+    gx = @SVector[tvals[i].value for i in 1:4]
+    fy = @SVector[bvals[i].value for i in 1:4]
+
+    dgx = @SVector[tvals[i].gradient for i in 1:4]
+    dfy = @SVector[bvals[i].gradient for i in 1:4]
+
+    G = kerneldata.green
+    gradG = -kerneldata.gradgreen # "-" to get nabla'G(r,r')
+
+    Ty = kerneldata.tau
+
+    α = viop.α
+
+    return @SMatrix[α * gx[i] * dot(gradG, Ty*dfy[j]) for i in 1:4, j in 1:4]
+end
+
+
 
 
 defaultquadstrat(op::VIEOperator, tfs, bfs) = SauterSchwab3DQStrat(3,3,3,3,3,3)
@@ -207,7 +307,7 @@ quadrule(op::VolumeOperator, g::RefSpace, f::RefSpace, i, τ, j, σ, qd, qs) = q
 
 function qr_volume(op::VolumeOperator, g::RefSpace, f::RefSpace, i, τ, j, σ, qd,
     qs::SauterSchwab3DQStrat)
-    
+
     dtol = 1.0e3 * eps(eltype(eltype(τ.vertices)))
 
     hits = 0
@@ -250,7 +350,7 @@ quadrule(op::BoundaryOperator, g::RefSpace, f::RefSpace, i, τ, j, σ, qd, qs) =
 
 function qr_boundary(op::BoundaryOperator, g::RefSpace, f::RefSpace, i, τ, j,  σ, qd,
     qs::SauterSchwab3DQStrat)
-    
+
     dtol = 1.0e3 * eps(eltype(eltype(τ.vertices)))
 
     hits = 0
