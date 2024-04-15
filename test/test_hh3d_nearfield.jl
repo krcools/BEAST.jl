@@ -5,11 +5,13 @@ using LinearAlgebra
 using Test
 
 @testset "Helmholtz potential operators" begin
-    r = 10.0
-    λ = 20 * r
-    k = 2 * π / λ
+    # r = 10.0
+    # λ = 20 * r
+    # k = 2 * π / λ
+    # sphere = meshsphere(r, 0.2 * r)
+    k = 0.031415926535897934
+    sphere = readmesh(joinpath(dirname(pathof(BEAST)),"../test/assets/sphere_rad=10_h=2.in"))
 
-    sphere = meshsphere(r, 0.2 * r)
     X0 = lagrangecxd0(sphere)
     X1 = lagrangec0d1(sphere)
 
@@ -23,6 +25,7 @@ using Test
 
     # Interior problem
     # Formulations from Sauter and Schwab, Boundary Element Methods(2011), Chapter 3.4.1.1
+    r = 10.0
     pos1 = SVector(r * 1.5, 0.0, 0.0)  # positioning of point charges
     pos2 = SVector(-r * 1.5, 0.0, 0.0)
 
@@ -159,11 +162,12 @@ end
 
 ## Test here some of the mixed discretizatinos
 #@testset "Helmholtz potential operators: mixed discretizations with duallagrangecxd0" begin
-    r = 10.0
-    λ = 20 * r
-    k = 2 * π / λ
-
-    sphere = meshsphere(r, 0.2 * r)
+    # r = 10.0
+    # sphere = meshsphere(r, 0.2 * r)
+    # λ = 20 * r
+    # k = 2 * π / λ
+    k = 0.031415926535897934
+    sphere = readmesh(joinpath(dirname(pathof(BEAST)),"../test/assets/sphere_rad=10_h=2.in"))
     X0 = lagrangecxd0(sphere)
     X1 = lagrangec0d1(sphere)
     Y0 = duallagrangecxd0(sphere; interpolatory=true)
@@ -178,6 +182,7 @@ end
 
     # Interior problem
     # Formulations from Sauter and Schwab, Boundary Element Methods(2011), Chapter 3.4.1.1
+    r = 10.0
     pos1 = SVector(r * 1.5, 0.0, 0.0)  # positioning of point charges
     pos2 = SVector(-r * 1.5, 0.0, 0.0)
 
@@ -234,11 +239,13 @@ end
 
 ## Test here some of the mixed discretizatinos
 #@testset "Helmholtz potential operators: mixed discretizations with duallagrangec0d1" begin
-    r = 10.0
-    λ = 20 * r
-    k = 2 * π / λ
+    # r = 10.0
+    # λ = 20 * r
+    # k = 2 * π / λ
+    # sphere = meshsphere(r, 0.2 * r)
+    k = 0.031415926535897934
+    sphere = readmesh(joinpath(dirname(pathof(BEAST)),"../test/assets/sphere_rad=10_h=2.in"))
 
-    sphere = meshsphere(r, 0.2 * r)
     X0 = lagrangecxd0(sphere)
     Y1 = duallagrangec0d1(sphere)
 
@@ -252,6 +259,7 @@ end
 
     # Interior problem
     # Formulations from Sauter and Schwab, Boundary Element Methods(2011), Chapter 3.4.1.1
+    r = 10.0
     pos1 = SVector(r * 1.5, 0.0, 0.0)  # positioning of point charges
     pos2 = SVector(-r * 1.5, 0.0, 0.0)
 
