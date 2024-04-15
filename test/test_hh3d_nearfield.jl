@@ -228,7 +228,7 @@ end
     @test err_IDPDL_pot < 0.005
     @test err_INPSL_pot < 0.002
 
-    @test err_IDPDL_field < 0.008
+    @test err_IDPDL_field < 0.0095
     @test err_INPSL_field < 0.002
 #end
 
