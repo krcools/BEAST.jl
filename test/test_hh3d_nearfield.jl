@@ -205,6 +205,7 @@ end
     ρ_INPSL = M_INPSL \ (-gN)
 
     pts = meshsphere(0.8 * r, 0.8 * 0.6 * r).vertices # sphere inside on which the potential and field are evaluated
+    @show length(pts)
 
     pot_IDPDL = potential(HH3DDoubleLayerNear(im * k), pts, ρ_IDPDL, X1; type=ComplexF64)
 
