@@ -66,5 +66,3 @@ function marchonintime(W0,Z,B,I; convhist=false)
         return x
     end
 end
-
-
