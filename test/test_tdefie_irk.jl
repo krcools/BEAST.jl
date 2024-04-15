@@ -4,7 +4,8 @@ using StaticArrays
 using LinearAlgebra
 using Test
 
-Γ = meshsphere(radius=1.0, h=0.45)
+# Γ = meshsphere(radius=1.0, h=0.45)
+Γ = readmesh(joinpath(dirname(pathof(BEAST)),"../test/assets/sphere45.in"))
 X = raviartthomas(Γ)
 sol = 1.0 # Speed of light (for sake of simplicity, set to one)
 
