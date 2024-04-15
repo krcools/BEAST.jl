@@ -9,7 +9,7 @@ and calling a traditional lu decomposition.
 function solve(eq)
 
     time_domain = isa(first(eq.trial_space_dict).second, BEAST.SpaceTimeBasis)
-    time_domain |= isa(first(eq.trial_space_dict).second, BEAST.StagedTimeStep)
+    
     if time_domain
         return td_solve(eq)
     end
@@ -37,5 +37,3 @@ function solve(eq)
     ax = nestedrange(Y, 1, numfunctions)
     return PseudoBlockVector(u, (ax,))
 end
-
-
