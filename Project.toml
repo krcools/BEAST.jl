@@ -1,6 +1,6 @@
 name = "BEAST"
 uuid = "bb4162c7-ba94-5a20-af32-d8ec4428bdd1"
-version = "2.2.1"
+version = "2.3.0
 
 [deps]
 AbstractTrees = "1520ce14-60c1-5f80-bbc7-55ef81b5835c"
