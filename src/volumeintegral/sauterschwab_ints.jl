@@ -71,9 +71,6 @@ function reorder_dof(space::LagrangeRefSpace{Float64,0,3,1},I)
     return SVector{1,Int64}(1),SVector{1,Int64}(1)
 end
 
-<<<<<<< HEAD
-#Method of moments volume integrals operators
-=======
 function reorder_dof(space::LagrangeRefSpace{T,1,3,3},I) where T
     n = length(I)
     K = zeros(MVector{3,Int64})
@@ -104,7 +101,6 @@ function reorder_dof(space::LagrangeRefSpace{T,1,4,4},I) where T
     return SVector(K),SVector{4,Int64}(1,1,1,1)
 end
 
->>>>>>> upstream/master
 function momintegrals!(op::VIEOperator,
     test_local_space::RefSpace, trial_local_space::RefSpace,
     test_tetrahedron_element, trial_tetrahedron_element, out, strat::SauterSchwab3DStrategy)
