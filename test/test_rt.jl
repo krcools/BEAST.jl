@@ -37,7 +37,7 @@ ref = refspace(rwg)
 ptch = chart(m, first(m))
 
 ctrd = neighborhood(ptch, T.([1,1]/3))
-vals = shapevals(ref, [ctrd])
+local vals = shapevals(ref, [ctrd])
 
 # test edge detection
 edges = skeleton(m, 1)

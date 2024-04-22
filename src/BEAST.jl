@@ -6,7 +6,7 @@ using SharedArrays
 using SparseArrays
 using FillArrays
 using BlockArrays
-using SparseMatrixDicts
+using ExtendableSparse
 
 using ConvolutionOperators
 using SauterSchwabQuadrature
@@ -29,7 +29,7 @@ export dot
 
 export planewave
 export RefSpace, numfunctions, coordtype, scalartype, assemblydata, geometry, refspace, valuetype
-export lagrangecxd0, lagrangec0d1, duallagrangec0d1, lagrangec0d2
+export lagrangecxd0, lagrangec0d1, duallagrangec0d1, lagrangec0d2, unitfunctioncxd0, unitfunctionc0d1
 export duallagrangecxd0
 export lagdimension
 export restrict
@@ -39,8 +39,10 @@ export brezzidouglasmarini3d
 export nedelecd3d
 export nedelecc3d
 export portcells, rt_ports, getindex_rtg, subset
-export StagedTimeStep
-export subdsurface,subdBasis,assemblydata,refspace
+
+export StagedTimeStep, numstages
+export subdsurface, subdBasis, assemblydata, refspace
+
 export spatialbasis, temporalbasis
 export ⊗
 export timebasisc0d1
@@ -50,7 +52,7 @@ export timebasisshiftedlagrange
 export TimeBasisDeltaShifted
 export ntrace
 export strace
-export ttrace 
+export ttrace
 export SingleLayer
 export DoubleLayer
 export DoubleLayerTransposed
@@ -82,7 +84,7 @@ export curl
 export gradient
 export MWSingleLayerField3D
 export SingleLayerTrace
-export DoubleLayerRotatedMW3D
+export DoubleLayerRotatedMW3D, MWDoubleLayerRotatedFarField3D
 export MWSingleLayerPotential3D
 
 export VIEOperator
@@ -138,6 +140,7 @@ include("utils/specialfns.jl")
 include("utils/combinatorics.jl")
 include("utils/linearspace.jl")
 include("utils/zeromap.jl")
+include("utils/rank1map.jl")
 
 include("bases/basis.jl")
 include("bases/lincomb.jl")
@@ -147,7 +150,9 @@ include("bases/divergence.jl")
 
 include("bases/local/laglocal.jl")
 include("bases/local/rtlocal.jl")
+include("bases/local/rt2local.jl")
 include("bases/local/ndlocal.jl")
+include("bases/local/nd2local.jl")
 include("bases/local/bdmlocal.jl")
 include("bases/local/ncrossbdmlocal.jl")
 include("bases/local/ndlcclocal.jl")
@@ -156,9 +161,11 @@ include("bases/local/bdm3dlocal.jl")
 
 include("bases/lagrange.jl")
 include("bases/rtspace.jl")
+include("bases/rt2space.jl")
 include("bases/rtxspace.jl")
 include("bases/bcspace.jl")
 include("bases/ndspace.jl")
+include("bases/nd2space.jl")
 include("bases/bdmdiv.jl")
 include("bases/ncrossbdmspace.jl")
 include("bases/ndlccspace.jl")
@@ -182,14 +189,16 @@ include("localop.jl")
 include("multiplicativeop.jl")
 include("identityop.jl")
 include("integralop.jl")
+include("dyadicop.jl")
 include("interpolation.jl")
-include("quaddata.jl")
 
-include("quadrature/quaddata.jl")
-include("quadrature/quadrule.jl")
+include("quadrature/doublenumqstrat.jl")
+include("quadrature/doublenumsauterqstrat.jl")
+include("quadrature/doublenumwiltonsauterqstrat.jl")
+include("quadrature/doublenumwiltonbogaertqstrat.jl")
 
-include("quadrature/double_quadrature.jl")
-include("quadrature/singularity_extraction.jl")
+include("quadrature/doublenumints.jl")
+include("quadrature/singularityextractionints.jl")
 include("quadrature/sauterschwabints.jl")
 
 include("postproc.jl")
@@ -202,6 +211,7 @@ include("timedomain/motlu.jl")
 include("timedomain/tdtimeops.jl")
 include("timedomain/rkcq.jl")
 include("timedomain/zdomain.jl")
+include("timedomain/td_symmetric_quadstrat.jl")
 
 
 # Support for Maxwell equations
@@ -219,7 +229,7 @@ include("maxwell/spotential.jl")
 include("maxwell/maxwell.jl")
 include("maxwell/sourcefield.jl")
 
-# Support for the Helmholtz equatio
+# Support for the Helmholtz equation
 include("helmholtz2d/helmholtzop.jl")
 
 include("helmholtz3d/hh3dexc.jl")
@@ -228,6 +238,8 @@ include("helmholtz3d/nitsche.jl")
 include("helmholtz3d/hh3dnear.jl")
 include("helmholtz3d/hh3dfar.jl")
 include("helmholtz3d/hh3d_sauterschwabqr.jl")
+include("helmholtz3d/helmholtz3d.jl")
+include("helmholtz3d/wiltonints.jl")
 
 #suport for Volume Integral equation
 include("volumeintegral/vie.jl")
@@ -262,9 +274,9 @@ include("utils/plotlyglue.jl")
 
 
 
-const x̂ = point(1,0,0)
-const ŷ = point(0,1,0)
-const ẑ = point(0,0,1)
+const x̂ = point(1, 0, 0)
+const ŷ = point(0, 1, 0)
+const ẑ = point(0, 0, 1)
 export x̂, ŷ, ẑ
 
 const n = NormalVector()

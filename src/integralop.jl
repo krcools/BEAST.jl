@@ -1,6 +1,7 @@
 abstract type IntegralOperator <: Operator end
 
-
+defaultquadstrat(op::IntegralOperator, tfs::RefSpace, bfs::RefSpace) =
+    DoubleNumSauterQstrat(2,3,5,5,4,3)
 
 """
     blockassembler(operator, test_space, trial_space) -> assembler
@@ -28,25 +29,25 @@ for `I` and `J` permutations of `1:numfunctions(test_space)` and
 function blockassembler end
 
 
-"""
-    quadrule(operator,test_refspace,trial_refspace,p,test_element,q_trial_element, qd)
+# """
+#     quadrule(operator,test_refspace,trial_refspace,p,test_element,q_trial_element, qd)
 
-Returns an object that contains all the dynamic (runtime) information that
-defines the integration strategy that will be used by `momintegrals!` to compute
-the interactions between the local test/trial functions defined on the specified
-geometric elements. The indices `p` and `q` refer to the position of the test
-and trial elements as encountered during iteration over the output of
-`geometry`.
+# Returns an object that contains all the dynamic (runtime) information that
+# defines the integration strategy that will be used by `momintegrals!` to compute
+# the interactions between the local test/trial functions defined on the specified
+# geometric elements. The indices `p` and `q` refer to the position of the test
+# and trial elements as encountered during iteration over the output of
+# `geometry`.
 
-The last argument `qd` provides access to all precomputed data required for
-quadrature. For example it might be desirable to precompute all the quadrature
-points for all possible numerical quadrature schemes that can potentially be
-required during matrix assembly. This makes sense, since the number of point is
-order N (where N is the number of faces) but these points will appear in N^2
-computations. Precomputation requires some extra memory but can save a lot on
-computation time.
-"""
-function quadrule end
+# The last argument `qd` provides access to all precomputed data required for
+# quadrature. For example it might be desirable to precompute all the quadrature
+# points for all possible numerical quadrature schemes that can potentially be
+# required during matrix assembly. This makes sense, since the number of point is
+# order N (where N is the number of faces) but these points will appear in N^2
+# computations. Precomputation requires some extra memory but can save a lot on
+# computation time.
+# """
+# function quadrule end
 
 
 """

@@ -21,26 +21,15 @@ module Maxwell3D
             alpha=nothing,
             beta=nothing)
 
-        if (gamma == nothing) && (wavenumber == nothing)
-            error("Supply one of (not both) gamma or wavenumber")
+
+        gamma, wavenumber = Mod.gamma_wavenumber_handler(gamma, wavenumber)
+
+        if Mod.isstatic(gamma) # static case
+            @assert !(isnothing(alpha)) && !(isnothing(beta))
         end
 
-        if (gamma != nothing) && (wavenumber != nothing)
-            error("Supply one of (not both) gamma or wavenumber")
-        end
-
-        if gamma == nothing
-            if iszero(real(wavenumber))
-                gamma = -imag(wavenumber)
-            else
-                gamma = im*wavenumber
-            end
-        end
-
-        @assert gamma != nothing
-
-        alpha == nothing && (alpha = -gamma)
-        beta  == nothing && (beta  = -1/gamma)
+        alpha === nothing && (alpha = -gamma)
+        beta  === nothing && (beta  = -1/gamma)
 
         Mod.MWSingleLayer3D(gamma, alpha, beta)
     end
@@ -55,34 +44,27 @@ module Maxwell3D
     Bilinear form given by:
 
     ```math
-        ∬_{Γ^2} k(x) ⋅ (∇G_γ(x-y) × j(y))
+        α ∬_{Γ^2} k(x) ⋅ (∇G_γ(x-y) × j(y))
     ```
 
     with ``G_γ = e^{-γ|x-y|} / 4π|x-y|``
     """
     function doublelayer(;
+            alpha=nothing,
             gamma=nothing,
             wavenumber=nothing)
 
-        if (gamma == nothing) && (wavenumber == nothing)
-            error("Supply one of (not both) gamma or wavenumber")
-        end
+        gamma, wavenumber = Mod.gamma_wavenumber_handler(gamma, wavenumber)
 
-        if (gamma != nothing) && (wavenumber != nothing)
-            error("Supply one of (not both) gamma or wavenumber")
-        end
-
-        if gamma == nothing
-            if iszero(real(wavenumber))
-                gamma = -imag(wavenumber)
+        if isnothing(alpha)
+            if Mod.isstatic(gamma) # static case
+                alpha = 1.0 # Default to double precision
             else
-                gamma = im*wavenumber
+                alpha = one(gamma)
             end
         end
 
-        @assert gamma != nothing
-
-        Mod.MWDoubleLayer3D(gamma)
+        Mod.MWDoubleLayer3D(alpha, gamma)
     end
 
     planewave(;
@@ -90,7 +72,7 @@ module Maxwell3D
             polarization = error("missing arguement `polarization`"),
             wavenumber   = error("missing arguement `wavenumber`"),
             amplitude    = one(real(typeof(wavenumber)))) =
-        Mod.PlaneWaveMW(direction, polarization, wavenumber, amplitude)
+        Mod.PlaneWaveMW(direction, polarization, wavenumber*im, amplitude)
 
     farfield(;
         wavenumber = error("missing argument: `wavenumber`")) =

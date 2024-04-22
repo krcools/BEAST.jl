@@ -30,10 +30,10 @@ for U in [Float32,Float64]
     pts = [point(U,cos(ϕ)*sin(θ), sin(ϕ)*sin(θ), cos(θ)) for ϕ in Φ for θ in Θ]
 
     # This is an electric dipole
-    # The pre-factor (1/ε) is used to resemble 
+    # The pre-factor (1/ε) is used to resemble
     # (9.18) in Jackson's Classical Electrodynamics
-    local E = U(1/ε) * dipolemw3d(location=SVector(U(0.4),U(0.2),U(0)), 
-                        orientation=U(1e-9).*SVector(U(0.5),U(0.5),U(0)), 
+    local E = U(1/ε) * dipolemw3d(location=SVector(U(0.4),U(0.2),U(0)),
+                        orientation=U(1e-9).*SVector(U(0.5),U(0.5),U(0)),
                         wavenumber=k)
 
     local n = BEAST.NormalVector()
@@ -57,11 +57,19 @@ for U in [Float32,Float64]
     nf_H_EFIE = potential(BEAST.MWDoubleLayerField3D(𝓚), pts, j_EFIE, X)
     ff_E_EFIE = potential(MWFarField3D(𝓣), pts, j_EFIE, X)
     ff_H_EFIE = potential(BEAST.MWDoubleLayerFarField3D(𝓚), pts, j_EFIE, X)
+    ff_H_EFIE_rotated = potential(n × BEAST.MWDoubleLayerFarField3D(𝓚), pts, -j_EFIE, n × X)
+    ff_H_EFIE_doublerotated = potential(n × BEAST.MWDoubleLayerRotatedFarField3D(n × 𝓚), pts, -j_EFIE, X)
+
 
     @test norm(nf_E_EFIE - E.(pts))/norm(E.(pts)) ≈ 0 atol=0.01
     @test norm(nf_H_EFIE - H.(pts))/norm(H.(pts)) ≈ 0 atol=0.01
     @test norm(ff_E_EFIE - E.(pts, isfarfield=true))/norm(E.(pts, isfarfield=true)) ≈ 0 atol=0.001
     @test norm(ff_H_EFIE - H.(pts, isfarfield=true))/norm(H.(pts, isfarfield=true)) ≈ 0 atol=0.001
+    @test norm(ff_H_EFIE_rotated - H.(pts, isfarfield=true))/norm(H.(pts, isfarfield=true)) ≈ 0 atol=0.001
+    @test norm(ff_H_EFIE_doublerotated - H.(pts, isfarfield=true))/norm(H.(pts, isfarfield=true)) ≈ 0 atol=0.001
+    @test ff_H_EFIE ≈ ff_H_EFIE_rotated rtol=1e-7
+    @test ff_H_EFIE_rotated ≈ ff_H_EFIE_doublerotated rtol=1e-7
+
 
     K_bc = Matrix(assemble(𝓚,Y,X))
     G_nxbc_rt = Matrix(assemble(𝓝,Y,X))
@@ -77,14 +85,14 @@ for U in [Float32,Float64]
     @test norm(nf_H_BCMFIE - H.(pts))/norm(H.(pts)) ≈ 0 atol=0.01
     @test norm(ff_E_BCMFIE - E.(pts, isfarfield=true))/norm(E.(pts, isfarfield=true)) ≈ 0 atol=0.01
 
-    H = dipolemw3d(location=SVector(U(0.0),U(0.0),U(0.3)), 
-                orientation=U(1e-9).*SVector(U(0.5),U(0.5),U(0)), 
+    H = dipolemw3d(location=SVector(U(0.0),U(0.0),U(0.3)),
+                orientation=U(1e-9).*SVector(U(0.5),U(0.5),U(0)),
                 wavenumber=k)
 
     # This time, we do not specify alpha and beta
     # We include η in the magnetic RHS
     𝓣 = Maxwell3D.singlelayer(wavenumber=k)
-                
+
     𝒉 = (n × H) × n
     E = (1/(im*ε*ω))*curl(H)
     𝒆 = (n × E) × n

@@ -34,10 +34,11 @@ function (f::LagrangeRefSpace{T,1,3})(t) where T
 
     j = jacobian(t)
     p = t.patch
+    σ = sign(dot(normal(t), cross(p[1]-p[3],p[2]-p[3])))
     SVector(
-        (value=u, curl=(p[3]-p[2])/j),
-        (value=v, curl=(p[1]-p[3])/j),
-        (value=w, curl=(p[2]-p[1])/j))
+        (value=u, curl=σ*(p[3]-p[2])/j),
+        (value=v, curl=σ*(p[1]-p[3])/j),
+        (value=w, curl=σ*(p[2]-p[1])/j))
 end
 
 valuetype(ref::LagrangeRefSpace{T,1,3}, charttype) where {T} = 
@@ -65,17 +66,18 @@ valuetype(ref::LagrangeRefSpace{T,2,3}, charttype) where {T} =
 
 Compute the values of the shape functions together with their curl.
 """
-function (f::LagrangeRefSpace{T,1,3})(t, ::Type{Val{:withcurl}}) where T
-    # Evaluete linear Lagrange elements on a triange, together with their curl
-    j = jacobian(t)
-    u,v,w, = barycentric(t)
-    p = t.patch
-    SVector(
-        (value=u, curl=(p[3]-p[2])/j),
-        (value=v, curl=(p[1]-p[3])/j),
-        (value=w, curl=(p[2]-p[1])/j)
-    )
-end
+# function (f::LagrangeRefSpace{T,1,3})(t, ::Type{Val{:withcurl}}) where T
+#     # Evaluete linear Lagrange elements on a triange, together with their curl
+#     j = jacobian(t)
+#     u,v,w, = barycentric(t)
+#     p = t.patch
+#     σ = sign(dot(normal(t), cross(p[1]-p[3],p[2]-p[3])))
+#     SVector(
+#         (value=u, curl=σ*(p[3]-p[2])/j),
+#         (value=v, curl=σ*(p[1]-p[3])/j),
+#         (value=w, curl=σ*(p[2]-p[1])/j)
+#     )
+# end
 
 # Evaluate constant Lagrange elements on a triangle, with their curls
 function (f::LagrangeRefSpace{T,0,3})(t, ::Type{Val{:withcurl}}) where T
@@ -176,6 +178,23 @@ function strace(x::LagrangeRefSpace, cell, localid, face)
     Q
 end
 
+function strace(x::LagrangeRefSpace{T, 1, 4, 4}, cell, localid, face) where {T}
+
+    #T = scalartype(x)
+    t = zeros(T, 3, 4)
+    for (k,fvert) in enumerate(face.vertices)
+        for (l,cvert) in enumerate(cell.vertices)
+            nrm = norm(fvert - cvert)
+            if isapprox(nrm, 0, atol=sqrt(eps(T)))
+                t[k,l] = T(1.0)
+                break
+            end
+        end
+    end
+
+    return t
+end
+
 
 function restrict(refs::LagrangeRefSpace{T,0}, dom1, dom2) where T
     #Q = eye(T, numfunctions(refs))
@@ -219,30 +238,33 @@ function (f::LagrangeRefSpace{T,2,3})(t) where T
      #   (value=v, curl=(p[1]-p[3])/j),
       #  (value=w, curl=(p[2]-p[1])/j)
 
+    σ = sign(dot(normal(t), cross(p[1]-p[3],p[2]-p[3])))
      SVector(
-        (value=u*(2*u-1), curl=(p[3]-p[2])*(4u-1)/j),
-        (value=v*(2*v-1), curl=(p[1]-p[3])*(4v-1)/j),
-        (value=w*(2*w-1), curl=(p[2]-p[1])*(4w-1)/j),
-        (value=4*v*w, curl=4*(w*(p[1]-p[3])+v*(p[2]-p[1]))/j),
-        (value=4*w*u, curl=4*(w*(p[3]-p[2])+u*(p[2]-p[1]))/j),
-        (value=4*u*v, curl=4*(u*(p[1]-p[3])+v*(p[3]-p[2]))/j),
+        (value=u*(2*u-1), curl=σ*(p[3]-p[2])*(4u-1)/j),
+        (value=v*(2*v-1), curl=σ*(p[1]-p[3])*(4v-1)/j),
+        (value=w*(2*w-1), curl=σ*(p[2]-p[1])*(4w-1)/j),
+        (value=4*v*w, curl=4*σ*(w*(p[1]-p[3])+v*(p[2]-p[1]))/j),
+        (value=4*w*u, curl=4*σ*(w*(p[3]-p[2])+u*(p[2]-p[1]))/j),
+        (value=4*u*v, curl=4*σ*(u*(p[1]-p[3])+v*(p[3]-p[2]))/j),
     )
 end
 
-function (f::LagrangeRefSpace{T,2,3})(t, ::Type{Val{:withcurl}}) where T
-    # Evaluete quadratic Lagrange elements on a triange, together with their curl
-    j = jacobian(t)
-    u,v,w, = barycentric(t)
-    p = t.patch
-    SVector(
-        (value=u*(2*u-1), curl=(p[3]-p[2])*(4u-1)/j),
-        (value=v*(2*v-1), curl=(p[1]-p[3])*(4v-1)/j),
-        (value=w*(2*w-1), curl=(p[2]-p[1])*(4w-1)/j),
-        (value=4*v*w, curl=4*(w*(p[1]-p[3])+v*(p[2]-p[1]))/j),
-        (value=4*w*u, curl=4*(w*(p[3]-p[2])+u*(p[2]-p[1]))/j),
-        (value=4*u*v, curl=4*(u*(p[1]-p[3])+v*(p[3]-p[2]))/j),
-    )
-end
+# function (f::LagrangeRefSpace{T,2,3})(t, ::Type{Val{:withcurl}}) where T
+#     # Evaluete quadratic Lagrange elements on a triange, together with their curl
+#     j = jacobian(t)
+#     u,v,w, = barycentric(t)
+#     p = t.patch
+
+#     σ = sign(dot(normal(t), cross(p[1]-p[3],p[2]-p[3])))
+#     SVector(
+#         (value=u*(2*u-1), curl=σ*(p[3]-p[2])*(4u-1)/j),
+#         (value=v*(2*v-1), curl=σ*(p[1]-p[3])*(4v-1)/j),
+#         (value=w*(2*w-1), curl=σ*(p[2]-p[1])*(4w-1)/j),
+#         (value=4*v*w, curl=4*σ*(w*(p[1]-p[3])+v*(p[2]-p[1]))/j),
+#         (value=4*w*u, curl=4*σ*(w*(p[3]-p[2])+u*(p[2]-p[1]))/j),
+#         (value=4*u*v, curl=4*σ*(u*(p[1]-p[3])+v*(p[3]-p[2]))/j),
+#     )
+# end
 
 function curl(ref::LagrangeRefSpace{T,2,3} where {T}, sh, el)
     #curl of lagc0d2 as combination of bdm functions 
@@ -305,3 +327,91 @@ function restrict(f::LagrangeRefSpace{T,2}, dom1, dom2) where T
     return Q
 end
 
+
+const _vert_perms_lag = [
+    (1,2,3),
+    (2,3,1),
+    (3,1,2),
+    (2,1,3),
+    (1,3,2),
+    (3,2,1),
+]
+
+const _dof_perms_lag0 = [
+    (1),
+    (1),
+    (1),
+    (1),
+    (1),
+    (1),
+]
+const _dof_perms_lag1 = [
+    (1,2,3),
+    (3,1,2),
+    (2,3,1),
+    (2,1,3),
+    (1,3,2),
+    (3,2,1),
+]
+
+function dof_permutation(::LagrangeRefSpace{<:Any,0}, vert_permutation)
+    i = findfirst(==(tuple(vert_permutation...)), _vert_perms_lag)
+    return _dof_perms_lag0[i]
+end
+
+function dof_permutation(::LagrangeRefSpace{<:Any,1}, vert_permutation)
+    i = findfirst(==(tuple(vert_permutation...)), _vert_perms_lag)
+    return _dof_perms_lag1[i]
+end
+
+function dof_perm_matrix(::LagrangeRefSpace{<:Any,0}, vert_permutation)
+    i = findfirst(==(tuple(vert_permutation...)), _vert_perms_rt)
+    @assert i != nothing
+    return _dof_lag0perm_matrix[i]
+end
+
+function dof_perm_matrix(::LagrangeRefSpace{<:Any,1}, vert_permutation)
+    i = findfirst(==(tuple(vert_permutation...)), _vert_perms_rt)
+    @assert i != nothing
+    return _dof_rtperm_matrix[i]
+end
+
+const _dof_lag0perm_matrix = [
+    @SMatrix[1],         # 1. {1,2,3}
+     
+    @SMatrix[1],         # 2. {2,3,1}
+    
+    @SMatrix[1],         # 3. {3,1,2}
+    
+    @SMatrix[1],         # 4. {2,1,3}
+    
+    @SMatrix[1],         # 5. {1,3,2}
+    
+    @SMatrix[1]         # 6. {3,2,1}
+    
+]
+
+function (ϕ::LagrangeRefSpace{T, 1, 4, 4})(lag) where T
+
+    u, v, w = parametric(lag)
+
+    tu = tangents(lag, 1)
+    tv = tangents(lag, 2)
+    tw = tangents(lag, 3)
+
+    B = [tu tv tw]
+    A = inv(transpose(B))
+
+    # gradient in u,v,w (unit tetrahedron)
+    gr1=SVector{3, T}(1.0, 0.0, 0.0)
+    gr2=SVector{3, T}(0.0, 1.0, 0.0)
+    gr3=SVector{3, T}(0.0, 0.0, 1.0)
+    gr4=SVector{3, T}(-1.0, -1.0, -1.0)
+
+    return SVector((
+        (value = u, gradient = A*gr1),
+        (value = v, gradient = A*gr2),
+        (value = w, gradient = A*gr3),
+        (value = T(1.0)-u-v-w, gradient = A*gr4)
+    ))
+end

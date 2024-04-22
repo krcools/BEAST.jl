@@ -1,79 +1,87 @@
 mutable struct PlaneWaveMW{T,P}
   direction::P
   polarisation::P
-  wavenumber::T
+  gamma::T
   amplitude::T
 end
 
-function PlaneWaveMW(d,p,k,a = 1)
-    T = promote_type(eltype(d), eltype(p), typeof(k), typeof(a))
+function PlaneWaveMW(d,p,γ,a = 1)
+    T = promote_type(eltype(d), eltype(p), typeof(γ), typeof(a))
     P = similar_type(typeof(d), T)
-    PlaneWaveMW{T,P}(d,p,k,a)
+    PlaneWaveMW{T,P}(d,p,γ,a)
 end
 
-scalartype(x::PlaneWaveMW{T,P}) where {T,P} = promote_type(complex(T), eltype(P)) 
+scalartype(x::PlaneWaveMW{T,P}) where {T,P} = promote_type(T, eltype(P)) 
 
 """
-    planewavemw3d(;direction, polarization, wavenumber[, amplitude=1])
+    planewavemw3d(;direction, polarization, wavenumber, gamma[, amplitude=1])
 
 Create a plane wave solution to Maxwell's equations.
 """
-planewavemw3d(;
+function planewavemw3d(;
     direction    = error("missing arguement `direction`"),
     polarization = error("missing arguement `polarization`"),
-    wavenumber   = error("missing arguement `wavenumber`"),
+    wavenumber   = nothing,
+    gamma        = nothing,
     amplitude    = 1,
-    ) = PlaneWaveMW(direction, polarization, wavenumber, amplitude)
+    )
+
+    gamma, wavenumber = gamma_wavenumber_handler(gamma, wavenumber)
+    isstatic(gamma) && (gamma = zero(eltype(direction)))
+
+    return PlaneWaveMW(direction, polarization, gamma, amplitude)
+
+end
 
 function (e::PlaneWaveMW)(x)
-  k = e.wavenumber
+  γ = e.gamma
   d = e.direction
   u = e.polarisation
   a = e.amplitude
-  a * exp(-im * k * dot(d, x)) * u
+  a * exp(-γ * dot(d, x)) * u
 end
 
 function curl(field::PlaneWaveMW)
-  k = field.wavenumber
+  γ = field.gamma
   d = field.direction
   u = field.polarisation
   a = field.amplitude
   v = d × u
-  b = -a * im * k
-  PlaneWaveMW(d, v, k, b)
+  b = -a * γ
+  PlaneWaveMW(d, v, γ, b)
 end
 
-*(a::Number, e::PlaneWaveMW) = PlaneWaveMW(e.direction, e.polarisation, e.wavenumber, a*e.amplitude)
+*(a::Number, e::PlaneWaveMW) = PlaneWaveMW(e.direction, e.polarisation, e.gamma, a*e.amplitude)
 
 abstract type Dipole end
 
 mutable struct DipoleMW{T,P} <: Dipole
     location::P
     orientation::P
-    wavenumber::T
+    gamma::T
 end
 
-function DipoleMW(l,o,k)
-    T = promote_type(eltype(l), eltype(o), typeof(k))
+function DipoleMW(l,o,γ)
+    T = promote_type(eltype(l), eltype(o), typeof(γ))
     P = similar_type(typeof(l), T)
-    DipoleMW{T,P}(l,o,k)
+    DipoleMW{T,P}(l,o,γ)
 end
 
-scalartype(x::DipoleMW{T,P}) where {T,P} = promote_type(complex(T), eltype(P)) 
+scalartype(x::DipoleMW{T,P}) where {T,P} = promote_type(T, eltype(P)) 
 
 mutable struct curlDipoleMW{T,P} <: Dipole
     location::P
     orientation::P
-    wavenumber::T
+    gamma::T
 end
 
-function curlDipoleMW(l,o,k)
-    T = promote_type(eltype(l), eltype(o), typeof(k))
+function curlDipoleMW(l,o,γ)
+    T = promote_type(eltype(l), eltype(o), typeof(γ))
     P = similar_type(typeof(l), T)
-    curlDipoleMW{T,P}(l,o,k)
+    curlDipoleMW{T,P}(l,o,γ)
 end
 
-scalartype(x::curlDipoleMW{T,P}) where {T,P} = promote_type(complex(T), eltype(P)) 
+scalartype(x::curlDipoleMW{T,P}) where {T,P} = promote_type(T, eltype(P)) 
 
 """
     dipolemw3d(;location, orientation, wavenumber)
@@ -82,53 +90,61 @@ Create an electric dipole solution to Maxwell's equations representing the elect
 field part. Implementation is based on (9.18) of Jackson's “Classical electrodynamics”,
 with the notable difference that the ``\exp(ikr)`` is used.
 """
-dipolemw3d(;
+function dipolemw3d(;
     location    = error("missing arguement `location`"),
     orientation = error("missing arguement `orientation`"),
-    wavenumber   = error("missing arguement `wavenumber`"),
-    ) = DipoleMW(location, orientation, wavenumber)
+    wavenumber  = nothing,
+    gamma       = nothing
+    )
+
+    gamma, wavenumber = gamma_wavenumber_handler(gamma, wavenumber)
+    isstatic(gamma) && (gamma = zero(eltype(orientation)))
+
+    return DipoleMW(location, orientation, gamma)
+
+end
 
 function (d::DipoleMW)(x; isfarfield=false)
-    k = d.wavenumber
+    γ = d.gamma
     x_0 = d.location
     p = d.orientation
     if isfarfield
-      # postfactor (4*π*im)/k to be consistent with BEAST far field computation
+      # postfactor (4*π*im)/k = (-4*π)/γ to be consistent with BEAST far field computation
       # and, of course, adapted phase factor exp(im*k*dot(n,x_0)) with
       # respect to (9.19) of Jackson's Classical Electrodynamics
       r = norm(x)
       n = x/r
-      return cross(cross(n,1/(4*π)*(k^2*cross(cross(n,p),n))*exp(im*k*dot(n,x_0))*(4*π*im)/k),n)
+      return cross(cross(n,1/(4*π)*(-γ^2*cross(cross(n,p),n))*exp(γ*dot(n,x_0))*(-4*π)/γ),n)
     else
       r = norm(x-x_0)
       n = (x - x_0)/r
-      return 1/(4*π)*exp(-im*k*r)*(k^2/r*cross(cross(n,p),n) + 
-              (1/r^3 + im*k/r^2)*(3*n*dot(n,p) - p))
+      return 1/(4*π)*exp(-γ*r)*(-γ^2/r*cross(cross(n,p),n) + 
+              (1/r^3 + γ/r^2)*(3*n*dot(n,p) - p))
     end
 end
 
 function (d::curlDipoleMW)(x; isfarfield=false)
-    k = d.wavenumber
+    γ = d.gamma
     x_0 = d.location
     p = d.orientation
     if isfarfield
       # postfactor (4*π*im)/k to be consistent with BEAST far field computation
       r = norm(x)
       n = x/r
-      return (-im*k)*k^2/(4*π)*cross(n,p)*(4*π*im)/k*exp(im*k*dot(n,x_0))
+      return (-γ)*(-γ^2)/(4*π)*cross(n,p)*(-4*π)/γ*exp(γ*dot(n,x_0))
     else
       r = norm(x-x_0)
       n =  (x - x_0)/r
-      return -im*(k^3)/(4*π)*cross(n,p)*exp(-im*k*r)/r*(1 + 1/(im*k*r))
+      return γ^3/(4*π)*cross(n,p)*exp(-γ*r)/r*(1 + 1/(γ*r))
     end
 end
 
 function curl(d::DipoleMW)
-    return curlDipoleMW(d.location, d.orientation, d.wavenumber)
+    return curlDipoleMW(d.location, d.orientation, d.gamma)
 end
 
-*(a::Number, d::DipoleMW) = DipoleMW(d.location, a .* d.orientation, d.wavenumber)
-*(a::Number, d::curlDipoleMW) = curlDipoleMW(d.location, a .* d.orientation, d.wavenumber)
+*(a::Number, d::DipoleMW) = DipoleMW(d.location, a .* d.orientation, d.gamma)
+*(a::Number, d::curlDipoleMW) = curlDipoleMW(d.location, a .* d.orientation, d.gamma)
 
 mutable struct CrossTraceMW{F} <: Functional
   field::F
