@@ -115,7 +115,7 @@ function (igd::VIEIntegrand)(u,v)
     #jacobian
     j = jacobian(tgeo) * jacobian(bgeo)
     
-    integrand(igd.op, kerneldata,tval,tgeo,bval,tgeo) * j
+    integrand(igd.op, kerneldata,tval,tgeo,bval,bgeo) * j
 end
 
 
