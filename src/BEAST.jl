@@ -18,6 +18,8 @@ using LiftedMaps
 using AbstractTrees
 using NestedUnitRanges
 
+# using Infiltrator
+
 import LinearAlgebra: cross, dot
 import LinearAlgebra: ×, ⋅
 
@@ -193,10 +195,16 @@ include("quadrature/doublenumqstrat.jl")
 include("quadrature/doublenumsauterqstrat.jl")
 include("quadrature/doublenumwiltonsauterqstrat.jl")
 include("quadrature/doublenumwiltonbogaertqstrat.jl")
+include("quadrature/selfsauterdnumotherwiseqstrat.jl")
+include("quadrature/nonconformingintegralopqstrat.jl")
+include("quadrature/commonfaceoverlappingedgeqstrat.jl")
+include("quadrature/strategies/cfcvsautercewiltonpdnumqstrat.jl")
 
 include("quadrature/doublenumints.jl")
 include("quadrature/singularityextractionints.jl")
 include("quadrature/sauterschwabints.jl")
+include("quadrature/nonconformingoverlapqrule.jl")
+include("quadrature/nonconformingtouchqrule.jl")
 
 include("postproc.jl")
 include("postproc/segcurrents.jl")

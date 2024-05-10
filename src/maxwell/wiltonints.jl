@@ -2,7 +2,7 @@ import WiltonInts84
 
 mutable struct WiltonSERule{P,Q} <: SingularityExtractionRule
     outer_quad_points::P
-    regularpart_quadrule::DoubleQuadRule{P,Q}
+    regularpart_quadrule::Q
 end
 
 function innerintegrals!(op::MWSingleLayer3DSng, p, g, f, t, s, z,

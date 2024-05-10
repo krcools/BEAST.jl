@@ -1,15 +1,12 @@
-struct DoubleNumSauterQstrat{R,S}
+struct SelfSauterOtherwiseDNumQStrat{R,S}
     outer_rule::R
     inner_rule::R
-    sauter_schwab_common_tetr::S
-    sauter_schwab_common_face::S
-    sauter_schwab_common_edge::S
-    sauter_schwab_common_vert::S
+    sauter_schwab_common::S
 end
 
 function quaddata(op::IntegralOperator,
     test_local_space::RefSpace, trial_local_space::RefSpace,
-    test_charts, trial_charts, qs::DoubleNumSauterQstrat)
+    test_charts, trial_charts, qs::SelfSauterOtherwiseDNumQStrat)
 
     T = coordtype(test_charts[1])
 
@@ -17,10 +14,7 @@ function quaddata(op::IntegralOperator,
     bqd = quadpoints(trial_local_space, trial_charts, (qs.inner_rule,))
      
     leg = (
-      convert.(NTuple{2,T},_legendre(qs.sauter_schwab_common_vert,0,1)),
-      convert.(NTuple{2,T},_legendre(qs.sauter_schwab_common_edge,0,1)),
-      convert.(NTuple{2,T},_legendre(qs.sauter_schwab_common_face,0,1)),
-      convert.(NTuple{2,T},_legendre(qs.sauter_schwab_common_tetr,0,1)),
+      convert.(NTuple{2,T},_legendre(qs.sauter_schwab_common,0,1)),
       )
 
     return (tpoints=tqd, bpoints=bqd, gausslegendre=leg)
@@ -28,7 +22,7 @@ end
 
 
 function quadrule(op::IntegralOperator, g::RefSpace, f::RefSpace,  i, τ, j, σ, qd,
-    qs::DoubleNumSauterQstrat)
+    qs::SelfSauterOtherwiseDNumQStrat)
 
     T = eltype(eltype(τ.vertices))
     hits = 0
@@ -42,9 +36,7 @@ function quadrule(op::IntegralOperator, g::RefSpace, f::RefSpace,  i, τ, j, σ,
         end
     end
 
-    hits == 3 && return SauterSchwabQuadrature.CommonFace(qd.gausslegendre[3])
-    hits == 2 && return SauterSchwabQuadrature.CommonEdge(qd.gausslegendre[2])
-    hits == 1 && return SauterSchwabQuadrature.CommonVertex(qd.gausslegendre[1])
+    hits == 3 && return SauterSchwabQuadrature.CommonFace(qd.gausslegendre[1])
 
     return DoubleQuadRule(
         qd.tpoints[1,i],

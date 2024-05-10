@@ -95,6 +95,11 @@ function momintegrals!(op::Operator,
     test_chart = CompScienceMeshes.permute_vertices(test_chart, I)
     trial_chart = CompScienceMeshes.permute_vertices(trial_chart, J)
 
+    if rule isa SauterSchwabQuadrature.CommonEdge
+        @assert test_chart.vertices[1] ≈ trial_chart.vertices[1]
+        @assert test_chart.vertices[3] ≈ trial_chart.vertices[3]
+    end
+
     igd = Integrand(op, test_local_space, trial_local_space, test_chart, trial_chart)
     G = SauterSchwabQuadrature.sauterschwab_parameterized(igd, rule)
 
@@ -102,7 +107,7 @@ function momintegrals!(op::Operator,
     QTrial = dof_perm_matrix(trial_local_space, J)
     out_temp = zeros(eltype(out), numfunctions(test_local_space),numfunctions(trial_local_space))
     out_temp = QTest*G*QTrial'
-    out[1:numfunctions(test_local_space),1:numfunctions(trial_local_space)] = out_temp
+    out[1:numfunctions(test_local_space),1:numfunctions(trial_local_space)] .+= out_temp
 
     nothing
 end
@@ -141,6 +146,7 @@ function momintegrals_test_refines_trial!(out, op,
     for (q,chart) in enumerate(trial_charts)
         qr = quadrule(op, test_local_space, trial_local_space,
             1, test_chart, q ,chart, qd, quadstrat)
+        # @show qr
 
         Q = restrict(trial_local_space, trial_chart, chart)
         zlocal = zero(out)

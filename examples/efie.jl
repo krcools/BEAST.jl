@@ -19,3 +19,14 @@ u, ch = BEAST.gmres_ch(efie; restart=1500)
 
 include("utils/postproc.jl")
 include("utils/plotresults.jl")
+
+qsg(g) = BEAST.DoubleNumWiltonSauterQStrat(6, 7, 6, 7, g, g, g, g)
+A1 = assemble(t,X,X;quadstrat=qsg(5))
+A2 = assemble(t,X,X;quadstrat=qsg(10))
+A2 = assemble(t,X,X;quadstrat=qsg(20))
+val, pos = findmax(abs.(A2-A3))
+
+import Plots
+Plots.plotly()
+Plots.plot(abs.(A2[537,:]))
+Plots.scatter!(abs.(A3[537,:]))

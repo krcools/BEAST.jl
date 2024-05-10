@@ -1,4 +1,4 @@
-using SpecialFunctions
+import SpecialFunctions: hankelh2
 
 abstract type HelmholtzOperator2D <: IntegralOperator end
 scalartype(::HelmholtzOperator2D) = ComplexF64

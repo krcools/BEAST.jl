@@ -11,14 +11,6 @@ struct DoubleNumWiltonSauterQStrat{R,S}
     sauter_schwab_common_vert::S
 end
 
-struct DoubleNumSauterQstrat{R,S}
-    outer_rule::R
-    inner_rule::R
-    sauter_schwab_common_tetr::S
-    sauter_schwab_common_face::S
-    sauter_schwab_common_edge::S
-    sauter_schwab_common_vert::S
-end
 
 struct DoubleNumQStrat{R}
     outer_rule::R
