@@ -320,8 +320,10 @@ function qr_volume(op::VolumeOperator, g::RefSpace, f::RefSpace, i, τ, j, σ, q
     for (i,t) in enumerate(τ.vertices)
         for (j,s) in enumerate(σ.vertices)
             d2 = LinearAlgebra.norm_sqr(t-s)
+            d = norm(t-s)
             dmin2 = min(dmin2, d2)
-            if d2 < dtol
+            # if d2 < dtol
+            if d < dtol
                 push!(idx_t,i)
                 push!(idx_s,j)
                 hits +=1
@@ -331,7 +333,7 @@ function qr_volume(op::VolumeOperator, g::RefSpace, f::RefSpace, i, τ, j, σ, q
     end
 
     #singData = SauterSchwab3D.Singularity{D,hits}(idx_t, idx_s )
-   
+   @assert hits <= 4
 
     hits == 4 && return SauterSchwab3D.CommonVolume6D_S(SauterSchwab3D.Singularity6DVolume(idx_t,idx_s),(qd.sing_qp[1],qd.sing_qp[2],qd.sing_qp[4]))
     hits == 3 && return SauterSchwab3D.CommonFace6D_S(SauterSchwab3D.Singularity6DFace(idx_t,idx_s),(qd.sing_qp[1],qd.sing_qp[2],qd.sing_qp[3]))
@@ -363,8 +365,10 @@ function qr_boundary(op::BoundaryOperator, g::RefSpace, f::RefSpace, i, τ, j,  
     for (i,t) in enumerate(τ.vertices)
         for (j,s) in enumerate(σ.vertices)
             d2 = LinearAlgebra.norm_sqr(t-s)
+            d = norm(t-s)
             dmin2 = min(dmin2, d2)
-            if d2 < dtol
+            # if d2 < dtol
+            if d < dtol
                 push!(idx_t,i)
                 push!(idx_s,j)
                 hits +=1
@@ -373,6 +377,7 @@ function qr_boundary(op::BoundaryOperator, g::RefSpace, f::RefSpace, i, τ, j,  
         end
     end
 
+    @assert hits <= 3
     #singData = SauterSchwab3D.Singularity{D,hits}(idx_t, idx_s )
    
 

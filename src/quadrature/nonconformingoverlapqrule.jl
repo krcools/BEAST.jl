@@ -14,6 +14,14 @@ function momintegrals!(op, test_local_space, basis_local_space,
     for tclp in tclps append!(test_charts, tclp) end
     for bclp in bclps append!(bsis_charts, bclp) end
 
+    T = coordtype(test_chart)
+    h = max(volume(test_chart), volume(test_chart))
+    test_charts = [ch for ch in test_charts if volume(ch) .> 1e6 * eps(T) * h]
+    bsis_charts = [ch for ch in bsis_charts if volume(ch) .> 1e6 * eps(T) * h]
+
+    test_charts = [ch for ch in test_charts if volume(ch) .> 1e6 * eps(T)]
+    bsis_charts = [ch for ch in bsis_charts if volume(ch) .> 1e6 * eps(T)]
+
     @assert volume(test_chart) ≈ sum(volume.(test_charts))
     @assert volume(basis_chart) ≈ sum(volume.(bsis_charts))
 

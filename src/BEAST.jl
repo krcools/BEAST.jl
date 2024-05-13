@@ -18,7 +18,7 @@ using LiftedMaps
 using AbstractTrees
 using NestedUnitRanges
 
-# using Infiltrator
+using Infiltrator
 
 import LinearAlgebra: cross, dot
 import LinearAlgebra: ×, ⋅

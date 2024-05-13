@@ -92,6 +92,14 @@ function momintegrals!(op::Operator,
         trial_chart.vertices, rule)
 
     # permute_vertices reparametrizes the simplex without affecting the normal
+    if 0 in I || 0 in J
+        @show typeof(rule) I J
+        @show test_chart.vertices
+        @show trial_chart.vertices
+        @infiltrate
+        # error("on purpose")
+    end
+
     test_chart = CompScienceMeshes.permute_vertices(test_chart, I)
     trial_chart = CompScienceMeshes.permute_vertices(trial_chart, J)
 

@@ -26,10 +26,14 @@ function quadrule(op::IntegralOperator, g::RefSpace, f::RefSpace,  i, τ, j, σ,
     for t in τ.vertices
         for s in σ.vertices
             d2 = LinearAlgebra.norm_sqr(t-s)
+            d = norm(t-s)
             dmin2 = min(dmin2, d2)
-            hits += (d2 < dtol)
+            # hits += (d2 < dtol)
+            hits += (d < dtol)
         end
     end
+
+    @assert hits <= 3
 
     hits == 3 && return SauterSchwabQuadrature.CommonFace(qd.gausslegendre[3])
     hits == 2 && return SauterSchwabQuadrature.CommonEdge(qd.gausslegendre[2])
