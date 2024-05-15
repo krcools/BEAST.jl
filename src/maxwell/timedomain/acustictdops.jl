@@ -31,7 +31,7 @@ end #of the module
 
 export TDAcustic3D
 
-defaultquadstrat(::AcusticSingleLayerTDIO, tfs, bfs) = nothing # AllAnalyticalQStrat(1)
+defaultquadstrat(::AcusticSingleLayerTDIO, tfs, bfs) = AllAnalyticalQStrat(1)
 #nothing goes in hybrid qr, allanalytical goes in zuccottirule
 
 
@@ -189,8 +189,9 @@ function momintegrals!(z, op::AcusticSingleLayerTDIO, g::LagrangeRefSpace{T,0,3}
           elseif hits==1
                 a2index,a3index=mod1(a1index+1,3),mod1(a1index+2,3)
                 b2index,b3index=mod1(b1index+1,3),mod1(b1index+2,3)
-                #print("\np1=",τ[a1index],"\np2=",τ[a2index],"\np3=",τ[a3index],"\nv1=",σ[b1index],"\nv2=",σ[b2index],"\nv3=",σ[b3index],"\nt1=",t1,"\nt2=",t2)
+                print("\na1=",τ[a1index],"\na2=",τ[a2index],"\na3=",τ[a3index],"\nb1=",σ[b1index],"\nb2=",σ[b2index],"\nb3=",σ[b3index],"\nt1=",t1,"\nt2=",t2)
                 z[1,1,1]+=(TimeDomainBEMInt.intcommonvertex(τ[a1index],τ[a2index],τ[a3index],σ[b2index],σ[b3index],t1,t2,qpc))/(4*π)
+                
           else
             #print("\np1=",τ[1],"\np2=",τ[2],"\np3=",τ[3],"\nv1=",σ[1],"\nv2=",σ[2],"\nv3=",σ[3],"\nt1=",t1,"\nt2=",t2)
              z[1,1,1]+=(inttriangletriangle(τ[1],τ[2],τ[3],σ[1],σ[2],σ[3],t1,t2,qpc))/(4*π)
@@ -290,7 +291,7 @@ function momintegrals!(z, op::AcusticSingleLayerTDIO, g::LagrangeRefSpace{T,0,3}
                 #print("\np1=",τ[a1index],"\np2=",τ[a2index],"\np3=",τ[a3index],"\nv1=",σ[b1index],"\nv2=",σ[b2index],"\nv3=",σ[b3index],"\nt1=",t1,"\nt2=",t2)
                 entry=(TimeDomainBEMInt.intcommonvertex(τ[a1index],τ[a2index],τ[a3index],σ[b2index],σ[b3index],t1,t2,qpc))/(4*π)
                 if norm(entry)>10.0 || entry<-0.0001
-                    println("quadrature ",τ[a1index]," ",τ[a2index]," ",τ[a3index]," ",σ[b2index]," ",σ[b3index], t1," ",t2," ",entry)
+                    println("quadrature ",τ[a1index]," ",τ[a2index]," ",τ[a3index]," ",σ[b2index]," ",σ[b3index], t1," ",t2," ",entry, " ",)
                     
                     XW = qr.outer_quad_points
                     for p in 1 : length(XW)

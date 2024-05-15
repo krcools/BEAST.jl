@@ -1,10 +1,10 @@
 using CompScienceMeshes, BEAST, LinearAlgebra
 #Γ = readmesh(joinpath(@__DIR__,"sphere2.in"))
-Γ = CompScienceMeshes.meshsphere(1.0,0.3)#CompScienceMeshes.meshcuboid(1.0,1.0,1.0,0.3)
+Γ = CompScienceMeshes.meshsphere(1.0,0.4)#CompScienceMeshes.meshcuboid(1.0,1.0,1.0,0.3)
 
 X = lagrangecxd0(Γ)
 
-Δt, Nt = 0.08, 600 
+Δt, Nt = 0.5, 200 
 T = timebasisshiftedlagrange(Δt, Nt, 0)
 U = timebasisdelta(Δt, Nt)
 
@@ -25,10 +25,11 @@ tdacusticsl = @discretise SL[j′,j] == -1.0e[j′]   j∈V  j′∈W
 xacusticsl = solve(tdacusticsl)
 
 Z = assemble(SL,W,V)
+
 #corregere da qui 
 import Plots
 
-Plots.plot(xacusticsl[1,1:300],label="Current")
+Plots.plot(xacusticsl[1,1:300],label="Current",ylim=[-0.0001,0.0001])
 Plots.xlabel!("t")
 Plots.savefig("stablecurrent.png") 
 
