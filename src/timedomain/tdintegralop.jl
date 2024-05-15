@@ -1,8 +1,29 @@
 using WiltonInts84
 using TimeDomainBEMInt
 
-abstract type RetardedPotential{T} <: Operator end
-Base.eltype(::RetardedPotential{T}) where {T} = T
+abstract type AbstractSpaceTimeOperator end
+abstract type SpaceTimeOperator <: AbstractSpaceTimeOperator end # atomic operator
+
+#TODO RKCQ multithreading
+
+function assemble(operator::AbstractSpaceTimeOperator, test_functions, trial_functions;
+    storage_policy = Val{:bandedstorage},
+    long_delays_policy = LongDelays{:compress},
+    threading = Threading{:multi},
+    quadstrat=defaultquadstrat(operator, test_functions, trial_functions))
+    stagedtimestep = isa(test_functions.time, StagedTimeStep)
+    if stagedtimestep
+        return assemble(RungeKuttaConvolutionQuadrature(operator), test_functions, trial_functions)
+    end
+    Z, store = allocatestorage(operator, test_functions, trial_functions,
+        storage_policy, long_delays_policy)
+    assemble!(operator, test_functions, trial_functions, store, threading; quadstrat)
+    return Z()
+end
+
+
+abstract type RetardedPotential{T} <: SpaceTimeOperator end
+# Base.eltype(::RetardedPotential{T}) where {T} = T
 scalartype(A::RetardedPotential{T}) where {T} = T
 
 mutable struct EmptyRP{T} <: RetardedPotential{T}
@@ -38,7 +59,8 @@ function allocatestorage(op::RetardedPotential, testST, basisST,
     println("\nAllocated memory for convolution operator.")
 
     kmax = maximum(K1);
-	Z = zeros(eltype(op), M, N, kmax)
+    T = scalartype(op, testST, basisST)
+	Z = zeros(T, M, N, kmax)
     store1(v,m,n,k) = (Z[m,n,k] += v)
     # return ()->MatrixConvolution(Z), store1
     return ()->ConvolutionOperators.DenseConvOp(Z), store1
@@ -84,7 +106,7 @@ function allocatestorage(op::RetardedPotential, testST, basisST,
     
     @info "Allocating mem for RP op compressing the static tail..."
 
-	T = eltype(op)
+	T = scalartype(op, testST, basisST)
 
     tfs = spatialbasis(testST)
     bfs = spatialbasis(basisST)
@@ -233,7 +255,7 @@ function assemble_chunk!(op::RetardedPotential, testST, trialST, store;
     udim = numfunctions(U)
     vdim = numfunctions(V)
     wdim = numfunctions(W)
-    z = zeros(eltype(op), udim, vdim, wdim)
+    z = zeros(scalartype(op, testST, trialST), udim, vdim, wdim)
 
 	# @show length(testels) length(trialels)
 

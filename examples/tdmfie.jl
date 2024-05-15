@@ -27,9 +27,9 @@ N = NCross()
 
 @hilbertspace k
 @hilbertspace j
-mfie = @discretise (0.5(N⊗I) + 1.0DL)[k,j] == -1.0H[k] k∈W j∈V
+mfie = @discretise ((0.5*N)⊗I)[k,j] + 1.0DL[k,j] == -1.0H[k] k∈W j∈V
 
-xmfie = solve(mfie)
+xmfie = BEAST.motsolve(mfie)
 
 Xmfie, Δω, ω0 = fouriertransform(xmfie, Δt, 0.0, 2)
 ω = collect(ω0 .+ (0:Nt-1)*Δω)
@@ -37,3 +37,7 @@ _, i1 = findmin(abs.(ω .- 1.0))
 
 ω1 = ω[i1]
 um = Xmfie[:,i1] / fouriertransform(gaussian)(ω1)
+
+import Plotly
+fcr, geo = facecurrents(um, X)
+Plotly.plot(patch(geo, norm.(fcr)))

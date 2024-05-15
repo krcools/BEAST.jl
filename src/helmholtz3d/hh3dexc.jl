@@ -11,6 +11,10 @@ function (f::HH3DPlaneWave)(r)
     return a * exp(-γ*dot(d,r))
 end
 
+function (f::HH3DPlaneWave)(r::CompScienceMeshes.MeshPointNM)
+    return f(cartesian(r))
+end
+
 scalartype(f::HH3DPlaneWave{P,K,T}) where {P,K,T} = promote_type(eltype(P), K, T)
 
 """
@@ -32,6 +36,9 @@ function (f::HH3DLinearPotential)(r)
     return a * dot(d, r)
 end
 
+function (f::HH3DLinearPotential)(r::CompScienceMeshes.MeshPointNM)
+    return f(cartesian(r))
+end
 struct gradHH3DLinearPotential{T,P}
     direction::P
     amplitude::T
@@ -42,6 +49,11 @@ function (f::gradHH3DLinearPotential)(r)
     a = f.amplitude
 
     return a * d
+end
+
+function (f::gradHH3DLinearPotential)(r::CompScienceMeshes.MeshPointNM)
+    r = cartesian(mp)
+    return dot(normal(mp), f(r))
 end
 
 function grad(m::HH3DLinearPotential)
@@ -65,6 +77,10 @@ struct HH3DMonopole{P,K,T}
 end
 
 scalartype(x::HH3DMonopole{P,K,T}) where {P,K,T} = promote_type(eltype(P), K, T)
+
+function (f::HH3DMonopole)(r::CompScienceMeshes.MeshPointNM)
+    return f(cartesian(r))
+end
 
 function (f::HH3DMonopole)(r)
     γ = f.gamma
@@ -90,6 +106,11 @@ function (f::gradHH3DMonopole)(r)
     R = norm(vecR)
 
     return -a * vecR * exp(-γ * R) / R^2 * (γ + 1 / R)
+end
+
+function (f::gradHH3DMonopole)(mp::CompScienceMeshes.MeshPointNM)
+    r = cartesian(mp)
+    return dot(normal(mp), f(r))
 end
 
 function grad(m::HH3DMonopole)

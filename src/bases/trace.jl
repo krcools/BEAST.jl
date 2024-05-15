@@ -139,6 +139,60 @@ function strace(X::Space, γ, dim1::Type{Val{2}})
     strace(X, Σ, fns)
 end
 
+function strace(X::Space, γ, dim1::Type{Val{3}})
+
+    x = refspace(X)
+    E, ad, P = assemblydata(X)
+    igeo = geometry(X)
+
+    @assert dimension(γ) == dimension(igeo)-1
+
+    ogeo = boundary(igeo)
+    on_target = overlap_gpredicate(γ)
+    ogeo = submesh(ogeo) do m,f
+        ch = chart(m,f)
+        on_target(ch)
+    end
+
+    D = connectivity(igeo, ogeo, abs)
+    rows, vals = rowvals(D), nonzeros(D)
+
+    T = scalartype(X)
+    S = Shape{T}
+    fns = [Vector{S}() for i in 1:numfunctions(X)]
+
+    for (p,el) in enumerate(E)
+
+        for (q,fc) in enumerate(faces(el))
+            on_target(fc) || continue
+
+            r = 0
+            for k in nzrange(D,P[p])
+                vals[k] == q && (r = rows[k]; break)
+            end
+            @assert r != 0
+
+            fc1 = chart(ogeo, r)
+            Q = strace(x, el, q, fc1)
+
+            for i in 1:size(Q,1)
+                for j in 1:size(Q,2)
+                    for (m,a) in ad[p,j]
+                        v = a*Q[i,j]
+                        isapprox(v,0,atol=sqrt(eps(T))) && continue
+                        push!(fns[m], Shape(r, i, v))
+                    end
+                end
+            end
+
+        end
+
+    end
+
+    strace(X, ogeo, fns)
+
+end
+
 """
 currently not working!
 """

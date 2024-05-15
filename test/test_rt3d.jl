@@ -12,8 +12,8 @@ for T in [Float32, Float64]
     nbd3 = neighborhood(tet, T.([1,1,0]/3))
     nbd4 = neighborhood(tet, T.([1,1,1]/3))
 
-    rs = BEAST.NDLCDRefSpace{T}()
-    fcs = BEAST.faces(tet)
+    local rs = BEAST.NDLCDRefSpace{T}()
+    local fcs = BEAST.faces(tet)
     @test dot(rs(nbd1)[1].value, normal(fcs[1])) > 0
     @test dot(rs(nbd2)[2].value, normal(fcs[2])) > 0
     @test dot(rs(nbd3)[3].value, normal(fcs[3])) > 0
@@ -41,7 +41,7 @@ for T in [Float32, Float64]
     @test dot(rs(nbd4)[3].value, normal(fcs[4])) * volume(fcs[4]) ≈ 0  atol=eps(T)
 
 
-    ctr = cartesian(center(tet))
+    local ctr = cartesian(center(tet))
     @test dot(cartesian(nbd1)-ctr, normal(fcs[1])) > 0
     @test dot(cartesian(nbd2)-ctr, normal(fcs[2])) > 0
     @test dot(cartesian(nbd3)-ctr, normal(fcs[3])) > 0

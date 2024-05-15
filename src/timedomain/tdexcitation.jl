@@ -40,8 +40,13 @@ function quadrule(exc::TDFunctional, testrefs, timerefs::DiracBoundary, p, τ, r
 
 end
 
-
 function assemble(exc::TDFunctional, testST; quaddata=quaddata, quadrule=quadrule)
+    
+    stagedtimestep = isa(temporalbasis(testST), BEAST.StagedTimeStep)
+    if stagedtimestep
+        return staged_assemble(exc, testST; quaddata=quaddata, quadrule=quadrule)
+    end
+    
     testfns = spatialbasis(testST)
     timefns = temporalbasis(testST)
     Z = zeros(eltype(exc), numfunctions(testfns), numfunctions(timefns))
@@ -50,26 +55,27 @@ function assemble(exc::TDFunctional, testST; quaddata=quaddata, quadrule=quadrul
     return Z
 end
 
-function assemble(exc::TDFunctional, testST::StagedTimeStep; 
+function staged_assemble(exc::TDFunctional, testST::SpaceTimeBasis; 
     quaddata=quaddata, quadrule=quadrule)
 
-    stageCount = length(testST.c);
-    spatialBasis = testST.spatialBasis;
-    Nt = testST.Nt;
-    Δt = testST.Δt;
-    Z = zeros(eltype(exc), numfunctions(spatialBasis) * stageCount, Nt);
+    @warn "staged assemble of the right-hand side"
+    testfns = spatialbasis(testST)
+    timefns = temporalbasis(testST)
+    stageCount = numstages(timefns)
+    Nt = timefns.Nt
+    Δt = timefns.Δt
+    Z = zeros(eltype(exc), numfunctions(testfns) * stageCount, Nt)
     for i = 1:stageCount
-        store(v,m,k) = (Z[(m-1)*stageCount+i,k] += v);
-        tbsd = TimeBasisDeltaShifted(timebasisdelta(Δt, Nt), testST.c[i]);
-        assemble!(exc, spatialBasis ⊗ tbsd, store,
-            quaddata=quaddata, quadrule=quadrule);
+        store(v,m,k) = (Z[(m-1)*stageCount+i,k] += v)
+        tbsd = TimeBasisDeltaShifted(timebasisdelta(Δt, Nt), timefns.c[i])
+        assemble!(exc, testfns ⊗ tbsd, store,
+            quaddata=quaddata, quadrule=quadrule)
     end
-    return Z;
+    return Z
 end
 
 function assemble!(exc::TDFunctional, testST, store;
     quaddata=quaddata, quadrule=quadrule)
-
     testfns = spatialbasis(testST)
     timefns = temporalbasis(testST)
 

@@ -5,11 +5,13 @@ using LinearAlgebra
 using Test
 
 @testset "Helmholtz potential operators" begin
-    r = 10.0
-    λ = 20 * r
-    k = 2 * π / λ
+    # r = 10.0
+    # λ = 20 * r
+    # k = 2 * π / λ
+    # sphere = meshsphere(r, 0.2 * r)
+    k = 0.031415926535897934
+    sphere = readmesh(joinpath(dirname(pathof(BEAST)),"../test/assets/sphere_rad=10_h=2.in"))
 
-    sphere = meshsphere(r, 0.2 * r)
     X0 = lagrangecxd0(sphere)
     X1 = lagrangec0d1(sphere)
 
@@ -23,6 +25,7 @@ using Test
 
     # Interior problem
     # Formulations from Sauter and Schwab, Boundary Element Methods(2011), Chapter 3.4.1.1
+    r = 10.0
     pos1 = SVector(r * 1.5, 0.0, 0.0)  # positioning of point charges
     pos2 = SVector(-r * 1.5, 0.0, 0.0)
 
@@ -156,3 +159,156 @@ using Test
     @test err_ENPSL_field < 0.01
     @test err_ENPDL_field < 0.02
 end
+
+## Test here some of the mixed discretizatinos
+#@testset "Helmholtz potential operators: mixed discretizations with duallagrangecxd0" begin
+    # r = 10.0
+    # sphere = meshsphere(r, 0.2 * r)
+    # λ = 20 * r
+    # k = 2 * π / λ
+    k = 0.031415926535897934
+    sphere = readmesh(joinpath(dirname(pathof(BEAST)),"../test/assets/sphere_rad=10_h=2.in"))
+    X0 = lagrangecxd0(sphere)
+    X1 = lagrangec0d1(sphere)
+    Y0 = duallagrangecxd0(sphere; interpolatory=true)
+
+    S = Helmholtz3D.singlelayer(; gamma=im * k)
+    D = Helmholtz3D.doublelayer(; gamma=im * k)
+    Dt = Helmholtz3D.doublelayer_transposed(; gamma=im * k)
+    N = Helmholtz3D.hypersingular(; gamma=im * k)
+
+    q = 100.0
+    ϵ = 1.0
+
+    # Interior problem
+    # Formulations from Sauter and Schwab, Boundary Element Methods(2011), Chapter 3.4.1.1
+    r = 10.0
+    pos1 = SVector(r * 1.5, 0.0, 0.0)  # positioning of point charges
+    pos2 = SVector(-r * 1.5, 0.0, 0.0)
+
+    charge1 = Helmholtz3D.monopole(position=pos1, amplitude=q/(4*π*ϵ), wavenumber=k)
+    charge2 = Helmholtz3D.monopole(position=pos2, amplitude=-q/(4*π*ϵ), wavenumber=k)
+
+    # Potential of point charges
+
+    Φ_inc(x) = charge1(x) + charge2(x)
+
+    gD1 = assemble(DirichletTrace(charge1), Y0) + assemble(DirichletTrace(charge2), Y0)
+    gN = assemble(∂n(charge1), X1) + assemble(BEAST.n ⋅ grad(charge2), X1)
+
+    G = assemble(Identity(), X1, Y0)
+    o = ones(numfunctions(X1))
+
+    # Interior Dirichlet problem - compare Sauter & Schwab eqs. 3.81
+    M_IDPDL = (-1 / 2 * assemble(Identity(), Y0, X1) + assemble(D, Y0, X1)) # Double layer (DL)
+
+    # Interior Neumann problem
+    # Neumann derivative from SL potential with deflected nullspace
+    M_INPSL = (1 / 2 * assemble(Identity(), X1, Y0) + assemble(Dt, X1, Y0)) + G * o * o' * G 
+
+    ρ_IDPDL = M_IDPDL \ (-gD1)
+    ρ_INPSL = M_INPSL \ (-gN)
+
+    pts = meshsphere(0.8 * r, 0.8 * 0.6 * r).vertices # sphere inside on which the potential and field are evaluated
+    @show length(pts)
+
+    pot_IDPDL = potential(HH3DDoubleLayerNear(im * k), pts, ρ_IDPDL, X1; type=ComplexF64)
+
+    pot_INPSL = potential(HH3DSingleLayerNear(im * k), pts, ρ_INPSL, Y0; type=ComplexF64)
+
+    # Total field inside should be zero
+    err_IDPDL_pot = norm(pot_IDPDL + Φ_inc.(pts)) / norm(Φ_inc.(pts))
+    err_INPSL_pot = norm(pot_INPSL + Φ_inc.(pts)) / norm(Φ_inc.(pts))
+
+    # Efield(x) = - grad Φ_inc(x)
+    Efield(x) =  -grad(charge1)(x) + -grad(charge2)(x)
+
+    field_IDPDL = -potential(HH3DHyperSingularNear(im * k), pts, ρ_IDPDL, X1)
+    field_INPSL = -potential(HH3DDoubleLayerTransposedNear(im * k), pts, ρ_INPSL, Y0)
+
+    err_IDPDL_field = norm(field_IDPDL + Efield.(pts)) / norm(Efield.(pts))
+    err_INPSL_field = norm(field_INPSL + Efield.(pts)) / norm(Efield.(pts))
+
+    # errors of interior problems
+    @test err_IDPDL_pot < 0.005
+    @test err_INPSL_pot < 0.002
+
+    @test err_IDPDL_field < 0.0095
+    @test err_INPSL_field < 0.002
+#end
+
+## Test here some of the mixed discretizatinos
+#@testset "Helmholtz potential operators: mixed discretizations with duallagrangec0d1" begin
+    # r = 10.0
+    # λ = 20 * r
+    # k = 2 * π / λ
+    # sphere = meshsphere(r, 0.2 * r)
+    k = 0.031415926535897934
+    sphere = readmesh(joinpath(dirname(pathof(BEAST)),"../test/assets/sphere_rad=10_h=2.in"))
+
+    X0 = lagrangecxd0(sphere)
+    Y1 = duallagrangec0d1(sphere)
+
+    S = Helmholtz3D.singlelayer(; gamma=im * k)
+    D = Helmholtz3D.doublelayer(; gamma=im * k)
+    Dt = Helmholtz3D.doublelayer_transposed(; gamma=im * k)
+    N = Helmholtz3D.hypersingular(; gamma=im * k)
+
+    q = 100.0
+    ϵ = 1.0
+
+    # Interior problem
+    # Formulations from Sauter and Schwab, Boundary Element Methods(2011), Chapter 3.4.1.1
+    r = 10.0
+    pos1 = SVector(r * 1.5, 0.0, 0.0)  # positioning of point charges
+    pos2 = SVector(-r * 1.5, 0.0, 0.0)
+
+    charge1 = Helmholtz3D.monopole(position=pos1, amplitude=q/(4*π*ϵ), wavenumber=k)
+    charge2 = Helmholtz3D.monopole(position=pos2, amplitude=-q/(4*π*ϵ), wavenumber=k)
+
+    # Potential of point charges
+
+    Φ_inc(x) = charge1(x) + charge2(x)
+
+    gD1 = assemble(DirichletTrace(charge1), X0) + assemble(DirichletTrace(charge2), X0)
+    gN = assemble(∂n(charge1), Y1) + assemble(BEAST.n ⋅ grad(charge2), Y1)
+
+    G = assemble(Identity(), Y1, X0)
+    o = ones(numfunctions(X0))
+
+    # Interior Dirichlet problem - compare Sauter & Schwab eqs. 3.81
+    M_IDPDL = (-1 / 2 * assemble(Identity(), X0, Y1) + assemble(D, X0, Y1)) # Double layer (DL)
+
+    # Interior Neumann problem
+    # Neumann derivative from SL potential with deflected nullspace
+    M_INPSL = (1 / 2 * assemble(Identity(), Y1, X0) + assemble(Dt, Y1, X0)) + G * o * o' * G 
+
+    ρ_IDPDL = M_IDPDL \ (-gD1)
+    ρ_INPSL = M_INPSL \ (-gN)
+
+    pts = meshsphere(0.8 * r, 0.8 * 0.6 * r).vertices # sphere inside on which the potential and field are evaluated
+
+    pot_IDPDL = potential(HH3DDoubleLayerNear(im * k), pts, ρ_IDPDL, Y1; type=ComplexF64)
+
+    pot_INPSL = potential(HH3DSingleLayerNear(im * k), pts, ρ_INPSL, X0; type=ComplexF64)
+
+    # Total field inside should be zero
+    err_IDPDL_pot = norm(pot_IDPDL + Φ_inc.(pts)) / norm(Φ_inc.(pts))
+    err_INPSL_pot = norm(pot_INPSL + Φ_inc.(pts)) / norm(Φ_inc.(pts))
+
+    # Efield(x) = - grad Φ_inc(x)
+    Efield(x) =  -grad(charge1)(x) + -grad(charge2)(x)
+
+    field_IDPDL = -potential(HH3DHyperSingularNear(im * k), pts, ρ_IDPDL, Y1)
+    field_INPSL = -potential(HH3DDoubleLayerTransposedNear(im * k), pts, ρ_INPSL, X0)
+
+    err_IDPDL_field = norm(field_IDPDL + Efield.(pts)) / norm(Efield.(pts))
+    err_INPSL_field = norm(field_INPSL + Efield.(pts)) / norm(Efield.(pts))
+
+    # errors of interior problems
+    @test err_IDPDL_pot < 0.02
+    @test err_INPSL_pot < 0.025
+
+    @test err_IDPDL_field < 0.02
+    @test err_INPSL_field < 0.025
+#end

@@ -53,8 +53,8 @@ BEAST.assemble_local_mixed!(id, rt, rt, (v,m,n)->(G2[m,n]+=v))
 # different but overlapping meshes
 m1 = meshrectangle(1.0,1.0,1.0)
 m2 = translate(m1, point(0.5,0.5,0.0))
-I = Identity()
+Id = Identity()
 x1 = lagrangecxd0(m1)
 x2 = lagrangecxd0(m2)
-G = assemble(I,x1,x2)
+G = assemble(Id,x1,x2)
 @test sum(G) ≈ 1/4

@@ -43,5 +43,55 @@ function dof_permutation(::BDMRefSpace, vert_permutation)
     return _dof_perms_bdm[i]
 end
 
+function dof_perm_matrix(::BDMRefSpace, vert_permutation)
+    i = findfirst(==(tuple(vert_permutation...)), _vert_perms_bdm)
+    return _dof_bdmperm_matrix[i]
+end
+
 dimtype(::BDMRefSpace, ::CompScienceMeshes.Simplex{U,2}) where {U} = Val{6}
 
+const _dof_bdmperm_matrix = [
+    
+    @SMatrix[1 0 0 0 0 0;  #1. {1,2,3}
+                0 1 0 0 0 0;
+                0 0 1 0 0 0;
+                0 0 0 1 0 0;
+                0 0 0 0 1 0;
+                0 0 0 0 0 1],
+
+    @SMatrix[0 0 0 0 1 0;  #2. {2,3,1}
+                0 0 0 0 0 1;
+                1 0 0 0 0 0;
+                0 1 0 0 0 0;
+                0 0 1 0 0 0;
+                0 0 0 1 0 0],
+
+    @SMatrix[0 0 1 0 0 0;  #3. {3,1,2}
+                0 0 0 1 0 0;
+                0 0 0 0 1 0;
+                0 0 0 0 0 1;
+                1 0 0 0 0 0;
+                0 1 0 0 0 0],
+
+    @SMatrix[0 0 0 1 0 0;  #4. {2,1,3}
+                0 0 1 0 0 0;
+                0 1 0 0 0 0;
+                1 0 0 0 0 0;
+                0 0 0 0 0 1;
+                0 0 0 0 1 0],
+
+    @SMatrix[0 1 0 0 0 0;  #5. {1,3,2}
+                1 0 0 0 0 0;
+                0 0 0 0 0 1;
+                0 0 0 0 1 0;
+                0 0 0 1 0 0;
+                0 0 1 0 0 0],
+
+    @SMatrix[0 0 0 0 0 1;  #6. {3,2,1}
+                0 0 0 0 1 0;
+                0 0 0 1 0 0;
+                0 0 1 0 0 0;
+                0 1 0 0 0 0;
+                1 0 0 0 0 0]
+
+]

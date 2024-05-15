@@ -44,41 +44,41 @@ function ntrace(x::RTRefSpace, el, q, fc)
     return t
 end
 
-function restrict(ϕ::RTRefSpace{T}, dom1, dom2) where T
+# function restrict(ϕ::RTRefSpace{T}, dom1, dom2) where T
 
-    K = numfunctions(ϕ)
-    D = dimension(dom1)
+#     K = numfunctions(ϕ)
+#     D = dimension(dom1)
 
-    @assert K == 3
-    @assert D == 2
-    @assert D == dimension(dom2)
+#     @assert K == 3
+#     @assert D == 2
+#     @assert D == dimension(dom2)
 
-    Q = zeros(T,K,K)
-    for i in 1:K
+#     Q = zeros(T,K,K)
+#     for i in 1:K
 
-        # find the center of edge i of dom2
-        a = dom2.vertices[mod1(i+1,D+1)]
-        b = dom2.vertices[mod1(i+2,D+1)]
-        c = (a + b) / 2
+#         # find the center of edge i of dom2
+#         a = dom2.vertices[mod1(i+1,D+1)]
+#         b = dom2.vertices[mod1(i+2,D+1)]
+#         c = (a + b) / 2
 
-        # find the outer binormal there
-        t = b - a
-        l = norm(t)
-        n = dom2.normals[1]
-        m = cross(t, n) / l
+#         # find the outer binormal there
+#         t = b - a
+#         l = norm(t)
+#         n = dom2.normals[1]
+#         m = cross(t, n) / l
 
-        u = carttobary(dom1, c)
-        x = neighborhood(dom1, u)
+#         u = carttobary(dom1, c)
+#         x = neighborhood(dom1, u)
 
-        y = ϕ(x)
+#         y = ϕ(x)
 
-        for j in 1:K
-            Q[j,i] = dot(y[j][1], m) * l
-        end
-    end
+#         for j in 1:K
+#             Q[j,i] = dot(y[j][1], m) * l
+#         end
+#     end
 
-    return Q
-end
+#     return Q
+# end
 
 
 const _vert_perms_rt = [
@@ -99,7 +99,88 @@ const _dof_perms_rt = [
 ]
 
 function dof_permutation(::RTRefSpace, vert_permutation)
-    i = findfirst(==(tuple(vert_permutation...)), _vert_perms_rt)
-    @assert i != nothing
+    i = something(findfirst(==(tuple(vert_permutation...)), _vert_perms_rt),0)
+    @assert i != 0
     return _dof_perms_rt[i]
 end
+
+function dof_perm_matrix(::RTRefSpace, vert_permutation)
+    i = findfirst(==(tuple(vert_permutation...)), _vert_perms_rt)
+    @assert i != nothing
+    return _dof_rtperm_matrix[i]
+end
+
+"""
+    interpolate(interpolant::RefSpace, chart1, interpolee::RefSpace, chart2)
+
+Computes by interpolation approximations of the local shape functions for
+`interpolee` on `chart2` in terms of the local shape functions for `interpolant`
+on `chart1`. The returned value is a matrix `Q` such that
+
+```math
+\\phi_i \\approx \\sum_j Q_{ij} \\psi_j
+```
+
+with ``\\phi_i`` the i-th local shape function for `interpolee` and ``\\psi_j`` the
+j-th local shape function for `interpolant`.
+"""
+function interpolate(interpolant::RefSpace, chart1, interpolee::RefSpace, chart2)
+    function fields(p)
+        x = cartesian(p)
+        v = carttobary(chart2, x)
+        r = neighborhood(chart2, v)
+        fieldvals = [f.value for f in interpolee(r)]
+    end
+
+    interpolate(fields, interpolant, chart1)
+end
+
+function interpolate(fields, interpolant::RTRefSpace, chart)
+    Q = map(faces(chart)) do face
+        p = center(face)
+        x = cartesian(p)
+        u = carttobary(chart, x)
+        q = neighborhood(chart, u)
+        n = normal(q)
+
+        # minus because in CSM the tangent points towards vertex[1]
+        t = -tangents(p,1)
+        m = cross(t,n)
+
+        fieldvals = fields(q)
+        q = [dot(fv,m) for fv in fieldvals]
+    end
+
+    return hcat(Q...)
+end
+
+
+function restrict(ϕ::RefSpace, dom1, dom2)
+    interpolate(ϕ, dom2, ϕ, dom1)
+end
+
+const _dof_rtperm_matrix = [
+    @SMatrix[1 0 0;         # 1. {1,2,3}
+                0 1 0;
+                0 0 1],
+
+    @SMatrix[0 0 1;         # 2. {2,3,1}
+                1 0 0;
+                0 1 0],
+
+    @SMatrix[0 1 0;         # 3. {3,1,2}
+                0 0 1;
+                1 0 0],
+
+    @SMatrix[0 1 0;         # 4. {2,1,3}
+                1 0 0;
+                0 0 1],
+
+    @SMatrix[1 0 0;         # 5. {1,3,2}
+                0 0 1;
+                0 1 0],
+
+    @SMatrix[0 0 1;         # 6. {3,2,1}
+                0 1 0;
+                1 0 0]
+]

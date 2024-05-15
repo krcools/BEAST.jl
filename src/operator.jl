@@ -80,12 +80,12 @@ defaultquadstrat(lc::LinearCombinationOfOperators, tfs, bfs) =
 
 function assemble(operator::AbstractOperator, test_functions, trial_functions;
     storage_policy = Val{:bandedstorage},
-    long_delays_policy = LongDelays{:compress},
+    # long_delays_policy = LongDelays{:compress},
     threading = Threading{:multi},
     quadstrat=defaultquadstrat(operator, test_functions, trial_functions))
 
     Z, store = allocatestorage(operator, test_functions, trial_functions,
-        storage_policy, long_delays_policy)
+        storage_policy)
     assemble!(operator, test_functions, trial_functions, store, threading; quadstrat)
     return Z()
 end
@@ -122,7 +122,7 @@ function assemblecol(operator::AbstractOperator, test_functions, trial_functions
 end
 
 function allocatestorage(operator::AbstractOperator, test_functions, trial_functions,
-    storage_trait, longdelays_trait)
+    storage_trait=nothing, longdelays_trait=nothing)
 
     T = promote_type(
         scalartype(operator)       ,

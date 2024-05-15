@@ -79,6 +79,33 @@ for T in [Float32, Float64]
     @test numfunctions(X) == 1
     @test length(X.fns[1]) == 6
 end
+
+## Test unitfunction
+using CompScienceMeshes
+using BEAST
+using Test
+
+for T in [Float32, Float64]
+    m = meshrectangle(T(1.0), T(1.0), T(0.5), 3)
+    X = unitfunctioncxd0(m)
+
+    @test numfunctions(X) == 1
+    @test length(X.fns[1]) == numcells(m)
+    @test assemble(Identity(), X, X) ≈ [1.0]
+
+    X1 = unitfunctionc0d1(m)
+
+    @test numfunctions(X1) == 1
+    @test length(X1.fns[1]) == 6
+    @test assemble(Identity(), X1, X1) ≈ [0.125]
+
+    X2 = unitfunctionc0d1(m; dirichlet=false)
+
+    @test numfunctions(X2) == 1
+    @test length(X2.fns[1]) == numcells(m) * 3
+    @test assemble(Identity(), X2, X2) ≈ [1.0]
+end
+
 ## test the scalar trace for Lagrange functions
 using CompScienceMeshes
 using BEAST

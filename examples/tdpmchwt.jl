@@ -54,8 +54,10 @@ pmchwt = @discretise(
 # w = BEAST.ConvolutionOperators.polyvals(Z)
 # error()
 
-u = solve(pmchwt)
 
+u = BEAST.motsolve(pmchwt)
+
+Z = BEAST.sysmatrix(pmchwt)
 using Plots
 scatter!(u[1,:])
 nothing

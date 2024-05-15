@@ -1,9 +1,11 @@
 
 function DofInterpolate(basis::LagrangeBasis, field) 
 
+    T = promote_type(scalartype(basis), scalartype(field))
+
     num_bfs = numfunctions(basis)
 
-    res = Vector(undef, num_bfs)
+    res = Vector{T}(undef, num_bfs)
 
     for  b in 1 : num_bfs
         bfs = basis.fns[b]
@@ -33,11 +35,43 @@ function DofInterpolate(basis::LagrangeBasis, field)
     return res
 end
 
-function DofInterpolate(basis::RTBasis, field)
+### Piecewise constant elements require separate treatment
+### TODO: Probably a rewrite is advisable to also take into account
+### dual elements properly.
+function DofInterpolate(basis::LagrangeBasis{0,-1,M,T,NF,P}, field) where {M, T, NF, P}
+
+    TT = promote_type(scalartype(basis), scalartype(field))
 
     num_bfs = numfunctions(basis)
 
-    res = Vector(undef, num_bfs)
+    res = Vector{TT}(undef, num_bfs)
+
+    for  b in 1 : num_bfs
+        bfs = basis.fns[b]
+
+        basis.pos[b]
+
+        shape = bfs[1]
+
+        cellid = shape.cellid
+
+        tria = chart(basis.geo, cellid)
+
+        v = neighborhood(tria, [1/3, 1/3])
+
+        res[b] = field(v)
+    end
+
+    return res
+end
+
+function DofInterpolate(basis::RTBasis, field)
+
+    T = promote_type(scalartype(basis), scalartype(field))
+
+    num_bfs = numfunctions(basis)
+
+    res = Vector{T}(undef, num_bfs)
 
     for b in 1 : num_bfs
 
@@ -76,9 +110,11 @@ end
 
 function DofInterpolate(basis::BDMBasis, field)
 
+    T = promote_type(scalartype(basis), scalartype(field))
+
     num_bfs = numfunctions(basis)
 
-    res = Vector(undef, num_bfs)
+    res = Vector{T}(undef, num_bfs)
 
     for b in 1 : num_bfs
         
@@ -129,9 +165,11 @@ end
 
 function DofInterpolate(basis::NDLCDBasis, field)
 
+    T = promote_type(scalartype(basis), scalartype(field))
+
     num_bfs = numfunctions(basis)
 
-    res = Vector(undef, num_bfs)
+    res = Vector{T}(undef, num_bfs)
 
     for b in 1 : num_bfs
         
@@ -173,9 +211,11 @@ end
 
 function DofInterpolate(basis::BEAST.BDM3DBasis, field)
 
+    T = promote_type(scalartype(basis), scalartype(field))
+
     num_bfs = numfunctions(basis)
 
-    res = Vector(undef, num_bfs)
+    res = Vector{T}(undef, num_bfs)
 
     for b in 1 : num_bfs
         

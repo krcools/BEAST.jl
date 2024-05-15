@@ -1,3 +1,21 @@
+motsolve(eq) = td_solve(eq)
+
+function td_solve(eq)
+
+    V = eq.trial_space_dict[1]
+
+    A = assemble(eq.equation.lhs, eq.test_space_dict, eq.trial_space_dict)
+    T = eltype(A)
+    S = zeros(T, size(A)[1:2])
+    ConvolutionOperators.timeslice!(S, A, 1)
+
+    iS = inv(S)
+    b = assemble(eq.equation.rhs, eq.test_space_dict)
+
+    nt = numfunctions(temporalbasis(V))
+    marchonintime(iS, A, b, nt)
+end
+
 """
     marchonintime(W0,Z,B,I; convhist=false)
 
@@ -48,5 +66,3 @@ function marchonintime(W0,Z,B,I; convhist=false)
         return x
     end
 end
-
-

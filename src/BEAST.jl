@@ -6,7 +6,7 @@ using SharedArrays
 using SparseArrays
 using FillArrays
 using BlockArrays
-using SparseMatrixDicts
+using ExtendableSparse
 
 using ConvolutionOperators
 using SauterSchwabQuadrature
@@ -27,7 +27,7 @@ export dot
 
 export planewave
 export RefSpace, numfunctions, coordtype, scalartype, assemblydata, geometry, refspace, valuetype
-export lagrangecxd0, lagrangec0d1, duallagrangec0d1
+export lagrangecxd0, lagrangec0d1, duallagrangec0d1, unitfunctioncxd0, unitfunctionc0d1
 export duallagrangecxd0
 export lagdimension
 export restrict
@@ -37,8 +37,10 @@ export brezzidouglasmarini3d
 export nedelecd3d
 export nedelecc3d
 export portcells, rt_ports, getindex_rtg, subset
-export StagedTimeStep
-export subdsurface,subdBasis,assemblydata,refspace
+
+export StagedTimeStep, numstages
+export subdsurface, subdBasis, assemblydata, refspace
+
 export spatialbasis, temporalbasis
 export ⊗
 export timebasisc0d1
@@ -48,7 +50,7 @@ export timebasisshiftedlagrange
 export TimeBasisDeltaShifted
 export ntrace
 export strace
-export ttrace 
+export ttrace
 export SingleLayer
 export DoubleLayer
 export DoubleLayerTransposed
@@ -80,7 +82,7 @@ export curl
 export gradient
 export MWSingleLayerField3D
 export SingleLayerTrace
-export DoubleLayerRotatedMW3D
+export DoubleLayerRotatedMW3D, MWDoubleLayerRotatedFarField3D
 export MWSingleLayerPotential3D
 
 export VIEOperator
@@ -145,7 +147,9 @@ include("bases/divergence.jl")
 
 include("bases/local/laglocal.jl")
 include("bases/local/rtlocal.jl")
+include("bases/local/rt2local.jl")
 include("bases/local/ndlocal.jl")
+include("bases/local/nd2local.jl")
 include("bases/local/bdmlocal.jl")
 include("bases/local/ncrossbdmlocal.jl")
 include("bases/local/ndlcclocal.jl")
@@ -154,9 +158,11 @@ include("bases/local/bdm3dlocal.jl")
 
 include("bases/lagrange.jl")
 include("bases/rtspace.jl")
+include("bases/rt2space.jl")
 include("bases/rtxspace.jl")
 include("bases/bcspace.jl")
 include("bases/ndspace.jl")
+include("bases/nd2space.jl")
 include("bases/bdmdiv.jl")
 include("bases/ncrossbdmspace.jl")
 include("bases/ndlccspace.jl")
@@ -260,9 +266,9 @@ include("utils/plotlyglue.jl")
 
 
 
-const x̂ = point(1,0,0)
-const ŷ = point(0,1,0)
-const ẑ = point(0,0,1)
+const x̂ = point(1, 0, 0)
+const ŷ = point(0, 1, 0)
+const ẑ = point(0, 0, 1)
 export x̂, ŷ, ẑ
 
 const n = NormalVector()
