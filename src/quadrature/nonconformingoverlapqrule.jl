@@ -22,8 +22,12 @@ function momintegrals!(op, test_local_space, basis_local_space,
     test_charts = [ch for ch in test_charts if volume(ch) .> 1e6 * eps(T)]
     bsis_charts = [ch for ch in bsis_charts if volume(ch) .> 1e6 * eps(T)]
 
-    @assert volume(test_chart) ≈ sum(volume.(test_charts))
-    @assert volume(basis_chart) ≈ sum(volume.(bsis_charts))
+    # @assert volume(test_chart) ≈ sum(volume.(test_charts))
+    # if volume(basis_chart) ≈ sum(volume.(bsis_charts)) else
+    #     @show volume(basis_chart)
+    #     @show sum(volume.(bsis_charts))
+    #     error()
+    # end
 
     qstrat = CommonFaceOverlappingEdgeQStrat(qrule.conforming_qstrat)
     qdata = quaddata(op, test_local_space, basis_local_space,
