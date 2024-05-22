@@ -4,10 +4,12 @@ using BEAST
 # Γ = readmesh(joinpath(dirname(pathof(BEAST)),"../examples/sphere2.in"))
 # Γref = CompScienceMeshes.barycentric_refinement(Γ)
 
-h = 0.2*0.7
-M1 = meshcuboid(0.5, 1.0, 1.0, h)
-M2 = meshcuboid(0.5, 1.0, 1.0, 1.2*h)
-M2 = CompScienceMeshes.translate(M2, point(-0.5, 0, 0))
+# h = 0.2*0.7
+# M1 = meshcuboid(0.5, 1.0, 1.0, h)
+# M2 = meshcuboid(0.5, 1.0, 1.0, 1.2*h)
+# M2 = CompScienceMeshes.translate(M2, point(-0.5, 0, 0))
+M1 = readmesh(joinpath(dirname(pathof(BEAST)),"../examples/assets/M1.in"))
+M2 = readmesh(joinpath(dirname(pathof(BEAST)),"../examples/assets/M2.in"))
 
 import Plotly
 Plotly.plot([
@@ -42,6 +44,7 @@ qs2 = BEAST.NonConformingIntegralOpQStrat(qs1)
 
 # A1 = assemble(t,Y,X, quadstrat=qs1, threading=BEAST.Threading{:single})
 A2 = assemble(t,Y,X, quadstrat=qs2, threading=BEAST.Threading{:single})
+A3 = assemble(t,X,Y, quadstrat=qs2, threading=BEAST.Threading{:single})
 
 error()
 
