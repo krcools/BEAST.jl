@@ -25,4 +25,9 @@ for U in [Float32, Float64]
     t = assemble(T, X, X)
 
     @test size(t) == (nt,nt)
+
+    bilterms = [BEAST.Variational.BilTerm(1,1,Any[],Any[],1,T)]
+
+    BilForm = BEAST.Variational.BilForm(:i, :j, bilterms)
+    @test typeof(assemble(BilForm, X, X)) == LinearMaps.LinearCombination{U, Vector{LinearMap}}
 end
