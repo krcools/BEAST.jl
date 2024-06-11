@@ -46,6 +46,6 @@ dot(::NormalVector, field::TDFunctional) = DotTraceHH{scalartype(field), typeof(
 
 function (f::DotTraceHH)(p,t)
     n = normal(p)
-    # x = cartesian(p)
-    return dot(n, f.field(p,t))
+    x = cartesian(p)
+    return dot(n, f.field(x,t))
 end

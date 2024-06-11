@@ -27,3 +27,72 @@ ctr = center(chart2)
 vals = [f.value for f in X(ctr)]
 itpol = sum(w*val for (w,val) in zip(Q3,vals))
 @test itpol ≈ constant_vector_field
+
+using TestItems
+@testitem "restrict RT0" begin
+    using CompScienceMeshes
+
+    ref_vertices = [
+        point(1,0),
+        point(0,1),
+        point(0,0),
+    ]
+    vertices = [
+        point(1,0,0),
+        point(0,1,0),
+        point(0,0,0),
+    ]
+    chart1 = simplex(vertices...)
+    for I in BEAST._dof_perms_rt
+        chart2 = simplex(
+            chart1.vertices[I[1]],
+            chart1.vertices[I[2]],
+            chart1.vertices[I[3]],)
+        chart2tochart1 = CompScienceMeshes.simplex(ref_vertices[collect(I)]...)
+        rs = BEAST.RTRefSpace{Float64}()
+        Q1 = BEAST.dof_perm_matrix(rs, I)
+        Q2 = BEAST.restrict(rs, chart1, chart2)
+        Q3 = BEAST.restrict(rs, chart1, chart2, chart2tochart1)
+        @test Q1 ≈ Q2
+        @test Q1 ≈ Q3
+    end
+end
+
+
+@testitem "restrict RTQ0" begin
+    using CompScienceMeshes
+    using Combinatorics
+
+    ref_vertices = [
+        point(0,0),
+        point(1,0),
+        point(1,1),
+        point(0,1)]
+    vertices = [
+        point(0,0,0),
+        point(1,0,0),
+        point(1,1,0),
+        point(0,1,0)]
+    chart1 = CompScienceMeshes.Quadrilateral(vertices...)
+    P = [
+        [1,2,3,4],
+        [2,3,4,1],
+        [3,4,1,2],
+        [4,1,2,3],
+        [2,1,4,3],
+        [1,4,3,2],
+        [4,3,2,1],
+        [3,2,1,4],
+        ]
+    for I in P
+        chart2 = CompScienceMeshes.Quadrilateral(
+            vertices[I[1]],
+            vertices[I[2]],
+            vertices[I[3]],
+            vertices[I[4]])
+        chart2tochart1 = CompScienceMeshes.Quadrilateral(ref_vertices[I]...)
+        rs = BEAST.RTQuadRefSpace{Float64}()
+        Q2 = BEAST.restrict(rs, chart1, chart2, chart2tochart1)
+        @show Q2
+    end
+end

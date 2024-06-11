@@ -18,6 +18,33 @@ function (igd::Integrand)(u,v)
     return jacobian(x) * jacobian(y) * igd(x,y,f,g)
 end
 
+# For divergence conforming basis and trial functions, an alternative evaluation
+# of the integrand is possible that avoids the computation of the chart jacobian
+# determinants.
+function (igd::Integrand{<:IntegralOperator,<:DivRefSpace,<:DivRefSpace})(u,v)
+    test_domain = CompScienceMeshes.domain(igd.test_chart)
+    bsis_domain = CompScienceMeshes.domain(igd.trial_chart)
+
+    x = CompScienceMeshes.neighborhood_lazy(igd.test_chart,u)
+    y = CompScienceMeshes.neighborhood_lazy(igd.trial_chart,v)
+    
+    p = neighborhood(test_domain, u)
+    q = neighborhood(bsis_domain, v)
+    
+    f̂ = igd.local_test_space(p)
+    ĝ = igd.local_trial_space(q)
+
+    Dx = tangents(x)
+    Dy = tangents(y)
+
+    f = map(f̂) do fi
+        (value = Dx * fi.value, divergence = fi.divergence) end
+    g = map(ĝ) do gi
+        (value = Dy * gi.value, divergence = gi.divergence) end
+
+    igd(x,y,f,g)
+end
+
 getvalue(a::SVector{N}) where {N} = SVector{N}(getvalue(a.data))
 getvalue(a::NTuple{1}) = (a[1].value,)
 getvalue(a::NTuple{N}) where {N} = tuple(a[1].value, getvalue(Base.tail(a))...)
