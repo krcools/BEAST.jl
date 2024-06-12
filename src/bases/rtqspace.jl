@@ -23,7 +23,7 @@ function raviartthomas(
     for (i,edge) in enumerate(edges)
         σ = orientations[i]
         fn = map(zip(nzrange(connectivity, i),(σ,-σ))) do (j, α)
-            Shape{T}(j, abs(vals[j]), α)
+            Shape{T}(rows[j], abs(vals[j]), α)
         end
         fns[i] = fn
         pos[i] = cartesian(CompScienceMeshes.center(chart(edges, edge)))
@@ -37,11 +37,35 @@ end
 
     m = CompScienceMeshes.meshrectangle(2.0, 2.0, 1.0; structured=:quadrilateral)
     edges = skeleton(m, 1)
-    edges_int = submesh(!in(boundary(edges)),  edges)
+    edges_bnd = boundary(m)
+    # @show length(edges_bnd)
+    @test length(edges_bnd) == 8
+    pred = !in(edges_bnd)
+    edges_int = submesh(pred,  edges)
 
-    c = CompScienceMeshes.connectivity(edges_int, m)
+    c = CompScienceMeshes.connectivity(edges_int, m, identity)
     @test size(c) == (length(m), length(edges_int))
     o = ones(length(edges_int))
     s = raviartthomas(m, edges_int, c, o)
     @test numfunctions(s) == 4
+end
+
+@testitem "RTQSpace assembly data" begin
+    using CompScienceMeshes
+    m = CompScienceMeshes.meshrectangle(2.0, 2.0, 1.0; structured=:quadrilateral)
+    edges = skeleton(m, 1)
+    edges_bnd = boundary(m)
+    pred = !in(edges_bnd)
+    edges_int = submesh(pred,  edges)
+    c = CompScienceMeshes.connectivity(edges_int, m, identity)
+    o = ones(length(edges_int))
+    s = raviartthomas(m, edges_int, c, o)
+
+    num_cells = numcells(m)
+    num_bfs = numfunctions(s)
+    r = refspace(s)
+    num_refs = numfunctions(r)
+    celltonum = BEAST.make_celltonum(num_cells, num_refs, num_bfs, s)
+
+    els, ad, a2g = BEAST.assemblydata(s)
 end

@@ -1,4 +1,4 @@
-struct RTQuadRefSpace{T} <: DivRefSpace{T,3} end
+struct RTQuadRefSpace{T} <: DivRefSpace{T,4} end
 
 function (ϕ::RTQuadRefSpace{T})(p) where {T}
 
@@ -65,4 +65,63 @@ end
     @show val1
     @show val2
     @test val1 ≈ val2
+end
+
+
+const _vrtperm_matrix_rtq = [
+    (1,2,3,4),
+    (2,3,4,1),
+    (3,4,1,2),
+    (4,1,2,3),
+    (2,1,4,3),
+    (1,4,3,2),
+    (4,3,2,1),
+    (3,2,1,4),
+]
+
+const _dofperm_matrix_rtq = [
+    @SMatrix[1.0 0.0 0.0 0.0; 0.0 1.0 0.0 0.0; 0.0 0.0 1.0 0.0; 0.0 0.0 0.0 1.0],
+    @SMatrix[0.0 0.0 0.0 1.0; 1.0 0.0 0.0 0.0; 0.0 1.0 0.0 0.0; 0.0 0.0 1.0 0.0],
+    @SMatrix[0.0 0.0 1.0 0.0; 0.0 0.0 0.0 1.0; 1.0 0.0 0.0 0.0; 0.0 1.0 0.0 0.0],
+    @SMatrix[0.0 1.0 0.0 0.0; 0.0 0.0 1.0 0.0; 0.0 0.0 0.0 1.0; 1.0 0.0 0.0 0.0],
+    @SMatrix[1.0 0.0 0.0 0.0; 0.0 0.0 0.0 1.0; 0.0 0.0 1.0 0.0; 0.0 1.0 0.0 0.0],
+    @SMatrix[0.0 0.0 0.0 1.0; 0.0 0.0 1.0 0.0; 0.0 1.0 0.0 0.0; 1.0 0.0 0.0 0.0],
+    @SMatrix[0.0 0.0 1.0 0.0; 0.0 1.0 0.0 0.0; 1.0 0.0 0.0 0.0; 0.0 0.0 0.0 1.0],
+    @SMatrix[0.0 1.0 0.0 0.0; 1.0 0.0 0.0 0.0; 0.0 0.0 0.0 1.0; 0.0 0.0 1.0 0.0],
+]
+
+function dof_perm_matrix(::RTQuadRefSpace, vert_permutation)
+    i = findfirst(==(tuple(vert_permutation...)), _vrtperm_matrix_rtq)
+    @assert i != nothing
+    return _dofperm_matrix_rtq[i]
+end
+
+@testitem "restrict RTQ0" begin
+    using CompScienceMeshes
+    using Combinatorics
+
+    ref_vertices = [
+        point(0,0),
+        point(1,0),
+        point(1,1),
+        point(0,1)]
+    vertices = [
+        point(0,0,0),
+        point(1,0,0),
+        point(1,1,0),
+        point(0,1,0)]
+    chart1 = CompScienceMeshes.Quadrilateral(vertices...)
+    for I in BEAST._vrtperm_matrix_rtq
+        @show I
+        chart2 = CompScienceMeshes.Quadrilateral(
+            vertices[I[1]],
+            vertices[I[2]],
+            vertices[I[3]],
+            vertices[I[4]])
+        chart2tochart1 = CompScienceMeshes.Quadrilateral(ref_vertices[collect(I)]...)
+        rs = BEAST.RTQuadRefSpace{Float64}()
+        Q1 = BEAST.dof_perm_matrix(rs, I)
+        Q2 = BEAST.restrict(rs, chart1, chart2, chart2tochart1)
+        @test Q1 ≈ Q1
+    end
 end

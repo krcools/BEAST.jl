@@ -115,8 +115,8 @@ function momintegrals!(op::Operator,
     test_chart, trial_chart, out, rule::SauterSchwabStrategy)
 
     I, J, _, _ = SauterSchwabQuadrature.reorder(
-        test_chart.vertices,
-        trial_chart.vertices, rule)
+        vertices(test_chart),
+        vertices(trial_chart), rule)
 
     # permute_vertices reparametrizes the simplex without affecting the normal
     if 0 in I || 0 in J
