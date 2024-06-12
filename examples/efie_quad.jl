@@ -16,8 +16,6 @@ t = Maxwell3D.singlelayer(wavenumber=κ)
 E = Maxwell3D.planewave(direction=ẑ, polarization=x̂, wavenumber=κ)
 e = (n × E) × n
 
-assemble(t, X, X)
-
 @hilbertspace j
 @hilbertspace k
 efie = @discretise t[k,j]==e[k]  j∈X k∈X
