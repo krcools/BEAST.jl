@@ -31,14 +31,12 @@ end #of the module
 
 export TDAcustic3D
 
-defaultquadstrat(::AcusticSingleLayerTDIO, tfs, bfs) = AllAnalyticalQStrat(1)
+defaultquadstrat(::AcusticSingleLayerTDIO, tfs, bfs) = AllAnalyticalQStrat(1) #nothing
 #nothing goes in hybrid qr, allanalytical goes in zuccottirule
 
 
-
-
 function quaddata(op::AcusticSingleLayerTDIO, testrefs, trialrefs, timerefs,
-    testels, trialels, timeels, quadstrat::AllAnalyticalQStrat)
+     testels, trialels, timeels, quadstrat::AllAnalyticalQStrat)    
     return nothing
 end
 
