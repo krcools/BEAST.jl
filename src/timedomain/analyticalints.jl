@@ -33,13 +33,13 @@ end
 
 
 function quaddata(op::AcusticSingleLayerTDIO, testrefs, trialrefs, timerefs,
-    testels, trialels, timeels, quadstrat::AllAnalyticalQStrat)
+    testels::Vector{Simplex{3,0,3,1,T}}, trialels::Vector{Simplex{3,1,1,2,T}}, timeels, quadstrat::AllAnalyticalQStrat) where T
     
     dimU=dimension(testels)
     dimV=dimension(trialels)
     #rigerenerare delta R
-
-    if dimU+dimV==1
+#quaddata 1D
+    #if dimU+dimV==1
     #testelsboundary=skeleton(testels,dimU-1)
    # trialelsboundary=skeleton(trialels,dimV-1) 
     
@@ -80,45 +80,59 @@ function quaddata(op::AcusticSingleLayerTDIO, testrefs, trialrefs, timerefs,
         end
 
         return datavertexedge
-    else
-        return "devo ancora scrivere"
+    #else
+     #   return "devo ancora scrivere"
+    #end
+end
+
+function quaddata2Dee(op::AcusticSingleLayerTDIO, testrefs, trialrefs, timerefs,
+    testels::Vector{Simplex{3,1,1,2,T}}, trialels::Vector{Simplex{3,1,1,2,T}}, timeels, quadstrat::AllAnalyticalQStrat)
+    nnodes=length(nodes)
+
+    
+    totrings=Array{UnitRange{Int},2}(undef, numedges, numedges)
+    datavalues=Array{Vector{Tuple{Int,Vector}},2}(undef,numedges,numedges)
+    cnnct=connectivity(edges,nodes)
+    
+    for p in 1:numdges
+        for q in 1:numedges
+            edge1=chart(edges,p)
+            edge2=chart(edges,q)
+            
+            vertind1=cnnct[1:nnodes,p].nzind
+            vertsgn1=cnnct[1:nnodes,p].nzval
+            vertind2=cnnct[1:nnodes,q].nzind
+            vertsgn2=cnnct[1:nnodes,q].nzval
+
+            if vertsgn1[1]==1
+                a1,a2=edge1[1],edge1[2]
+            else
+                a2,a1=edge1[1],edge1[2]
+            end
+
+            if vertsgn2[1]==1
+                b1,b2=edge2[1],edge2[2]
+            else
+                b2,b1=edge2[1],edge2[2]
+            end
+
+            geo1,rings1,datarings1=edgevertexgeo[vertind1[1],q],rings[vertind1[1],q],datarings[vertind1[1],q]
+            geo2,rings2,datarings2=edgevertexgeo[vertind1[2],q],rings[vertind1[2],q],datarings[vertind1[2],q]
+            geo3,rings3,datarings3=edgevertexgeo[vertind2[1],p],rings[vertind2[1],p],datarings[vertind2[1],p]
+            geo4,rings4,datarings4=edgevertexgeo[vertind2[2],p],rings[vertind2[2],p],datarings[vertind2[2],p]
+
+            geo=[geo1,geo2,geo3,geo4]
+            rings=[rings1,rings2,rings3,rings4]
+            datarings=[datarings1,datarings2,datarings3,datarings4]
+
+            totrings[p,q],datavalues[p,q]=intlinelineglobal(a1,a2,b1,b2,geo,rings,datarings,[10^6,10^6,10^6],Val{0}) 
+        end
     end
+    return totrings,datavalues
 end
 
 
-nnodes=length(nodes)
-edge1=chart(edges,p)
-edge2=chart(edges,q)
-cnnct=connectivity(edges,nodes)
-vertind1=cnnct[1:nnodes,p].nzind
-vertsgn1=cnnct[1:nnodes,p].nzval
-vertind2=cnnct[1:nnodes,q].nzind
-vertsgn2=cnnct[1:nnodes,q].nzval
-
-if vertsgn1[1]==1
-    a1,a2=edge1[1],edge1[2]
-else
-    a2,a1=edge1[1],edge1[2]
-end
-
-if vertsgn2[1]==1
-    b1,b2=edge1[1],edge1[2]
-else
-    b2,b1=edge1[1],edge1[2]
-end
-
-geo1,rings1,datarings1=edgevertexgeo[vertind1[1],q],rings[vertind1[1],q],datarings[vertind1[1],q]
-geo2,rings2,datarings2=edgevertexgeo[vertind1[2],q],rings[vertind1[2],q],datarings[vertind1[2],q]
-geo3,rings3,datarings3=edgevertexgeo[vertind2[1],p],rings[vertind2[1],p],datarings[vertind2[1],p]
-geo4,rings4,datarings4=edgevertexgeo[vertind2[2],p],rings[vertind2[2],p],datarings[vertind2[2],p]
-
-geo=[geo1,geo2,geo3,geo4]
-rings=[rings1,rings2,rings3,rings4]
-datarings=[datarings1,datarings2,datarings3,datarings4]
-
-
-
-function intlinelineglobal(a1,a2,b1,b2,geo,rings,datatimes,parcontrol,UB::Type{Val{N}}) where N
+function intlinelineglobal(a1,a2,b1,b2,geo,rings,datarings,parcontrol,UB::Type{Val{N}}) where N
         
     #nedges=length(edges)
    
@@ -182,7 +196,7 @@ function intlinelineglobal(a1,a2,b1,b2,geo,rings,datatimes,parcontrol,UB::Type{V
         h=dot(a2-a2′,n)
         sgnh=[+1,-1,+1,-1]
         for j in 1:4  
-            for i in ringtot[1]:(relrings[j][1]-1)
+            for i in ringtot[1]:(rings[j][1]-1)
                         
                         P,Q  = arcsegcontribution(v,ξ[j],sgnn[j]*n,sgnh[j]*h,geo[j],0,[0,0],i*ΔR,UB)
                         allint[i-ringtot[1]+2][1] = add(allint[i-ringtot[1]+2][1],P)
@@ -191,13 +205,13 @@ function intlinelineglobal(a1,a2,b1,b2,geo,rings,datatimes,parcontrol,UB::Type{V
                         allint[i-ringtot[1]+2][1] = add(allint[i-ringtot[1]+2][1],P)
                         allint[i-ringtot[1]+2][2] = add(allint[i-ringtot[1]+2][2],Q)
             end
-            for i in relrings[j]
+            for i in rings[j]
                 
                     #shall I put some check like i*deltaR > h
-                        P, Q = arcsegcontribution(v,ξ[j],sgnn[j]*n,sgnh[j]*h,geo[j],datarings[j][i-relrings[j][1]+2][1],datarings[j][i-relrings[j][1]+2][2],i*ΔR,UB) #salviamo 
+                        P, Q = arcsegcontribution(v,ξ[j],sgnn[j]*n,sgnh[j]*h,geo[j],datarings[j][i-rings[j][1]+2][1],datarings[j][i-rings[j][1]+2][2],i*ΔR,UB) #salviamo 
                         allint[i-ringtot[1]+2][1] = add(allint[i-ringtot[1]+2][1],P)
                         allint[i-ringtot[1]+2][2] = add(allint[i-ringtot[1]+2][2],Q)
-                        P, Q = arcsegcontribution(v,ξ[j],-sgnn[j]*n,sgnh[j]*h,geo[j],datarings[j][i-relrings[j][1]+1][1],datarings[j][i-relrings[j][1]+1][2],(i-1)*ΔR,UB)                 
+                        P, Q = arcsegcontribution(v,ξ[j],-sgnn[j]*n,sgnh[j]*h,geo[j],datarings[j][i-rings[j][1]+1][1],datarings[j][i-rings[j][1]+1][2],(i-1)*ΔR,UB)                 
                         allint[i-ringtot[1]+2][1] = add(allint[i-ringtot[1]+2][1],P)
                         allint[i-ringtot[1]+2][2] = add(allint[i-ringtot[1]+2][2],Q)
             end #probabilmente va bene cosi anche con ceil(int,frac) invece di ceil(int,frac+1)
