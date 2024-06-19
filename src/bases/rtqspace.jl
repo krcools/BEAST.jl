@@ -32,6 +32,39 @@ function raviartthomas(
     return RTQSpace(mesh, fns, pos)
 end
 
+function raviartthomas(
+    mesh::CompScienceMeshes.QuadMesh{T},
+    edges::CompScienceMeshes.AbstractMesh{3,2,T},
+    orientations::Vector{Bool}) where {T<:Any}
+
+    conn = connectivity(edges, mesh)
+    return raviartthomas(mesh, edges, conn, orientations)
+end
+
+function raviartthomas(
+    mesh::CompScienceMeshes.QuadMesh{T},
+    edges::CompScienceMeshes.AbstractMesh{3,2,T}) where {T}
+
+    c = connectivity(edges, mesh, identity)
+    o = ones(length(edges))
+
+    vals = nonzeros(c)
+    rows = rowvals(c)
+    for i in axes(c,2)
+        k = first(nzrange(c,i))
+        vals[k] < 0 && (o[i] = -1)
+    end
+
+    return raviartthomas(mesh, edges, c, o)
+end
+
+function raviartthomas(mesh::CompScienceMeshes.QuadMesh{T}) where {T}
+    edges = skeleton(mesh,1)
+    bnd = boundary(mesh)
+    edges_int = submesh(!in(bnd), edges)
+    raviartthomas(mesh, edges_int)
+end
+
 @testitem "RTQSpace construction" begin
     using CompScienceMeshes
 
