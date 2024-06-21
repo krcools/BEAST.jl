@@ -127,22 +127,29 @@ function momintegrals!(op::Operator,
         # error("on purpose")
     end
 
-    test_chart = CompScienceMeshes.permute_vertices(test_chart, I)
-    trial_chart = CompScienceMeshes.permute_vertices(trial_chart, J)
+    # test_chart = CompScienceMeshes.permute_vertices(test_chart, I)
+    # trial_chart = CompScienceMeshes.permute_vertices(trial_chart, J)
 
-    if rule isa SauterSchwabQuadrature.CommonEdge
-        @assert test_chart.vertices[1] ≈ trial_chart.vertices[1]
-        @assert test_chart.vertices[3] ≈ trial_chart.vertices[3]
-    end
+    # if rule isa SauterSchwabQuadrature.CommonEdge
+    #     @assert test_chart.vertices[1] ≈ trial_chart.vertices[1]
+    #     @assert test_chart.vertices[3] ≈ trial_chart.vertices[3]
+    # end
+
+    # igd = Integrand(op, test_local_space, trial_local_space, test_chart, trial_chart)
+    # G = SauterSchwabQuadrature.sauterschwab_parameterized(igd, rule)
+
+    uv_test(u,v) = [u,v,1-u-v][I][1:end-1]
+    uv_trial(u,v) = [u,v,1-u-v][J][1:end-1]
 
     igd = Integrand(op, test_local_space, trial_local_space, test_chart, trial_chart)
-    G = SauterSchwabQuadrature.sauterschwab_parameterized(igd, rule)
+    igdp(u,v) = igd(uv_test(u...),uv_trial(v...))
+    G = SauterSchwabQuadrature.sauterschwab_parameterized(igdp, rule)
 
-    QTest = dof_perm_matrix(test_local_space, I)
-    QTrial = dof_perm_matrix(trial_local_space, J)
-    out_temp = zeros(eltype(out), numfunctions(test_local_space),numfunctions(trial_local_space))
-    out_temp = QTest*G*QTrial'
-    out[1:numfunctions(test_local_space),1:numfunctions(trial_local_space)] .+= out_temp
+    # QTest = dof_perm_matrix(test_local_space, I)
+    # QTrial = dof_perm_matrix(trial_local_space, J)
+    # out_temp = zeros(eltype(out), numfunctions(test_local_space),numfunctions(trial_local_space))
+    # out_temp = QTest*G*QTrial'
+    out[1:numfunctions(test_local_space),1:numfunctions(trial_local_space)] .+= G
 
     nothing
 end
