@@ -138,8 +138,8 @@ function momintegrals!(op::Operator,
     # igd = Integrand(op, test_local_space, trial_local_space, test_chart, trial_chart)
     # G = SauterSchwabQuadrature.sauterschwab_parameterized(igd, rule)
 
-    uv_test(u,v) = [u,v,1-u-v][I][1:end-1]
-    uv_trial(u,v) = [u,v,1-u-v][J][1:end-1]
+    uv_test(u,v) = [u,v,1-u-v][invperm(I)][1:end-1]
+    uv_trial(u,v) = [u,v,1-u-v][invperm(J)][1:end-1]
 
     igd = Integrand(op, test_local_space, trial_local_space, test_chart, trial_chart)
     igdp(u,v) = igd(uv_test(u...),uv_trial(v...))
