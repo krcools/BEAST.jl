@@ -110,6 +110,25 @@ function (igd::Integrand)(x,y,f,g)
 end
 
 
+
+function pullback_coordinates(I,type::CompScienceMeshes.Simplex)
+    function transform(u)
+        [u[1],u[2],1-sum(u)][invperm(I)][1:end-1]
+    end
+    return transform
+end
+function pullback_coordinates(I,type::CompScienceMeshes.Quadrilateral)
+    function transform(u)
+        n =  [1-sum(u)+prod(u),u[1]-prod(u),prod(u),u[2]-prod(u)][invperm(I)]
+        p = n[3]
+        result = [n[2]+p,n[4]+p]
+        @assert 1-sum(result)+p ≈ n[1]
+        @assert p ≈ prod(result)
+        return result
+    end
+    return transform
+end
+
 function momintegrals!(op::Operator,
     test_local_space::RefSpace, trial_local_space::RefSpace,
     test_chart, trial_chart, out, rule::SauterSchwabStrategy)
@@ -138,11 +157,11 @@ function momintegrals!(op::Operator,
     # igd = Integrand(op, test_local_space, trial_local_space, test_chart, trial_chart)
     # G = SauterSchwabQuadrature.sauterschwab_parameterized(igd, rule)
 
-    uv_test(u,v) = [u,v,1-u-v][invperm(I)][1:end-1]
-    uv_trial(u,v) = [u,v,1-u-v][invperm(J)][1:end-1]
+    # uv_test(u,v) = [u,v,1-u-v][invperm(I)][1:end-1]
+    # uv_trial(u,v) = [u,v,1-u-v][invperm(J)][1:end-1]
 
     igd = Integrand(op, test_local_space, trial_local_space, test_chart, trial_chart)
-    igdp(u,v) = igd(uv_test(u...),uv_trial(v...))
+    igdp(u,v) = igd(pullback_coordinates(I,test_chart)(u),pullback_coordinates(J,trial_chart)(v))
     G = SauterSchwabQuadrature.sauterschwab_parameterized(igdp, rule)
 
     # QTest = dof_perm_matrix(test_local_space, I)
