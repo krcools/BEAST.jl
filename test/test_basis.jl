@@ -17,6 +17,8 @@ for T in [Float32, Float64]
     identityop    = Identity()
     doublelayer   = DoubleLayer(κ)
 
+    @show BEAST.defaultquadstrat(hypersingular, X, X)
+    # @show @which BEAST.defaultquadstrat(hypersingular, X, X)
     @time N = assemble(hypersingular, X, X)
     @time I = assemble(identityop, X, X)
 

@@ -12,7 +12,7 @@ for T in [Float32, Float64]
 	numfunctions(X)
 
 	##
-	X1 = subset(X,1:1)
+	local X1 = subset(X,1:1)
 	numfunctions(X1)
 
 	T1 = assemble(t,X1,X)

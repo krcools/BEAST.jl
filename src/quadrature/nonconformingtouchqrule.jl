@@ -4,9 +4,13 @@ struct NonConformingTouchQRule{S}
     bsis_overlapping_edge_index::Int
 end
 
-function momintegrals!(op, test_locspace, bsis_locspace,
-        τ::CompScienceMeshes.Simplex, σ::CompScienceMeshes.Simplex,
-        out, qrule::NonConformingTouchQRule)
+function momintegrals!(op,
+    test_locspace, bsis_locspace,
+    τ::CompScienceMeshes.Simplex, σ::CompScienceMeshes.Simplex,
+    out, qrule::NonConformingTouchQRule)
+
+    # test_locspace = refspace(test_functions)
+    # bsis_locspace = refspace(bsis_functions)
 
     T = coordtype(τ)
     P = eltype(τ.vertices)
@@ -58,8 +62,9 @@ function momintegrals!(op, test_locspace, bsis_locspace,
             Q = restrict(bsis_locspace, σ, bchart)
             zlocal = zero(out)
 
-            momintegrals!(op, test_locspace, bsis_locspace,
-                tchart, bchart, zlocal, qrule)
+            momintegrals!(zlocal, op,
+                test_locspace, nothing, tchart,
+                bsis_locspace, nothing, bchart, qrule)
 
             # out .+= P * zlocal * Q'
             for i in axes(P,1)

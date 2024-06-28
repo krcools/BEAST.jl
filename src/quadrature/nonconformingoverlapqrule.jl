@@ -3,7 +3,8 @@ struct NonConformingOverlapQRule{S}
 end
 
 
-function momintegrals!(op, test_local_space, basis_local_space,
+function momintegrals!(op,
+    test_local_space, basis_local_space,
     test_chart::CompScienceMeshes.Simplex, basis_chart::CompScienceMeshes.Simplex,
     out, qrule::NonConformingOverlapQRule)
 
@@ -22,12 +23,17 @@ function momintegrals!(op, test_local_space, basis_local_space,
     test_charts = [ch for ch in test_charts if volume(ch) .> 1e6 * eps(T)]
     bsis_charts = [ch for ch in bsis_charts if volume(ch) .> 1e6 * eps(T)]
 
+    isempty(test_charts) && return
+    isempty(bsis_charts) && return
+
     # @assert volume(test_chart) ≈ sum(volume.(test_charts))
     # if volume(basis_chart) ≈ sum(volume.(bsis_charts)) else
     #     @show volume(basis_chart)
     #     @show sum(volume.(bsis_charts))
     #     error()
     # end
+    # test_local_space = refspace(test_functions)
+    # basis_local_space = refspace(basis_functions)
 
     qstrat = CommonFaceOverlappingEdgeQStrat(qrule.conforming_qstrat)
     qdata = quaddata(op, test_local_space, basis_local_space,
@@ -43,8 +49,9 @@ function momintegrals!(op, test_local_space, basis_local_space,
             Q = restrict(basis_local_space, basis_chart, bchart)
             zlocal = zero(out)
 
-            momintegrals!(op, test_local_space, basis_local_space,
-                tchart, bchart, zlocal, qrule)
+            momintegrals!(zlocal, op,
+                test_local_space, nothing, tchart,
+                basis_local_space, nothing, bchart, qrule)
 
             for i in axes(P,1)
                 for j in axes(Q,1)
