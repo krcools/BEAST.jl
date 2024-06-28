@@ -101,9 +101,10 @@ function reorder_dof(space::LagrangeRefSpace{T,1,4,4},I) where T
     return SVector(K),SVector{4,Int64}(1,1,1,1)
 end
 
-function momintegrals!(op::VIEOperator,
-    test_local_space::RefSpace, trial_local_space::RefSpace,
-    test_tetrahedron_element, trial_tetrahedron_element, out, strat::SauterSchwab3DStrategy)
+function momintegrals!(out, op::VIEOperator,
+    test_local_space::RefSpace, test_ptr, test_tetrahedron_element,
+    trial_local_space::RefSpace, trial_ptr, trial_tetrahedron_element,
+    strat::SauterSchwab3DStrategy)
 
     #Find permutation of vertices to match location of singularity to SauterSchwab
     J, I= SauterSchwab3D.reorder(strat.sing)
@@ -159,7 +160,10 @@ function momintegrals!(op::VIEOperator,
     nothing
 end
 
-function momintegrals!(biop::VIEOperator, tshs, bshs, tcell, bcell, z, strat::DoubleQuadRule)
+function momintegrals!(z, biop::VIEOperator,
+    tshs, tptr, tcell,
+    bshs, bptr, bcell,
+    strat::DoubleQuadRule)
 
     # memory allocation here is a result from the type instability on strat
     # which is on purpose, i.e. the momintegrals! method is chosen based

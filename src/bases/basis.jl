@@ -1,4 +1,6 @@
 abstract type RefSpace{T,D} end
+abstract type DivRefSpace{T,D} <: RefSpace{T,D} end
+
 abstract type AbstractSpace end
 abstract type Space{T} <: AbstractSpace end
 

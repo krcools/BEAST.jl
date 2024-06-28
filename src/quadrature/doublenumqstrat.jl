@@ -1,6 +1,9 @@
 function quaddata(operator::IntegralOperator,
-    local_test_basis::RefSpace, local_trial_basis::RefSpace,
+    local_test_basis, local_trial_basis,
     test_elements, trial_elements, qs::DoubleNumQStrat)
+
+    # local_test_basis = refspace(test_basis)
+    # local_trial_basis = refspace(trial_basis)
 
     test_quad_data  = quadpoints(local_test_basis,  test_elements,  (qs.outer_rule,))
     trial_quad_data = quadpoints(local_trial_basis, trial_elements, (qs.inner_rule,))
@@ -10,7 +13,7 @@ end
 
 
 function quadrule(operator::IntegralOperator,
-    local_test_basis::RefSpace, local_trial_basis::RefSpace,
+    local_test_basis, local_trial_basis,
     test_id, test_element, trial_id, trial_element,
     quad_data, qs::DoubleNumQStrat)
 

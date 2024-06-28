@@ -78,6 +78,9 @@ include("test_variational.jl")
 
 include("test_handlers.jl")
 
+using TestItemRunner
+@run_package_tests
+
 
 try
     Pkg.installed("BogaertInts10")
