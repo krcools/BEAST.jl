@@ -6,13 +6,11 @@ struct Threading{T} end
 import Base: transpose, +, -, *
 
 abstract type AbstractOperator end
-
-#@linearspace AbstractOperator{T} T
-
 """
 *Atomic operator*: one that assemblechunk can deal with
 """
 abstract type Operator <: AbstractOperator end
+abstract type IntegralOperator <: Operator end
 
 mutable struct TransposedOperator <: AbstractOperator
     op::AbstractOperator
