@@ -2,6 +2,7 @@ using CompScienceMeshes
 using BEAST
 
 using Test
+import LinearMaps
 
 for U in [Float32, Float64]
     m1 = meshrectangle(U(1.0), U(1.0), U(0.5))
@@ -29,5 +30,5 @@ for U in [Float32, Float64]
     bilterms = [BEAST.Variational.BilTerm(1,1,Any[],Any[],1,T)]
 
     BilForm = BEAST.Variational.BilForm(:i, :j, bilterms)
-    @test typeof(assemble(BilForm, X, X)) == LinearMaps.LinearCombination{U, Vector{LinearMap}}
+    @test typeof(assemble(BilForm, X, X)) == LinearMaps.LinearCombination{U, Vector{LinearMaps.LinearMap}}
 end
