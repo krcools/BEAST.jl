@@ -53,20 +53,20 @@ end
 
 qs_strat = BEAST.DoubleNumWiltonSauterQStrat(1,1,6,7,10,10,10,10)
 
-sauterschwab = BEAST.SauterSchwabQuadrature.CommonFace(BEAST._legendre(10,0.0,1.0))
+# sauterschwab = BEAST.SauterSchwabQuadrature.CommonFace(BEAST._legendre(10,0.0,1.0))
 out_ss = zeros(T, numfunctions(𝒳), numfunctions(𝒳))
-BEAST.momintegrals_test_refines_trial!(out_ss, 𝒜,
+BEAST.momintegrals!(out_ss, 𝒜,
     Y, p, test_chart,
     X, 1, trial_chart,
-    sauterschwab, qs_strat)
+    BEAST.TestRefinesTrialQRule(qs_strat))
 
 
 wiltonsingext = BEAST.WiltonSERule(test_quadpoints, BEAST.DoubleQuadRule(test_quadpoints, trial_quadpoints))
 out_dw = zeros(T, numfunctions(𝒳), numfunctions(𝒳))
-BEAST.momintegrals_test_refines_trial!(out_dw, 𝒜,
+BEAST.momintegrals!(out_dw, 𝒜,
     Y, p, test_chart,
     X, 1, trial_chart,
-    wiltonsingext, qs_strat)
+    wiltonsingext)
 
 @show norm(out_ss-out_dw) / norm(out_dw)
 
