@@ -109,171 +109,153 @@ function (igd::Integrand)(x,y,f,g)
 
 end
 
+# TODO: Remove this when the next version of CSM is relased!
+function CompScienceMeshes.permute_vertices(
+    ch::CompScienceMeshes.RefQuadrilateral, I)
 
+    V = vertices(ch)
+    return Quadrilateral(V[I[1]], V[I[2]], V[I[3]], V[I[4]])
+end
 
-function pullback_coordinates(I,type::CompScienceMeshes.Simplex)
-    function transform(u)
-        [u[1],u[2],1-sum(u)][invperm(I)][1:end-1]
-    end
-    return transform
+struct PulledBackIntegrand{I,C}
+    igd::I
+    chart1::C
+    chart2::C
 end
-function pullback_coordinates(I,type::CompScienceMeshes.Quadrilateral)
-    function transform(u)
-        n =  [1-sum(u)+prod(u),u[1]-prod(u),prod(u),u[2]-prod(u)][invperm(I)]
-        p = n[3]
-        result = [n[2]+p,n[4]+p]
-        @assert 1-sum(result)+p ≈ n[1]
-        @assert p ≈ prod(result)
-        return result
-    end
-    return transform
+
+function (f::PulledBackIntegrand)(u,v)
+    # In general I think a Jacobian determinant needs to be included. For Simplical and
+    # Quadrilateral charts this is not needed because they are 1.
+    f.igd(cartesian(f.chart1,u), cartesian(f.chart2,v))
 end
+
+function pulledback_integrand(igd,
+    I, chart1,
+    J, chart2)
+
+    dom1 = domain(chart1)
+    dom2 = domain(chart2)
+
+    ichart1 = CompScienceMeshes.permute_vertices(dom1, I)
+    ichart2 = CompScienceMeshes.permute_vertices(dom2, J)
+
+    PulledBackIntegrand(igd, ichart1, ichart2)
+end 
 
 function momintegrals!(op::Operator,
     test_local_space, trial_local_space,
     test_chart, trial_chart,
     out, rule::SauterSchwabStrategy)
 
-    # test_local_space = refspace(test_space)
-    # trial_local_space = refspace(trial_space)
-
     I, J, _, _ = SauterSchwabQuadrature.reorder(
         vertices(test_chart),
         vertices(trial_chart), rule)
 
-    # permute_vertices reparametrizes the simplex without affecting the normal
-    if 0 in I || 0 in J
-        @show typeof(rule) I J
-        @show test_chart.vertices
-        @show trial_chart.vertices
-        @infiltrate
-        # error("on purpose")
-    end
-
-    # test_chart = CompScienceMeshes.permute_vertices(test_chart, I)
-    # trial_chart = CompScienceMeshes.permute_vertices(trial_chart, J)
-
-    # if rule isa SauterSchwabQuadrature.CommonEdge
-    #     @assert test_chart.vertices[1] ≈ trial_chart.vertices[1]
-    #     @assert test_chart.vertices[3] ≈ trial_chart.vertices[3]
-    # end
-
-    # igd = Integrand(op, test_local_space, trial_local_space, test_chart, trial_chart)
-    # G = SauterSchwabQuadrature.sauterschwab_parameterized(igd, rule)
-
-    # uv_test(u,v) = [u,v,1-u-v][invperm(I)][1:end-1]
-    # uv_trial(u,v) = [u,v,1-u-v][invperm(J)][1:end-1]
-
     igd = Integrand(op, test_local_space, trial_local_space, test_chart, trial_chart)
-    igdp(u,v) = igd(pullback_coordinates(I,test_chart)(u),pullback_coordinates(J,trial_chart)(v))
+    igdp = pulledback_integrand(igd, I, test_chart, J, trial_chart)
     G = SauterSchwabQuadrature.sauterschwab_parameterized(igdp, rule)
-
-    # QTest = dof_perm_matrix(test_local_space, I)
-    # QTrial = dof_perm_matrix(trial_local_space, J)
-    # out_temp = zeros(eltype(out), numfunctions(test_local_space),numfunctions(trial_local_space))
-    # out_temp = QTest*G*QTrial'
     out[1:numfunctions(test_local_space),1:numfunctions(trial_local_space)] .+= G
 
     nothing
 end
 
 
-function momintegrals_test_refines_trial!(out, op,
-    test_functions, test_cell, test_chart,
-    trial_functions, trial_cell, trial_chart,
-    quadrule, quadstrat)
+# function momintegrals_test_refines_trial!(out, op,
+#     test_functions, test_cell, test_chart,
+#     trial_functions, trial_cell, trial_chart,
+#     quadrule, quadstrat)
 
-    # test_local_space = refspace(test_functions)
-    # trial_local_space = refspace(trial_functions)
+#     # test_local_space = refspace(test_functions)
+#     # trial_local_space = refspace(trial_functions)
 
-    momintegrals!(out, op,
-        test_functions, test_cell, test_chart,
-        trial_functions, trial_cell, trial_chart, quadrule)
-end
+#     momintegrals!(out, op,
+#         test_functions, test_cell, test_chart,
+#         trial_functions, trial_cell, trial_chart, quadrule)
+# end
 
-# const MWOperator3D = Union{MWSingleLayer3D, MWDoubleLayer3D}
-function momintegrals_test_refines_trial!(out, op,
-    test_functions, test_cell, test_chart,
-    trial_functions, trial_cell, trial_chart,
-    qr::SauterSchwabStrategy, quadstrat)
+# # const MWOperator3D = Union{MWSingleLayer3D, MWDoubleLayer3D}
+# function momintegrals_test_refines_trial!(out, op,
+#     test_functions, test_cell, test_chart,
+#     trial_functions, trial_cell, trial_chart,
+#     qr::SauterSchwabStrategy, quadstrat)
 
-    test_local_space = refspace(test_functions)
-    trial_local_space = refspace(trial_functions)
+#     test_local_space = refspace(test_functions)
+#     trial_local_space = refspace(trial_functions)
 
-    test_mesh = geometry(test_functions)
-    # trial_mesh = geometry(trial_functions)
+#     test_mesh = geometry(test_functions)
+#     # trial_mesh = geometry(trial_functions)
 
-    parent_mesh = CompScienceMeshes.parent(test_mesh)
-    trial_charts = [chart(test_mesh, p) for p in CompScienceMeshes.children(parent_mesh, trial_cell)]
+#     parent_mesh = CompScienceMeshes.parent(test_mesh)
+#     trial_charts = [chart(test_mesh, p) for p in CompScienceMeshes.children(parent_mesh, trial_cell)]
 
-    qd = quaddata(op, test_local_space, trial_local_space,
-        [test_chart], trial_charts, quadstrat)
+#     qd = quaddata(op, test_local_space, trial_local_space,
+#         [test_chart], trial_charts, quadstrat)
 
-    for (q,chart) in enumerate(trial_charts)
-        qr = quadrule(op, test_local_space, trial_local_space,
-            1, test_chart, q ,chart, qd, quadstrat)
-        # @show qr
+#     for (q,chart) in enumerate(trial_charts)
+#         qr = quadrule(op, test_local_space, trial_local_space,
+#             1, test_chart, q ,chart, qd, quadstrat)
+#         # @show qr
 
-        Q = restrict(trial_local_space, trial_chart, chart)
-        zlocal = zero(out)
+#         Q = restrict(trial_local_space, trial_chart, chart)
+#         zlocal = zero(out)
 
-        momintegrals!(zlocal, op,
-            test_functions, test_cell, test_chart,
-            trial_functions, nothing, chart, qr)
+#         momintegrals!(zlocal, op,
+#             test_functions, test_cell, test_chart,
+#             trial_functions, nothing, chart, qr)
 
-        for j in 1:numfunctions(trial_local_space)
-            for i in 1:numfunctions(test_local_space)
-                for k in 1:size(Q, 2)
-                    out[i,j] += zlocal[i,k] * Q[j,k]
-end end end end end
-
-
-
-function momintegrals_trial_refines_test!(out, op,
-    test_functions, test_cell, test_chart,
-    trial_functions, trial_cell, trial_chart,
-    quadrule, quadstrat)
-
-    test_local_space = refspace(test_functions)
-    trial_local_space = refspace(trial_functions)
-
-    momintegrals!(out, op,
-        test_functions, test_cell, test_chart,
-        trial_functions, trial_cell, trial_chart, quadrule)
-end
+#         for j in 1:numfunctions(trial_local_space)
+#             for i in 1:numfunctions(test_local_space)
+#                 for k in 1:size(Q, 2)
+#                     out[i,j] += zlocal[i,k] * Q[j,k]
+# end end end end end
 
 
-function momintegrals_trial_refines_test!(out, op,
-    test_functions, test_cell, test_chart,
-    trial_functions, trial_cell, trial_chart,
-    qr::SauterSchwabStrategy, quadstrat)
 
-    test_local_space = refspace(test_functions)
-    trial_local_space = refspace(trial_functions)
+# function momintegrals_trial_refines_test!(out, op,
+#     test_functions, test_cell, test_chart,
+#     trial_functions, trial_cell, trial_chart,
+#     quadrule, quadstrat)
 
-    test_mesh = geometry(test_functions)
-    trial_mesh = geometry(trial_functions)
+#     test_local_space = refspace(test_functions)
+#     trial_local_space = refspace(trial_functions)
 
-    parent_mesh = CompScienceMeshes.parent(trial_mesh)
-    test_charts = [chart(trial_mesh, p) for p in CompScienceMeshes.children(parent_mesh, test_cell)] 
+#     momintegrals!(out, op,
+#         test_functions, test_cell, test_chart,
+#         trial_functions, trial_cell, trial_chart, quadrule)
+# end
 
-    qd = quaddata(op, test_local_space, trial_local_space,
-        test_charts, [trial_chart], quadstrat)
 
-    for (p,chart) in enumerate(test_charts)
-        qr = quadrule(op, test_local_space, trial_local_space,
-            p, chart, 1, trial_chart, qd, quadstrat)
+# function momintegrals_trial_refines_test!(out, op,
+#     test_functions, test_cell, test_chart,
+#     trial_functions, trial_cell, trial_chart,
+#     qr::SauterSchwabStrategy, quadstrat)
 
-        Q = restrict(test_local_space, test_chart, chart)
-        zlocal = zero(out)
-        momintegrals!(zlocal, op,
-            test_functions, nothing, chart,
-            trial_functions, trial_cell, trial_chart, qr)
+#     test_local_space = refspace(test_functions)
+#     trial_local_space = refspace(trial_functions)
 
-        for j in 1:numfunctions(trial_local_space)
-            for i in 1:numfunctions(test_local_space)
-                for k in 1:size(Q, 2)
-                    out[i,j] += Q[i,k] * zlocal[k,j]
-        end end end
-    end
-end
+#     test_mesh = geometry(test_functions)
+#     trial_mesh = geometry(trial_functions)
+
+#     parent_mesh = CompScienceMeshes.parent(trial_mesh)
+#     test_charts = [chart(trial_mesh, p) for p in CompScienceMeshes.children(parent_mesh, test_cell)] 
+
+#     qd = quaddata(op, test_local_space, trial_local_space,
+#         test_charts, [trial_chart], quadstrat)
+
+#     for (p,chart) in enumerate(test_charts)
+#         qr = quadrule(op, test_local_space, trial_local_space,
+#             p, chart, 1, trial_chart, qd, quadstrat)
+
+#         Q = restrict(test_local_space, test_chart, chart)
+#         zlocal = zero(out)
+#         momintegrals!(zlocal, op,
+#             test_functions, nothing, chart,
+#             trial_functions, trial_cell, trial_chart, qr)
+
+#         for j in 1:numfunctions(trial_local_space)
+#             for i in 1:numfunctions(test_local_space)
+#                 for k in 1:size(Q, 2)
+#                     out[i,j] += Q[i,k] * zlocal[k,j]
+#         end end end
+#     end
+# end

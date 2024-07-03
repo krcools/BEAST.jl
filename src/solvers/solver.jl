@@ -262,7 +262,11 @@ function assemble(bf::BilForm, X::DirectProductSpace, Y::DirectProductSpace;
     if spaceTimeBasis
         return sum(lincombv)
     else
-        return LinearMaps.LinearCombination{T}(lincombv)
+        if length(lincombv) == 1
+            return lincombv[1]
+        else
+            return LinearMaps.LinearCombination{T}(lincombv)
+        end
     end
 end
 
