@@ -197,6 +197,7 @@ include("quadrature/strategies/testrefinestrialqstrat.jl")
 include("quadrature/strategies/trialrefinestestqstrat.jl")
 
 include("excitation.jl")
+include("gridfunction.jl")
 include("localop.jl")
 include("multiplicativeop.jl")
 include("identityop.jl")

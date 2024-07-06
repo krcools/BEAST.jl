@@ -77,6 +77,7 @@ include("test_td_tensoroperator.jl")
 include("test_variational.jl")
 
 include("test_handlers.jl")
+include("test_gridfunction.jl")
 
 using TestItemRunner
 @run_package_tests
