@@ -77,6 +77,7 @@ function _integrands_gen(::Type{U}, ::Type{V}) where {U<:SVector{N}, V<:SVector{
     end
     return ex
 end
+
 @generated function _integrands(f, a::SVector{N}, b::SVector{M}) where {M,N}
     ex = _integrands_gen(a,b)
     # println(ex)
@@ -105,7 +106,7 @@ function (igd::Integrand)(x,y,f,g)
 
     op = igd.operator
     kervals = kernelvals(op, x, y)
-    _integrands_leg(op, kervals, f, x, g, y)
+    return _integrands_leg(op, kervals, f, x, g, y)
 
 end
 
@@ -166,5 +167,147 @@ function momintegrals!(op::Operator,
     nothing
 end
 
+struct Integrand1D{Op,LSt,LSb,Elt,Elb}
+    operator::Op
+    local_test_space::LSt
+    local_trial_space::LSb
+    test_chart::Elt
+    trial_chart::Elb
+end
 
+function (igd::Integrand1D)(x,y,f,g)
+
+    op = igd.operator
+
+    kervals = kernelvals(op, x, y)
+
+    wynik=_integrands_leg(op, kervals, f, x, g, y)
+    return wynik
+end
+
+function (igd::Integrand1D)(u,v)
+
+    x = neighborhood(igd.test_chart,u)
+    y = neighborhood(igd.trial_chart,v)
+
+    f = igd.local_test_space(x)
+    g = igd.local_trial_space(y)
+
+    return jacobian(x) * jacobian(y) * igd(x,y,f,g)
+end
+
+struct PulledBackIntegrand1D{I,C}
+    igd::I
+    chart1::C
+    chart2::C
+end
+
+function (f::PulledBackIntegrand1D)(u,v)
+
+    return f.igd(u, v)
+end
+
+function reference_vertices(::Type{CompScienceMeshes.ReferenceSimplex{1, T, 2}}) where T
+    return (SVector{2,T}(0,0), SVector{2,T}(1,0))
+end
+
+#=
+function pulledback_integrand1D(igd,
+    I, chart1,
+    J, chart2)
+
+    dom1 = domain(chart1)
+    dom2 = domain(chart2)
+
+    V1 = reference_vertices(typeof(dom1))
+    V2 = reference_vertices(typeof(dom2))
+
+    ichart1 = simplex(V1[I[1]], V1[I[2]])
+    ichart2 = simplex(V2[J[1]], V2[J[2]])
+
+    PulledBackIntegrand1D(igd, ichart1, ichart2)
+end
+=#
+
+function pulledback_integrand1D(igd,
+    chart1,
+    chart2)
+    PulledBackIntegrand1D(igd, chart1, chart2)
+end
+
+function momintegrals!(op::Operator,
+    test_local_space, trial_local_space,
+    test_chart, trial_chart,
+    out, rule::BEAST.SauterSchwabQuadrature1D.CommonEdge)
+
+
+    igd = Integrand1D(op, test_local_space, trial_local_space, test_chart, trial_chart)
+
+    G = BEAST.SauterSchwabQuadrature1D.sauterschwab_parameterized1D(igd, rule)
+    out[
+        1:numfunctions(test_local_space, domain(test_chart)),
+        1:numfunctions(trial_local_space, domain(trial_chart))
+    ] .+= G
+    nothing
+end
+
+
+"""
+it is the test for correctly order of vertices, which results in anticlock way r1->r3->r2->r1
+this means that for u,v = 0 r1, r3 and for u,v=1 the expected common node r2 is present
+if this condition is not met, a reordering function must be implemented
+"""
+
+function reverse_chart(chart::CompScienceMeshes.Simplex{2,1,1,2,T}) where T
+    new_verts = SVector{2,SVector{2,T}}(chart.vertices[2], chart.vertices[1])
+
+    new_tangent = -chart.tangents[1]
+
+    # TODO: double check normal should not flip
+    new_normal = chart.normals[1]
+
+    new_vol = chart.volume
+
+    return CompScienceMeshes.Simplex{2,1,1,2,T}(
+        new_verts,
+        SVector{1,SVector{2,T}}(new_tangent),
+        SVector{1,SVector{2,T}}(new_normal),
+        new_vol
+    )
+end
+
+
+function momintegrals!(op::Operator,
+    test_local_space, trial_local_space,
+    test_chart, trial_chart,
+    out, rule::BEAST.SauterSchwabQuadrature1D.CommonVertex)
+
+    igd = Integrand1D(op, test_local_space, trial_local_space, test_chart, trial_chart)
+
+    u = 0.0
+    v = 1.0
+
+    if !(cartesian(igd.test_chart, u) ≈ cartesian(igd.trial_chart, v))
+
+        itest_chart = reverse_chart(igd.test_chart)
+        itrial_chart = reverse_chart(igd.trial_chart)
+
+        igdp = pulledback_integrand1D(igd, itest_chart, itrial_chart)
+
+        G = BEAST.SauterSchwabQuadrature1D.sauterschwab_parameterized1D(igdp, rule)
+        out[
+            1:numfunctions(test_local_space, domain(test_chart)),
+            1:numfunctions(trial_local_space, domain(trial_chart))
+        ] .+= G
+
+    else
+
+        G = BEAST.SauterSchwabQuadrature1D.sauterschwab_parameterized1D(igd, rule)
+        out[
+            1:numfunctions(test_local_space, domain(test_chart)),
+            1:numfunctions(trial_local_space, domain(trial_chart))
+        ] .+= G
+    end
+    nothing
+end
 
