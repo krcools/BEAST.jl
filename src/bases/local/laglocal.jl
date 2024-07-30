@@ -7,6 +7,7 @@ numfunctions(s::LagrangeRefSpace{T,D,2}) where {T,D} = D+1
 numfunctions(s::LagrangeRefSpace{T,0,3}) where {T} = 1
 numfunctions(s::LagrangeRefSpace{T,1,3}) where {T} = 3
 numfunctions(s::LagrangeRefSpace{T,2,3}) where {T} = 6
+numfunctions(s::LagrangeRefSpace{T,N,3}) where {T,N} = Int((N+1)*(N+2)/2)
 
 valuetype(ref::LagrangeRefSpace{T}, charttype) where {T} =
         SVector{numfunctions(ref), Tuple{T,T}}
@@ -185,6 +186,34 @@ function restrict(f::LagrangeRefSpace{T,1}, dom1, dom2) where T
 end
 
 
+function R(iterate::Int, u, p::Int)
+    if iterate == 0
+        return 1
+    else
+        R = 1/factorial(iterate)
+        for i in 0:iterate-1
+            R *= (p*u - i)
+        end
+    end
+    return R
+end
+
+function Silvester(u,v,w,p::Int)
+    size = Int((p+1)*(p+2)/2)
+    tup = (value=0.0,curl=0)
+    S = Vector{typeof(tup)}(undef,size)
+    index = 1
+    for i in 0:p
+        for j in 0:p
+            if (i+j<=p)
+                k = p - i - j
+                S[index] = (value = R(i,u,p) * R(j,v,p) * R(k,w,p), curl = 0)
+                index += 1
+            end
+        end
+    end
+    return SVector(S...)
+end
 
 ## Quadratic Lagrange element on a triangle
 function (f::LagrangeRefSpace{T,2,3})(t) where T
@@ -198,14 +227,25 @@ function (f::LagrangeRefSpace{T,2,3})(t) where T
       #  (value=w, curl=(p[2]-p[1])/j)
 
     σ = sign(dot(normal(t), cross(p[1]-p[3],p[2]-p[3])))
-     SVector(
+    return Silvester(u,v,w,2)
+    #=
+    SVector(
         (value=u*(2*u-1), curl=σ*(p[3]-p[2])*(4u-1)/j),
         (value=v*(2*v-1), curl=σ*(p[1]-p[3])*(4v-1)/j),
         (value=w*(2*w-1), curl=σ*(p[2]-p[1])*(4w-1)/j),
         (value=4*v*w, curl=4*σ*(w*(p[1]-p[3])+v*(p[2]-p[1]))/j),
         (value=4*w*u, curl=4*σ*(w*(p[3]-p[2])+u*(p[2]-p[1]))/j),
         (value=4*u*v, curl=4*σ*(u*(p[1]-p[3])+v*(p[3]-p[2]))/j),
-    )
+    )=#
+end
+
+function (f::LagrangeRefSpace{T,N,3})(t) where {T, N}
+    u, v, w = barycentric(t)
+    j = jacobian(t)
+
+    p = t.patch
+
+    return Silvester(u,v,w,N)
 end
 
 # function (f::LagrangeRefSpace{T,2,3})(t, ::Type{Val{:withcurl}}) where T

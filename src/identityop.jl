@@ -53,7 +53,7 @@ function quaddata(op::LocalOperator, g::LinearRefSpaceTetr, f::LinearRefSpaceTet
     A = _alloc_workspace(qd, g, f, tels, bels)
     return qd, A
 end
-
+#SingleNumQStrat(max(1,D1+D2))
 defaultquadstrat(::LocalOperator, ::LagrangeRefSpace{T,D1,2}, ::LagrangeRefSpace{T,D2,2}) where {T,D1,D2} = SingleNumQStrat(6)
 function quaddata(op::LocalOperator, g::LagrangeRefSpace{T,Deg,2} where {T,Deg},
     f::LagrangeRefSpace, tels::Vector, bels::Vector, qs::SingleNumQStrat)
@@ -64,7 +64,8 @@ function quaddata(op::LocalOperator, g::LagrangeRefSpace{T,Deg,2} where {T,Deg},
     return qd, A
 end
 
-defaultquadstrat(::LocalOperator, ::LagrangeRefSpace{T,D1,3}, ::LagrangeRefSpace{T,D2,3}) where {T,D1,D2} = SingleNumQStrat(6)
+#defaultquadstrat(::LocalOperator, ::LagrangeRefSpace{T,D1,3}, ::LagrangeRefSpace{T,D2,3}) where {T,D1,D2} = SingleNumQStrat(6)
+defaultquadstrat(::LocalOperator, ::LagrangeRefSpace{T,D1,3}, ::LagrangeRefSpace{T,D2,3}) where {T,D1,D2} = SingleNumQStrat(max(1,D1+D2))
 function quaddata(op::LocalOperator, g::LagrangeRefSpace{T,Deg,3} where {T,Deg},
     f::LagrangeRefSpace, tels::Vector, bels::Vector, qs::SingleNumQStrat)
 

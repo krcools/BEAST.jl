@@ -90,6 +90,7 @@ end
 function assemble_local_matched!(biop::LocalOperator, tfs::Space, bfs::Space, store;
     quadstrat=defaultquadstrat(biop, tfs, bfs))
 
+    quadstrat=defaultquadstrat(biop, tfs, bfs) #take this line out
     tels, tad, ta2g = assemblydata(tfs)
     bels, bad, ba2g = assemblydata(bfs)
 

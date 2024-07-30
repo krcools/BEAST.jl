@@ -45,8 +45,8 @@ for (i, h) in enumerate(hs)
     pos1 = SVector(r * 1.5, 0.0, 0.0)
     pos2 = SVector(-r * 1.5, 0.0, 0.0)
 
-    charge1 = HH3DMonopole(position=pos1, amplitude=q/(4*π*ϵ), wavenumber=0.0)
-    charge2 = HH3DMonopole(position=pos2, amplitude=-q/(4*π*ϵ), wavenumber=0.0)
+    charge1 = Helmholtz3D.monopole(position=pos1, amplitude=q/(4*π*ϵ), wavenumber=0.0)
+    charge2 = Helmholtz3D.monopole(position=pos2, amplitude=-q/(4*π*ϵ), wavenumber=0.0)
 
     #Potential of point charges
     Φ_inc(x) = charge1(x) + charge2(x)
