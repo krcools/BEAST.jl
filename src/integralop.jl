@@ -94,7 +94,7 @@ function assemblechunk!(biop::IntegralOperator, tfs::Space, bfs::Space, store;
     assemblechunk_body!(biop,
         tfs, test_elements, tad, tcells,
         bfs, bsis_elements, bad, bcells,
-        qd, zlocal, store; quadstrat=qs)
+        qd, zlocal, store, quadstrat)
 
     # if CompScienceMeshes.refines(tgeo, bgeo)
     #     assemblechunk_body_test_refines_trial!(biop,
@@ -128,7 +128,7 @@ end
 function assemblechunk_body!(biop,
         test_space, test_elements, test_assembly_data, test_cell_ptrs,
         trial_space, trial_elements, trial_assembly_data, trial_cell_ptrs,
-        qd, zlocal, store; quadstrat)
+        qd, zlocal, store, quadstrat)
 
     test_shapes = refspace(test_space)
     trial_shapes = refspace(trial_space)

@@ -31,6 +31,7 @@ SpecialFunctions = "276daf66-3868-5448-9aa4-cd146d93841b"
 StaticArrays = "90137ffa-7385-5640-81b9-e52037218182"
 TestItems = "1c621080-faea-4a02-84b6-bbd5e436b8fe"
 WiltonInts84 = "a3e2863e-c0ee-5ff6-a523-307a4cdc8724"
+AnalytIntegralD0 = "49d4d070-7366-40d9-8484-291b68b4f7aa"
 
 [compat]
 AbstractTrees = "0.4.4"

@@ -1,5 +1,8 @@
 using InteractiveUtils
 
+struct GumerovKanekoDuraiswamiStrat{}
+end
+
 struct DoubleNumWiltonSauterQStrat{R,S}
     outer_rule_far::R
     inner_rule_far::R

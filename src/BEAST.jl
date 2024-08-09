@@ -21,6 +21,8 @@ using NestedUnitRanges
 using Infiltrator
 using TestItems
 
+using AnalytIntegralD0
+
 import LinearAlgebra: cross, dot
 import LinearAlgebra: ×, ⋅
 
@@ -249,6 +251,7 @@ include("helmholtz3d/hh3dfar.jl")
 include("helmholtz3d/hh3d_sauterschwabqr.jl")
 include("helmholtz3d/helmholtz3d.jl")
 include("helmholtz3d/wiltonints.jl")
+include("helmholtz3d/hh3d_gumerovkanekoduraiswami.jl")
 
 #suport for Volume Integral equation
 include("volumeintegral/vie.jl")
