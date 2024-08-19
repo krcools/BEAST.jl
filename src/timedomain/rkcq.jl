@@ -106,3 +106,75 @@ function assemble(rkcq :: RungeKuttaConvolutionQuadrature,
 	return ZC
 
 end
+
+
+struct LaplaceDomainOperator
+	coeff::ComplexF64
+	kernel::Any
+end
+
+scalartype(op::LaplaceDomainOperator) = ComplexF64
+
+*(a::Number, op::LaplaceDomainOperator) = LaplaceDomainOperator(a*op.coeff, op.kernel)
+
+LaplaceDomainOperator(kernel) = LaplaceDomainOperator(Complex(1.0), kernel)
+
+defaultquadstrat(op::LaplaceDomainOperator, tfs::SpaceTimeBasis, bfs::SpaceTimeBasis) = DoubleNumWiltonSauterQStrat(2,3,6,7,5,5,4,3)
+
+function assemble(op::LaplaceDomainOperator, testfns::SpaceTimeBasis, trialfns::SpaceTimeBasis; quadstrat=defaultquadstrat(op, testfns, trialfns))
+	laplaceKernel = op.kernel
+
+	A = testfns.time.A
+	b = testfns.time.b
+	Δt = testfns.time.Δt
+	Q = testfns.time.zTransformedTermCount
+	rho = testfns.time.contourRadius
+	p = length(b) # stage count
+
+	test_spatial_basis  = testfns.space
+	trial_spatial_basis = trialfns.space
+
+	# Compute the Z transformed sequence.
+	# Assume that the operator applied on the conjugate of s is the same as the
+	# conjugate of the operator applied on s,
+	# so that only half of the values are computed
+	Qmax = Q>>1+1
+	M = numfunctions(test_spatial_basis)
+	N = numfunctions(trial_spatial_basis)
+	Tz = ComplexF64
+	Zz = Vector{Array{Tz,2}}(undef,Qmax)
+	blocksEigenvalues = Vector{Array{Tz,2}}(undef,p)
+	tmpDiag = Vector{Tz}(undef,p)
+
+	for q = 0:Qmax-1
+		# Build a temporary matrix for each eigenvalue
+		s = laplace_to_z(rho, q, Q, Δt, A, b)
+		sFactorized = diagonalizedmatrix(s)
+		for (i,sD) in enumerate(sFactorized.D)
+			blocksEigenvalues[i] = op.coeff * assemble(laplaceKernel(sD), test_spatial_basis, trial_spatial_basis, quadstrat=quadstrat)
+		end
+
+		# Compute the Z transformed matrix by block
+		Zz[q+1] = zeros(Tz, M*p, N*p)
+		for m = 1:M
+			for n = 1:N
+				for i = 1:p
+					tmpDiag[i] = blocksEigenvalues[i][m,n]
+				end
+				D = SVector{p,Tz}(tmpDiag);
+				Zz[q+1][(m-1)*p.+(1:p),(n-1)*p.+(1:p)] = sFactorized.H * diagm(D) * sFactorized.invH
+			end
+		end
+	end
+
+	# return the inverse Z transform
+	kmax = Q
+	T = real(Tz)
+	Z = zeros(T, M*p, N*p, kmax)
+	for q = 0:kmax-1
+		Z[:,:,q+1] = real_inverse_z_transform(q, rho, Q, Zz)
+	end
+	ZC = ConvolutionOperators.DenseConvOp(Z)
+
+	return ZC
+end
