@@ -44,11 +44,11 @@ for T in [Float32, Float64]
 
 
     # Test restriction of RT elements
-    ni, no = 6, 7;
-    ui = transpose([triangleGaussA[ni] triangleGaussB[ni] ]);
-    uo = transpose([triangleGaussA[no] triangleGaussB[no] ]);
-    wi = triangleGaussW[ni];
-    wo = triangleGaussW[no];
+    # ni, no = 6, 7;
+    # ui = transpose([CompScienceMeshes.triangleGaussA[ni] CompScienceMeshes.triangleGaussB[ni] ]);
+    # uo = transpose([CompScienceMeshes.triangleGaussA[no] CompScienceMeshes.triangleGaussB[no] ]);
+    # wi = triangleGaussW[ni];
+    # wo = triangleGaussW[no];
     # universe = Universe(1.0, ui, wi, uo, wo);
 
     p = simplex([T.(2*e0),T.(2*e1),T.(2*e2)], Val{2})
