@@ -109,13 +109,12 @@ function (igd::Integrand)(x,y,f,g)
 
 end
 
-# TODO: Remove this when the next version of CSM is relased!
-function CompScienceMeshes.permute_vertices(
-    ch::CompScienceMeshes.RefQuadrilateral, I)
+# function CompScienceMeshes.permute_vertices(
+#     ch::CompScienceMeshes.RefQuadrilateral, I)
 
-    V = vertices(ch)
-    return Quadrilateral(V[I[1]], V[I[2]], V[I[3]], V[I[4]])
-end
+#     V = vertices(ch)
+#     return Quadrilateral(V[I[1]], V[I[2]], V[I[3]], V[I[4]])
+# end
 
 struct PulledBackIntegrand{I,C1,C2}
     igd::I
