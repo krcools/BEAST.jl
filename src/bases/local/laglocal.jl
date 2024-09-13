@@ -1,7 +1,7 @@
 # T: coeff type
 # Degree: degree
 # Dim1: dimension of the support + 1
-mutable struct LagrangeRefSpace{T,Degree,Dim1,NF} <: RefSpace{T,NF} end
+struct LagrangeRefSpace{T,Degree,Dim1,NF} <: RefSpace{T,NF} end
 
 numfunctions(s::LagrangeRefSpace{T,D,2}) where {T,D} = D+1
 numfunctions(s::LagrangeRefSpace{T,0,3}) where {T} = 1
@@ -26,10 +26,6 @@ end
 # Evaluete linear lagrange elements on a triangle
 function (f::LagrangeRefSpace{T,1,3})(t) where T
     u,v,w, = barycentric(t)
-    # SVector(
-    #     (value=u,),
-    #     (value=v,),
-    #     (value=w,))
 
     j = jacobian(t)
     p = t.patch
@@ -40,24 +36,6 @@ function (f::LagrangeRefSpace{T,1,3})(t) where T
         (value=w, curl=σ*(p[2]-p[1])/j))
 end
 
-
-"""
-    f(tangent_space, Val{:withcurl})
-
-Compute the values of the shape functions together with their curl.
-"""
-# function (f::LagrangeRefSpace{T,1,3})(t, ::Type{Val{:withcurl}}) where T
-#     # Evaluete linear Lagrange elements on a triange, together with their curl
-#     j = jacobian(t)
-#     u,v,w, = barycentric(t)
-#     p = t.patch
-#     σ = sign(dot(normal(t), cross(p[1]-p[3],p[2]-p[3])))
-#     SVector(
-#         (value=u, curl=σ*(p[3]-p[2])/j),
-#         (value=v, curl=σ*(p[1]-p[3])/j),
-#         (value=w, curl=σ*(p[2]-p[1])/j)
-#     )
-# end
 
 
 # Evaluate constant Lagrange elements on a triangle, with their curls
@@ -156,7 +134,6 @@ end
 
 
 function restrict(refs::LagrangeRefSpace{T,0}, dom1, dom2) where T
-    #Q = eye(T, numfunctions(refs))
     Q = Matrix{T}(I, numfunctions(refs), numfunctions(refs))
 end
 
@@ -193,10 +170,6 @@ function (f::LagrangeRefSpace{T,2,3})(t) where T
     j = jacobian(t)
     p = t.patch
 
-    #curl=(p[3]-p[2])/j),
-     #   (value=v, curl=(p[1]-p[3])/j),
-      #  (value=w, curl=(p[2]-p[1])/j)
-
     σ = sign(dot(normal(t), cross(p[1]-p[3],p[2]-p[3])))
      SVector(
         (value=u*(2*u-1), curl=σ*(p[3]-p[2])*(4u-1)/j),
@@ -208,22 +181,6 @@ function (f::LagrangeRefSpace{T,2,3})(t) where T
     )
 end
 
-# function (f::LagrangeRefSpace{T,2,3})(t, ::Type{Val{:withcurl}}) where T
-#     # Evaluete quadratic Lagrange elements on a triange, together with their curl
-#     j = jacobian(t)
-#     u,v,w, = barycentric(t)
-#     p = t.patch
-
-#     σ = sign(dot(normal(t), cross(p[1]-p[3],p[2]-p[3])))
-#     SVector(
-#         (value=u*(2*u-1), curl=σ*(p[3]-p[2])*(4u-1)/j),
-#         (value=v*(2*v-1), curl=σ*(p[1]-p[3])*(4v-1)/j),
-#         (value=w*(2*w-1), curl=σ*(p[2]-p[1])*(4w-1)/j),
-#         (value=4*v*w, curl=4*σ*(w*(p[1]-p[3])+v*(p[2]-p[1]))/j),
-#         (value=4*w*u, curl=4*σ*(w*(p[3]-p[2])+u*(p[2]-p[1]))/j),
-#         (value=4*u*v, curl=4*σ*(u*(p[1]-p[3])+v*(p[3]-p[2]))/j),
-#     )
-# end
 
 function curl(ref::LagrangeRefSpace{T,2,3} where {T}, sh, el)
     #curl of lagc0d2 as combination of bdm functions 
@@ -293,17 +250,11 @@ end
 
 const _dof_lag0perm_matrix = [
     @SMatrix[1],         # 1. {1,2,3}
-     
     @SMatrix[1],         # 2. {2,3,1}
-    
     @SMatrix[1],         # 3. {3,1,2}
-    
     @SMatrix[1],         # 4. {2,1,3}
-    
     @SMatrix[1],         # 5. {1,3,2}
-    
     @SMatrix[1]         # 6. {3,2,1}
-    
 ]
 
 function (ϕ::LagrangeRefSpace{T, 1, 4, 4})(lag) where T
@@ -329,4 +280,128 @@ function (ϕ::LagrangeRefSpace{T, 1, 4, 4})(lag) where T
         (value = w, gradient = A*gr3),
         (value = T(1.0)-u-v-w, gradient = A*gr4)
     ))
+end
+
+
+
+# Evaluate higher order Lagrange elements on triangles
+# TODO: Optimise using code generation
+function (ϕ::LagrangeRefSpace{T,Degree,3})(p) where {T,Degree}
+
+    u, v = parametric(p)
+    w = 1 - u - v
+    idx = 0
+
+    suppdim = 2
+    localdim = binomial(suppdim+Degree, suppdim)
+    vals = T[]
+    diffus = T[]
+    diffvs = T[]
+
+    D1 = Degree + 1
+    for i in 0:Degree
+        ui = i/Degree
+        for j in 0:Degree
+            vj = j/Degree
+            for k in 0:Degree
+                wk = k/Degree
+                i + j + k == Degree || continue
+
+                val = one(T)
+                for p in 0:Degree
+                    p == i && continue
+                    up = p/Degree
+                    for q in 0:Degree
+                        q == j && continue
+                        vq = q/Degree
+                        for r in 0:Degree
+                            r == k && continue
+                            wr = r/Degree
+                            val *= (u-up) * (v-vq) * (w-wr) / ((ui - up)* (vj - vq) * (wk - wr))                  
+                end end end
+                push!(vals, val)
+
+                diffu = zero(T)
+                for l in 0:Degree
+                    l == i && continue
+                    ul = l/Degree
+                    terml = one(T)
+                    for p in 0:Degree
+                        p == l && continue
+                        p == i && continue
+                        up = p/Degree
+                        for q in 0:Degree
+                            q == j && continue
+                            vq = q/Degree
+                            for r in 0:Degree
+                                r == k && continue
+                                wr = r/Degree
+                                terml *= (u - up) * (v - vq) * (w - wr) / ((ui - up) * (vj - vq) * (wk - wr))
+                    end end end
+                    diffu += terml / (ui - ul)
+                end
+                for l in 0:Degree
+                    l == k && continue
+                    wl = l/Degree
+                    terml = one(T)
+                    for p in 0:Degree
+                        p == i && continue
+                        up = p/Degree
+                        for q in 0:Degree
+                            q == j && continue
+                            vq = q/Degree
+                            for r in 0:Degree
+                                r == l && continue
+                                r == k && continue
+                                wr = r/Degree
+                                terml *= (u - up) * (v - vq) * (w - wr) / ((ui - up) * (vj - vq) * (wk - wr))
+                    end end end
+                    diffu -= terml / (wk - wl)
+                end
+                push!(diffus, diffu)
+
+
+                diffv = zero(T)
+                for l in 0:Degree
+                    l == j && continue
+                    vl = l/Degree
+                    terml = one(T)
+                    for p in 0:Degree
+                        p == i && continue
+                        up = p/Degree
+                        for q in 0:Degree
+                            q == l && continue
+                            q == j && continue
+                            vq = q/Degree
+                            for r in 0:Degree
+                                r == k && continue
+                                wr = r/Degree
+                                terml *= (u - up) * (v - vq) * (w - wr) / ((ui - up) * (vj - vq) * (wk - wr))
+                    end end end
+                    diffv += terml / (vj - vl)
+                end
+                for l in 0:Degree
+                    l == k && continue
+                    wl = l/Degree
+                    terml = one(T)
+                    for p in 0:Degree
+                        p == i && continue
+                        up = p/Degree
+                        for q in 0:Degree
+                            q == j && continue
+                            vq = q/Degree
+                            for r in 0:Degree
+                                r == l && continue
+                                r == k && continue
+                                wr = r/Degree
+                                terml *= (u - up) * (v - vq) * (w - wr) / ((ui - up) * (vj - vq) * (wk -wr))
+                    end end end
+                    diffv -= terml / (wk - wl)
+                end
+                push!(diffvs, diffv)
+
+                idx += 1
+    end end end
+ 
+    [(value=f, curl=point(T,-dv,du)) for (f,du,dv) in zip(vals, diffus, diffvs)]
 end

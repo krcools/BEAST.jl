@@ -840,3 +840,29 @@ function dual0forms_body(mesh::CompScienceMeshes.AbstractMesh{<:Any,3}, refd, bn
 
     LagrangeBasis{1,0,3}(refd, bfs, pos)
 end
+
+
+
+function lagrangecx(mesh::CompScienceMeshes.AbstractMesh{<:Any,3}; order)
+
+    T = coordtype(mesh)
+    NF = binomial(2+order, 2)
+    P = vertextype(mesh)
+    S = Shape{T}
+
+    fns = Vector{Vector{S}}(undef, length(mesh) * NF)
+    pos = Vector{P}(undef, length(mesh) * NF)
+
+    idx = 1
+    u = one(T)
+    for (c,cell) in enumerate(mesh)
+        ch = chart(mesh,cell)
+        for r in 1:NF
+            fns[idx] = S[S(c,r,u)]
+            pos[idx] = cartesian(center(ch))
+            idx += 1
+        end
+    end
+
+    return LagrangeBasis{order,-1,NF}(mesh, fns, pos)
+end
