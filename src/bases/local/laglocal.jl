@@ -403,5 +403,8 @@ function (ϕ::LagrangeRefSpace{T,Degree,3})(p) where {T,Degree}
                 idx += 1
     end end end
  
-    [(value=f, curl=point(T,-dv,du)) for (f,du,dv) in zip(vals, diffus, diffvs)]
+    tu = tangents(p,1)
+    tv = tangents(p,2)
+    j = jacobian(p)
+    [(value=f, curl=(-dv*tu+du*tv)/j) for (f,du,dv) in zip(vals, diffus, diffvs)]
 end
