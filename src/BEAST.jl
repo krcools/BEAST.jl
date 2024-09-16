@@ -18,6 +18,9 @@ using LiftedMaps
 using AbstractTrees
 using NestedUnitRanges
 
+using Infiltrator
+using TestItems
+
 import LinearAlgebra: cross, dot
 import LinearAlgebra: ×, ⋅
 
@@ -155,6 +158,7 @@ include("bases/local/ncrossbdmlocal.jl")
 include("bases/local/ndlcclocal.jl")
 include("bases/local/ndlcdlocal.jl")
 include("bases/local/bdm3dlocal.jl")
+include("bases/local/rtqlocal.jl")
 
 include("bases/lagrange.jl")
 include("bases/rtspace.jl")
@@ -169,6 +173,7 @@ include("bases/ndlccspace.jl")
 include("bases/ndlcdspace.jl")
 include("bases/dual3d.jl")
 include("bases/bdm3dspace.jl")
+include("bases/rtqspace.jl")
 
 
 include("bases/subdbasis.jl")
@@ -180,6 +185,16 @@ include("bases/tensorbasis.jl")
 include("operator.jl")
 
 include("quadrature/quadstrats.jl")
+include("quadrature/doublenumqstrat.jl")
+include("quadrature/doublenumsauterqstrat.jl")
+include("quadrature/doublenumwiltonsauterqstrat.jl")
+include("quadrature/doublenumwiltonbogaertqstrat.jl")
+include("quadrature/selfsauterdnumotherwiseqstrat.jl")
+include("quadrature/nonconformingintegralopqstrat.jl")
+include("quadrature/commonfaceoverlappingedgeqstrat.jl")
+include("quadrature/strategies/cfcvsautercewiltonpdnumqstrat.jl")
+include("quadrature/strategies/testrefinestrialqstrat.jl")
+include("quadrature/strategies/trialrefinestestqstrat.jl")
 
 include("excitation.jl")
 include("localop.jl")
@@ -189,14 +204,14 @@ include("integralop.jl")
 include("dyadicop.jl")
 include("interpolation.jl")
 
-include("quadrature/doublenumqstrat.jl")
-include("quadrature/doublenumsauterqstrat.jl")
-include("quadrature/doublenumwiltonsauterqstrat.jl")
-include("quadrature/doublenumwiltonbogaertqstrat.jl")
-
+include("quadrature/rules/momintegrals.jl")
 include("quadrature/doublenumints.jl")
 include("quadrature/singularityextractionints.jl")
 include("quadrature/sauterschwabints.jl")
+include("quadrature/nonconformingoverlapqrule.jl")
+include("quadrature/nonconformingtouchqrule.jl")
+include("quadrature/rules/testrefinestrialqrule.jl")
+include("quadrature/rules/trialrefinestestqrule.jl")
 
 include("postproc.jl")
 include("postproc/segcurrents.jl")

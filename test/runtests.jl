@@ -79,6 +79,9 @@ include("test_variational.jl")
 include("test_handlers.jl")
 include("test_ncrossbdm.jl")
 include("test_curl_lagc0d1_lagc0d2.jl")
+using TestItemRunner
+@run_package_tests
+
 
 try
     Pkg.installed("BogaertInts10")

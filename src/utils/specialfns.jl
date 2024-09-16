@@ -1,4 +1,4 @@
-
+import SpecialFunctions: erf
 
 struct Gaussian{T}
     scaling::T

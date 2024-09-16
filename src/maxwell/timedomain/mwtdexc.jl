@@ -31,6 +31,7 @@ cross(k, pw::PlaneWaveMWTD) = PlaneWaveMWTD(
 
 function (f::PlaneWaveMWTD)(r,t)
     t = cartesian(t)[1]
+    r = cartesian(r)
     dr = zero(typeof(t))
     for i in 1 : 3
         dr += r[i]*f.direction[i]

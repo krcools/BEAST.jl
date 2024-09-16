@@ -17,7 +17,10 @@ function raviartthomas(mesh, ::Type{Continuity{:none}})
         functions[3*(i-1)+2] = [S(i,2,+1.0)]
         functions[3*(i-1)+3] = [S(i,3,+1.0)]
 
-        ctr = sum(mesh.vertices[mesh.faces[i]])/3
+        I = CompScienceMeshes.indices(mesh,i)
+        V = CompScienceMeshes.vertices(mesh,I)
+        ctr = sum(V)/3
+        # ctr = sum(mesh.vertices[mesh.faces[i]])/3
         positions[3*(i-1)+1] = ctr
         positions[3*(i-1)+2] = ctr
         positions[3*(i-1)+3] = ctr

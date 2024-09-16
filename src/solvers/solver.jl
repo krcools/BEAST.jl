@@ -219,14 +219,17 @@ lift(a::ConvolutionOperators.AbstractConvOp ,I,J,U,V) =
 function assemble(bf::BilForm, X::DirectProductSpace, Y::DirectProductSpace;
     materialize=BEAST.assemble)
 
+    T = Int32
     @assert !isempty(bf.terms)
 
     spaceTimeBasis = isa(X.factors[1], BEAST.SpaceTimeBasis)
 
     if spaceTimeBasis
         p = [numstages(temporalbasis(ch)) for ch in X.factors]
+        lincombv = ConvolutionOperators.LiftedConvOp[]
     else
         p = 1
+        lincombv = LinearMap[]
     end
 
     M = numfunctions.(spatialbasis(X).factors) .* p
@@ -237,7 +240,7 @@ function assemble(bf::BilForm, X::DirectProductSpace, Y::DirectProductSpace;
     U = BlockArrays.blockedrange(M)
     V = BlockArrays.blockedrange(N)
 
-    sum(bf.terms) do term
+    for term in bf.terms
 
         x = X.factors[term.test_id]
         for op in reverse(term.test_ops)
@@ -251,7 +254,19 @@ function assemble(bf::BilForm, X::DirectProductSpace, Y::DirectProductSpace;
         
         a = term.coeff * term.kernel
         z = materialize(a, x, y)
-        lift(z, Block(term.test_id), Block(term.trial_id), U, V)
+
+        Smap = lift(z, Block(term.test_id), Block(term.trial_id), U, V)
+        T = promote_type(T, eltype(Smap))
+        push!(lincombv, Smap)
+    end
+    if spaceTimeBasis
+        return sum(lincombv)
+    else
+        if length(lincombv) == 1
+            return lincombv[1]
+        else
+            return LinearMaps.LinearCombination{T}(lincombv)
+        end
     end
 end
 

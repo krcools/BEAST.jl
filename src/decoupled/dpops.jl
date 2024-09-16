@@ -17,13 +17,14 @@ function integrand(op::CurlSingleLayerDP3D, kernel_vals,
     return -α * dot(nx × gx, ∇G * fy)
 end
 
-function momintegrals!(op::CurlSingleLayerDP3D,
-    test_local_space::RTRefSpace, trial_local_space::LagrangeRefSpace,
-    test_triangular_element, trial_triangular_element, out, strat::SauterSchwabStrategy)
+function momintegrals!(out, op::CurlSingleLayerDP3D,
+    test_local_space::RTRefSpace, tptr, test_triangular_element,
+    trial_local_space::LagrangeRefSpace, bptr, trial_triangular_element,
+    qrule::SauterSchwabStrategy)
 
     I, J, K, L = SauterSchwabQuadrature.reorder(
         test_triangular_element.vertices,
-        trial_triangular_element.vertices, strat)
+        trial_triangular_element.vertices, qrule)
 
     test_triangular_element  = simplex(test_triangular_element.vertices[I]...)
     trial_triangular_element = simplex(trial_triangular_element.vertices[J]...)
@@ -55,7 +56,7 @@ function momintegrals!(op::CurlSingleLayerDP3D,
         return @SMatrix[dot(f[i].value × nx, R[j]) for i in 1:3, j in 1:3]
     end
 
-    Q = sauterschwab_parameterized(igd, strat)
+    Q = sauterschwab_parameterized(igd, qrule)
     for j ∈ 1:3
         for i ∈ 1:3
             out[i,j] += Q[K[i],L[j]]

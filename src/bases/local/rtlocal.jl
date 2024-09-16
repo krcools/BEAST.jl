@@ -1,4 +1,4 @@
-struct RTRefSpace{T} <: RefSpace{T,3} end
+struct RTRefSpace{T} <: DivRefSpace{T,3} end
 
 # valuetype(ref::RTRefSpace{T}, charttype) where {T} = SVector{3,Tuple{SVector{universedimension(charttype),T},T}}
 function valuetype(ref::RTRefSpace{T}, charttype::Type) where {T}
@@ -43,42 +43,6 @@ function ntrace(x::RTRefSpace, el, q, fc)
     t[q] = 1 / volume(fc)
     return t
 end
-
-# function restrict(ϕ::RTRefSpace{T}, dom1, dom2) where T
-
-#     K = numfunctions(ϕ)
-#     D = dimension(dom1)
-
-#     @assert K == 3
-#     @assert D == 2
-#     @assert D == dimension(dom2)
-
-#     Q = zeros(T,K,K)
-#     for i in 1:K
-
-#         # find the center of edge i of dom2
-#         a = dom2.vertices[mod1(i+1,D+1)]
-#         b = dom2.vertices[mod1(i+2,D+1)]
-#         c = (a + b) / 2
-
-#         # find the outer binormal there
-#         t = b - a
-#         l = norm(t)
-#         n = dom2.normals[1]
-#         m = cross(t, n) / l
-
-#         u = carttobary(dom1, c)
-#         x = neighborhood(dom1, u)
-
-#         y = ϕ(x)
-
-#         for j in 1:K
-#             Q[j,i] = dot(y[j][1], m) * l
-#         end
-#     end
-
-#     return Q
-# end
 
 
 const _vert_perms_rt = [
@@ -135,6 +99,19 @@ function interpolate(interpolant::RefSpace, chart1, interpolee::RefSpace, chart2
     interpolate(fields, interpolant, chart1)
 end
 
+
+function interpolate(interpolant::RefSpace, chart1, interpolee::RefSpace, chart2, ch1toch2)
+    function fields(p1)
+        u1 = parametric(p1)
+        u2 = cartesian(ch1toch2, u1)
+        p2 = neighborhood(chart2, u2)
+        fieldvals = [f.value for f in interpolee(p2)]
+    end
+
+    interpolate(fields, interpolant, chart1)
+end
+
+
 function interpolate(fields, interpolant::RTRefSpace, chart)
     Q = map(faces(chart)) do face
         p = center(face)
@@ -157,6 +134,10 @@ end
 
 function restrict(ϕ::RefSpace, dom1, dom2)
     interpolate(ϕ, dom2, ϕ, dom1)
+end
+
+function restrict(ϕ::RefSpace, dom1, dom2, dom2todom1)
+    interpolate(ϕ, dom2, ϕ, dom1, dom2todom1)
 end
 
 const _dof_rtperm_matrix = [
@@ -184,3 +165,6 @@ const _dof_rtperm_matrix = [
                 0 1 0;
                 1 0 0]
 ]
+
+
+# Support for zeroth order elements on quadrilaterals

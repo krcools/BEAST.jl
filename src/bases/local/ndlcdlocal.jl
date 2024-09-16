@@ -97,7 +97,7 @@ function restrict(ϕ::NDLCDRefSpace{T}, dom1, dom2) where {T}
         A = volume(face)
 
         m = normal(p)
-        u = carttobary(dom1,p)
+        # u = carttobary(dom1,cartesian(p))
 
         u = carttobary(dom1, c)
         x = neighborhood(dom1, u)
