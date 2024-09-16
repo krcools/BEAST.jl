@@ -308,17 +308,18 @@ function (ϕ::LagrangeRefSpace{T,Degree,3})(p) where {T,Degree}
                 i + j + k == Degree || continue
 
                 val = one(T)
-                for p in 0:Degree
-                    p == i && continue
-                    up = p/Degree
-                    for q in 0:Degree
-                        q == j && continue
-                        vq = q/Degree
-                        for r in 0:Degree
-                            r == k && continue
-                            wr = r/Degree
-                            val *= (u-up) * (v-vq) * (w-wr) / ((ui - up)* (vj - vq) * (wk - wr))                  
-                end end end
+                for p in 0:i-1
+                    up = p / Degree
+                    val *= (u-up) / (ui-up)
+                end
+                for q in 0:j-1
+                    vq = q / Degree
+                    val *= (v-vq) / (vj-vq)
+                end
+                for r in 0:k-1
+                    wr = r / Degree
+                    val *= (w-wr) / (wk-wr)
+                end
                 push!(vals, val)
 
                 diffu = zero(T)
@@ -406,5 +407,30 @@ function (ϕ::LagrangeRefSpace{T,Degree,3})(p) where {T,Degree}
     tu = tangents(p,1)
     tv = tangents(p,2)
     j = jacobian(p)
-    [(value=f, curl=(-dv*tu+du*tv)/j) for (f,du,dv) in zip(vals, diffus, diffvs)]
+    NF = length(vals)
+    SVector{NF}([(value=f, curl=(-dv*tu+du*tv)/j) for (f,du,dv) in zip(vals, diffus, diffvs)])
+end
+
+# fields[i] ≈ sum(Q[j,i] * interpolant[j].value for j in 1:numfunctions(interpolant))
+function interpolate(fields, interpolant::LagrangeRefSpace{T,Degree,3}, chart) where {T,Degree}
+
+    dim = binomial(2+Degree, Degree)
+
+    I = 0:Degree
+    s = range(0,1,length=Degree+1)
+    Is = zip(I,s)
+    idx = 1
+    vals = []
+    for (i,ui) in Is
+        for (j,vj) in Is
+            for (k,wk) in Is
+                i + j + k == Degree || continue
+                @assert ui + vj + wk ≈ 1
+                p = neighborhood(chart, (ui,vj))
+                push!(vals, fields(p))
+                idx += 1
+    end end end
+
+    Q = hcat(vals...)
+    return Q
 end
