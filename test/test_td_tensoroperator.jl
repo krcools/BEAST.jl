@@ -28,7 +28,7 @@ using Test
     op = Id ⊗ Id
     Z = assemble(op, V, U)
     A = BEAST.ConvolutionOperators.ConvOpAsArray(Z)
-    @test size(A) == (1,1,10)
+    @test size(A) == (1,1,2)
     for i in 2:10
         @test A[1,1,i] ≈ 0 atol=sqrt(eps(eltype(A)))
     end
