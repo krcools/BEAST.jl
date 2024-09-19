@@ -182,6 +182,9 @@ include("bases/stagedtimestep.jl")
 include("bases/timebasis.jl")
 include("bases/tensorbasis.jl")
 
+include("bases/composedbasis.jl")
+include("bases/local/localcomposedbasis.jl")
+
 include("operator.jl")
 
 include("quadrature/quadstrats.jl")
