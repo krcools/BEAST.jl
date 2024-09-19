@@ -6,8 +6,8 @@ using Test
 
 Γ = meshcuboid(1.0,1.0,1.0,1.0)
 X = raviartthomas(Γ)
-f(x) = 2.0
-Y = BEAST._BasisTimes(X,f)
+func(x) = 2.0
+Y = BEAST._BasisTimes(X,func)
 K = Maxwell3D.doublelayer(wavenumber=1.0)
 m1 = assemble(K,Y,Y)
 m2 = assemble(K,X,X)
