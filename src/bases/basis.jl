@@ -395,3 +395,24 @@ function functionvals(s::BEAST.Space, index::Int, n=3)
 
     return ctrs, vals
 end
+
+
+
+function eval(s::BEAST.Space, i::Int, cellid, u)
+
+    ch = chart(cellid, s.geo)
+    p = neighborhood(ch, u)
+
+    ϕ = refpsace(s)
+    ϕp = ϕ(p)
+
+    U = valuetype(ϕ, ch)
+
+    r = zero(U)
+    for sh in s.fns[i]
+        sh.cellid == cellid || continue
+        r += sh.coeff * ϕp[sh.refid].value
+    end
+
+    return r
+end

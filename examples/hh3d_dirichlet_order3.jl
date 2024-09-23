@@ -5,7 +5,7 @@ o, x, y, z = euclidianbasis(3)
 
 Γ = readmesh(joinpath(dirname(pathof(BEAST)),"../examples/sphere2.in"))
 
-X = BEAST.lagrangecx(Γ; order=1)
+X = BEAST.lagrangecx(Γ; order=3)
 # X = subdsurface(Γ)
 # X = raviartthomas(Γ)
 @show numfunctions(X)
@@ -24,10 +24,15 @@ f = strace(uⁱ,Γ)
 @hilbertspace u
 @hilbertspace v
 
-eq1 = @discretise a[v,u] == f[v] u∈X v∈X
+# eq1 = @discretise a[v,u] == f[v] u∈X v∈X
 # eq2 = @discretise b[v,u] == g[v] u∈X v∈X
 
-x1 = gmres(eq1; tol=1e-3)
+A = assemble(a[v,u], X, X)
+b = assemble(f[v], X)
+x1 = AbstractMatrix(A) \ b
+# x1 = BEAST.GMRESSolver(A; reltol=1e-10) * b
+
+x1 = gmres(eq1; tol=1e-6)
 # x2 = gmres(eq2)
 
 fcr1, geo1 = facecurrents(x1, X)

@@ -31,7 +31,29 @@ end
     crlp = sum(a.curl for a in A)
     @test valp ≈ 1
     @test crlp ≈ point(0,0,0) atol=sqrt(eps(T))
-    @show crlp
+
+    u = T(0.2); du = eps(T) * 1000
+    v = T(0.6); dv = eps(T) * 1000
+
+    p00 = neighborhood(s, (u,v))
+    p10 = neighborhood(s, (u+du,v))
+    p01 = neighborhood(s, (u, v+dv))
+
+    ϕ00 = ϕ(p00)
+    ϕ10 = ϕ(p10)
+    ϕ01 = ϕ(p01)
+
+    tu = tangents(p00,1)
+    tv = tangents(p00,2)
+    j = jacobian(p00)
+
+    for (f00, f10, f01) in zip(ϕ00, ϕ10, ϕ01)
+        dfdu = (f10.value - f00.value)/du
+        dfdv = (f01.value - f00.value)/dv
+        curl_num = (-dfdv * tu + dfdu * tv) / j
+        curl_ana = f00.curl
+        @test curl_num ≈ curl_ana atol=sqrt(eps(T))*100
+    end
 end
 
 
@@ -114,8 +136,68 @@ end
         for j in eachindex(vals)
             val1 = vals[j]
             val2 = sum(Q[j,i] * b.value for (i,b) in enumerate(basis))
-            @show val1 val2
+            @test val1≈val2 atol=1e-8
         end
         println()
     end
+end
+
+@testitem "lagrangec0 order=3 - global" begin
+    using CompScienceMeshes
+    using SparseArrays
+    order = 3
+
+    projectdir = joinpath(dirname(pathof(BEAST)),"..")
+    m = readmesh(joinpath(projectdir, "test/assets/sphere2.in"))
+
+    verts = skeleton(m,0)
+    edges = skeleton(m,1)
+
+    println(pathof(CompScienceMeshes))
+
+    lagspace3 = BEAST.lagrangec0(m, order=3)
+    @test numfunctions(lagspace3) == 
+        length(verts) +
+        length(edges)*(order-1) +
+        length(m)*div((order-1)*(order-2),2)
+    @test refspace(lagspace3) == BEAST.LagrangeRefSpace{Float64,3,3,10}()
+
+    conn20 = connectivity(verts, m)
+    for i in 1:length(verts)
+        @test length(lagspace3.fns[i]) == length(nzrange(conn20, i))
+    end
+
+    i0 = length(verts)
+    for i in 1:(order-1)*length(edges)
+        @test length(lagspace3.fns[i0+i]) == 2
+    end
+
+    i0 += (order-1)*length(edges)
+    for i in 1:length(m)*div((order-1)*(order-2),2)
+        @test length(lagspace3.fns[i0+i]) == 1
+    end
+end
+
+
+@testitem "lagrangec0 order=3 - continuity" begin
+    using CompScienceMeshes
+    using SparseArrays
+    order = 3
+
+    projectdir = joinpath(dirname(pathof(BEAST)),"..")
+    m = readmesh(joinpath(projectdir, "test/assets/sphere2.in"))
+
+    verts = skeleton(m,0)
+    edges = skeleton(m,1)
+
+    println(pathof(CompScienceMeshes))
+
+    lagspace3 = BEAST.lagrangec0(m, order=3)
+    @test numfunctions(lagspace3) == 
+        length(verts) +
+        length(edges)*(order-1) +
+        length(m)*div((order-1)*(order-2),2)
+    @test refspace(lagspace3) == BEAST.LagrangeRefSpace{Float64,3,3,10}()
+
+    conn20 = connectivity(verts, m)
 end
