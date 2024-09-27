@@ -147,6 +147,7 @@ include("bases/lincomb.jl")
 include("bases/trace.jl")
 include("bases/restrict.jl")
 include("bases/divergence.jl")
+include("bases/global/globaldofs.jl")
 
 include("bases/local/laglocal.jl")
 include("bases/local/rtlocal.jl")

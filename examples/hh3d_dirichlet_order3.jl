@@ -14,12 +14,12 @@ X = BEAST.lagrangecx(Γ; order=3)
 a = Helmholtz3D.singlelayer(wavenumber=κ)
 # b = Helmholtz3D.doublelayer_transposed(gamma=κ*im) +0.5Identity()
 
-BEAST.@defaultquadstrat (a,X,X) BEAST.DoubleNumSauterQstrat(7,8,6,6,6,6)
-BEAST.@defaultquadstrat (f,X) BEAST.SingleNumQStrat(12)
-
 uⁱ = Helmholtz3D.planewave(wavenumber=κ, direction=z)
 f = strace(uⁱ,Γ)
 # g = ∂n(uⁱ)
+
+BEAST.@defaultquadstrat (a,X,X) BEAST.DoubleNumSauterQstrat(7,8,6,6,6,6)
+BEAST.@defaultquadstrat (f,X) BEAST.SingleNumQStrat(12)
 
 @hilbertspace u
 @hilbertspace v
@@ -32,7 +32,7 @@ b = assemble(f[v], X)
 x1 = AbstractMatrix(A) \ b
 # x1 = BEAST.GMRESSolver(A; reltol=1e-10) * b
 
-x1 = gmres(eq1; tol=1e-6)
+# x1 = gmres(eq1; tol=1e-6)
 # x2 = gmres(eq2)
 
 fcr1, geo1 = facecurrents(x1, X)

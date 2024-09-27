@@ -868,122 +868,96 @@ function lagrangecx(mesh::CompScienceMeshes.AbstractMesh{<:Any,3}; order)
 end
 
 
+
+"""
+    localindices(dof, chart, i)
+
+Returns a vector of indices into the vector of local shape functions that correspond to
+global degrees of freedom supported on sub-entity `i`, where the type of entity (nodes,
+edge, face) is encoded in the type of 'dof'.
+"""
+function localindices(dof::_LagrangeGlobalNodesDoFs, chart::CompScienceMeshes.Simplex,
+    localspace, i)
+
+    d = dof.order
+    [div((d+1)*(d+2),2), d+1, 1][[i]]
+end
+
+function localindices(dof::_LagrangeGlobalEdgeDoFs, chart::CompScienceMeshes.Simplex,
+    localspace, i)
+
+    d = dof.order
+    lids, lid = Int[], 0
+    if i == 1
+        for i in 0:d for j in 0:d
+            k = d - i - j
+            k < 0 && continue
+            lid += 1
+            i != 0 && continue
+            j in (0,d) && continue
+            push!(lids, lid)
+        end end
+    elseif i == 2
+        for i in 0:d for j in 0:d
+            k = d - i - j
+            k < 0 && continue
+            lid += 1
+            i in (0,d) && continue
+            j != 0 && continue
+            push!(lids, lid)
+        end end
+    elseif i ==3
+        for i in 0:d for j in 0:d
+            k = d - i - j
+            k < 0 && continue
+            lid += 1
+            j in (0,d) && continue
+            k != 0 && continue
+            push!(lids, lid)
+        end end
+    else
+        error("wrong local edge index")
+    end
+    return lids
+end
+
+function localindices(dof::_LagrangeGlobalFaceDoFs, chart::CompScienceMeshes.Simplex,
+    localspace, i)
+
+    d = dof.order
+    lids, lid = Int[], 0
+    for i in 0:d, j in 0:d
+        k = d - i - j
+        k < 0 && continue
+        lid += 1
+        (i == 0 || j == 0 || k == 0) && continue
+        # @show (i,j,k)
+        push!(lids, lid)
+    end
+    return lids
+end
+
+function localindices(dof::_LagrangeGlobalNodesDoFs, chart::CompScienceMeshes.Simplex,
+    localspace::LagrangeRefSpace{<:Real,2}, i)
+    return [i]
+end
+
+function localindices(dof::_LagrangeGlobalEdgeDoFs, chart::CompScienceMeshes.Simplex,
+    localspace::LagrangeRefSpace{<:Real,2}, i)
+    return [3+i]
+end
+
+function localindices(dof::_LagrangeGlobalFaceDoFs, chart::CompScienceMeshes.Simplex,
+    localspace::LagrangeRefSpace{<:Real,2}, i)
+    return []
+end
+
+
 function lagrangec0(mesh::CompScienceMeshes.AbstractMesh{<:Any,3}; order)
 
-    verts = skeleton(mesh, 0)
-    edges = skeleton(mesh, 1)
-
     T = coordtype(mesh)
-    P = vertextype(mesh)
-    S = Shape{T}
-    NF = binomial(2+order, 2)
-    ϕ = LagrangeRefSpace{T,order,3,NF}()
-    tol = sqrt(eps(T))
-    z, u = zero(T), one(T)
+    atol = sqrt(eps(T))
 
-    fns = Vector{S}[]
-    pos = P[]
-    conn20 = connectivity(verts, mesh, abs)
-    rows = rowvals(conn20)
-    vals = nonzeros(conn20)
-    for vert in verts
-        fn = S[]
-        vert_ch = chart(verts, vert)
-        vert_dom = domain(vert_ch)
-        for k in nzrange(conn20, vert)
-            face = rows[k]
-            lidx = vals[k]
-            face_ch = chart(mesh, face)
-            face_dom = domain(face_ch)
-            # injection = faces(face_dom, Val{0})[lidx]
-            injection = simplex(vertices(face_dom)[lidx])
-            p = neighborhood(injection, ())
-            u = cartesian(p)
-            ϕu = ϕ(u)
-            for i in 1:numfunctions(ϕ)
-                weight = ϕu[i].value
-                isapprox(0, weight, atol=sqrt(eps(T))) && continue
-                push!(fn, S(face, i, weight))
-            end
-        end
-        push!(fns, fn)
-        push!(pos, cartesian(center(vert_ch)))
-    end
-
-    conn21 = connectivity(edges, mesh, abs)
-    rows = rowvals(conn21)
-    vals = nonzeros(conn21)
-    for edge in edges
-        edge_fns = [S[] for i in 1:order-1]
-        edge_pos = Vector{P}(undef, order-1)
-        edge_ch = chart(edges, edge)
-        edge_dom = domain(edge_ch)
-        for k in nzrange(conn21, edge)
-            face = rows[k]
-            lidx = vals[k]
-            face_ch = chart(mesh, face)
-            face_dom = domain(face_ch)
-            local_edge_ch = faces(face_ch)[lidx]
-            face_ch_verts = vertices(face_ch)
-            edge_ch_verts = vertices(edge_ch)
-            perm = [something(findfirst(w->isapprox(v,w,atol=tol), face_ch_verts)) for v in edge_ch_verts]
-            injection = simplex(vertices(face_dom)[perm])
-            ds = one(T) / order
-            for (j,s) in enumerate(range(ds, step=ds, length=order-1))
-                p = neighborhood(injection, (s,))
-                u = cartesian(p)
-                ϕu = ϕ(u)
-                for (i,val) in enumerate(ϕu)
-                    weight = val.value
-                    isapprox(0, weight, atol=sqrt(eps(T))) && continue
-                    push!(edge_fns[j], S(face, i, weight))
-                end
-                edge_pos[j] = cartesian(neighborhood(edge_ch, s))
-            end
-        end
-        append!(fns, edge_fns)
-        append!(pos, edge_pos)
-    end
-
-    I = 1:order-1
-    ds = one(T) / order
-    for face in mesh
-        face_fns = [S[] for i in 1:div((order-1)*(order-2),2)]
-        face_pos = Vector{P}(undef, div((order-1)*(order-2),2))
-        face_ch = chart(mesh, face)
-        face_dom = domain(face_ch)
-        idx = 1
-        for i in I
-            for j in I
-                for k in I
-                    i + j + k == order || continue
-                    p = neighborhood(face_dom, (i*ds, j*ds))
-                    ϕs = ϕ(p)
-                    for (n,ϕn) in enumerate(ϕs)
-                        weight = ϕn.value
-                        isapprox(0, weight, atol=sqrt(eps(T))) && continue
-                        push!(face_fns[idx], S(face, n, weight))
-                    end
-                    face_pos[idx] = cartesian(neighborhood(face_ch, (i*ds, j*ds)))
-                    idx += 1
-                end
-            end
-        end
-        append!(fns, face_fns)
-    end
-
-    return LagrangeBasis{order,0,NF}(mesh, fns, pos)
-end
-
-struct _LagrangeGlobalEdgeDoFs end
-
-function globaldofs_edge(edge_ch, face_ch, fields)
-    
-end
-
-function lagrangec0_bis(mesh::CompScienceMeshes.AbstractMesh{<:Any,3}; order)
-
-    T = coordtype(mesh)
     P = vertextype(mesh)
     S = Shape{T}
     F = Vector{S}
@@ -991,56 +965,82 @@ function lagrangec0_bis(mesh::CompScienceMeshes.AbstractMesh{<:Any,3}; order)
     verts = skeleton(mesh, 0)
     edges = skeleton(mesh, 1)
 
-    C02 = connectivity(mesh, verts); R02 = rowvals(C02)
-    C12 = connectivity(mesh, edges); R12 = rowvals(C12)
-
-    localspace = LagrangeRefSpace{T,order,3,NF}()
-    localdim = numfunctions(localspace)
+    C02 = connectivity(mesh, verts, abs); R02 = rowvals(C02); V02 = nonzeros(C02)
+    C12 = connectivity(mesh, edges, abs); R12 = rowvals(C12); V12 = nonzeros(C12)
 
     ne = order-1
     nf = div((order-2)*(order-1), 2)
 
     nV = length(verts)
     nE = length(edges) * ne
-    nF = length(faces) * nf
-    function local2global(c)
-        gids = R02[nzrange(C02,c)]
-        for e in R12[nzrange(C12,c)]
-            for p in 1:ne
-                push!(gids, nV + (e-1)*ne + p)
+    nF = length(mesh) * nf
+    N = nV + nE + nF
+
+    localspace = LagrangeRefSpace{T,order,3,binomial(2+order,2)}()
+    localdim = numfunctions(localspace)
+    
+    d = order
+    fns = [S[] for n in 1:(nV+nE+nF)]
+    pos = fill(point(0,0,0), nV+nE+nF)
+    for cell in mesh
+        cell_ch = chart(mesh, cell)
+        V = R02[nzrange(C02,cell)]
+        I = V02[nzrange(C02,cell)]
+        for (i,v) in zip(I, V)
+            vertex_ch = chart(verts, v)
+            gids = [v]
+            lids = localindices(_LagrangeGlobalNodesDoFs(d), cell_ch, localspace, i)
+            v = globaldofs(vertex_ch, cell_ch, localspace, _LagrangeGlobalNodesDoFs(d))
+            α = v[lids, :]
+            β = inv(α')
+            for i in axes(β,1)
+                for j in axes(β,2)
+                    isapprox(β[i,j], 0; atol) && continue
+                    push!(fns[gids[i]], S(cell, lids[j], β[i,j]))
+                end
             end
         end
-        for p in 1:nF
-            push!(gids, nV + nE + (c-1)*nf + p)
+
+        E = R12[nzrange(C12,cell)]
+        I = V12[nzrange(C12,cell)]
+        for (i,e) in zip(I, E)
+            edge_ch = chart(edges, e)
+            gids = nV + (e-1)*ne + 1: nV + e*ne
+            lids = localindices(_LagrangeGlobalEdgeDoFs(d), cell_ch, localspace, i)
+            @assert length(lids) == length(gids)
+            v = globaldofs(edge_ch, cell_ch, localspace, _LagrangeGlobalEdgeDoFs(d))
+            α = v[lids, :]
+            β = inv(α')
+            for i in axes(β,1)
+                for j in axes(β,2)
+                    isapprox(β[i,j], 0; atol) && continue
+                    push!(fns[gids[i]], S(cell, lids[j], β[i,j]))
+                end
+            end
         end
-        return gids
+
+        order < 3 && continue
+        F = [cell]
+        for (q,f) in enumerate(F)
+            face_ch = chart(mesh, f)
+            gids = nV + nE + (f-1)*nf + 1 : nV + nE + f*nf
+            lids = localindices(_LagrangeGlobalFaceDoFs(d), cell_ch, localspace, 1)
+            v = globaldofs(face_ch, cell_ch, localspace, _LagrangeGlobalFaceDoFs(d))
+            α = v[lids, :]
+            # @show α
+            β = inv(α')
+            for i in axes(β,1)
+                for j in axes(β,2)
+                    isapprox(β[i,j], 0; atol) && continue
+                    push!(fns[gids[i]], S(cell, lids[j], β[i,j]))
+                end
+            end
+        end 
     end
 
-    # list the vertex supported global DoFs
-    B = zeros(T, localdim, localdim)
-    for cell in mesh
-        i = 1
-        gids = localtoglobal(c)
-        for v in R02[nzrange(C02,c)]
-            B[i,:] = globaldof(c,v,localspace)
-            i += 1
-        end
-        for e in R12[nzrange(C12,c)]
-            for p in 1:ne
-                B[i,:] = globaldof(c,e,p,localspace)
-                i += 1
-            end
-        end
-        for p in 1:nf
-            B[i,:] = globaldof(c,p,localspace)
-            i += 1
-        end
-        A = inv(B)
-        for i in 1:localdim
-            mi = gids[i]
-            for j in 1:localdim
-                push!(fns[mi], S(cell, j, A[i,j]))
-            end
-        end
-    end    
+    for v in verts pos[v] = cartesian(center(chart(verts, v))) end
+    for e in edges pos[nV + (e-1)*ne + 1: nV + e*ne] .= Ref(cartesian(center(chart(edges, e)))) end
+    for f in mesh pos[nV + nE + (f-1)*nf + 1: nV + nE + f*nf] .= Ref(cartesian(center(chart(mesh, f)))) end
+
+    return LagrangeBasis{order,0,localdim}(mesh, fns, pos)
 end
