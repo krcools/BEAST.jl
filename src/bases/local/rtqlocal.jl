@@ -1,4 +1,4 @@
-struct RTQuadRefSpace{T} <: DivRefSpace{T,4} end
+struct RTQuadRefSpace{T} <: DivRefSpace{T} end
 
 function (ϕ::RTQuadRefSpace{T})(p) where {T}
 

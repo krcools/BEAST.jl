@@ -20,16 +20,7 @@ function trace(edge_ch, face_ch, localspace::RefSpace)
     return f
 end
 
-function _lagrangepolynomial(nodes, i, s, i1=length(nodes))
-    r = one(T)
-    si = nodes[i]
-    for j in 1:i1
-        j == i && continue
-        sj = nodes[j]
-        r *= (s - sj) / (si - sj)
-    end
-    return r
-end 
+
 
 struct _LagrangeGlobalEdgeDoFs
     order::Int
@@ -38,7 +29,7 @@ function numfunctions(dof::_LagrangeGlobalEdgeDoFs) dof.order-1 end
 function (dof::_LagrangeGlobalEdgeDoFs)(s)
     T = typeof(s)
     nodes = range(zero(T), one(T), length=order+1)
-    [_lagrangepolynomial(nodes, i, s) for i in 2:order]
+    [_lagpoly(nodes, i, s) for i in 2:order]
 end
 
 struct _LagrangeGlobalFaceDoFs
@@ -54,12 +45,12 @@ end
 #     idx = 1
 #     degree = dof.degree
 #     for i in 0:degree
-#         prodi = _lagrangepolynomial(nodes, i+1, s1, i)
+#         prodi = _lagpoly(nodes, i+1, s1, i)
 #         for j in 0:degree
 #             k = degree - i - j
 #             k < 0 && continue
-#             prodj = _lagrangepolynomial(nodes, j+1, s2, j)
-#             prodk = _lagrangepolynomial(nodes, k+1, s3, k)
+#             prodj = _lagpoly(nodes, j+1, s2, j)
+#             prodk = _lagpoly(nodes, k+1, s3, k)
 #             r[idx] = prodi * prodj * prodk
 #     end end
 #     return r

@@ -75,8 +75,9 @@ for T in [Float32, Float64]
     m = meshrectangle(T(1.0), T(1.0), T(0.5), 3)
     X = lagrangec0d1(m)
     x = refspace(X)
+    dom = domain(chart(m, first(m)))
 
-    @test numfunctions(x) == 3
+    @test numfunctions(x, dom) == 3
 
     @test numfunctions(X) == 1
     @test length(X.fns[1]) == 6
@@ -213,9 +214,10 @@ x = refspace(X)
 
 isonjunction = inclosure_gpredicate(j)
 els, ad = BEAST.assemblydata(X)
+num_shapes = numfunctions(x, domain(chart(m, first(m))))
 for _p in 1:numcells(m)
     el = els[_p]
-    for r in 1:numfunctions(x)
+    for r in 1:num_shapes
         vert = el[r]
         isonjunction(vert) || continue
         for (i,w) in ad[_p,r]

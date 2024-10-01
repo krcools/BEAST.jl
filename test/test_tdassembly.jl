@@ -58,14 +58,14 @@ function momintegrals!(z, op::typeof(G),
             TR = [(-R)^d for d in 0:maxdegree]
             dxdy = wpv_τ.weight * wpv_σ.weight
 
-            for i in 1 : numfunctions(g)
-                for j in 1 : numfunctions(f)
+            for i in 1 : numfunctions(g, domain(τ))
+                for j in 1 : numfunctions(f, domain(σ))
                     for k in 1 : numfunctions(T)
                         z[i,j,k] += dxdy * gx[i] * fy[j] * TR[k] / (4π*R)
 end end end end end end
 
 # Compare results for a single monomial
-z1 = zeros(numfunctions(x1), numfunctions(x2), numfunctions(q))
+z1 = zeros(numfunctions(x1, domain(τ1)), numfunctions(x2, domain(τ2)), numfunctions(q))
 for r in BEAST.rings(τ1, τ2, ΔR)
     local ι = BEAST.ring(r, ΔR)
     momintegrals!(z1, G, x1, x2, q, τ1, τ2, ι, DoubleQuadTimeDomainRule())
@@ -73,7 +73,7 @@ end
 
 qs = BEAST.defaultquadstrat(G,X1,X2)
 qd = quaddata(G, x1, x2, q, [τ1], [τ2], nothing, qs)
-z2 = zeros(numfunctions(x1), numfunctions(x2), numfunctions(q))
+z2 = zeros(numfunctions(x1, domain(τ1)), numfunctions(x2, domain(τ2)), numfunctions(q))
 for r in BEAST.rings(τ1, τ2, ΔR)
     local ι = BEAST.ring(r, ΔR)
     quad_rule = quadrule(G, x1, x2, q, 1, τ1, 1, τ2, r, ι, qd, qs)
