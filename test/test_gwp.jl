@@ -1,4 +1,4 @@
-@testitem "GWPRefSpace eval" begin
+@testitem "refspace: dimension" begin
     using CompScienceMeshes
 
     T = Float64
@@ -9,4 +9,33 @@
 
     u = (one(T)/3, one(T)/3)
     vals = ϕ(dom, u)
+
+    nf = (Degree+1)*(Degree+3)
+    @test length(vals) == nf
+end
+
+
+@testitem "refspace: self-interpolate" begin
+    using CompScienceMeshes
+
+    T, Dim, Nverts, Degree = Float64, 2, 3, 2
+    dom =  CompScienceMeshes.ReferenceSimplex{Dim,T,Nverts}()
+    ϕ = BEAST.GWPCurlRefSpace{T,Degree}()
+
+    fields(p) = [v.value for v in ϕ(dom, p)]
+    # fields(p) = [ϕ(dom,p)[1].value]
+    coeffs = BEAST.interpolate(fields, ϕ, dom)
+
+    display(round.(coeffs, digits=3))
+
+    # pts = [
+    #     point(T, 0.3, 0.1),
+    #     point(T, 0.1, 0.3),
+    #     point(T, 0.5, 0.0)]
+
+    # for u in pts
+    #     vals = ϕ(dom, u)
+    #     r = sum(c * v.value for (c,v) in zip(coeffs, vals))
+    #     @show r
+    # end
 end

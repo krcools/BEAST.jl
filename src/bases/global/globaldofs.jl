@@ -1,4 +1,4 @@
-function trace(edge_ch, face_ch, localspace::RefSpace)
+function trace(edge_ch, face_ch, fields)
     T = coordtype(edge_ch)
     atol = sqrt(eps(T))
 
@@ -14,7 +14,7 @@ function trace(edge_ch, face_ch, localspace::RefSpace)
     function f(s)
         u = neighborhood(injection, s)
         p = neighborhood(face_ch, cartesian(u))
-        localspace(p)
+        fields(p)
     end
 
     return f
