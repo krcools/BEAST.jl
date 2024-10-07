@@ -977,7 +977,8 @@ function lagrangec0(mesh::CompScienceMeshes.AbstractMesh{<:Any,3}; order)
     N = nV + nE + nF
 
     localspace = LagrangeRefSpace{T,order,3,binomial(2+order,2)}()
-    localdim = numfunctions(localspace)
+    dom = domain(chart(mesh, first(mesh)))
+    localdim = numfunctions(localspace, dom)
     
     d = order
     fns = [S[] for n in 1:(nV+nE+nF)]

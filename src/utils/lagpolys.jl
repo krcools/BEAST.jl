@@ -11,15 +11,17 @@ function _lagpoly(nodes, i, s, i0=1, i1=length(nodes))
 end
 
 function _lagpoly_diff(nodes, i, s, i0=1, i1=length(nodes))
+    T = typeof(s)
     r = zero(T)
     si = nodes[i]
     for p in i0:i1
         p == i && continue
+        sp = nodes[p]
         rp = one(T)
         for j in i0:i1
             j == i && continue
             j == p && continue
-            sj = nodees[j]
+            sj = nodes[j]
             rp *= (s - sj) / (si - sj)
         end
         rp *= 1 / (si - sp)
@@ -41,5 +43,5 @@ function _sylpoly_shift(nodes, i, s)
 end
 
 function _sylpoly_shift_diff(nodes, i, s)
-    _lagpoly_shift(nodes, i, s, 2, i)
+    _lagpoly_diff(nodes, i, s, 2, i)
 end

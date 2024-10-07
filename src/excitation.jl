@@ -86,7 +86,7 @@ function assemble!(field::Functional, tfs::subdBasis, store;
 
 end
 
-function celltestvalues(tshs::RefSpace{T}, tcell, field, qr) where {T,NF}
+function celltestvalues(tshs::RefSpace{T}, tcell, field, qr) where {T}
 
     num_tshs = numfunctions(tshs, domain(tcell))
     interactions = zeros(Complex{T}, num_tshs)

@@ -156,6 +156,8 @@ include("bases/local/ndlcdlocal.jl")
 include("bases/local/bdm3dlocal.jl")
 include("bases/local/rtqlocal.jl")
 include("bases/local/gwplocal.jl")
+include("bases/local/gwpdivlocal.jl")
+
 
 include("bases/basis.jl")
 include("bases/lincomb.jl")
@@ -163,6 +165,8 @@ include("bases/trace.jl")
 include("bases/restrict.jl")
 include("bases/divergence.jl")
 include("bases/global/globaldofs.jl")
+include("bases/global/gwpglobal.jl")
+include("bases/global/gwpdivglobal.jl")
 
 include("bases/lagrange.jl")
 include("bases/rtspace.jl")

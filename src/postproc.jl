@@ -10,12 +10,14 @@ function facecurrents(coeffs, basis)
 	T = eltype(coeffs)
 	RT = real(T)
 
+	mesh = geometry(basis)
+	dom = domain(chart(mesh, first(mesh)))
+
 	refs = refspace(basis)
-	numrefs = numfunctions(refs)
+	numrefs = numfunctions(refs, dom)
 
 	cells, tad, a2g = assemblydata(basis)
 
-	mesh = geometry(basis)
 	D = dimension(mesh)
 	# U = D+1
 	U = 3
