@@ -22,6 +22,7 @@ function (ϕ::RTQuadRefSpace{T})(p) where {T}
         (value=D*f.value/j, divergence=f.divergence/j) end
 end
 
+function numfunctions(ϕ::RTQuadRefSpace, dom::CompScienceMeshes.RefQuadrilateral) 4 end
 
 function interpolate(fields, interpolant::RTQuadRefSpace{T}, chart) where {T}
 
