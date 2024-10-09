@@ -31,7 +31,6 @@ struct OuterNumInnerAnalyticQStrat{R}
 end
 
 
-
 defaultquadstrat(op, tfs, bfs) = defaultquadstrat(op, refspace(tfs), refspace(bfs))
 macro defaultquadstrat(dop, body)
     @assert dop.head == :tuple
