@@ -2,6 +2,8 @@ struct GWPCurlRefSpace{T,Degree} <: RefSpace{T} end
 
 function numfunctions(x::GWPCurlRefSpace{<:Any,D},
         dom::CompScienceMeshes.ReferenceSimplex{2}) where{D} (D+1)*(D+3) end
+function dimtype(x::GWPCurlRefSpace{<:Any,D},
+    dom::CompScienceMeshes.ReferenceSimplex{2}) where{D} Val{(D+1)*(D+3)} end
 
 function (ϕ::GWPCurlRefSpace{T,Degree})(p) where {T,Degree}
     dom = domain(chart(p))
@@ -12,6 +14,12 @@ end
 
 function (ϕ::GWPCurlRefSpace{T,Deg})(dom::CompScienceMeshes.ReferenceSimplex{Dim},
     u) where {T,Deg,Dim}
+
+    ϕ(dom, u, dimtype(ϕ,dom))
+end
+
+function (ϕ::GWPCurlRefSpace{T,Deg})(dom::CompScienceMeshes.ReferenceSimplex{Dim},
+    u, ::Type{Val{NF}}) where {T,Deg,Dim,NF}
 
     d = Deg
     u, v = u
@@ -24,8 +32,9 @@ function (ϕ::GWPCurlRefSpace{T,Deg})(dom::CompScienceMeshes.ReferenceSimplex{Di
     nd3 = point(T, -v, u)
 
     P = SVector{2,T}
-    vals = P[]
-    crls = T[]
+    vals = Vector{P}(undef,NF)
+    crls = Vector{T}(undef,NF)
+    idx = 1
 
     i = 0
     for j in 1:d+1
@@ -33,15 +42,19 @@ function (ϕ::GWPCurlRefSpace{T,Deg})(dom::CompScienceMeshes.ReferenceSimplex{Di
             Rᵢ = _sylpoly(s, i+1, u)
             Rⱼ = _sylpoly_shift(s, j+1, v)
             Rₖ = _sylpoly_shift(s, k+1, w)
-            push!(vals, Rᵢ*Rⱼ*Rₖ*nd1)
-
+            
             dRᵢ = _sylpoly_diff(s, i+1, u)
             dRⱼ = _sylpoly_shift_diff(s, j+1, v)
             dRₖ = _sylpoly_shift_diff(s, k+1, w)
             du = dRᵢ*Rⱼ*Rₖ - Rᵢ*Rⱼ*dRₖ
             dv = Rᵢ*dRⱼ*Rₖ - Rᵢ*Rⱼ*dRₖ
             curl = (du*nd1[2] - dv*nd1[1]) + 2*Rᵢ*Rⱼ*Rₖ
-            push!(crls, curl)
+
+            vals[idx] = Rᵢ*Rⱼ*Rₖ*nd1
+            crls[idx] = curl
+            # push!(vals, Rᵢ*Rⱼ*Rₖ*nd1)
+            # push!(crls, curl)
+            idx += 1
     end
 
     for i in 1:d+1
@@ -50,15 +63,20 @@ function (ϕ::GWPCurlRefSpace{T,Deg})(dom::CompScienceMeshes.ReferenceSimplex{Di
         Rᵢ = _sylpoly_shift(s, i+1, u)
         Rⱼ = _sylpoly(s, j+1, v)
         Rₖ = _sylpoly_shift(s, k+1, w)
-        push!(vals, Rᵢ*Rⱼ*Rₖ*nd2)
-
+        
         dRᵢ = _sylpoly_shift_diff(s, i+1, u)
         dRⱼ = _sylpoly_diff(s, j+1, v)
         dRₖ = _sylpoly_shift_diff(s, k+1, w)
         du = dRᵢ*Rⱼ*Rₖ - Rᵢ*Rⱼ*dRₖ
         dv = Rᵢ*dRⱼ*Rₖ - Rᵢ*Rⱼ*dRₖ
         curl = (du*nd2[2] - dv*nd2[1]) + 2*Rᵢ*Rⱼ*Rₖ
-        push!(crls, curl)
+
+        # push!(vals, Rᵢ*Rⱼ*Rₖ*nd2)
+        # push!(crls, curl)
+
+        vals[idx] = Rᵢ*Rⱼ*Rₖ*nd2
+        crls[idx] = curl
+        idx += 1
     end
 
     for i in 1:d+1
@@ -67,17 +85,21 @@ function (ϕ::GWPCurlRefSpace{T,Deg})(dom::CompScienceMeshes.ReferenceSimplex{Di
         Rᵢ = _sylpoly_shift(s, i+1, u)
         Rⱼ = _sylpoly_shift(s, j+1, v)
         Rₖ = _sylpoly(s, k+1, w)
-        push!(vals, Rᵢ*Rⱼ*Rₖ*nd3)
-
+        
         dRᵢ = _sylpoly_shift_diff(s, i+1, u)
         dRⱼ = _sylpoly_shift_diff(s, j+1, v)
         dRₖ = _sylpoly_diff(s, k+1, w)
-
+        
         du = dRᵢ*Rⱼ*Rₖ - Rᵢ*Rⱼ*dRₖ
         dv = Rᵢ*dRⱼ*Rₖ - Rᵢ*Rⱼ*dRₖ
         curl = (du*nd3[2] - dv*nd3[1]) + 2*Rᵢ*Rⱼ*Rₖ
         
-        push!(crls, curl)
+        # push!(vals, Rᵢ*Rⱼ*Rₖ*nd3)
+        # push!(crls, curl)
+
+        vals[idx] = Rᵢ*Rⱼ*Rₖ*nd3
+        crls[idx] = curl
+        idx += 1
     end
 
     for i in 1:d+1
@@ -93,8 +115,6 @@ function (ϕ::GWPCurlRefSpace{T,Deg})(dom::CompScienceMeshes.ReferenceSimplex{Di
             S1 = Rᵢ*Rsⱼ*Rsₖ*nd1
             S2 = Rsᵢ*Rⱼ*Rsₖ*nd2
             S3 = Rsᵢ*Rsⱼ*Rₖ*nd3
-            push!(vals, S2-S3)
-            push!(vals, S3-S1)
 
             dRsᵢ = _sylpoly_shift_diff(s, i+1, u)
             dRsⱼ = _sylpoly_shift_diff(s, j+1, v)
@@ -115,12 +135,22 @@ function (ϕ::GWPCurlRefSpace{T,Deg})(dom::CompScienceMeshes.ReferenceSimplex{Di
             dv = Rsᵢ*dRsⱼ*Rₖ - Rsᵢ*Rsⱼ*dRₖ
             curlS3 = du*nd3[2] - dv*nd3[1] + 2*Rsᵢ*Rsⱼ*Rₖ
 
-            push!(crls, curlS2 - curlS3)
-            push!(crls, curlS3 - curlS1)
+            # push!(vals, S2-S3)
+            # push!(crls, curlS2 - curlS3)
+            vals[idx] = S2-S3
+            crls[idx] = curlS2 - curlS3
+            idx += 1
+            
+            # push!(vals, S3-S1)
+            # push!(crls, curlS3 - curlS1)
+            vals[idx] = S3-S1
+            crls[idx] = curlS3 - curlS1
+            idx += 1
     end end
 
-    NF = length(vals)
+    # NF = length(vals)
     SVector{NF}([(value=f, curl=c) for (f,c) in zip(vals, crls)])
+    # [(value=f, curl=c) for (f,c) in zip(vals, crls)]
 end
 
 
