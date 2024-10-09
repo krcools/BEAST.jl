@@ -55,6 +55,13 @@ in `basis` are defined. The order the elements are encountered needs correspond
 to the element indices used in the data structure returned by `assemblydata`.
 """
 geometry(s::Space) = s.geo
+
+"""
+    basisfunction(basis, i)
+
+Returns a vector of the shape functions defining the `i`th function
+of the `basis`.
+"""
 basisfunction(s::Space, i) = s.fns[i]
 numfunctions(space::Space) = length(space.fns)
 
@@ -150,30 +157,46 @@ end
 
 
 """
-    charts, admap = assemblydata(basis)
+    charts, admap, act_to_global = assemblydata(basis; onlyactives=true)
 
-Given a Basis this function returns a data structure containing the information
-required for matrix assemble. More precise the following expressions are valid
-for the returned object `ad`:
+Given a `basis` this function returns a data structure containing the information
+required for matrix assemble, that is, the vector `charts` containing `Simplex` elements,
+a variable `admap` of type `AssemblyData`, and a mapping from indices of actively
+used simplices to global simplices.
+
+When `onlyactives` is `true`, another layer of indices is introduced to filter out all
+cells of the mesh that are not in the union of the support of the basis functions
+(i.e., when the basis functions are defined only on a part of the mesh).
+
+`admap` is, in essence, a three-dimensional array of named tuples, which,
+by wrapping it in the struct `AssemblyData`, allows the definition of iterators.
+The tuple consists of the two entries
 
 ```
-ad[c,r,i].globalindex
-ad[c,r,i].coefficient
+admap[i,r,c].globalindex
+admap[i,r,c].coefficient
 ```
 
-Here, `c` and `r` are indices in the iterable set of geometric elements and the
-set of local shape functions on each element. `i` ranges from 1 to the maximum
-number of basis functions local shape function `r` on element `r` contributes
-to.
+Here, `c` and `r` are indices in the iterable set of (active) simplices and the
+set of shape functions on each cell/simplex: `r` ranges from 1 to the number of
+shape functions on a cell/simplex, `c` ranges from 1 to the number of active
+simplices, and `i` ranges from 1 to the number of maximal number of basis functions,
+where any of the shape functions contributes to. 
 
-For a triplet `(c,r,i)`, `globalindex` is the index in the Basis of the
-`i`-th basis function that has a contribution from local shape function `r` on
-element `r`. `coefficient` is the coefficient of that contribution in the
-linear combination defining that basis function in terms of local shape
+For example, for continuous piecewise linear lagrange functions (c0d1), each of the
+three shape functions on a triangle are associated with exactly one Lagrange function,
+and therefore `i` is limited to 1.
+
+*Note*: When `onlyactives=false`, the indices `c` correspond to
+the position of the corresponding cell/simplex whilst iterating over `geometry(basis)`.
+When `onlyactives=true`, then `act_to_global(c)` correspond to the position of the
+corresponding cell/simplex whilst iterating over `geometry(basis)`.
+
+For a triplet `(i,r,c)`, `globalindex` is the index in the `basis` of the
+`i`th basis function that has a contribution from shape function `r` on
+(active) cell/simplex `c`. `coefficient` is the coefficient of that contribution in the
+linear combination defining that basis function in terms of shape
 function.
-
-*Note*: the indices `c` correspond to the position of the corresponding
-element whilst iterating over `geometry(basis)`.
 """
 function assemblydata(basis::Space; onlyactives=true)
 
@@ -187,11 +210,15 @@ function assemblydata(basis::Space; onlyactives=true)
     num_bfs  = numfunctions(basis)
     num_refs = numfunctions(refspace(basis))
 
-    # # determine the maximum number of function defined over a given cell
+    # Determine the number of functions defined over a given cell
+    # and per local shape function.
     celltonum = make_celltonum(num_cells, num_refs, num_bfs, basis)
 
-    # mark the active elements, i.e. elements over which
-    # at least one function is defined.
+    # In general, a basis function space might only be defined
+    # over a small portion of the underlying mesh. To avoid
+    # the inefficient iterating of cells, which are not in the support of
+    # any of the basis functions, we filter out only those cells, over 
+    # which at least one basis function is defined.
     if onlyactives
         active, index_among_actives, num_active_cells, act_to_global =
             index_actives(num_cells, celltonum)
@@ -203,8 +230,13 @@ function assemblydata(basis::Space; onlyactives=true)
     end
 
     num_active_cells == 0 && return nothing
+
+    # Generate the a vector of Simplexes associated
+    # with the active cells only
     elements = instantiate_charts(geo, num_active_cells, active)
 
+    # Determine the maximal number of functions associated with a
+    # local shape function
     max_celltonum = maximum(celltonum)
     fill!(celltonum, 0)
     data = fill((0,zero(T)), max_celltonum, num_refs, num_active_cells)
@@ -223,7 +255,14 @@ function assemblydata(basis::Space; onlyactives=true)
     return elements, AssemblyData(data), act_to_global
 end
 
+"""
+    celltonum = make_celltonum(num_cells, num_refs, num_bfs, basis)
 
+Computes the array `celltonum[c,r]` that, given the index
+`c` of a cell of the mesh associated with the `basis` and the index `r`
+of the shape function in the refspace associated with `basis`, provides the number
+of basis functions where the `r`th shape function on cell `c` is used in their definition.
+"""
 function make_celltonum(num_cells, num_refs, num_bfs, basis)
     celltonum = zeros(Int, num_cells, num_refs)
     for b in 1 : num_bfs
@@ -237,6 +276,20 @@ function make_celltonum(num_cells, num_refs, num_bfs, basis)
     return celltonum
 end
 
+"""
+    active, index_among_actives, num_active_cells, act_to_global =
+        index_actives(num_cells, celltonum)
+
+Given the number of cells of the mesh `num_cells` and an array indicating, which
+shape functions of each cell are used in the definition of the basis, `celltonum`,
+`index_actives(num_cells, celltonum)` computes a Boolean vector `active` that indicates for
+each cell index if the cell is in the support of any basis function. For this reduced set
+of active cells, a new index set is introduced, where `index_among_actives` is a vector
+providing the mapping from the cells of the mesh to the indices of the active cells,
+`num_active_cells` provides the number of all active cells, and `act_to_global` is a
+vector providing the mapping from the indices of the active cells to the indices of
+cells of the underlying mesh of the basis function spce.
+"""
 function index_actives(num_cells, celltonum)
     @assert num_cells == size(celltonum,1)
     active = falses(num_cells)
@@ -255,7 +308,11 @@ function index_actives(num_cells, celltonum)
     return active, index_among_actives, num_active_cells, act_to_global
 end
 
+"""
+    instantiate_charts(geo, num_active_cells, active)
 
+Returns a vector of all actively used simplices.
+"""
 function instantiate_charts(geo, num_active_cells, active)
     @assert length(geo) != 0
     E = typeof(chart(geo, first(geo)))
