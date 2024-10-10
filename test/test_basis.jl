@@ -20,7 +20,7 @@ for T in [Float32, Float64]
     @show BEAST.defaultquadstrat(hypersingular, X, X)
     # @show @which BEAST.defaultquadstrat(hypersingular, X, X)
     @time N = assemble(hypersingular, X, X)
-    @time I = assemble(identityop, X, X)
+    @time I = Matrix(assemble(identityop, X, X))
 
     @test size(N) == (numfunctions(X), numfunctions(X))
     @test size(I) == (numfunctions(X), numfunctions(X))
