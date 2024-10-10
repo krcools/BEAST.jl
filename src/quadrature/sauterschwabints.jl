@@ -150,10 +150,13 @@ function momintegrals!(op::Operator,
         vertices(test_chart),
         vertices(trial_chart), rule)
 
+    num_tshapes = numfunctions(test_local_space, domain(test_chart))
+    num_bshapes = numfunctions(trial_local_space, domain(trial_chart))
+
     igd = Integrand(op, test_local_space, trial_local_space, test_chart, trial_chart)
     igdp = pulledback_integrand(igd, I, test_chart, J, trial_chart)
     G = SauterSchwabQuadrature.sauterschwab_parameterized(igdp, rule)
-    out[1:numfunctions(test_local_space),1:numfunctions(trial_local_space)] .+= G
+    out[1:num_tshapes, 1:num_bshapes] .+= G
 
     nothing
 end

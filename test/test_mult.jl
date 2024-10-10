@@ -22,7 +22,7 @@ for T in [Float32, Float64]
 
     divX = divergence(X)
     Id = BEAST.Identity()
-    DD = assemble(Id, divX, divX)
+    DD = Matrix(assemble(Id, divX, divX))
     @test rank(DD) == 7
     L = divX * Conn
     for sh in L.fns[1]

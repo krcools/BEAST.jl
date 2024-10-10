@@ -29,13 +29,16 @@ function innerintegrals!(op::MWSingleLayer3DSng, p, g, f, t, s, z,
     c₁ = op.α
     c₂ = op.β
 
+    num_tshapes = numfunctions(g, domain(t))
+    num_bshapes = numfunctions(f, domain(s))
+
     α = 1 / volume(t) / volume(s) / 4
-    for i in 1 : numfunctions(g)
+    for i in 1 : num_bshapes
         a = t[i]
         g = x - a
         dg = 2
 
-        for j in 1 : numfunctions(f)
+        for j in 1 : num_tshapes
             b = s[j]
 
             ∫Gf = SVector(∫Gy[1]-∫G*b[1], ∫Gy[2]-∫G*b[2], ∫Gy[3]-∫G*b[3])
@@ -60,14 +63,17 @@ function innerintegrals!(op::MWDoubleLayer3DSng, p, g, f, t, s, z, strat::Wilton
 
     scal, vec, grad = WiltonInts84.wiltonints(s[1], s[2], s[3], x, Val{1})
 
+    num_tshapes = numfunctions(g, domain(t))
+    num_bshapes = numfunctions(f, domain(s))
+
     # \int \nabla G_s with G_s = \nabla (1/R + 0.5*γ^2*R) / (4\pi)
     ∫∇G = T.((-grad[1] - 0.5*γ^2*grad[3]) / (4π))
     α = 1 / volume(t) / volume(s) / 4
-    for i in 1 : numfunctions(g)
+    for i in 1 : num_tshapes
         a = t[i]
         g = (x - a)
 
-        for j in 1 : numfunctions(f)
+        for j in 1 : num_bshapes
             b = s[j]
 
             z[i,j] += ( α * ( (x-b) × g ) ⋅ ∫∇G ) * dx

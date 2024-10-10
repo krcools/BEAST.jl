@@ -266,10 +266,13 @@ function innerintegrals!(zl, op::MWSingleLayerTDIO,
     sol5 = sol4*sol
     solpowers = (one(sol), sol, sol2, sol3, sol4, sol5)
 
-    for i in 1 : numfunctions(U)
+    udim = numfunctions(U, domain(τ))
+    vdim = numfunctions(V, domain(σ))
+
+    for i in 1 : udim
         a = τ[i]
         g = (x-a)
-        for j in 1 : numfunctions(V)
+        for j in 1 : vdim
             b = σ[j]; bξ = ξ-b
             for k in 1 : numfunctions(W)
 				d = k-1 # ranges from 0 to numfunctions(W)-1
@@ -338,11 +341,14 @@ function innerintegrals!(z, op::MWDoubleLayerTDIO,
     Ux = U(p)
     Vx = αf * @SVector[(x-σ[1]), (x-σ[2]), (x-σ[3])]
 
-    for i in 1 : numfunctions(U)
+    udim = numfunctions(U, domain(τ))
+    vdim = numfunctions(V, domain(σ))
+
+    for i in 1 : udim
         # a = τ[i]
         # g = αg * (x-τ[i])
         g = Ux[i].value
-        for j in 1 : numfunctions(V)
+        for j in 1 : vdim
             # b = σ[j]
             # f = αf * (x-σ[j])
             # f = Vx[j].value

@@ -10,12 +10,14 @@ function facecurrents(coeffs, basis)
 	T = eltype(coeffs)
 	RT = real(T)
 
+	mesh = geometry(basis)
+	dom = domain(chart(mesh, first(mesh)))
+
 	refs = refspace(basis)
-	numrefs = numfunctions(refs)
+	numrefs = numfunctions(refs, dom)
 
 	cells, tad, a2g = assemblydata(basis)
 
-	mesh = geometry(basis)
 	D = dimension(mesh)
 	# U = D+1
 	U = 3
@@ -171,7 +173,9 @@ function potential!(store, op, points, basis;
 	els, ad = assemblydata(basis)
 	rs = refspace(basis)
 
-	zlocal = Array{type}(undef,numfunctions(rs))
+	geo = geometry(basis)
+	nf = numfunctions(rs, domain(chart(geo, first(geo))))
+	zlocal = Array{type}(undef, nf)
 	qdata = quaddata(op,rs,els,quadstrat)
 
 	print("dots out of 10: ")

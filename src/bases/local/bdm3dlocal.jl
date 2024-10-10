@@ -1,4 +1,4 @@
-struct BDM3DRefSpace{T} <: RefSpace{T,12} end
+struct BDM3DRefSpace{T} <: RefSpace{T} end
 
 function (f::BDM3DRefSpace)(p)
 

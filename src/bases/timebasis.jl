@@ -2,7 +2,7 @@
 
 using Compat
 
-mutable struct MonomialBasis{T,Degree,NF} <: RefSpace{T,NF} end
+mutable struct MonomialBasis{T,Degree,NF} <: RefSpace{T} end
 
 valuetype(::MonomialBasis{T}) where {T} = T
 degree(::MonomialBasis{T,D}) where {T,D} = D
@@ -66,7 +66,7 @@ mutable struct TimeBasisDelta{T} <: AbstractTimeBasisFunction
     numfunctions::Int
 end
 
-mutable struct DiracBoundary{T} <: RefSpace{T,1} end
+mutable struct DiracBoundary{T} <: RefSpace{T} end
 numfunctions(x::DiracBoundary) = 1
 
 scalartype(x::TimeBasisDelta{T}) where {T} = T

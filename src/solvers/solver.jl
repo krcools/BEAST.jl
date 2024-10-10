@@ -185,6 +185,11 @@ function assemble(lform::LinForm, X::DirectProductSpace)
     return B
 end
 
+function assemble(lf::LinForm, X::Space)
+    @assert length(lf.terms) == 1
+    assemble(lf, BEAST.DirectProductSpace([X]))
+end
+
 struct SpaceTimeData{T} <: AbstractArray{Vector{T},1}
     data::Array{T,2}
 end

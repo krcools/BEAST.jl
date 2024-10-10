@@ -97,7 +97,8 @@ end
     num_cells = numcells(m)
     num_bfs = numfunctions(s)
     r = refspace(s)
-    num_refs = numfunctions(r)
+    dom = domain(chart(m, first(m)))
+    num_refs = numfunctions(r, dom)
     celltonum = BEAST.make_celltonum(num_cells, num_refs, num_bfs, s)
 
     els, ad, a2g = BEAST.assemblydata(s)

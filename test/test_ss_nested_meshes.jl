@@ -54,7 +54,7 @@ end
 qs_strat = BEAST.DoubleNumWiltonSauterQStrat(1,1,6,7,10,10,10,10)
 
 # sauterschwab = BEAST.SauterSchwabQuadrature.CommonFace(BEAST._legendre(10,0.0,1.0))
-out_ss = zeros(T, numfunctions(𝒳), numfunctions(𝒳))
+out_ss = zeros(T, numfunctions(𝒳, domain(test_chart)), numfunctions(𝒳, domain(trial_chart)))
 BEAST.momintegrals!(out_ss, 𝒜,
     Y, p, test_chart,
     X, 1, trial_chart,
@@ -62,7 +62,7 @@ BEAST.momintegrals!(out_ss, 𝒜,
 
 
 wiltonsingext = BEAST.WiltonSERule(test_quadpoints, BEAST.DoubleQuadRule(test_quadpoints, trial_quadpoints))
-out_dw = zeros(T, numfunctions(𝒳), numfunctions(𝒳))
+out_dw = zeros(T, numfunctions(𝒳, domain(test_chart)), numfunctions(𝒳, domain(trial_chart)))
 BEAST.momintegrals!(out_dw, 𝒜,
     Y, p, test_chart,
     X, 1, trial_chart,
@@ -77,11 +77,11 @@ test_quadpoints  = BEAST.quadpoints(𝒳, [test_chart],  (12,))[1,1]
 trial_quadpoints = BEAST.quadpoints(𝒳, [trial_chart], (13,))[1,1]
 
 sauterschwab = BEAST.SauterSchwabQuadrature.CommonFace(BEAST._legendre(10,0.0,1.0))
-out_ss1 = zeros(T, numfunctions(𝒳), numfunctions(𝒳))
+out_ss1 = zeros(T, numfunctions(𝒳, domain(test_chart)), numfunctions(𝒳, domain(trial_chart)))
 BEAST.momintegrals!(𝒜,𝒳,𝒳,test_chart,trial_chart,out_ss1,sauterschwab)
 
 wiltonsingext = BEAST.WiltonSERule(test_quadpoints, BEAST.DoubleQuadRule(test_quadpoints, trial_quadpoints))
-out_dw1 = zeros(T, numfunctions(𝒳), numfunctions(𝒳))
+out_dw1 = zeros(T, numfunctions(𝒳, domain(test_chart)), numfunctions(𝒳, domain(trial_chart)))
 BEAST.momintegrals!(𝒜,𝒳,𝒳,test_chart,trial_chart,out_dw1,wiltonsingext)
 
 @test out_ss1 ≈ out_dw1 rtol=3e-6
@@ -94,11 +94,11 @@ test_quadpoints  = BEAST.quadpoints(𝒳, [test_chart],  (12,))[1,1]
 trial_quadpoints = BEAST.quadpoints(𝒳, [trial_chart], (13,))[1,1]
 
 sauterschwab = BEAST.SauterSchwabQuadrature.CommonEdge(BEAST._legendre(10,0.0,1.0))
-out_ss2 = zeros(T, numfunctions(𝒳), numfunctions(𝒳))
+out_ss2 = zeros(T, numfunctions(𝒳, domain(test_chart)), numfunctions(𝒳, domain(trial_chart)))
 BEAST.momintegrals!(𝒜,𝒳,𝒳,test_chart,trial_chart,out_ss2,sauterschwab)
 
 wiltonsingext = BEAST.WiltonSERule(test_quadpoints, BEAST.DoubleQuadRule(test_quadpoints, trial_quadpoints))
-out_dw2 = zeros(T, numfunctions(𝒳), numfunctions(𝒳))
+out_dw2 = zeros(T, numfunctions(𝒳, domain(test_chart)), numfunctions(𝒳, domain(trial_chart)))
 BEAST.momintegrals!(𝒜,𝒳,𝒳,test_chart,trial_chart,out_dw2,wiltonsingext)
 
 @test out_ss2 ≈ out_dw2 rtol=4e-6
@@ -111,11 +111,11 @@ test_quadpoints  = BEAST.quadpoints(𝒳, [test_chart],  (12,))[1,1]
 trial_quadpoints = BEAST.quadpoints(𝒳, [trial_chart], (13,))[1,1]
 
 sauterschwab = BEAST.SauterSchwabQuadrature.CommonEdge(BEAST._legendre(10,0.0,1.0))
-out_ss3 = zeros(T, numfunctions(𝒳), numfunctions(𝒳))
+out_ss3 = zeros(T, numfunctions(𝒳, domain(test_chart)), numfunctions(𝒳, domain(trial_chart)))
 BEAST.momintegrals!(𝒜,𝒳,𝒳,test_chart,trial_chart,out_ss3,sauterschwab)
 
 wiltonsingext = BEAST.WiltonSERule(test_quadpoints, BEAST.DoubleQuadRule(test_quadpoints, trial_quadpoints))
-out_dw3 = zeros(T, numfunctions(𝒳), numfunctions(𝒳))
+out_dw3 = zeros(T, numfunctions(𝒳, domain(test_chart)), numfunctions(𝒳, domain(trial_chart)))
 BEAST.momintegrals!(𝒜,𝒳,𝒳,test_chart,trial_chart,out_dw3,wiltonsingext)
 
 @test out_ss3 ≈ out_dw3 rtol=3e-6
@@ -129,11 +129,11 @@ test_quadpoints  = BEAST.quadpoints(𝒳, [test_chart],  (12,))[1,1]
 trial_quadpoints = BEAST.quadpoints(𝒳, [trial_chart], (13,))[1,1]
 
 sauterschwab = BEAST.SauterSchwabQuadrature.CommonVertex(BEAST._legendre(10,0.0,1.0))
-out_ss4 = zeros(T, numfunctions(𝒳), numfunctions(𝒳))
+out_ss4 = zeros(T, numfunctions(𝒳, domain(test_chart)), numfunctions(𝒳, domain(trial_chart)))
 BEAST.momintegrals!(𝒜,𝒳,𝒳,test_chart,trial_chart,out_ss4,sauterschwab)
 
 wiltonsingext = BEAST.WiltonSERule(test_quadpoints, BEAST.DoubleQuadRule(test_quadpoints, trial_quadpoints))
-out_dw4 = zeros(T, numfunctions(𝒳), numfunctions(𝒳))
+out_dw4 = zeros(T, numfunctions(𝒳, domain(test_chart)), numfunctions(𝒳, domain(trial_chart)))
 BEAST.momintegrals!(𝒜,𝒳,𝒳,test_chart,trial_chart,out_dw4,wiltonsingext)
 
 @test out_ss4 ≈ out_dw4 rtol=2e-9
@@ -146,11 +146,11 @@ test_quadpoints  = BEAST.quadpoints(𝒳, [test_chart],  (12,))[1,1]
 trial_quadpoints = BEAST.quadpoints(𝒳, [trial_chart], (13,))[1,1]
 
 sauterschwab = BEAST.SauterSchwabQuadrature.CommonVertex(BEAST._legendre(10,0.0,1.0))
-out_ss5 = zeros(T, numfunctions(𝒳), numfunctions(𝒳))
+out_ss5 = zeros(T, numfunctions(𝒳, domain(test_chart)), numfunctions(𝒳, domain(trial_chart)))
 BEAST.momintegrals!(𝒜,𝒳,𝒳,test_chart,trial_chart,out_ss5,sauterschwab)
 
 wiltonsingext = BEAST.WiltonSERule(test_quadpoints, BEAST.DoubleQuadRule(test_quadpoints, trial_quadpoints))
-out_dw5 = zeros(T, numfunctions(𝒳), numfunctions(𝒳))
+out_dw5 = zeros(T, numfunctions(𝒳, domain(test_chart)), numfunctions(𝒳, domain(trial_chart)))
 BEAST.momintegrals!(𝒜,𝒳,𝒳,test_chart,trial_chart,out_dw5,wiltonsingext)
 
 @test out_ss4 ≈ out_dw4 rtol=3e-8
@@ -163,11 +163,11 @@ test_quadpoints  = BEAST.quadpoints(𝒳, [test_chart],  (12,))[1,1]
 trial_quadpoints = BEAST.quadpoints(𝒳, [trial_chart], (13,))[1,1]
 
 sauterschwab = BEAST.SauterSchwabQuadrature.CommonVertex(BEAST._legendre(10,0.0,1.0))
-out_ss6 = zeros(T, numfunctions(𝒳), numfunctions(𝒳))
+out_ss6 = zeros(T, numfunctions(𝒳, domain(test_chart)), numfunctions(𝒳, domain(trial_chart)))
 BEAST.momintegrals!(𝒜,𝒳,𝒳,test_chart,trial_chart,out_ss6,sauterschwab)
 
 wiltonsingext = BEAST.WiltonSERule(test_quadpoints, BEAST.DoubleQuadRule(test_quadpoints, trial_quadpoints))
-out_dw6 = zeros(T, numfunctions(𝒳), numfunctions(𝒳))
+out_dw6 = zeros(T, numfunctions(𝒳, domain(test_chart)), numfunctions(𝒳, domain(trial_chart)))
 BEAST.momintegrals!(𝒜,𝒳,𝒳,test_chart,trial_chart,out_dw6,wiltonsingext)
 
 @test out_ss4 ≈ out_dw4 rtol=6e-8

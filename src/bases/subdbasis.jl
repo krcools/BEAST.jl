@@ -14,7 +14,7 @@ function subset(s::S,I) where {S<:subdBasis}
 end
 
 
-mutable struct subReferenceSpace{T,D} <: RefSpace{T,D} end
+mutable struct subReferenceSpace{T,D} <: RefSpace{T} end
 
 refspace(s::subdBasis{T,M,P}) where {T,M,P} = subReferenceSpace{T,12}()
 # 12 only for regular case

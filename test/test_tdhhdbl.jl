@@ -13,11 +13,13 @@ c = 1.0
 K = BEAST.HH3DDoubleLayerTDBIO(speed_of_light=c)
 
 X = lagrangecxd0(G)
-@test numfunctions(refspace(X)) == 1
+@test numfunctions(refspace(X), domain(chart(G, first(G)))) == 1
 
 Y = duallagrangec0d1(G)
 @test numfunctions(Y) == 1
-@test numfunctions(refspace(Y)) == 3
+
+Gref = geometry(Y)
+@test numfunctions(refspace(Y), domain(chart(Gref, first(Gref)))) == 3
 
 # X = duallagrangecxd0(G, boundary(G))
 # Y = lagrangec0d1(G, dirichlet=false)

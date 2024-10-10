@@ -75,11 +75,14 @@ function assemblechunk!(biop::IntegralOperator, tfs::Space, bfs::Space, store;
     test_elements, tad, tcells = tr
     bsis_elements, bad, bcells = br
 
-    tshapes = refspace(tfs); num_tshapes = numfunctions(tshapes)
-    bshapes = refspace(bfs); num_bshapes = numfunctions(bshapes)
-
     tgeo = geometry(tfs)
     bgeo = geometry(bfs)
+
+    tdom = domain(chart(tgeo, first(tgeo)))
+    bdom = domain(chart(bgeo, first(bgeo)))
+
+    tshapes = refspace(tfs); num_tshapes = numfunctions(tshapes, tdom)
+    bshapes = refspace(bfs); num_bshapes = numfunctions(bshapes, bdom)
 
     qs = if CompScienceMeshes.refines(tgeo, bgeo)
         TestRefinesTrialQStrat(quadstrat)
@@ -328,8 +331,14 @@ function assembleblock_primer(biop, tfs, bfs;
     test_elements, tad = assemblydata(tfs; onlyactives=false)
     bsis_elements, bad = assemblydata(bfs; onlyactives=false)
 
-    tshapes = refspace(tfs); num_tshapes = numfunctions(tshapes)
-    bshapes = refspace(bfs); num_bshapes = numfunctions(bshapes)
+    tgeo = geometry(tfs)
+    bgeo = geometry(bfs)
+
+    tdom = domain(chart(tgeo, first(tgeo)))
+    bdom = domain(chart(bgeo, first(bgeo)))
+
+    tshapes = refspace(tfs); num_tshapes = numfunctions(tshapes, tdom)
+    bshapes = refspace(bfs); num_bshapes = numfunctions(bshapes, bdom)
 
     qd = quaddata(biop, tshapes, bshapes, test_elements, bsis_elements, quadstrat)
 
@@ -551,14 +560,20 @@ end end end end end end end
 function assemblerow!(biop::IntegralOperator, test_functions::Space, trial_functions::Space, store;
         quadstrat=defaultquadstrat(biop, test_functions, trial_functions))
 
-    test_elements = elements(geometry(test_functions))
+    tgeo = geometry(test_functions)
+    bgeo = geometry(trial_functions)
+
+    tdom = domain(chart(tgeo, first(tgeo)))
+    bdom = domain(chart(bgeo, first(bgeo)))
+
+    test_elements = elements(tgeo)
     trial_elements, trial_assembly_data = assemblydata(trial_functions)
 
     test_shapes  = refspace(test_functions)
     trial_shapes = refspace(trial_functions)
 
-    num_test_shapes  = numfunctions(test_shapes)
-    num_trial_shapes = numfunctions(trial_shapes)
+    num_test_shapes  = numfunctions(test_shapes, tdom)
+    num_trial_shapes = numfunctions(trial_shapes, bdom)
 
     quadrature_data = quaddata(biop, test_shapes, trial_shapes, test_elements, trial_elements,
         quadstrat)

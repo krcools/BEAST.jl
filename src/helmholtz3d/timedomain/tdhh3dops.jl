@@ -92,8 +92,8 @@ function innerintegrals!(zlocal, operator::HH3DSingleLayerTDBIO,
     a = dx / (4*pi)
     D = operator.num_diffs
     @assert D == 0
-    @assert numfunctions(test_local_space)  == 1
-    @assert numfunctions(trial_local_space) == 1
+    @assert numfunctions(test_local_space, domain(test_element))  == 1
+    @assert numfunctions(trial_local_space, domain(trial_element)) == 1
 
     @inline function tmRoR_sl(d, iG)
         sgn = isodd(d) ? -1 : 1
@@ -139,8 +139,8 @@ function innerintegrals!(zlocal, operator::HH3DHyperSingularTDBIO,
         trial_element[3],
         x, r, R, Val{N-1},quad_rule.workspace)
 
-    @assert numfunctions(test_local_space)  <= 3
-    @assert numfunctions(trial_local_space) == 3
+    @assert numfunctions(test_local_space, domain(test_element))  <= 3
+    @assert numfunctions(trial_local_space, domain(trial_element)) == 3
 
     @inline function tmRoR(d, iG)
         r = (isodd(d) ? -1 : 1) * iG[d+2]
@@ -156,9 +156,9 @@ function innerintegrals!(zlocal, operator::HH3DHyperSingularTDBIO,
     # weakly singular term
     α = dx / (4π) * operator.weight_of_weakly_singular_term
     Ds = operator.num_diffs_on_weakly_singular_term
-    for i in 1 : numfunctions(test_local_space)
+    for i in 1 : numfunctions(test_local_space, domain(test_element))
         g, curlg = test_values[i]
-        for j in 1 : numfunctions(trial_local_space)
+        for j in 1 : numfunctions(trial_local_space, domain(trial_element))
             b = trial_element[j]
             opp_edge = trial_element[mod1(j+2,3)] - trial_element[mod1(j+1,3)]
             h = norm(opp_edge)/2/volume(trial_element)
@@ -175,9 +175,9 @@ function innerintegrals!(zlocal, operator::HH3DHyperSingularTDBIO,
     # Hyper-singular term
     β = dx / (4π) * operator.weight_of_hyper_singular_term
     Dh = operator.num_diffs_on_hyper_singular_term
-    for i in 1 : numfunctions(test_local_space)
+    for i in 1 : numfunctions(test_local_space, domain(test_element))
         g, curlg = test_values[i]
-        for j in 1 : numfunctions(trial_local_space)
+        for j in 1 : numfunctions(trial_local_space, domain(trial_element))
             _, curlf = trial_values[j]
             for k in 1 : numfunctions(time_local_space)
                 d = k - 1
@@ -196,8 +196,8 @@ function innerintegrals!(zlocal, operator::HH3DDoubleLayerTDBIO,
         test_element, trial_element, time_element,
         quad_rule, quad_weight)
 
-    @assert numfunctions(test_local_space)  <= 3
-    @assert numfunctions(trial_local_space) == 1
+    @assert numfunctions(test_local_space, domain(test_element))  <= 3
+    @assert numfunctions(trial_local_space, domain(trial_element)) == 1
 
     dx = quad_weight
     x = cartesian(test_point)
@@ -231,9 +231,9 @@ function innerintegrals!(zlocal, operator::HH3DDoubleLayerTDBIO,
     # weakly singular term
     α = dx / (4π) * operator.weight
     D = operator.num_diffs
-    for i in 1 : numfunctions(test_local_space)
+    for i in 1 : numfunctions(test_local_space, domain(test_element))
         g, curlg = test_values[i]
-        for j in 1 : numfunctions(trial_local_space)
+        for j in 1 : numfunctions(trial_local_space, domain(trial_element))
             f, curlf = trial_values[j]
             for k in 1 : numfunctions(time_local_space)
                 d = k-1

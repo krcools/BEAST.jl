@@ -1,5 +1,5 @@
 
-mutable struct ND2RefSpace{T} <: RefSpace{T,8} end
+mutable struct ND2RefSpace{T} <: RefSpace{T} end
 
 function (ϕ::ND2RefSpace)(nbd)
 
@@ -26,3 +26,5 @@ function (ϕ::ND2RefSpace)(nbd)
     ))
 
 end
+
+numfunctions(x::ND2RefSpace, dom::CompScienceMeshes.ReferenceSimplex{2}) = 8

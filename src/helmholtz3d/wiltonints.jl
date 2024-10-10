@@ -52,6 +52,8 @@ function innerintegrals!(op::HH3DSingleLayerSng, test_neighborhood,
     s1, s2, s3 = trial_element.vertices
     t1, t2, t3 = test_elements.vertices
 
+    num_tshapes = numfunctions(test_refspace, domain(test_elements))
+    num_bshapes = numfunctions(trial_refspace, domain(trial_element))
 
     x = cartesian(test_neighborhood)
     n = normalize((s1-s3)×(s2-s3))
@@ -60,10 +62,10 @@ function innerintegrals!(op::HH3DSingleLayerSng, test_neighborhood,
     scal, vec = WiltonInts84.wiltonints(s1, s2, s3, x, Val{1})
     ∫G = (scal[2] + 0.5*γ^2*scal[4]) / (4π)
     Atot = 1/2*norm(cross(t3-t1,t3-t2))
-    for i in 1:numfunctions(test_refspace)
+    for i in 1:num_tshapes
         Ai = 1/2*norm(cross(test_elements.vertices[mod1(i-1,3)]-x,test_elements.vertices[mod1(i+1,3)]-x))
         g = Ai/Atot
-        for j in 1:numfunctions(trial_refspace)
+        for j in 1:num_bshapes
             zlocal[i,j] += α * ∫G * g * dx
         end
     end
@@ -81,6 +83,9 @@ function innerintegrals!(op::HH3DSingleLayerSng, test_neighborhood,
     γ = gamma(op)
     α = op.alpha
 
+    num_tshapes = numfunctions(test_refspace, domain(test_elements))
+    num_bshapes = numfunctions(trial_refspace, domain(trial_element))
+
     s1, s2, s3 = trial_element.vertices
 
     x = cartesian(test_neighborhood)
@@ -90,7 +95,7 @@ function innerintegrals!(op::HH3DSingleLayerSng, test_neighborhood,
     ∫Rⁿ, ∫RⁿN = WiltonInts84.higherorder(s1,s2,s3,x,3)
     ∫G = (∫RⁿN[2] + 0.5*γ^2*∫RⁿN[3]) / (4π)
 
-    for i in 1:numfunctions(trial_refspace)
+    for i in 1:num_bshapes
     zlocal[1,i] += α * ∫G[i] * dx
     end
 
@@ -110,6 +115,9 @@ function innerintegrals!(op::HH3DSingleLayerSng, test_neighborhood,
     s1, s2, s3 = trial_element.vertices
     t1, t2, t3 = test_elements.vertices
 
+    num_tshapes = numfunctions(test_refspace, domain(test_elements))
+    num_bshapes = numfunctions(trial_refspace, domain(trial_element))
+
     x = cartesian(test_neighborhood)
     n = normalize((s1-s3)×(s2-s3))
     ρ = x - dot(x - s1, n) * n
@@ -118,10 +126,10 @@ function innerintegrals!(op::HH3DSingleLayerSng, test_neighborhood,
     ∫G = (∫RⁿN[2] + 0.5*γ^2*∫RⁿN[3]) / (4π)
 
     Atot = 1/2*norm(cross(t3-t1,t3-t2))
-    for i in 1:numfunctions(test_refspace)
+    for i in 1:num_tshapes
         Ai = 1/2*norm(cross(test_elements.vertices[mod1(i-1,3)]-x,test_elements.vertices[mod1(i+1,3)]-x))
         g = Ai/Atot
-        for j in 1:numfunctions(trial_refspace)
+        for j in 1:num_bshapes
             zlocal[i,j] += α * ∫G[j] * g * dx
         end
     end
@@ -166,12 +174,15 @@ function innerintegrals!(op::HH3DDoubleLayerTransposedSng, test_neighborhood,
     n = normalize((t1-t3)×(t2-t3))
     ρ = x - dot(x - s1, n) * n
 
+    num_tshapes = numfunctions(test_refspace, domain(test_elements))
+    num_bshapes = numfunctions(trial_refspace, domain(trial_element))
+
     scal, vec, grad = WiltonInts84.wiltonints(s1, s2, s3, x, Val{1})
 
     ∫∇G = -(grad[1]+0.5*γ^2*grad[3])/(4π)
     ∫n∇G = dot(n,∫∇G)
-    for i in 1:numfunctions(test_refspace)
-        for j in 1:numfunctions(trial_refspace)
+    for i in 1:num_tshapes
+        for j in 1:num_bshapes
             zlocal[i,j] += α * ∫n∇G * dx
         end
     end
@@ -194,15 +205,18 @@ function innerintegrals!(op::HH3DDoubleLayerTransposedSng, test_neighborhood,
     n = normalize((t1-t3)×(t2-t3))
     ρ = x - dot(x - s1, n) * n
 
+    num_tshapes = numfunctions(test_refspace, domain(test_elements))
+    num_bshapes = numfunctions(trial_refspace, domain(trial_element))
+
     scal, vec, grad = WiltonInts84.wiltonints(s1, s2, s3, x, Val{1})
 
     ∫∇G = -(grad[1]+0.5*γ^2*grad[3])/(4π)
     ∫n∇G = dot(n,∫∇G)
     Atot = 1/2*norm(cross(t3-t1,t3-t2))
-    for i in 1:numfunctions(test_refspace)
+    for i in 1:num_tshapes
         Ai = 1/2*norm(cross(test_elements.vertices[mod1(i-1,3)]-x,test_elements.vertices[mod1(i+1,3)]-x))
         g = Ai/Atot
-        for j in 1:numfunctions(trial_refspace)
+        for j in 1:num_bshapes
             zlocal[i,j] += α * ∫n∇G * g * dx
         end
     end
@@ -225,11 +239,14 @@ function innerintegrals!(op::HH3DDoubleLayerTransposedSng, test_neighborhood,
     n = normalize((t1-t3)×(t2-t3))
     ρ = x - dot(x - s1, n) * n
 
+    num_tshapes = numfunctions(test_refspace, domain(test_elements))
+    num_bshapes = numfunctions(trial_refspace, domain(trial_element))
+
     _, _, _, grad = WiltonInts84.higherorder(s1,s2,s3,x,3)
 
     ∫∇G = -(grad[1] + 0.5*γ^2*grad[2]) / (4π)
-    for i in 1:numfunctions(test_refspace)
-        for j in 1:numfunctions(trial_refspace)
+    for i in 1:num_tshapes
+        for j in 1:num_bshapes
             ∫n∇G = dot(n,∫∇G[j])
             zlocal[i,j] += α * ∫n∇G  * dx
         end
@@ -253,15 +270,18 @@ function innerintegrals!(op::HH3DDoubleLayerTransposedSng, test_neighborhood,
     n = normalize((t1-t3)×(t2-t3))
     ρ = x - dot(x - s1, n) * n
 
+    num_tshapes = numfunctions(test_refspace, domain(test_elements))
+    num_bshapes = numfunctions(trial_refspace, domain(trial_element))
+
     _, _, _, grad = WiltonInts84.higherorder(s1,s2,s3,x,3)
 
     ∫∇G = -(grad[1] + 0.5*γ^2*grad[2]) / (4π)
 
     Atot = 1/2*norm(cross(t3-t1,t3-t2))
-    for i in 1:numfunctions(test_refspace)
+    for i in 1:num_tshapes
         Ai = 1/2*norm(cross(test_elements.vertices[mod1(i-1,3)]-x,test_elements.vertices[mod1(i+1,3)]-x))
         g = Ai/Atot
-        for j in 1:numfunctions(trial_refspace)
+        for j in 1:num_bshapes
             ∫n∇G = dot(n,∫∇G[j])
             zlocal[i,j] += α * ∫n∇G * g * dx
         end
@@ -303,6 +323,9 @@ function innerintegrals!(op::HH3DDoubleLayerSng, p,
     s1, s2, s3 = s.vertices
     t1, t2, t3 = t.vertices
 
+    num_tshapes = numfunctions(g, domain(t))
+    num_bshapes = numfunctions(f, domain(s))
+
     x = cartesian(p)
     n = normalize((s1-s3)×(s2-s3))
     ρ = x - dot(x - s1, n) * n
@@ -312,10 +335,10 @@ function innerintegrals!(op::HH3DDoubleLayerSng, p,
     ∫∇G = -(grad[1] + 0.5*γ^2*grad[2]) / (4π)
 
     Atot = 1/2*norm(cross(t3-t1,t3-t2))
-    for i in 1:numfunctions(g)
+    for i in 1:num_tshapes
         Ai = 1/2*norm(cross(t.vertices[mod1(i-1,3)]-x,t.vertices[mod1(i+1,3)]-x))
         g = Ai/Atot
-        for j in 1:numfunctions(f)     
+        for j in 1:num_bshapes     
         z[i,j] += α * dot(n,-∫∇G[j]) * g * dx
         end
     end
@@ -332,6 +355,9 @@ function innerintegrals!(op::HH3DDoubleLayerSng, p,
     γ = gamma(op)
     α = op.alpha
 
+    num_tshapes = numfunctions(g, domain(t))
+    num_bshapes = numfunctions(f, domain(s))
+
     s1, s2, s3 = s.vertices
     t1, t2, t3 = t.vertices
 
@@ -343,8 +369,8 @@ function innerintegrals!(op::HH3DDoubleLayerSng, p,
 
     ∫∇G = -(grad[1]+0.5*γ^2*grad[3])/(4π)
 
-    for i in 1:numfunctions(g)
-        for j in 1:numfunctions(f)
+    for i in 1:num_tshapes
+        for j in 1:num_bshapes
             z[i,j] += α * dot(n,-∫∇G) * dx #why the minus?
         end
     end
@@ -363,6 +389,9 @@ function innerintegrals!(op::HH3DDoubleLayerSng, p,
     s1, s2, s3 = s.vertices
     t1, t2, t3 = t.vertices
 
+    num_tshapes = numfunctions(g, domain(t))
+    num_bshapes = numfunctions(f, domain(s))
+
     x = cartesian(p)
     n = normalize((s1-s3)×(s2-s3))
     ρ = x - dot(x - s1, n) * n
@@ -372,13 +401,13 @@ function innerintegrals!(op::HH3DDoubleLayerSng, p,
     ∫∇G = -(grad[1]+0.5*γ^2*grad[3])/(4π)
 
     Atot = 1/2*norm(cross(t3-t1,t3-t2))
-for i in 1:numfunctions(g)
-    Ai = 1/2*norm(cross(t.vertices[mod1(i-1,3)]-x,t.vertices[mod1(i+1,3)]-x))
-    g = Ai/Atot
-    for j in 1:numfunctions(f)
-       z[i,j] += α * dot(n,-∫∇G) * g * dx
+    for i in 1:num_tshapes
+        Ai = 1/2*norm(cross(t.vertices[mod1(i-1,3)]-x,t.vertices[mod1(i+1,3)]-x))
+        g = Ai/Atot
+        for j in 1:num_bshapes
+        z[i,j] += α * dot(n,-∫∇G) * g * dx
+        end
     end
-end
     return nothing
 end
 
@@ -402,12 +431,14 @@ function innerintegrals!(op::HH3DDoubleLayerSng, p,
 
     ∫∇G = -(grad[1] + 0.5*γ^2*grad[2]) / (4π)
 
+    num_tshapes = numfunctions(g, domain(t))
+    num_bshapes = numfunctions(f, domain(s))
   
-for i in 1:numfunctions(g)
-    for j in 1:numfunctions(f)
-       z[i,j] += α * dot(n,-∫∇G[j]) * dx
+    for i in 1:num_tshapes
+        for j in 1:num_bshapes
+        z[i,j] += α * dot(n,-∫∇G[j]) * dx
+        end
     end
-end
 
     return nothing
 end
@@ -451,15 +482,18 @@ function innerintegrals!(op::HH3DHyperSingularSng, p,
     greenconst = (∫Rⁿ[2] + 0.5*γ^2*∫Rⁿ[3]) / (4π)
     greenlinear = (∫RⁿN[2] + 0.5*γ^2*∫RⁿN[3] ) / (4π)
 
+    num_tshapes = numfunctions(g, domain(t))
+    num_bshapes = numfunctions(f, domain(s))
+
     jt = volume(t) * factorial(dimension(t))
     js = volume(s) * factorial(dimension(s))
     curlt = [(t3-t2)/jt,(t1-t3)/jt,(t2-t1)/jt]
     curls = [(s3-s2)/js,(s1-s3)/js,(s2-s1)/js]
     Atot = 1/2*norm(cross(t3-t1,t3-t2))
-    for i in 1:numfunctions(g)
+    for i in 1:num_tshapes
         Ai = 1/2*norm(cross(t.vertices[mod1(i-1,3)]-x,t.vertices[mod1(i+1,3)]-x))
         g = Ai/Atot
-        for j in 1:numfunctions(f)
+        for j in 1:num_bshapes
            z[i,j] += β * dot(curlt[i],curls[j])*greenconst*dx + α*dot(nx,ny) * greenlinear[j]*g*dx
         end
     end

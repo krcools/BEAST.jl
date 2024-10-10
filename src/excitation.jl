@@ -42,13 +42,17 @@ function assemble!(field::Functional, tfs::Space, store;
     trefs = refspace(tfs)
     qd = quaddata(field, trefs, tels, quadstrat)
 
+    tgeo = geometry(tfs)
+    tdom = domain(chart(tgeo, first(tgeo)))
+    num_trefs = numfunctions(trefs, tdom)
+
     for (t, tcell) in enumerate(tels)
 
         # compute the testing with the reference elements
         qr = quadrule(field, trefs, t, tcell, qd, quadstrat)
         blocal = celltestvalues(trefs, tcell, field, qr)
 
-        for i in 1 : numfunctions(trefs)
+        for i in 1 : num_trefs
             for (m,a) in tad[t,i]
                 store(a*blocal[i], m)
             end
@@ -82,9 +86,9 @@ function assemble!(field::Functional, tfs::subdBasis, store;
 
 end
 
-function celltestvalues(tshs::RefSpace{T,NF}, tcell, field, qr) where {T,NF}
+function celltestvalues(tshs::RefSpace{T}, tcell, field, qr) where {T}
 
-    num_tshs = numfunctions(tshs)
+    num_tshs = numfunctions(tshs, domain(tcell))
     interactions = zeros(Complex{T}, num_tshs)
 
     num_oqp = length(qr)
