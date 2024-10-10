@@ -1,14 +1,9 @@
 using CompScienceMeshes, BEAST
 
 # Γ = readmesh(joinpath(dirname(pathof(BEAST)),"../examples/sphere2.in"))
-Γ = meshsphere(radius=1.0, h=0.1)
-# X, Y = raviartthomas(Γ), buffachristiansen(Γ)
-# X = brezzidouglasmarini(Γ)
-# Y = brezzidouglasmarini(Γ)
-# X = raviartthomas(Γ)
-# Y = raviartthomas(Γ)
-X = BEAST.gwpdiv(Γ; order=2)
-Y = BEAST.gwpdiv(Γ; order=2)
+Γ = meshsphere(radius=1.0, h=0.2)
+X = BEAST.gwpdiv(Γ; order=3)
+Y = BEAST.gwpdiv(Γ; order=3)
 
 ϵ, μ, ω = 1.0, 1.0, 1.0; κ = ω * √(ϵ*μ)
 # κ = 3.0

@@ -32,8 +32,8 @@ function (ϕ::GWPCurlRefSpace{T,Deg})(dom::CompScienceMeshes.ReferenceSimplex{Di
     nd3 = point(T, -v, u)
 
     P = SVector{2,T}
-    vals = Vector{P}(undef,NF)
-    crls = Vector{T}(undef,NF)
+    NT = @NamedTuple{value::P, curl::T}
+    nts = Vector{NT}(undef, NF)
     idx = 1
 
     i = 0
@@ -50,10 +50,7 @@ function (ϕ::GWPCurlRefSpace{T,Deg})(dom::CompScienceMeshes.ReferenceSimplex{Di
             dv = Rᵢ*dRⱼ*Rₖ - Rᵢ*Rⱼ*dRₖ
             curl = (du*nd1[2] - dv*nd1[1]) + 2*Rᵢ*Rⱼ*Rₖ
 
-            vals[idx] = Rᵢ*Rⱼ*Rₖ*nd1
-            crls[idx] = curl
-            # push!(vals, Rᵢ*Rⱼ*Rₖ*nd1)
-            # push!(crls, curl)
+            nts[idx] = (value=Rᵢ*Rⱼ*Rₖ*nd1, curl=curl)
             idx += 1
     end
 
@@ -71,11 +68,7 @@ function (ϕ::GWPCurlRefSpace{T,Deg})(dom::CompScienceMeshes.ReferenceSimplex{Di
         dv = Rᵢ*dRⱼ*Rₖ - Rᵢ*Rⱼ*dRₖ
         curl = (du*nd2[2] - dv*nd2[1]) + 2*Rᵢ*Rⱼ*Rₖ
 
-        # push!(vals, Rᵢ*Rⱼ*Rₖ*nd2)
-        # push!(crls, curl)
-
-        vals[idx] = Rᵢ*Rⱼ*Rₖ*nd2
-        crls[idx] = curl
+        nts[idx] = (value=Rᵢ*Rⱼ*Rₖ*nd2, curl=curl)
         idx += 1
     end
 
@@ -93,12 +86,8 @@ function (ϕ::GWPCurlRefSpace{T,Deg})(dom::CompScienceMeshes.ReferenceSimplex{Di
         du = dRᵢ*Rⱼ*Rₖ - Rᵢ*Rⱼ*dRₖ
         dv = Rᵢ*dRⱼ*Rₖ - Rᵢ*Rⱼ*dRₖ
         curl = (du*nd3[2] - dv*nd3[1]) + 2*Rᵢ*Rⱼ*Rₖ
-        
-        # push!(vals, Rᵢ*Rⱼ*Rₖ*nd3)
-        # push!(crls, curl)
 
-        vals[idx] = Rᵢ*Rⱼ*Rₖ*nd3
-        crls[idx] = curl
+        nts[idx] = (value=Rᵢ*Rⱼ*Rₖ*nd3, curl=curl)
         idx += 1
     end
 
@@ -135,22 +124,14 @@ function (ϕ::GWPCurlRefSpace{T,Deg})(dom::CompScienceMeshes.ReferenceSimplex{Di
             dv = Rsᵢ*dRsⱼ*Rₖ - Rsᵢ*Rsⱼ*dRₖ
             curlS3 = du*nd3[2] - dv*nd3[1] + 2*Rsᵢ*Rsⱼ*Rₖ
 
-            # push!(vals, S2-S3)
-            # push!(crls, curlS2 - curlS3)
-            vals[idx] = S2-S3
-            crls[idx] = curlS2 - curlS3
+            nts[idx] = (value=S2-S3, curl=curlS2 - curlS3)
             idx += 1
             
-            # push!(vals, S3-S1)
-            # push!(crls, curlS3 - curlS1)
-            vals[idx] = S3-S1
-            crls[idx] = curlS3 - curlS1
+            nts[idx] = (value=S3-S1, curl=curlS3 - curlS1)
             idx += 1
     end end
 
-    # NF = length(vals)
-    SVector{NF}([(value=f, curl=c) for (f,c) in zip(vals, crls)])
-    # [(value=f, curl=c) for (f,c) in zip(vals, crls)]
+    return SVector{NF}(nts)
 end
 
 
