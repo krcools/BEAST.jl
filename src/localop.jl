@@ -99,12 +99,21 @@ function assemble_local_matched!(biop::LocalOperator, tfs::Space, bfs::Space, st
     trefs = refspace(tfs)
     brefs = refspace(bfs)
 
+    tgeo = geometry(tfs)
+    bgeo = geometry(bfs)
+
+    tdom = domain(chart(tgeo, first(tgeo)))
+    bdom = domain(chart(bgeo, first(bgeo)))
+
+    num_trefs = numfunctions(trefs, tdom)
+    num_brefs = numfunctions(brefs, bdom)
+
     qd = quaddata(biop, trefs, brefs, tels, bels, quadstrat)
 
     verbose = length(tels) > 10_000
     verbose && print("dots out of 20: ")
     todo, done, pctg = length(tels), 0, 0
-    locmat = zeros(scalartype(biop, trefs, brefs), numfunctions(trefs), numfunctions(brefs))
+    locmat = zeros(scalartype(biop, trefs, brefs), num_trefs, num_brefs)
     for (p,cell) in enumerate(tels)
         P = ta2g[p]
         q = bg2a[P]
@@ -138,6 +147,15 @@ function assemble_local_refines!(biop::LocalOperator, tfs::Space, bfs::Space, st
     trefs = refspace(tfs)
     brefs = refspace(bfs)
 
+    tgeo = geometry(tfs)
+    bgeo = geometry(bfs)
+
+    tdom = domain(chart(tgeo, first(tgeo)))
+    bdom = domain(chart(bgeo, first(bgeo)))
+
+    num_trefs = numfunctions(trefs, tdom)
+    num_brefs = numfunctions(brefs, bdom)
+
     tels, tad, ta2g = assemblydata(tfs)
     bels, bad, ba2g = assemblydata(bfs)
 
@@ -167,8 +185,8 @@ function assemble_local_refines!(biop::LocalOperator, tfs::Space, bfs::Space, st
             zlocal = cellinteractions(biop, trefs, brefs, cell, qr)
             zlocal = Q * zlocal * P'
 
-            for i in 1 : numfunctions(trefs)
-                for j in 1 : numfunctions(brefs)
+            for i in 1 : num_trefs
+                for j in 1 : num_brefs
                     for (m,a) in tad[p,i]
                         for (n,b) in bad[q,j]
                             store(a * zlocal[i,j] * b, m, n)
@@ -256,6 +274,15 @@ function assemble_local_mixed!(biop::LocalOperator, tfs::Space{T}, bfs::Space{T}
     trefs = refspace(tfs)
     brefs = refspace(bfs)
 
+    tgeo = geometry(tfs)
+    bgeo = geometry(bfs)
+
+    tdom = domain(chart(tgeo, first(tgeo)))
+    bdom = domain(chart(bgeo, first(bgeo)))
+
+    num_trefs = numfunctions(trefs, tdom)
+    num_brefs = numfunctions(brefs, bdom)
+
     tels, tad = assemblydata(tfs)
     bels, bad = assemblydata(bfs)
 
@@ -288,8 +315,8 @@ function assemble_local_mixed!(biop::LocalOperator, tfs::Space{T}, bfs::Space{T}
                         zlocal = cellinteractions(biop, trefs, brefs, cell, qr)
                         zlocal = Q * zlocal * P'
 
-                        for i in 1 : numfunctions(trefs)
-                            for j in 1 : numfunctions(brefs)
+                        for i in 1 : num_trefs
+                            for j in 1 : num_brefs
                                 for (m,a) in tad[p,i]
                                     for (n,b) in bad[q,j]
                                         store(a * zlocal[i,j] * b, m, n)

@@ -279,7 +279,7 @@ function cellquadsamplingvaluesvalues!(
     qr
 )
 
-    num_tshs = numfunctions(tshs)
+    # num_tshs = numfunctions(tshs)
 
     num_oqp = length(qr)
     
@@ -289,7 +289,8 @@ function cellquadsamplingvaluesvalues!(
 
         tvals = qr[p].value
 
-        for m in 1 : num_tshs
+        for m in 1 : length(tvals)
+        # for m in 1 : num_tshs
             tval = tvals[m]
 
             for k = 1:size(data, 1)

@@ -11,6 +11,7 @@ function lagdimension end
 # M: mesh type
 # T: field type
 # NF: number of local shape functions
+# P: point type
 mutable struct LagrangeBasis{D,C,M,T,NF,P} <: Space{T}
   geo::M
   fns::Vector{Vector{Shape{T}}}
@@ -839,4 +840,209 @@ function dual0forms_body(mesh::CompScienceMeshes.AbstractMesh{<:Any,3}, refd, bn
     end
 
     LagrangeBasis{1,0,3}(refd, bfs, pos)
+end
+
+
+
+function lagrangecx(mesh::CompScienceMeshes.AbstractMesh{<:Any,3}; order)
+
+    T = coordtype(mesh)
+    NF = binomial(2+order, 2)
+    P = vertextype(mesh)
+    S = Shape{T}
+
+    fns = Vector{Vector{S}}(undef, length(mesh) * NF)
+    pos = Vector{P}(undef, length(mesh) * NF)
+
+    idx = 1
+    u = one(T)
+    for (c,cell) in enumerate(mesh)
+        ch = chart(mesh,cell)
+        for r in 1:NF
+            fns[idx] = S[S(c,r,u)]
+            pos[idx] = cartesian(center(ch))
+            idx += 1
+        end
+    end
+
+    return LagrangeBasis{order,-1,NF}(mesh, fns, pos)
+end
+
+
+
+"""
+    localindices(dof, chart, i)
+
+Returns a vector of indices into the vector of local shape functions that correspond to
+global degrees of freedom supported on sub-entity `i`, where the type of entity (nodes,
+edge, face) is encoded in the type of 'dof'.
+"""
+function localindices(dof::_LagrangeGlobalNodesDoFs, chart::CompScienceMeshes.Simplex,
+    localspace, i)
+
+    d = dof.order
+    [div((d+1)*(d+2),2), d+1, 1][[i]]
+end
+
+function localindices(dof::_LagrangeGlobalEdgeDoFs, chart::CompScienceMeshes.Simplex,
+    localspace, i)
+
+    d = dof.order
+    lids, lid = Int[], 0
+    if i == 1
+        for i in 0:d for j in 0:d
+            k = d - i - j
+            k < 0 && continue
+            lid += 1
+            i != 0 && continue
+            j in (0,d) && continue
+            push!(lids, lid)
+        end end
+    elseif i == 2
+        for i in 0:d for j in 0:d
+            k = d - i - j
+            k < 0 && continue
+            lid += 1
+            i in (0,d) && continue
+            j != 0 && continue
+            push!(lids, lid)
+        end end
+    elseif i ==3
+        for i in 0:d for j in 0:d
+            k = d - i - j
+            k < 0 && continue
+            lid += 1
+            j in (0,d) && continue
+            k != 0 && continue
+            push!(lids, lid)
+        end end
+    else
+        error("wrong local edge index")
+    end
+    return lids
+end
+
+function localindices(dof::_LagrangeGlobalFaceDoFs, chart::CompScienceMeshes.Simplex,
+    localspace, i)
+
+    d = dof.order
+    lids, lid = Int[], 0
+    for i in 0:d, j in 0:d
+        k = d - i - j
+        k < 0 && continue
+        lid += 1
+        (i == 0 || j == 0 || k == 0) && continue
+        # @show (i,j,k)
+        push!(lids, lid)
+    end
+    return lids
+end
+
+function localindices(dof::_LagrangeGlobalNodesDoFs, chart::CompScienceMeshes.Simplex,
+    localspace::LagrangeRefSpace{<:Real,2}, i)
+    return [i]
+end
+
+function localindices(dof::_LagrangeGlobalEdgeDoFs, chart::CompScienceMeshes.Simplex,
+    localspace::LagrangeRefSpace{<:Real,2}, i)
+    return [3+i]
+end
+
+function localindices(dof::_LagrangeGlobalFaceDoFs, chart::CompScienceMeshes.Simplex,
+    localspace::LagrangeRefSpace{<:Real,2}, i)
+    return []
+end
+
+
+function lagrangec0(mesh::CompScienceMeshes.AbstractMesh{<:Any,3}; order)
+
+    T = coordtype(mesh)
+    atol = sqrt(eps(T))
+
+    P = vertextype(mesh)
+    S = Shape{T}
+    F = Vector{S}
+
+    verts = skeleton(mesh, 0)
+    edges = skeleton(mesh, 1)
+
+    C02 = connectivity(mesh, verts, abs); R02 = rowvals(C02); V02 = nonzeros(C02)
+    C12 = connectivity(mesh, edges, abs); R12 = rowvals(C12); V12 = nonzeros(C12)
+
+    ne = order-1
+    nf = div((order-2)*(order-1), 2)
+
+    nV = length(verts)
+    nE = length(edges) * ne
+    nF = length(mesh) * nf
+    N = nV + nE + nF
+
+    localspace = LagrangeRefSpace{T,order,3,binomial(2+order,2)}()
+    dom = domain(chart(mesh, first(mesh)))
+    localdim = numfunctions(localspace, dom)
+    
+    d = order
+    fns = [S[] for n in 1:(nV+nE+nF)]
+    pos = fill(point(0,0,0), nV+nE+nF)
+    for cell in mesh
+        cell_ch = chart(mesh, cell)
+        V = R02[nzrange(C02,cell)]
+        I = V02[nzrange(C02,cell)]
+        for (i,v) in zip(I, V)
+            vertex_ch = chart(verts, v)
+            gids = [v]
+            lids = localindices(_LagrangeGlobalNodesDoFs(d), cell_ch, localspace, i)
+            v = globaldofs(vertex_ch, cell_ch, localspace, _LagrangeGlobalNodesDoFs(d))
+            α = v[lids, :]
+            β = inv(α')
+            for i in axes(β,1)
+                for j in axes(β,2)
+                    isapprox(β[i,j], 0; atol) && continue
+                    push!(fns[gids[i]], S(cell, lids[j], β[i,j]))
+                end
+            end
+        end
+
+        E = R12[nzrange(C12,cell)]
+        I = V12[nzrange(C12,cell)]
+        for (i,e) in zip(I, E)
+            edge_ch = chart(edges, e)
+            gids = nV + (e-1)*ne + 1: nV + e*ne
+            lids = localindices(_LagrangeGlobalEdgeDoFs(d), cell_ch, localspace, i)
+            @assert length(lids) == length(gids)
+            v = globaldofs(edge_ch, cell_ch, localspace, _LagrangeGlobalEdgeDoFs(d))
+            α = v[lids, :]
+            β = inv(α')
+            for i in axes(β,1)
+                for j in axes(β,2)
+                    isapprox(β[i,j], 0; atol) && continue
+                    push!(fns[gids[i]], S(cell, lids[j], β[i,j]))
+                end
+            end
+        end
+
+        order < 3 && continue
+        F = [cell]
+        for (q,f) in enumerate(F)
+            face_ch = chart(mesh, f)
+            gids = nV + nE + (f-1)*nf + 1 : nV + nE + f*nf
+            lids = localindices(_LagrangeGlobalFaceDoFs(d), cell_ch, localspace, 1)
+            v = globaldofs(face_ch, cell_ch, localspace, _LagrangeGlobalFaceDoFs(d))
+            α = v[lids, :]
+            # @show α
+            β = inv(α')
+            for i in axes(β,1)
+                for j in axes(β,2)
+                    isapprox(β[i,j], 0; atol) && continue
+                    push!(fns[gids[i]], S(cell, lids[j], β[i,j]))
+                end
+            end
+        end 
+    end
+
+    for v in verts pos[v] = cartesian(center(chart(verts, v))) end
+    for e in edges pos[nV + (e-1)*ne + 1: nV + e*ne] .= Ref(cartesian(center(chart(edges, e)))) end
+    for f in mesh pos[nV + nE + (f-1)*nf + 1: nV + nE + f*nf] .= Ref(cartesian(center(chart(mesh, f)))) end
+
+    return LagrangeBasis{order,0,localdim}(mesh, fns, pos)
 end

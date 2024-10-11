@@ -1,4 +1,4 @@
-struct NDLCDRefSpace{T} <: RefSpace{T,4} end
+struct NDLCDRefSpace{T} <: RefSpace{T} end
 
 function valuetype(ref::NDLCDRefSpace{T}, charttype::Type) where {T}
     SVector{universedimension(charttype),T}
@@ -29,6 +29,8 @@ function (ϕ::NDLCDRefSpace)(ndlc)
         (value=(2*(u*tu + v*tv + w*tw)/j)    ,divergence=(6/j))
     ))
 end
+
+numfunctions(x::NDLCDRefSpace, dom::CompScienceMeshes.ReferenceSimplex{3}) = 4
 
 function ntrace(x::NDLCDRefSpace, el, q, fc)
     t = zeros(scalartype(x),1,4)
@@ -76,13 +78,13 @@ function ttrace(x::NDLCDRefSpace, el, q, fc)
     return t
 end
 
-divergence(ref::NDLCDRefSpace, sh, el) = Shape(sh.cellid, 1, sh.coeff/volume(el))
+divergence(ref::NDLCDRefSpace, sh, el) = [Shape(sh.cellid, 1, sh.coeff/volume(el))]
 
 
 function restrict(ϕ::NDLCDRefSpace{T}, dom1, dom2) where {T}
     # dom2 is the smaller of the domains
 
-    K = numfunctions(ϕ)
+    K = numfunctions(ϕ, domain(dom1))
     D = dimension(dom1)
 
     @assert K == 4

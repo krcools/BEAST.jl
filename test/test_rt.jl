@@ -13,7 +13,8 @@ tol = eps(T) * 10^3
 function shapevals(ϕ, ts)
 
     numpoints = length(ts)
-    numshapes = numfunctions(ϕ)
+    dom = CompScienceMeshes.domain(CompScienceMeshes.chart(ts[1]))
+    numshapes = numfunctions(ϕ, dom)
 
     y = Array{P}(undef, numshapes, numpoints)
     for i in 1 : numpoints

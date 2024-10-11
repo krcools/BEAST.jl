@@ -333,7 +333,7 @@ x = BEAST.refspace(X)
 κ = 1.0
 op = BEAST.MWSingleLayer3D(κ)
 
-n = BE.numfunctions(x)
+n = BE.numfunctions(x, domain(s))
 z1 = zeros(ComplexF64, n, n)
 z2 = zeros(ComplexF64, n, n)
 

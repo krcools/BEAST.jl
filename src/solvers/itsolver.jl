@@ -110,7 +110,7 @@ function gmres_ch(eq::DiscreteEquation; maxiter=0, restart=0, tol=0)
     if tol == 0
         invZ = GMRESSolver(Z, maxiter=maxiter, restart=restart)
     else
-        invZ = GMRESSolver(Z, maxiter=maxiter, restart=restart, tol=tol)
+        invZ = GMRESSolver(Z, maxiter=maxiter, restart=restart, reltol=tol)
     end
     x, ch = solve(invZ, b)
     # x = invZ * b
