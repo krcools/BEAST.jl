@@ -37,3 +37,61 @@ end
     Nt = length(edges)*ne + length(mesh)*nf
     @test numfunctions(gwp) == Nt
 end
+
+
+function divergence(X::GWPDivSpace, geo, fns)
+    ch = chart(geo, first(geo))
+    dim = dimension(ch)
+    dom = domain(ch)
+    # dim = dimension(dom)
+
+    P = X.degree
+    Cont = -1
+    NF = binomial(dim+P, dim)
+
+    LagrangeBasis{P,Cont,NF}(geo, fns, deepcopy(positions(X)))
+end
+
+
+@testitem "divergence - global" begin
+    using CompScienceMeshes
+    const CSM = CompScienceMeshes
+
+    T = Float64
+
+    m = CSM.meshrectangle(1.0, 1.0, 0.5, 3)
+    X = BEAST.gwpdiv(m; order=4)
+    divX = BEAST.divergence(X)
+
+    x = BEAST.refspace(X)
+    divx = BEAST.refspace(divX)
+
+    err = zero(T)
+    for i in eachindex(X.fns)
+        fn = X.fns[i]
+        for j in eachindex(fn)
+            cellid = X.fns[i][j].cellid
+            ch = chart(m, cellid)
+            
+            u = (0.2341, 0.4312)
+            p = neighborhood(ch, u)
+
+            r1 = zero(T)
+            ϕp = x(p)
+            for sh in X.fns[i]
+                sh.cellid == cellid || continue
+                r1 += sh.coeff * ϕp[sh.refid].divergence
+            end
+
+            r2 = zero(T)
+            ϕp = divx(p)
+            for sh in divX.fns[i]
+                sh.cellid == cellid || continue
+                r2 += sh.coeff * ϕp[sh.refid].value
+            end
+            global err = max(err, abs(r1-r2))
+        end
+    end
+
+    @test err < sqrt(eps(T))
+end

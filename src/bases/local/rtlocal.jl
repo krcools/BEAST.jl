@@ -28,7 +28,7 @@ end
 
 numfunctions(x::RTRefSpace, dom::CompScienceMeshes.ReferenceSimplex{2}) = 3
 
-divergence(ref::RTRefSpace, sh, el) = Shape(sh.cellid, 1, sh.coeff/volume(el))
+divergence(ref::RTRefSpace, sh, el) = [Shape(sh.cellid, 1, sh.coeff/volume(el))]
 
 """
     ntrace(refspace, element, localindex, face)

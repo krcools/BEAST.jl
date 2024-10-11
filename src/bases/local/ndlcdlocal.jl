@@ -78,7 +78,7 @@ function ttrace(x::NDLCDRefSpace, el, q, fc)
     return t
 end
 
-divergence(ref::NDLCDRefSpace, sh, el) = Shape(sh.cellid, 1, sh.coeff/volume(el))
+divergence(ref::NDLCDRefSpace, sh, el) = [Shape(sh.cellid, 1, sh.coeff/volume(el))]
 
 
 function restrict(ϕ::NDLCDRefSpace{T}, dom1, dom2) where {T}

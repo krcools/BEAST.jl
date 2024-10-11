@@ -11,6 +11,7 @@ function lagdimension end
 # M: mesh type
 # T: field type
 # NF: number of local shape functions
+# P: point type
 mutable struct LagrangeBasis{D,C,M,T,NF,P} <: Space{T}
   geo::M
   fns::Vector{Vector{Shape{T}}}

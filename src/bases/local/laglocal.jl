@@ -386,7 +386,7 @@ function interpolate(fields, interpolant::LagrangeRefSpace{T,Degree,3}, chart) w
     s = range(0,1,length=Degree+1)
     Is = zip(I,s)
     idx = 1
-    vals = []
+    vals = Vector{Vector{T}}()
     for (i,ui) in Is
         for (j,vj) in Is
             for (k,wk) in Is
@@ -397,6 +397,10 @@ function interpolate(fields, interpolant::LagrangeRefSpace{T,Degree,3}, chart) w
                 idx += 1
     end end end
 
-    Q = hcat(vals...)
+    # Q = hcat(vals...)
+    Q = Matrix{T}(undef, length(vals[1]), length(vals))
+    for i in eachindex(vals)
+        Q[:,i] .= vals[i]
+    end
     return Q
 end

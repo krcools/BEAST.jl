@@ -2,6 +2,8 @@ struct GWPDivRefSpace{T,Degree} <: RefSpace{T} end
 
 function numfunctions(x::GWPDivRefSpace{<:Any,D},
     dom::CompScienceMeshes.ReferenceSimplex{2}) where{D} (D+1)*(D+3) end
+function dimtype(x::GWPDivRefSpace{<:Any,D},
+    dom::CompScienceMeshes.ReferenceSimplex{2}) where{D} Val{(D+1)*(D+3)} end
 
 function (ϕ::GWPDivRefSpace{T,Degree})(p) where {T,Degree}
     ψ = GWPCurlRefSpace{T,Degree}()
@@ -26,7 +28,7 @@ function interpolate(fields, interpolant::GWPDivRefSpace{T,Degree}, chart) where
     return interpolate(nxfields, GWPCurlRefSpace{T,Degree}(), chart)
 end
 
-@testitem "divergence" begin
+@testitem "divergence - pointwise" begin
     using CompScienceMeshes, LinearAlgebra
 
     T = Float64
@@ -66,4 +68,72 @@ end
         # @show curl_num,  curl_ana, abs(curl_num - curl_ana)
         @test curl_num ≈ curl_ana atol=sqrt(eps(T))*100
     end
+end
+
+
+function divergence(localspace::GWPDivRefSpace, sh, ch)
+    fns = divergence(localspace, sh.cellid, ch)
+    α = sh.coeff
+    S = typeof(sh)
+    return S[S(s.cellid, s.refid, α*s.coeff) for s in fns[sh.refid]]
+end
+
+
+function divergence(localspace::GWPDivRefSpace, cellid::Int, ch)
+    divergence(localspace, cellid, ch, dimtype(localspace, domain(ch)))
+end
+
+
+function divergence(localspace::GWPDivRefSpace{T,D}, cellid::Int, ch, ::Type{Val{N}}) where {N,D,T}
+    function fields(p)
+        map(localspace(p)) do x
+            x.divergence
+        end
+    end
+    atol = sqrt(eps(T))
+    Dim = 2
+    NFout = div((Dim+1)*(Dim+2), 2)
+    lag = LagrangeRefSpace{T,D,Dim+1,NFout}()
+    coeffs = interpolate(fields, lag, ch)
+    S = BEAST.Shape{T}
+    A = Vector{Vector{S}}(undef, size(coeffs,1))
+    for r in axes(coeffs,1)
+        A[r] = collect(S(cellid, c, coeffs[r,c]) for c in axes(coeffs,2) if abs(c) > atol)
+    end
+    return SVector{N}(A)
+end
+
+
+@testitem "divergence - chartwise" begin
+    using CompScienceMeshes
+    const CSM = CompScienceMeshes
+
+    T = Float64
+    D = 4
+    NF = binomial(2+D, 2)
+    gwp = BEAST.GWPDivRefSpace{T,D}()
+    lgx = BEAST.LagrangeRefSpace{T,D,3,10}()
+
+    ch = CSM.simplex(
+        point(1,0,0),
+        point(0,1,0),
+        point(0,0,0))
+
+    divfns = BEAST.divergence(gwp, 1, ch)
+
+    p = neighborhood(ch, (0.2, 0.6))
+    gwp_vals = gwp(p)
+    lgx_vals = lgx(p)
+
+    err = similar(Vector{T}, axes(gwp_vals))
+    for i in eachindex(gwp_vals)
+        val1 = gwp_vals[i].divergence
+        val2 = zero(T)
+        for sh in divfns[i]
+            val2 += sh.coeff * lgx_vals[sh.refid].value
+        end
+        err[i] = abs(val1 - val2)
+    end
+    atol = sqrt(eps(T))
+    @test all(err .< atol)
 end

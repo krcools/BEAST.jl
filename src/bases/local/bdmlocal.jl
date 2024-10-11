@@ -19,7 +19,7 @@ function (f::BDMRefSpace)(p)
         (value=v*tv/j,         divergence=d),]
 end
 
-divergence(ref::BDMRefSpace, sh, el) = Shape(sh.cellid, 1, sh.coeff/(2*volume(el)))
+divergence(ref::BDMRefSpace, sh, el) = [Shape(sh.cellid, 1, sh.coeff/(2*volume(el)))]
 
 const _vert_perms_bdm = [
     (1,2,3),
