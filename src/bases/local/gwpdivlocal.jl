@@ -1,9 +1,13 @@
 struct GWPDivRefSpace{T,Degree} <: RefSpace{T} end
 
 function numfunctions(x::GWPDivRefSpace{<:Any,D},
-    dom::CompScienceMeshes.ReferenceSimplex{2}) where{D} (D+1)*(D+3) end
+    dom::CompScienceMeshes.ReferenceSimplex{2}) where {D}
+    (D+1)*(D+3)
+end
 function dimtype(x::GWPDivRefSpace{<:Any,D},
-    dom::CompScienceMeshes.ReferenceSimplex{2}) where{D} Val{(D+1)*(D+3)} end
+    dom::CompScienceMeshes.ReferenceSimplex{2}) where {D}
+    Val{(D+1)*(D+3)}
+end
 
 function (ϕ::GWPDivRefSpace{T,Degree})(p) where {T,Degree}
     ψ = GWPCurlRefSpace{T,Degree}()
