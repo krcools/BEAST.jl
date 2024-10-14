@@ -46,8 +46,8 @@ macro defaultquadstrat(dop, body)
     return esc(ex)
 end
 
-struct SingleNumQStrat
-    quad_rule::Int
+struct SingleNumQStrat{R}
+    quad_rule::R
 end
 
 function quadinfo(op, tfs, bfs; quadstrat=defaultquadstrat(op, tfs, bfs))
