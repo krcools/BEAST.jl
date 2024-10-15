@@ -1,5 +1,4 @@
-abstract type RefSpace{T,D} end
-abstract type DivRefSpace{T,D} <: RefSpace{T,D} end
+
 
 abstract type AbstractSpace end
 abstract type Space{T} <: AbstractSpace end
@@ -25,12 +24,12 @@ Returns the ReferenceSpace of local shape functions on which the basis is built.
 function refspace end
 
 
-"""
-    numfunctions(r)
+# """
+#     numfunctions(r)
 
-Return the number of functions in a `Space` or `RefSpace`.
-"""
-numfunctions(rs::RefSpace{T,D}) where {T,D} = D
+# Return the number of functions in a `Space` or `RefSpace`.
+# """
+# numfunctions(rs::RefSpace{T,D}) where {T,D} = D
 
 
 """
@@ -208,7 +207,10 @@ function assemblydata(basis::Space; onlyactives=true)
     num_cells = numcells(geo)
 
     num_bfs  = numfunctions(basis)
-    num_refs = numfunctions(refspace(basis))
+    
+    ch = chart(geo, first(geo))
+    dom = domain(ch)
+    num_refs = numfunctions(refspace(basis), dom)
 
     # Determine the number of functions defined over a given cell
     # and per local shape function.
@@ -394,4 +396,25 @@ function functionvals(s::BEAST.Space, index::Int, n=3)
     end
 
     return ctrs, vals
+end
+
+
+
+function eval(s::BEAST.Space, i::Int, cellid, u)
+
+    ch = chart(cellid, s.geo)
+    p = neighborhood(ch, u)
+
+    ϕ = refpsace(s)
+    ϕp = ϕ(p)
+
+    U = valuetype(ϕ, ch)
+
+    r = zero(U)
+    for sh in s.fns[i]
+        sh.cellid == cellid || continue
+        r += sh.coeff * ϕp[sh.refid].value
+    end
+
+    return r
 end

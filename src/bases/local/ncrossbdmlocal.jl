@@ -1,4 +1,4 @@
-struct NCrossBDMRefSpace{T} <: RefSpace{T,6} end
+struct NCrossBDMRefSpace{T} <: RefSpace{T} end
 
 function (f::NCrossBDMRefSpace{T})(p) where T
 

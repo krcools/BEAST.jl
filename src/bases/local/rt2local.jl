@@ -1,4 +1,4 @@
-struct RT2RefSpace{T} <: RefSpace{T,8} end
+struct RT2RefSpace{T} <: RefSpace{T} end
 
 function (f::RT2RefSpace)(p)
 
@@ -33,6 +33,7 @@ function (f::RT2RefSpace)(p)
     )
 end
 
+numfunctions(x::RT2RefSpace, dom::CompScienceMeshes.ReferenceSimplex{2}) = 8
 
 function interpolate(fields, interpolant::BEAST.RT2RefSpace, chart)
 
