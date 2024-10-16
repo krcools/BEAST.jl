@@ -1,4 +1,4 @@
-struct RTQuadRefSpace{T} <: DivRefSpace{T,4} end
+struct RTQuadRefSpace{T} <: DivRefSpace{T} end
 
 function (ϕ::RTQuadRefSpace{T})(p) where {T}
 
@@ -22,6 +22,7 @@ function (ϕ::RTQuadRefSpace{T})(p) where {T}
         (value=D*f.value/j, divergence=f.divergence/j) end
 end
 
+function numfunctions(ϕ::RTQuadRefSpace, dom::CompScienceMeshes.RefQuadrilateral) 4 end
 
 function interpolate(fields, interpolant::RTQuadRefSpace{T}, chart) where {T}
 

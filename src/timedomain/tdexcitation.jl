@@ -85,9 +85,11 @@ function assemble!(exc::TDFunctional, testST, store;
     testels, testad = assemblydata(testfns)
     timeels, timead = assemblydata(timefns)
 
+    
     qd = quaddata(exc, testrefs, timerefs, testels, timeels)
-
-    z = zeros(eltype(exc), numfunctions(testrefs), numfunctions(timerefs))
+    
+    num_testshapes = numfunctions(testrefs, domain(first(testels)))
+    z = zeros(eltype(exc), num_testshapes, numfunctions(timerefs))
     for p in eachindex(testels)
         τ = testels[p]
         for r in eachindex(timeels)
@@ -97,7 +99,7 @@ function assemble!(exc::TDFunctional, testST, store;
             qr = quadrule(exc, testrefs, timerefs, p, τ, r, ρ, qd)
             momintegrals!(z, exc, testrefs, timerefs, τ, ρ, qr)
 
-            for i in 1 : numfunctions(testrefs)
+            for i in 1 : num_testshapes
                 for d in 1 : numfunctions(timerefs)
 
                     v = z[i,d]
@@ -155,13 +157,15 @@ end
 
 function timeintegrals!(z, exc::TDFunctional, testrefs, timerefs, testpoint, timeelement, dx, qr, f)
 
+    num_tshapes = numfunctions(testrefs, domain(chart(testpoint)))
+
     for p in qr.quad_points
         t = p.point
         w = p.weight
         U = p.value
         dt = w #* jacobian(t) # * volume(timeelement)
 
-        for i in 1 : numfunctions(testrefs)
+        for i in 1 : num_tshapes
             for k in 1 : numfunctions(timerefs)
                 z[i,k] += dot(f[i][1]*U[k], exc(testpoint,t)) * dt * dx
             end
@@ -176,12 +180,14 @@ function timeintegrals!(z, exc::TDFunctional,
         testpoint, timeelement,
         dx, qr, testvals)
 
+        num_tshapes = numfunctions(spacerefs, domain(chart(testpoint)))
+
         # since timeelement uses barycentric coordinates,
         # the first/left vertex has coords u = 1.0!
         testtime = neighborhood(timeelement, point(0.0))
         @assert cartesian(testtime)[1] ≈ timeelement.vertices[2][1]
 
-        for i in 1 : numfunctions(spacerefs)
+        for i in 1 : num_tshapes
             z[i,1] += dot(testvals[i][1], exc(testpoint, testtime)) * dx
         end
 end

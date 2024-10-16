@@ -1,4 +1,4 @@
-struct RTRefSpace{T} <: DivRefSpace{T,3} end
+struct RTRefSpace{T} <: DivRefSpace{T} end
 
 # valuetype(ref::RTRefSpace{T}, charttype) where {T} = SVector{3,Tuple{SVector{universedimension(charttype),T},T}}
 function valuetype(ref::RTRefSpace{T}, charttype::Type) where {T}
@@ -26,7 +26,9 @@ function (ϕ::RTRefSpace)(mp)
     ))
 end
 
-divergence(ref::RTRefSpace, sh, el) = Shape(sh.cellid, 1, sh.coeff/volume(el))
+numfunctions(x::RTRefSpace, dom::CompScienceMeshes.ReferenceSimplex{2}) = 3
+
+divergence(ref::RTRefSpace, sh, el) = [Shape(sh.cellid, 1, sh.coeff/volume(el))]
 
 """
     ntrace(refspace, element, localindex, face)

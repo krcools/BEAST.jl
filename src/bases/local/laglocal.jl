@@ -1,18 +1,21 @@
 # T: coeff type
 # Degree: degree
 # Dim1: dimension of the support + 1
-mutable struct LagrangeRefSpace{T,Degree,Dim1,NF} <: RefSpace{T,NF} end
+struct LagrangeRefSpace{T,Degree,Dim1,NF} <: RefSpace{T} end
 
-numfunctions(s::LagrangeRefSpace{T,D,2}) where {T,D} = D+1
-numfunctions(s::LagrangeRefSpace{T,0,3}) where {T} = 1
-numfunctions(s::LagrangeRefSpace{T,1,3}) where {T} = 3
-numfunctions(s::LagrangeRefSpace{T,2,3}) where {T} = 6
+numfunctions(s::LagrangeRefSpace{T,D,2}, ch::CompScienceMeshes.ReferenceSimplex{1}) where {T,D} = D+1
+numfunctions(s::LagrangeRefSpace{T,0,3}, ch::CompScienceMeshes.ReferenceSimplex{2}) where {T} = 1
+numfunctions(s::LagrangeRefSpace{T,1,3}, ch::CompScienceMeshes.ReferenceSimplex{2}) where {T} = 3
+numfunctions(s::LagrangeRefSpace{T,2,3}, ch::CompScienceMeshes.ReferenceSimplex{2}) where {T} = 6
+numfunctions(s::LagrangeRefSpace{T,Dg}, ch::CompScienceMeshes.ReferenceSimplex{D}) where {T,Dg,D} = binomial(D+Dg,Dg)
 
 valuetype(ref::LagrangeRefSpace{T}, charttype) where {T} =
         SVector{numfunctions(ref), Tuple{T,T}}
 
 # Evaluate constant lagrange elements on anything
 (ϕ::LagrangeRefSpace{T,0})(tp) where {T} = SVector(((value=one(T), derivative=zero(T)),))
+(ϕ::LagrangeRefSpace{T,0,3})(tp) where {T} = SVector(((value=one(T), derivative=zero(T)),))
+
 
 # Evaluate linear Lagrange elements on a segment
 function (f::LagrangeRefSpace{T,1,2})(mp) where T
@@ -26,10 +29,6 @@ end
 # Evaluete linear lagrange elements on a triangle
 function (f::LagrangeRefSpace{T,1,3})(t) where T
     u,v,w, = barycentric(t)
-    # SVector(
-    #     (value=u,),
-    #     (value=v,),
-    #     (value=w,))
 
     j = jacobian(t)
     p = t.patch
@@ -40,24 +39,6 @@ function (f::LagrangeRefSpace{T,1,3})(t) where T
         (value=w, curl=σ*(p[2]-p[1])/j))
 end
 
-
-"""
-    f(tangent_space, Val{:withcurl})
-
-Compute the values of the shape functions together with their curl.
-"""
-# function (f::LagrangeRefSpace{T,1,3})(t, ::Type{Val{:withcurl}}) where T
-#     # Evaluete linear Lagrange elements on a triange, together with their curl
-#     j = jacobian(t)
-#     u,v,w, = barycentric(t)
-#     p = t.patch
-#     σ = sign(dot(normal(t), cross(p[1]-p[3],p[2]-p[3])))
-#     SVector(
-#         (value=u, curl=σ*(p[3]-p[2])/j),
-#         (value=v, curl=σ*(p[1]-p[3])/j),
-#         (value=w, curl=σ*(p[2]-p[1])/j)
-#     )
-# end
 
 
 # Evaluate constant Lagrange elements on a triangle, with their curls
@@ -129,7 +110,8 @@ function strace(x::LagrangeRefSpace, cell, localid, face)
     vals1 = x(P1)
     vals2 = x(P2)
 
-    for j in 1:numfunctions(x)
+    num_shapes = numfunctions(x, domain(cell))
+    for j in 1:num_shapes
         Q[1,j] = vals1[j].value
         Q[2,j] = vals2[j].value
     end
@@ -156,13 +138,13 @@ end
 
 
 function restrict(refs::LagrangeRefSpace{T,0}, dom1, dom2) where T
-    #Q = eye(T, numfunctions(refs))
-    Q = Matrix{T}(I, numfunctions(refs), numfunctions(refs))
+    n = numfunctions(refs, domain(dom1))
+    Q = Matrix{T}(I, n, n)
 end
 
 function restrict(f::LagrangeRefSpace{T,1}, dom1, dom2) where T
 
-    D = numfunctions(f)
+    D = numfunctions(f, domain(dom1))
     Q = zeros(T, D, D)
 
     # for each point of the new domain
@@ -193,10 +175,6 @@ function (f::LagrangeRefSpace{T,2,3})(t) where T
     j = jacobian(t)
     p = t.patch
 
-    #curl=(p[3]-p[2])/j),
-     #   (value=v, curl=(p[1]-p[3])/j),
-      #  (value=w, curl=(p[2]-p[1])/j)
-
     σ = sign(dot(normal(t), cross(p[1]-p[3],p[2]-p[3])))
      SVector(
         (value=u*(2*u-1), curl=σ*(p[3]-p[2])*(4u-1)/j),
@@ -208,22 +186,6 @@ function (f::LagrangeRefSpace{T,2,3})(t) where T
     )
 end
 
-# function (f::LagrangeRefSpace{T,2,3})(t, ::Type{Val{:withcurl}}) where T
-#     # Evaluete quadratic Lagrange elements on a triange, together with their curl
-#     j = jacobian(t)
-#     u,v,w, = barycentric(t)
-#     p = t.patch
-
-#     σ = sign(dot(normal(t), cross(p[1]-p[3],p[2]-p[3])))
-#     SVector(
-#         (value=u*(2*u-1), curl=σ*(p[3]-p[2])*(4u-1)/j),
-#         (value=v*(2*v-1), curl=σ*(p[1]-p[3])*(4v-1)/j),
-#         (value=w*(2*w-1), curl=σ*(p[2]-p[1])*(4w-1)/j),
-#         (value=4*v*w, curl=4*σ*(w*(p[1]-p[3])+v*(p[2]-p[1]))/j),
-#         (value=4*w*u, curl=4*σ*(w*(p[3]-p[2])+u*(p[2]-p[1]))/j),
-#         (value=4*u*v, curl=4*σ*(u*(p[1]-p[3])+v*(p[3]-p[2]))/j),
-#     )
-# end
 
 function curl(ref::LagrangeRefSpace{T,2,3} where {T}, sh, el)
     #curl of lagc0d2 as combination of bdm functions 
@@ -293,17 +255,11 @@ end
 
 const _dof_lag0perm_matrix = [
     @SMatrix[1],         # 1. {1,2,3}
-     
     @SMatrix[1],         # 2. {2,3,1}
-    
     @SMatrix[1],         # 3. {3,1,2}
-    
     @SMatrix[1],         # 4. {2,1,3}
-    
     @SMatrix[1],         # 5. {1,3,2}
-    
     @SMatrix[1]         # 6. {3,2,1}
-    
 ]
 
 function (ϕ::LagrangeRefSpace{T, 1, 4, 4})(lag) where T
@@ -329,4 +285,122 @@ function (ϕ::LagrangeRefSpace{T, 1, 4, 4})(lag) where T
         (value = w, gradient = A*gr3),
         (value = T(1.0)-u-v-w, gradient = A*gr4)
     ))
+end
+
+
+
+# Evaluate higher order Lagrange elements on triangles
+# TODO: Optimise using code generation
+function (ϕ::LagrangeRefSpace{T,Degree,3})(p) where {T,Degree}
+
+    u, v = parametric(p)
+    w = 1 - u - v
+    idx = 0
+
+    suppdim = 2
+    localdim = binomial(suppdim+Degree, suppdim)
+    vals = T[]
+    diffus = T[]
+    diffvs = T[]
+
+    D1 = Degree + 1
+    s = range(zero(T), one(T), length=D1)
+    for i in 0:Degree
+        ui = i/Degree
+        for j in 0:Degree
+            vj = j/Degree
+            for k in 0:Degree
+                wk = k/Degree
+                i + j + k == Degree || continue
+
+                prod_p = one(T)
+                for p in 0:i-1
+                    up = p / Degree
+                    prod_p *= (u-up) / (ui-up)
+                end
+                prod_q = one(T)
+                for q in 0:j-1
+                    vq = q / Degree
+                    prod_q *= (v-vq) / (vj-vq)
+                end
+                prod_r = one(T)
+                for r in 0:k-1
+                    wr = r / Degree
+                    prod_r *= (w-wr) / (wk-wr)
+                end
+                push!(vals, prod_p * prod_q * prod_r)
+
+                diffu = zero(T)
+                diffv = zero(T)
+                for l in 0:i-1
+                    ul = l/Degree
+                    prod_pl = one(T)
+                    for p in 0:i-1
+                        p == l && continue
+                        up = p/Degree
+                        prod_pl *= (u-up) / (ui-up)
+                    end
+                    diffu += prod_pl * prod_q * prod_r / (ui-ul)
+                end
+                for m in 0:j-1
+                    vm = m/Degree
+                    prod_qm = one(T)
+                    for q in 0:j-1
+                        q == m && continue
+                        vq = q/Degree
+                        prod_qm *= (v-vq) / (vj-vq)
+                    end
+                    diffv += prod_p * prod_qm * prod_r / (vj-vm)
+                end
+                for n in 0:k-1
+                    wn = n/Degree
+                    prod_rn = one(T)
+                    for r in 0:k-1
+                        r == n && continue
+                        wr = r/Degree
+                        prod_rn *= (w-wr) / (wk-wr)
+                    end
+                    diffu -= prod_p * prod_q * prod_rn / (wk-wn)
+                    diffv -= prod_p * prod_q * prod_rn / (wk-wn)
+                end
+
+                push!(diffus, diffu)
+                push!(diffvs, diffv)
+
+                idx += 1
+    end end end
+ 
+    tu = tangents(p,1)
+    tv = tangents(p,2)
+    j = jacobian(p)
+    NF = length(vals)
+    SVector{NF}([(value=f, curl=(-dv*tu+du*tv)/j) for (f,du,dv) in zip(vals, diffus, diffvs)])
+end
+
+# fields[i] ≈ sum(Q[j,i] * interpolant[j].value for j in 1:numfunctions(interpolant))
+function interpolate(fields, interpolant::LagrangeRefSpace{T,Degree,3}, chart) where {T,Degree}
+
+    dim = binomial(2+Degree, Degree)
+
+    I = 0:Degree
+    s = range(0,1,length=Degree+1)
+    Is = zip(I,s)
+    idx = 1
+    vals = Vector{Vector{T}}()
+    for (i,ui) in Is
+        for (j,vj) in Is
+            for (k,wk) in Is
+                i + j + k == Degree || continue
+                @assert ui + vj + wk ≈ 1
+                p = neighborhood(chart, (ui,vj))
+                push!(vals, fields(p))
+                idx += 1
+    end end end
+
+    # Q = hcat(vals...)
+    Q = Matrix{T}(undef, length(vals[1]), length(vals))
+    for i in eachindex(vals)
+        Q[:,i] .= vals[i]
+    end
+    return Q
 end

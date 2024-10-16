@@ -1,4 +1,4 @@
-struct NDLCCRefSpace{T} <: RefSpace{T,6} end
+struct NDLCCRefSpace{T} <: RefSpace{T} end
 
 function valuetype(ref::NDLCCRefSpace{T}, charttype::Type) where {T}
     SVector{universedimension(charttype),T}
@@ -58,6 +58,8 @@ function (ϕ::NDLCCRefSpace)(ndlc)
 ##        ))
 end
 
+numfunctions(x::NDLCCRefSpace, dom::CompScienceMeshes.ReferenceSimplex{3}) = 6
+
 #check orientation
 function curl(ref::NDLCCRefSpace, sh, el)
     a = [4,2,3,4,1,2]##[2,1,1,1,2,4]#[2,1,4,4,3,2]#[4,2,3,4,1,2]
@@ -71,7 +73,7 @@ end
 function restrict(ϕ::NDLCCRefSpace{T}, dom1, dom2) where {T}
     # dom2 is the smaller of the domains
 
-    K = numfunctions(ϕ)
+    K = numfunctions(ϕ, domain(dom1))
     D = dimension(dom1)
 
     @assert K == 6

@@ -17,10 +17,11 @@ function divergence(x::Space)
     fns = x.fns
     dvs = similar(fns)
     for (i,fn) in enumerate(fns)
-        dvs[i] = similar(fns[i])
+        dvs[i] = similar(fns[i], 0)
         for (j,sh) in enumerate(fn)
             el = els[sh.cellid]
-            dvs[i][j] = divergence(ref, sh, el)
+            append!(dvs[i], divergence(ref, sh, el))
+            # dvs[i][j] = divergence(ref, sh, el)
         end
     end
     divergence(x, geo, dvs)
