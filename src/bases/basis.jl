@@ -62,6 +62,12 @@ Returns a vector of the shape functions defining the `i`th function
 of the `basis`.
 """
 basisfunction(s::Space, i) = s.fns[i]
+
+"""
+    numfunctions(basis)
+
+Number of functions in the basis.
+"""
 numfunctions(space::Space) = length(space.fns)
 
 struct DirectProductSpace{T,S<:AbstractSpace} <: AbstractSpace
