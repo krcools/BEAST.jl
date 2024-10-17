@@ -37,7 +37,8 @@ function (ϕ::GWPCurlRefSpace{T,Deg})(dom::CompScienceMeshes.ReferenceSimplex{Di
 
     P = SVector{2,T}
     NT = @NamedTuple{value::P, curl::T}
-    nts = Vector{NT}(undef, NF)
+    # nts = Vector{NT}(undef, NF)
+    nts = MVector{NF,NT}(undef)
     idx = 1
 
     i = 0
@@ -135,7 +136,7 @@ function (ϕ::GWPCurlRefSpace{T,Deg})(dom::CompScienceMeshes.ReferenceSimplex{Di
             idx += 1
     end end
 
-    return SVector{NF}(nts)
+    return SVector(nts)
 end
 
 

@@ -2,7 +2,7 @@ using CompScienceMeshes
 using BEAST
 
 # Γ = readmesh(joinpath(dirname(pathof(BEAST)),"../examples/sphere2.in"))
-Γ = meshsphere(radius=1.0, h=0.4)
+Γ = meshsphere(radius=1.0, h=0.2)
 @show length(Γ)
 # X = raviartthomas(Γ)
 X = BEAST.gwpdiv(Γ; order=2)
