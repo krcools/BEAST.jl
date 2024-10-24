@@ -11,12 +11,12 @@ using Test
 @testset "Lippmann Schwinger Volume Integral Equation" begin
 
     # Environment
-    ε1 = 1.0*ε0
-    μ1 = μ0
+    ε1 = 1.0*SphericalScattering.ε0
+    μ1 = SphericalScattering.μ0
 
     # Dielectic Sphere
-    ε2 = 5.0*ε0
-    μ2 = μ0
+    ε2 = 5.0*SphericalScattering.ε0
+    μ2 = SphericalScattering.μ0
     r = 1.0
     sp = DielectricSphere(; radius = r, filling = Medium(ε2, μ2))
 
@@ -56,7 +56,7 @@ using Test
 
 
     # Assembly
-    b = assemble(Φ_inc, X)
+    b = real.(assemble(Φ_inc, X))
 
     Z_I = assemble(I, X, X)
 
@@ -69,8 +69,8 @@ using Test
     Z_version2 = Z_I + Z_Y
 
     # MoM solution
-    u_version1 = Z_version1 \ Vector(b)
-    u_version2 = Z_version2 \ Vector(b)
+    u_version1 = Z_version1 \ b
+    u_version2 = Z_version2 \ b
 
     # Observation points
     range_ = range(-1.0*r,stop=1.0*r,length=14)
@@ -84,8 +84,8 @@ using Test
     Φ = field(sp, ex, ScalarPotential(points_sp))
 
     # MoM solution inside the dielectric sphere
-    Φ_MoM_version1 = BEAST.grideval(points_sp, u_version1, X, type=Float64)
-    Φ_MoM_version2 = BEAST.grideval(points_sp, u_version2, X, type=Float64)
+    Φ_MoM_version1 = BEAST.grideval(points_sp, u_version1, X)
+    Φ_MoM_version2 = BEAST.grideval(points_sp, u_version2, X)
 
 
 
