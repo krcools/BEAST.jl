@@ -66,7 +66,7 @@ function reorder_dof(space::RTRefSpace,I)
     return SVector(K),SVector{3,Int64}(1,1,1)
 end
 
-function reorder_dof(space::LagrangeRefSpace{Float64,0,3,1},I)
+function reorder_dof(space::LagrangeRefSpace{T,0,3,1},I) where T
    
     return SVector{1,Int64}(1),SVector{1,Int64}(1)
 end
@@ -102,16 +102,19 @@ function reorder_dof(space::LagrangeRefSpace{T,1,4,4},I) where T
 end
 
 function momintegrals!(out, op::VIEOperator,
-    test_local_space::RefSpace, test_ptr, test_tetrahedron_element,
-    trial_local_space::RefSpace, trial_ptr, trial_tetrahedron_element,
+    test_functions::Space, test_ptr, test_tetrahedron_element,
+    trial_functions::Space, trial_ptr, trial_tetrahedron_element,
     strat::SauterSchwab3DStrategy)
+
+    local_test_space = refspace(test_functions)
+    local_trial_space = refspace(trial_functions)
 
     #Find permutation of vertices to match location of singularity to SauterSchwab
     J, I= SauterSchwab3D.reorder(strat.sing)
       
     #Get permutation and rel. orientatio of DoFs 
-    K,O1 = reorder_dof(test_local_space, I)
-    L,O2 = reorder_dof(trial_local_space, J)
+    K,O1 = reorder_dof(local_test_space, I)
+    L,O2 = reorder_dof(local_trial_space, J)
     #Apply permuation to elements
  
     if length(I) == 4
@@ -146,7 +149,7 @@ function momintegrals!(out, op::VIEOperator,
 
     #Define integral (returns a function that only needs barycentric coordinates)
     igd = VIEIntegrand(test_tetrahedron_element, trial_tetrahedron_element,
-        op, test_local_space, trial_local_space)
+        op, local_test_space, local_trial_space)
 
     #Evaluate integral
     Q = SauterSchwab3D.sauterschwab_parameterized(igd, strat)
@@ -161,8 +164,8 @@ function momintegrals!(out, op::VIEOperator,
 end
 
 function momintegrals!(z, biop::VIEOperator,
-    tshs, tptr, tcell,
-    bshs, bptr, bcell,
+    test_functions::Space, tptr, tcell,
+    trial_functions::Space, bptr, bcell,
     strat::DoubleQuadRule)
 
     # memory allocation here is a result from the type instability on strat

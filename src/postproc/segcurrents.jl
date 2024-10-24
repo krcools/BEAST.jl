@@ -29,21 +29,25 @@ function grideval(points, coeffs, basis; type=nothing)
 
     V = valuetype(refs, eltype(charts))
     T = promote_type(eltype(coeffs), eltype(V))
-    P = similar_type(V, T)
+    if !(V <: SVector)
+        P = T
+    else
+        P = similar_type(V, T)
+    end
 
-    type != nothing && (P = type)
+    type !== nothing && (P = type)
 
     values = zeros(P, size(points))
 
     chart_tree = BEAST.octree(charts)
     for (j,point) in enumerate(points)
         i = CompScienceMeshes.findchart(charts, chart_tree, point)
-        if i != nothing
+        if i !== nothing
             # @show i
             chart = charts[i]
             u = carttobary(chart, point)
             vals = refs(neighborhood(chart,u))
-            for r in 1 : numfunctions(refs)
+            for r in 1 : numfunctions(refs, domain(chart))
                 for (m,w) in ad[i, r]
                     values[j] += w * coeffs[m] * vals[r][1]
                 end
