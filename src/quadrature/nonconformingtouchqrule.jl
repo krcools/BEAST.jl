@@ -62,9 +62,11 @@ function momintegrals!(op,
             Q = restrict(bsis_locspace, σ, bchart)
             zlocal = zero(out)
 
-            momintegrals!(zlocal, op,
-                test_locspace, nothing, tchart,
-                bsis_locspace, nothing, bchart, qrule)
+            # momintegrals!(zlocal, op,
+            #     test_locspace, nothing, tchart,
+            #     bsis_locspace, nothing, bchart, qrule)
+            momintegrals!(op, test_locspace, bsis_locspace,
+                tchart, bchart, zlocal, qrule)
 
             # out .+= P * zlocal * Q'
             for i in axes(P,1)
