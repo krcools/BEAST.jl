@@ -144,9 +144,14 @@ function assemblechunk_body!(biop,
 
         fill!(zlocal, 0)
         qrule = quadrule(biop, test_shapes, trial_shapes, p, tcell, q, bcell, qd, quadstrat)
-        momintegrals!(zlocal, biop,
-            test_space,  tptr, tcell,
-            trial_space, bptr, bcell, qrule)
+        try
+            momintegrals!(zlocal, biop,
+                test_space,  tptr, tcell,
+                trial_space, bptr, bcell, qrule)
+        catch e
+            println(e)
+            println("test cell: ", tptr, "trial cell:", bptr)
+        end
         I = length(test_assembly_data[p])
         J = length(trial_assembly_data[q])
         for j in 1 : J, i in 1 : I
