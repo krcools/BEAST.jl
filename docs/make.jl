@@ -1,7 +1,7 @@
 using Documenter, BEAST
 
 makedocs(
-    clean=false,
+    # clean=false,
     sitename="BEAST Documentation")
 
 deploydocs(

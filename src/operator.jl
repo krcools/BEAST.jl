@@ -6,13 +6,11 @@ struct Threading{T} end
 import Base: transpose, +, -, *
 
 abstract type AbstractOperator end
-
-#@linearspace AbstractOperator{T} T
-
 """
 *Atomic operator*: one that assemblechunk can deal with
 """
 abstract type Operator <: AbstractOperator end
+abstract type IntegralOperator <: Operator end
 
 mutable struct TransposedOperator <: AbstractOperator
     op::AbstractOperator
@@ -144,7 +142,7 @@ function allocatestorage(operator::LinearCombinationOfOperators,
         storage_policy::Type{Val{:bandedstorage}},
         long_delays_policy::Type{LongDelays{:ignore}})
 
-    # TODO: remove this ugly, ugly patch
+    # This works when are terms in the LC can share storage
     return allocatestorage(operator.ops[end], test_functions, trial_functions,
         storage_policy, long_delays_policy)
 end
@@ -155,7 +153,7 @@ function allocatestorage(operator::LinearCombinationOfOperators,
         storage_policy::Type{Val{S}},
         long_delays_policy::Type{LongDelays{L}}) where {L,S}
 
-    # TODO: remove this ugly, ugly patch
+    # This works when are terms in the LC can share storage
     return allocatestorage(operator.ops[end], test_functions, trial_functions,
         storage_policy, long_delays_policy)
 end
@@ -172,30 +170,22 @@ function assemble!(operator::Operator, test_functions::Space, trial_functions::S
     store, threading::Type{Threading{:multi}};
     quadstrat=defaultquadstrat(operator, test_functions, trial_functions))
 
-    # @info "Multi-threaded assembly:"
-
     P = Threads.nthreads()
     numchunks = P
     @assert numchunks >= 1
     splits = [round(Int,s) for s in range(0, stop=numfunctions(test_functions), length=numchunks+1)]
 
     Threads.@threads for i in 1:P
-    # @batch per=thread for i in 1:P
         lo, hi = splits[i]+1, splits[i+1]
         lo <= hi || continue
         test_functions_p = subset(test_functions, lo:hi)
-        # store1 = (v,m,n) -> store(v,lo+m-1,n)
         store1 = _OffsetStore(store, lo-1, 0)
         assemblechunk!(operator, test_functions_p, trial_functions, store1, quadstrat=quadstrat)
-    end
-
-end
+end end
 
 function assemble!(operator::Operator, test_functions::Space, trial_functions::Space,
     store, threading::Type{Threading{:single}};
     quadstrat=defaultquadstrat(operator, test_functions, trial_functions))
-
-    # @info "Single-threaded assembly"
 
     assemblechunk!(operator, test_functions, trial_functions, store; quadstrat)
 end
@@ -260,6 +250,9 @@ function assemble!(op::AbstractOperator, tfs::DirectProductSpace, bfs::DirectPro
     end
 end
 
+# TODO: Remove BlockDiagonalOperator in favour of manipulations
+#       on the level of bilinear forms.
+
 # Discretisation and assembly of these operators
 # will respect the direct product structure of the
 # HilbertSpace/FiniteElmeentSpace
@@ -288,6 +281,7 @@ function assemble!(op::BlockDiagonalOperator, U::DirectProductSpace, V::DirectPr
     end
 end
 
+# BlockFull is default so not sure when this exists -> remove
 
 struct BlockFullOperators <: AbstractOperator
     op::AbstractOperator
@@ -303,16 +297,8 @@ function assemble!(op::BlockFullOperators, U::DirectProductSpace, V::DirectProdu
     store, threading;
     quadstrat = defaultquadstrat(op, U, V))
     
-    # @assert length(U.factors) == length(V.factors)
     I = Int[0]; for u in U.factors push!(I, last(I) + numfunctions(u)) end
     J = Int[0]; for v in V.factors push!(J, last(J) + numfunctions(v)) end
-
-    # k = 1
-    # for (u,v) in zip(U.factors, V.factors)
-    #     store1(v,m,n) = store(v, I[k] + m, J[k] + n)
-    #     assemble!(op.op, u, v, store1; quadstrat)
-    #     k += 1
-    # end
 
     for (k,u) in enumerate(U.factors)
         for (l,v) in enumerate(V.factors)

@@ -29,7 +29,7 @@ function interior(mesh::Mesh, edges=skeleton(mesh,1))
     @assert size(C) == (numcells(mesh), numcells(edges))
 
     nn = vec(sum(abs.(C), dims=1))
-    T = CompScienceMeshes.celltype(edges)
+    T = CompScienceMeshes.indextype(edges)
     interior_edges = Vector{T}()
     for (i,edge) in pairs(cells(edges))
         nn[i] > 1 && push!(interior_edges, edge)

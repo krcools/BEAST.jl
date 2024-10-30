@@ -1,4 +1,4 @@
-using SpecialFunctions
+import SpecialFunctions: hankelh2
 
 abstract type HelmholtzOperator2D <: IntegralOperator end
 scalartype(::HelmholtzOperator2D) = ComplexF64
@@ -29,7 +29,9 @@ function testfunc1()
     print("test function!")
 end
 
-defaultquadstrat(op::HelmholtzOperator2D, tfs, bfs) = DoubleNumWiltonSauterQStrat(4,3,4,3,4,4,4,4)
+# defaultquadstrat(op::HelmholtzOperator2D, tfs, bfs) = DoubleNumWiltonSauterQStrat(4,3,4,3,4,4,4,4)
+defaultquadstrat(op::HelmholtzOperator2D, tfs, bfs) = DoubleNumQStrat(4,3)
+
 
 function quaddata(op::HelmholtzOperator2D, g::LagrangeRefSpace, f::LagrangeRefSpace, tels, bels,
         qs::DoubleNumWiltonSauterQStrat)

@@ -11,14 +11,6 @@ struct DoubleNumWiltonSauterQStrat{R,S}
     sauter_schwab_common_vert::S
 end
 
-struct DoubleNumSauterQstrat{R,S}
-    outer_rule::R
-    inner_rule::R
-    sauter_schwab_common_tetr::S
-    sauter_schwab_common_face::S
-    sauter_schwab_common_edge::S
-    sauter_schwab_common_vert::S
-end
 
 struct DoubleNumQStrat{R}
     outer_rule::R
@@ -42,16 +34,27 @@ end
 defaultquadstrat(op, tfs, bfs) = defaultquadstrat(op, refspace(tfs), refspace(bfs))
 macro defaultquadstrat(dop, body)
     @assert dop.head == :tuple
-    @assert length(dop.args) == 3
-    op = dop.args[1]
-    tfs = dop.args[2]
-    bfs = dop.args[3]
-    ex = quote
-        function BEAST.defaultquadstrat(::typeof($op), ::typeof($tfs), ::typeof($bfs))
-            $body
+    if length(dop.args) == 3
+        op = dop.args[1]
+        tfs = dop.args[2]
+        bfs = dop.args[3]
+        ex = quote
+            function BEAST.defaultquadstrat(::typeof($op), ::typeof($tfs), ::typeof($bfs))
+                $body
+            end
         end
+        return esc(ex)
+    elseif length(dop.args) == 2
+        lin = dop.args[1]
+        tfs = dop.args[2]
+        ex = quote
+            function BEAST.defaultquadstrat(::typeof($lin), ::typeof($tfs))
+                $body
+            end
+        end
+        return esc(ex)
     end
-    return esc(ex)
+    error("@defaultquadstrat expects a first argument of the for (op,tfs,bfs) or (linform,tfs)")
 end
 
 struct SingleNumQStrat

@@ -26,8 +26,8 @@ for T in [Float32, Float64]
     # center of the diagonal
     ctr = center(charts[3])
     face_charts = [chart(mesh,fce) for fce in mesh]
-    nbd1 = neighborhood(face_charts[1], carttobary(face_charts[1], ctr))
-    nbd2 = neighborhood(face_charts[2], carttobary(face_charts[2], ctr))
+    nbd1 = neighborhood(face_charts[1], carttobary(face_charts[1], cartesian(ctr)))
+    nbd2 = neighborhood(face_charts[2], carttobary(face_charts[2], cartesian(ctr)))
     t = tangents(ctr,1)
     ut = t / norm(t)
 

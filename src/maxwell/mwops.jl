@@ -170,6 +170,8 @@ function (igd::Integrand{<:MWSingleLayer3D})(x,y,f,g)
     end
 end
 
+
+
 function (igd::Integrand{<:MWSingleLayer3DReg})(x,y,f,g)
     α = igd.operator.α
     β = igd.operator.β

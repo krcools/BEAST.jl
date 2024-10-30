@@ -72,7 +72,7 @@ function allocatestorage(op::TensorOperator, test_functions, trial_functions,
     tail = zeros(T, M, N)
 
     Nt = numfunctions(temporalbasis(trial_functions))
-    Z = ConvolutionOperators.ConvOp(data, K0, K1, tail, Nt)
+    Z = ConvolutionOperators.ConvOp(data, K0, K1, tail, bandwidth)
     function store1(v,m,n,k)
 		if Z.k0[m,n] ≤ k ≤ Z.k1[m,n]
 			Z.data[k - Z.k0[m,n] + 1,m,n] += v

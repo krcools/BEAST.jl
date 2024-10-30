@@ -20,6 +20,9 @@ using LiftedMaps
 using AbstractTrees
 using NestedUnitRanges
 
+using Infiltrator
+using TestItems
+
 import LinearAlgebra: cross, dot
 import LinearAlgebra: ×, ⋅
 
@@ -141,13 +144,9 @@ include("utils/combinatorics.jl")
 include("utils/linearspace.jl")
 include("utils/zeromap.jl")
 include("utils/rank1map.jl")
+include("utils/lagpolys.jl")
 
-include("bases/basis.jl")
-include("bases/lincomb.jl")
-include("bases/trace.jl")
-include("bases/restrict.jl")
-include("bases/divergence.jl")
-
+include("bases/localbasis.jl")
 include("bases/local/laglocal.jl")
 include("bases/local/rtlocal.jl")
 include("bases/local/rt2local.jl")
@@ -158,6 +157,19 @@ include("bases/local/ncrossbdmlocal.jl")
 include("bases/local/ndlcclocal.jl")
 include("bases/local/ndlcdlocal.jl")
 include("bases/local/bdm3dlocal.jl")
+include("bases/local/rtqlocal.jl")
+include("bases/local/gwplocal.jl")
+include("bases/local/gwpdivlocal.jl")
+
+
+include("bases/basis.jl")
+include("bases/lincomb.jl")
+include("bases/trace.jl")
+include("bases/restrict.jl")
+include("bases/divergence.jl")
+include("bases/global/globaldofs.jl")
+include("bases/global/gwpglobal.jl")
+include("bases/global/gwpdivglobal.jl")
 
 include("bases/lagrange.jl")
 include("bases/rtspace.jl")
@@ -172,6 +184,7 @@ include("bases/ndlccspace.jl")
 include("bases/ndlcdspace.jl")
 include("bases/dual3d.jl")
 include("bases/bdm3dspace.jl")
+include("bases/rtqspace.jl")
 
 
 include("bases/subdbasis.jl")
@@ -183,8 +196,19 @@ include("bases/tensorbasis.jl")
 include("operator.jl")
 
 include("quadrature/quadstrats.jl")
+include("quadrature/doublenumqstrat.jl")
+include("quadrature/doublenumsauterqstrat.jl")
+include("quadrature/doublenumwiltonsauterqstrat.jl")
+include("quadrature/doublenumwiltonbogaertqstrat.jl")
+include("quadrature/selfsauterdnumotherwiseqstrat.jl")
+include("quadrature/nonconformingintegralopqstrat.jl")
+include("quadrature/commonfaceoverlappingedgeqstrat.jl")
+include("quadrature/strategies/cfcvsautercewiltonpdnumqstrat.jl")
+include("quadrature/strategies/testrefinestrialqstrat.jl")
+include("quadrature/strategies/trialrefinestestqstrat.jl")
 
 include("excitation.jl")
+include("gridfunction.jl")
 include("localop.jl")
 include("multiplicativeop.jl")
 include("identityop.jl")
@@ -192,14 +216,14 @@ include("integralop.jl")
 include("dyadicop.jl")
 include("interpolation.jl")
 
-include("quadrature/doublenumqstrat.jl")
-include("quadrature/doublenumsauterqstrat.jl")
-include("quadrature/doublenumwiltonsauterqstrat.jl")
-include("quadrature/doublenumwiltonbogaertqstrat.jl")
-
+include("quadrature/rules/momintegrals.jl")
 include("quadrature/doublenumints.jl")
 include("quadrature/singularityextractionints.jl")
 include("quadrature/sauterschwabints.jl")
+include("quadrature/nonconformingoverlapqrule.jl")
+include("quadrature/nonconformingtouchqrule.jl")
+include("quadrature/rules/testrefinestrialqrule.jl")
+include("quadrature/rules/trialrefinestestqrule.jl")
 
 include("postproc.jl")
 include("postproc/segcurrents.jl")

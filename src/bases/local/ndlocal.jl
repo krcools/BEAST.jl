@@ -6,7 +6,7 @@ This is not the edge starting at vertex `r`. The downside of this local numberin
 scheme is that it cannot be extended to cells that are not simplices because
 there is no well defined concept of adjacent-ness.
 """
-mutable struct NDRefSpace{T} <: RefSpace{T,3} end
+mutable struct NDRefSpace{T} <: RefSpace{T} end
 
 function valuetype(ref::NDRefSpace{T}, charttype::Type) where {T}
     SVector{universedimension(charttype),T}
@@ -32,10 +32,11 @@ function (ϕ::NDRefSpace)(nbd)
 
 end
 
+numfunctions(x::NDRefSpace, dom::CompScienceMeshes.ReferenceSimplex{2}) = 3
 
 function restrict(ϕ::NDRefSpace{T}, dom1, dom2) where T
 
-    K = numfunctions(ϕ)
+    K = numfunctions(ϕ, domain(dom1))
     D = dimension(dom1)
 
     @assert K == 3

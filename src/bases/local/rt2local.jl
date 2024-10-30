@@ -1,4 +1,4 @@
-struct RT2RefSpace{T} <: RefSpace{T,8} end
+struct RT2RefSpace{T} <: RefSpace{T} end
 
 function (f::RT2RefSpace)(p)
 
@@ -33,13 +33,14 @@ function (f::RT2RefSpace)(p)
     )
 end
 
+numfunctions(x::RT2RefSpace, dom::CompScienceMeshes.ReferenceSimplex{2}) = 8
 
 function interpolate(fields, interpolant::BEAST.RT2RefSpace, chart)
 
     T = coordtype(chart)
 
     Q = Any[]
-    refchart = CompScienceMeshes.domain(chart).simplex
+    refchart = CompScienceMeshes.domain(chart)
     nfields = length(fields(center(chart)))
 
     for (edge, refedge) in zip(faces(chart), faces(refchart))
@@ -48,8 +49,6 @@ function interpolate(fields, interpolant::BEAST.RT2RefSpace, chart)
         qps = CompScienceMeshes.quadpoints(edge,4)
         for (p_edge,w) in qps
             s = parametric(p_edge)
-            # x = cartesian(p_edge)
-            # u = carttobary(chart, x)
 
             p_refedge = neighborhood(refedge,s)
             u = cartesian(p_refedge)
@@ -174,3 +173,31 @@ const _dof_rt2perm_matrix = [
                 0 0 0 0 0 0 -1 1]
 ]
 
+@testitem "restrict RT2" begin
+    using CompScienceMeshes
+    using LinearAlgebra
+    
+    ref_vertices = [
+        point(1,0),
+        point(0,1),
+        point(0,0),
+    ]
+    vertices = [
+        point(1,0,0),
+        point(0,1,0),
+        point(0,0,0),
+    ]
+    chart1 = simplex(vertices...)
+    for I in BEAST._vert_perms_rt
+        chart2 = simplex(
+            chart1.vertices[I[1]],
+            chart1.vertices[I[2]],
+            chart1.vertices[I[3]],)
+        chart2tochart1 = CompScienceMeshes.simplex(ref_vertices[collect(I)]...)
+        rs = BEAST.RT2RefSpace{Float64}()
+        Q1 = BEAST.dof_perm_matrix(rs, I)
+        Q3 = BEAST.interpolate(rs, chart2, rs, chart1, chart2tochart1)
+        @test Q1 ≈ Q3
+        @show norm(Q1-Q3)
+    end
+end
