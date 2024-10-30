@@ -53,9 +53,9 @@ function allocatestorage(op::RetardedPotential, testST, basisST,
     end
 
     aux = EmptyRP(op.speed_of_light)
-    print("Allocating memory for convolution operator: ")
+    #print("Allocating memory for convolution operator: ")
     assemble!(aux, testST, basisST, store)
-    println("\nAllocated memory for convolution operator.")
+    #println("\nAllocated memory for convolution operator.")
 
     kmax = maximum(K1);
     T = scalartype(op, testST, basisST)
@@ -103,7 +103,7 @@ function allocatestorage(op::RetardedPotential, testST, basisST,
 	::Type{Val{:bandedstorage}},
     ::Type{LongDelays{:compress}})
     
-    @info "Allocating mem for RP op compressing the static tail..."
+    #@info "Allocating mem for RP op compressing the static tail..."
 
 	T = scalartype(op, testST, basisST)
 
@@ -130,9 +130,9 @@ function allocatestorage(op::RetardedPotential, testST, basisST,
     op_alloc = EmptyRP(op.speed_of_light)
 	tbf_trunc = truncatetail(tbf)
 	δ = timebasisdelta(Δt, Nt)
-    print("Allocating memory for convolution operator: ")
+    #print("Allocating memory for convolution operator: ")
     assemble!(op_alloc, tfs⊗δ, bfs⊗tbf_trunc, store_alloc)
-    println("\nAllocated memory for convolution operator.")
+    #println("\nAllocated memory for convolution operator.")
 
 	bandwidth = maximum(K1 .- K0 .+ 1)
 	data = zeros(T, bandwidth, M, N)
@@ -167,10 +167,17 @@ function assemble!(op::LinearCombinationOfOperators, tfs::SpaceTimeBasis, bfs::S
     end
 end
 
+
+function assemble!(op::RetardedPotential, testST::Space, trialST::Space, store,
+    threading::Type{Threading{:single}}=Threading{:single}; quadstrat=defaultquadstrat(op, testST, trialST))
+
+    assemble_chunk!(op, testST, trialST, store; quadstrat=quadstrat)
+end
+
 function assemble!(op::RetardedPotential, testST::Space, trialST::Space, store,
     threading::Type{Threading{:multi}}=Threading{:multi}; quadstrat=defaultquadstrat(op, testST, trialST))
 
-    @show quadstrat
+    #@show quadstrat
 
 	Y, S = spatialbasis(testST), temporalbasis(testST)
     X, R = spatialbasis(trialST), temporalbasis(trialST)
@@ -201,7 +208,7 @@ function assemble!(op::RetardedPotential, testST::Space, trialST::Space, store,
 		store1 = (v,m,n,k) -> store(v,rlo+m-1,clo+n-1,k)
 		assemble_chunk!(op, Y_p ⊗ S, X_q ⊗ R, store1)
 	end
-    println("")
+    #println("")
 
 	# P = Threads.nthreads()
 	# splits = [round(Int,s) for s in range(0, stop=numfunctions(Y), length=P+1)]
@@ -258,8 +265,8 @@ function assemble_chunk!(op::RetardedPotential, testST, trialST, store;
 
 	# @show length(testels) length(trialels)
 
-    myid == 1 && print("dots out of 10: ")
-    todo, done, pctg = length(testels), 0, 0
+    #myid == 1 && print("dots out of 10: ")
+    #todo, done, pctg = length(testels), 0, 0
     for p in eachindex(testels)
         τ = testels[p]
         for q in eachindex(trialels)
@@ -296,12 +303,13 @@ function assemble_chunk!(op::RetardedPotential, testST, trialST, store;
 		    end # next r
 		end # next q
 
-        done += 1
-        new_pctg = round(Int, done / todo * 100)
-        if myid == 1 && new_pctg > pctg + 9
-            print(".")
-            pctg = new_pctg
-        end
+        #done += 1
+        
+        #new_pctg = round(Int, done / todo * 100)
+        #if myid == 1 && new_pctg > pctg + 9
+        #    print(".")
+        #    pctg = new_pctg
+        #end
     end # next p
 
     # println("")

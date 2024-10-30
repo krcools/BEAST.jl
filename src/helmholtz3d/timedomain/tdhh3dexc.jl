@@ -41,6 +41,7 @@ struct DotTraceHH{T,F} <: TDFunctional{T}
     field::F
 end
 
+scalartype(d::DotTraceHH{T}) where {T} = T
 
 dot(::NormalVector, field::TDFunctional) = DotTraceHH{scalartype(field), typeof(field)}(field)
 
