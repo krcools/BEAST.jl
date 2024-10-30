@@ -21,3 +21,23 @@ qstrat = BEAST.NonConformingIntegralOpQStrat(parent_qstrat)
 Z21 = BEAST.assemble(t, X2, X1, quadstrat=qstrat)
 Z12 = BEAST.assemble(t, X1, X2, quadstrat=qstrat)
 @test maximum(norm.(Z21-transpose(Z12)))<tol
+
+#=
+# Another test scheme 
+
+e_inc = Maxwell3D.planewave(direction=ẑ, polarization=x̂, wavenumber=1.0)
+e = (n × e_inc) × n
+
+E1 = BEAST.assemble(e, X1)
+E2 = BEAST.assemble(e, X2)
+
+#solving this overdetermined system
+E_test = transpose(Z21)*E2
+Z_test = transpose(Z21)*Z21
+S2 = BEAST.GMRESSolver(Z1221)
+j2 = solve(S2, E_test)[1]
+
+Z11 = BEAST.assemble(t, X1, X1)
+S1 = BEAST.GMRESSolver(Z11)
+j1 = solve(S1, E1)[1]
+=#
