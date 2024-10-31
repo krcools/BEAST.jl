@@ -1,4 +1,4 @@
-abstract type _LocalBasisOperations{T} <: RefSpace{T,:None} end
+abstract type _LocalBasisOperations{T} <: RefSpace{T} end
 numfunctions(a::_LocalBasisOperations) = coalesce(numfunctions(a.el1) , numfunctions(a.el2))
 
 struct _LocalBasisTimes{T,U,V} <: _LocalBasisOperations{T}
@@ -37,7 +37,7 @@ end
 
 operation(a::_LocalBasisTimes) = *
 operation(a::_LocalBasisCross) = ×
-operation(a::_LocalBasisDot) = ⋅
+operation(a::_LocalBasisDot) = (x,y) --> transpose(x)*y
 
 _execute_operation(el1::SVector{N,<:NamedTuple},el2::SVector,op::U) where {N,U} = SVector{N}(_execute_operation_named(el1.data,el2,operation(op)))
 _execute_operation(el1::SVector{N,<:NamedTuple},el2::U,op::_LocalBasisTimes) where {N,U <: Number} = SVector{N}(_execute_operation_named(el1.data,el2,operation(op)))
@@ -45,7 +45,7 @@ _execute_operation(el1::SVector,el2::SVector{N,<:NamedTuple},op::U) where {N,U} 
 _execute_operation(el1::U,el2::SVector{N,<:NamedTuple},op::_LocalBasisTimes) where {N,U <: Number} = SVector{N}(_execute_operation_named(el1,el2.data,operation(op)))
 _execute_operation(el1::SVector,el2::SVector,op::U) where {U <: Union{_LocalBasisCross,_LocalBasisDot}} = operation(op)(el1,el2)
 _execute_operation(el1::U,el2::V,op::_LocalBasisTimes) where {U <: Number,V <: Number}= el1*el2
-_execute_operation(el1::SVector{N,<:NamedTuple},el2::SVector{M,<:NamedTuple},op) where {N,M} = @error "multiplication of basisses not (yet) supported"
+_execute_operation(el1::SVector{N,<:NamedTuple},el2::SVector{M,<:NamedTuple},op) where {N,M} = @error "multiplication of basisses not supported"
 
 _execute_operation_named(a::NTuple{N},b,op) where {N} = ((value=op(a[1].value,b),), _execute_operation_named(Base.tail(a),b,op)...)
 _execute_operation_named(a::NTuple{1},b,op) = ((value=op(a[1].value,b),),)
