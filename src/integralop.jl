@@ -151,6 +151,10 @@ function assemblechunk_body!(biop,
         catch e
             println(e)
             println("test cell: ", tptr, "trial cell:", bptr)
+            momintegrals!(zlocal, biop,
+                test_space,  tptr, tcell,
+                trial_space, bptr, bcell, qrule, true)
+            return
         end
         I = length(test_assembly_data[p])
         J = length(trial_assembly_data[q])

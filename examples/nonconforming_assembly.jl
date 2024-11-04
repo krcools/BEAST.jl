@@ -14,9 +14,9 @@ Xref = BEAST.raviartthomas(mref)
 X = BEAST.raviartthomas(m)
 t = Maxwell3D.singlelayer(wavenumber=1.0)
 
-default_qstrat = BEAST.defaultquadstrat(t, X, Xref)
+default_qstrat = BEAST.defaultquadstrat(t, Xref, X)
 qstrat = BEAST.NonConformingIntegralOpQStrat(default_qstrat)
-Z = BEAST.assemble(t, X, Xref, quadstrat=qstrat)
+Z = BEAST.assemble(t, Xref, X, quadstrat=qstrat);
 
 #element 2725 in m and element 10673 in mref are problematic pairs
 import Plotly
