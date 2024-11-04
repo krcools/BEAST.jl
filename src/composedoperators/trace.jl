@@ -17,12 +17,12 @@ end
 
 
 #### trace of a potential:
-_trace(::Kernel,n;type=Float64,D) = NullKernel(), 0
+_trace(::Kernel,n;type=Float64,D) = 0, 0
 function _trace(::HH3DGradGreen,n,D;type=Float64)
     if D==2
         return DisplacementVector{type}(n) , 0.5
     end
-    return NullKernel(), 0
+    return 0, 0
 end
 
 """
@@ -32,13 +32,13 @@ function ttrace(a::PotentialIntegralOperator{D},sign;testfunction_tangential=fal
     t,f = _trace(a.kernel,sign,D)
     if testfunction_tangential
         doubleint = CompDoubleInt(B->B,(x,y)->transpose(x)*y,a.kernel,a.pairing2,a.bfunc)
-        singleint = f*CompSingleInt(B->B,(x,y)->transpose(x)*y,t,a.pairing2,a.bfunc)
+        t!=0 && singleint = f*CompSingleInt(B->B,(x,y)->transpose(x)*y,t,a.pairing2,a.bfunc)
     else
 
         doubleint = -1*CompDoubleInt(B-> n×(n×B),(x,y)->transpose(x)*y,a.kernel,a.pairing2,a.bfunc)
-        singleint = (-f)*CompSingleInt(B -> n×(n×B),(x,y)->transpose(x)*y,t,a.pairing2,a.bfunc)
+        t!=0 && singleint = (-f)*CompSingleInt(B -> n×(n×B),(x,y)->transpose(x)*y,t,a.pairing2,a.bfunc)
     end
-    if t==NullKernel()
+    if t==0
         return doubleint
     else
         #eventualy a scan to be non zero can be added here.
@@ -49,9 +49,9 @@ end
 function ntrace(a::PotentialIntegralOperator{D},sign) where {D}
     t,f = _trace(a.kernel,sign,D)
     doubleint = CompDoubleInt(B-> B*n,(x,y)->transpose(x)*y,a.kernel,a.pairing2,a.bfunc)
-    singleint = f*CompSingleInt(B-> B*n,(x,y)->transpose(x)*y,t,a.pairing2,a.bfunc)
+    t!=0 && singleint = f*CompSingleInt(B-> B*n,(x,y)->transpose(x)*y,t,a.pairing2,a.bfunc)
     
-    if t==NullKernel()
+    if t==0
         return doubleint
     else
         #eventualy a scan to be non zero can be added here.
@@ -62,9 +62,9 @@ end
 function trace(a::PotentialIntegralOperator{D},sign) where {D}
     t,f = _trace(a.kernel,sign,D)
     doubleint = CompDoubleInt(B->B,*,a.kernel,a.pairing2,a.bfunc)
-    singleint = f*CompSingleInt(B->B,*,t,a.pairing2,a.bfunc)
+    t!=0 && singleint = f*CompSingleInt(B->B,*,t,a.pairing2,a.bfunc)
     
-    if t==NullKernel()
+    if t==0
         return doubleint
     else
         #eventualy a scan to be non zero can be added here.
@@ -75,9 +75,9 @@ end
 function strace(a::PotentialIntegralOperator{D},sign) where {D}
     t,f = _trace(a.kernel,sign,D)
     doubleint = CompDoubleInt(B-> B × n,(x,y)->transpose(x)*y,a.kernel,a.pairing2,a.bfunc)
-    singleint = f*CompSingleInt(B-> B × n,(x,y)->transpose(x)*y,t,a.pairing2,a.bfunc)
+    t!=0 && singleint = f*CompSingleInt(B-> B × n,(x,y)->transpose(x)*y,t,a.pairing2,a.bfunc)
     
-    if t==NullKernel()
+    if t==0
         return doubleint
     else
         #eventualy a scan to be non zero can be added here.
