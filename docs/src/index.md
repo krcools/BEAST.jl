@@ -33,7 +33,7 @@ The *reference space* concept defines an API for working with spaces of local sh
 
 The functions that depend on the type and value of arguments modeling *reference space* are:
 
-- [`numfunctions(refspace)`](@ref): returns the number of shape functions on each element.
+- [`numfunctions(refspace, domain)`](@ref): returns the number of shape functions on each element.
 
 ## Kernel
 

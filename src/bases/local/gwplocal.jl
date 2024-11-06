@@ -1,4 +1,6 @@
-struct GWPCurlRefSpace{T,Degree} <: RefSpace{T} end
+struct GWPCurlRefSpace{T,Degree} <: RefSpace{T}
+    storage::Vector{@NamedTuple{value::SVector{2,T}, curl::T}}
+end
 
 function numfunctions(x::GWPCurlRefSpace{<:Any,D},
         dom::CompScienceMeshes.ReferenceSimplex{2}) where {D}
@@ -7,6 +9,11 @@ end
 function dimtype(x::GWPCurlRefSpace{<:Any,D},
     dom::CompScienceMeshes.ReferenceSimplex{2}) where {D}
     Val{(D+1)*(D+3)}
+end
+
+function GWPCurlRefSpace{T,Degree}() where {T,Degree}
+    NT = @NamedTuple{value::T, curl::SVector{2,T}}
+    GWPCurlRefSpace{T,Degree}(Vector{NT}())
 end
 
 function (ϕ::GWPCurlRefSpace{T,Degree})(p) where {T,Degree}
@@ -37,7 +44,9 @@ function (ϕ::GWPCurlRefSpace{T,Deg})(dom::CompScienceMeshes.ReferenceSimplex{Di
 
     P = SVector{2,T}
     NT = @NamedTuple{value::P, curl::T}
-    nts = Vector{NT}(undef, NF)
+    # nts = Vector{NT}(undef, NF)
+    # nts = MVector{NF,NT}(undef)
+    nts = resize!(ϕ.storage, NF)
     idx = 1
 
     i = 0
