@@ -49,9 +49,11 @@ function momintegrals!(op,
             Q = restrict(basis_local_space, basis_chart, bchart)
             zlocal = zero(out)
 
-            momintegrals!(zlocal, op,
-                test_local_space, nothing, tchart,
-                basis_local_space, nothing, bchart, qrule)
+            # momintegrals!(zlocal, op,
+            #     test_local_space, nothing, tchart,
+            #     basis_local_space, nothing, bchart, qrule)
+            momintegrals!(op, test_local_space, basis_local_space,
+                tchart, bchart, zlocal, qrule)
 
             for i in axes(P,1)
                 for j in axes(Q,1)
