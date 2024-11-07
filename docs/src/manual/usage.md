@@ -70,7 +70,20 @@ EF = potential(MWSingleLayerField3D(gamma=im*2.0), points, u, RT)
 ```
 
 
-!!! warn
-    Add a plot here!
+!!! warning
+    more details
 
-
+```@raw html
+<figure>
+  <img
+    src="../assets/currentREADME.png"
+    alt="Setup"
+    width="250" />
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+  <img
+    src="../assets/currentRealREADME.png"
+    alt="Setup"
+    width="250" />
+</figure>
+<br/>
+```
