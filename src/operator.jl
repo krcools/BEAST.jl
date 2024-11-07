@@ -19,6 +19,11 @@ end
 scalartype(op::TransposedOperator) = scalartype(op.op)
 defaultquadstrat(op::TransposedOperator, tfs::Space, bfs::Space) = defaultquadstrat(op.op, tfs, bfs)
 
+"""
+    LinearCombinationOfOperators{T} <: AbstractOperator
+
+A linear combination of operators.
+"""
 mutable struct LinearCombinationOfOperators{T} <: AbstractOperator
     coeffs::Vector{T}
     ops::Vector
@@ -76,9 +81,16 @@ transpose(op::Operator) = TransposedOperator(op)
 defaultquadstrat(lc::LinearCombinationOfOperators, tfs, bfs) =
     [defaultquadstrat(op,tfs,bfs) for op in lc.ops]
 
+"""
+    assemble(operator, test_functions, trial_functions;
+        storage_policy = Val{:bandedstorage},
+        threading = Threading{:multi},
+        quadstrat=defaultquadstrat(operator, test_functions, trial_functions))
+
+Assemble the system matrix corresponding to the operator `operator` tested with the test functions `test_functions` and the trial functions `trial_functions`.
+"""
 function assemble(operator::AbstractOperator, test_functions, trial_functions;
     storage_policy = Val{:bandedstorage},
-    # long_delays_policy = LongDelays{:compress},
     threading = Threading{:multi},
     quadstrat=defaultquadstrat(operator, test_functions, trial_functions))
 

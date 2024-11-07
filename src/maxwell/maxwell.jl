@@ -10,10 +10,10 @@ module Maxwell3D
     Bilinear form given by:
 
     ```math
-        α ∬_{Γ×Γ} j(x)⋅k(y) G_{γ}(x,y) + β ∬_{Γ×Γ} div j(x) div k(y) G_{γ}(x,y)
+        a(t,b) = α ∬_{Γ×Γ} t(x)⋅b(y) g_{γ}(x,y) dx dy + β ∬_{Γ×Γ} ∇_Γ⋅ t(x) ∇_Γ⋅ b(y) g_{γ}(x,y) dx dy
     ```
 
-    with ``G_{γ} = e^{-γ|x-y|} / 4π|x-y|``.
+    with ``g_{γ} = e^{-γ|x-y|} / 4π|x-y|``.
     """
     function singlelayer(;
             gamma=nothing,

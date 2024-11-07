@@ -2,3 +2,6 @@
 BEAST = "bb4162c7-ba94-5a20-af32-d8ec4428bdd1"
 CompScienceMeshes = "3e66a162-7b8c-5da0-b8f8-124ecd2c3ae1"
 Documenter = "e30172f5-a6a5-5a46-863b-614d45cd2de4"
+DocumenterCitations = "daee34ce-89f3-4625-b898-19384cb65244"
+Krylov = "ba0b0d4f-ebba-5204-a429-3ac8c609bfb7"
+TypeTree = "04da0e3b-1cad-4b2c-a963-fc1602baf1af"

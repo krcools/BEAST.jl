@@ -9,6 +9,8 @@ docs/site/
 temp/
 dev/
 profile/
-/Manifest.toml
 /envs/
+/Manifest.toml
+/test/Manifest.toml
+/docs/Manifest.toml
 /data/

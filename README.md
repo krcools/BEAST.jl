@@ -1,13 +1,21 @@
-# BEAST
 
-Boundary Element Analysis and Simulation Toolkit
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/src/assets/logo_README_white.svg" height="170">
+  <source media="(prefers-color-scheme: light)" srcset="docs/src/assets/logo_README.svg" height="170">
+  <img alt="" src="" height="170">
+</picture>
+
+
 
 [![CI](https://github.com/krcools/BEAST.jl/actions/workflows/CI.yml/badge.svg)](https://github.com/krcools/BEAST.jl/actions/workflows/CI.yml)
 [![codecov.io](http://codecov.io/github/krcools/BEAST.jl/coverage.svg?branch=master)](http://codecov.io/github/krcools/BEAST.jl?branch=master)
 [![Documentation](https://img.shields.io/badge/docs-latest-blue.svg)](https://krcools.github.io/BEAST.jl/dev/)
 [![DOI](https://zenodo.org/badge/87720391.svg)](https://zenodo.org/badge/latestdoi/87720391)
 
+
 ## Introduction
+
+Boundary Element Analysis and Simulation Toolkit
 
 This package contains common basis functions and assembly routines for the implementation of
 boundary element methods. Examples are included for the 2D and 3D Helmholtz equations and for
