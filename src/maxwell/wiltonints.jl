@@ -14,7 +14,7 @@ function innerintegrals!(op::MWSingleLayer3DSng, p, g, f, t, s, z,
     n = cross(s[1]-s[3],s[2]-s[3])
     n /= norm(n)
     ρ = x - ((x-s[1]) ⋅ n) * n
-    println(ρ)
+    # println(ρ)
     scal, vec = WiltonInts84.wiltonints(s[1], s[2], s[3], x, Val{1})
 
     # \int \frac{1}{4 \pi R}

@@ -118,6 +118,7 @@ function momintegrals!(op,
             catch e
                 println("test chart: ", p, tchart.vertices)
                 println("basis chart: ", q, bchart.vertices)
+                @infiltrate
                 return
             end
 
