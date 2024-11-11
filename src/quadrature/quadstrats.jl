@@ -57,8 +57,8 @@ macro defaultquadstrat(dop, body)
     error("@defaultquadstrat expects a first argument of the for (op,tfs,bfs) or (linform,tfs)")
 end
 
-struct SingleNumQStrat
-    quad_rule::Int
+struct SingleNumQStrat{R}
+    quad_rule::R
 end
 
 function quadinfo(op, tfs, bfs; quadstrat=defaultquadstrat(op, tfs, bfs))
