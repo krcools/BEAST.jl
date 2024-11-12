@@ -129,11 +129,12 @@ end
 
 function potential(op, points, coeffs, basis;
 	type=SVector{3,ComplexF64},
-	quadstrat=defaultquadstrat(op, basis))
+	quadstrat=defaultquadstrat(op, basis),
+	threading = Threading{:multi})
 
 	ff = zeros(type, size(points))
 	store(v,m,n) = (ff[m] += v*coeffs[n])
-	potential!(store, op, points, basis; type, quadstrat)
+	potential!(store, op, points, basis; type, quadstrat,threading)
 	return ff
 end
 
@@ -147,7 +148,8 @@ end
 
 function potential(op, points, coeffs, space::DirectProductSpace;
 	type=SVector{3,ComplexF64},
-	quadstrat=defaultquadstrat(op,space))
+	quadstrat=defaultquadstrat(op,space),
+	threading = Threading{:multi})
 
 	ff = zeros(type, size(points))
 	@assert length(coeffs) == numfunctions(space)
@@ -155,14 +157,85 @@ function potential(op, points, coeffs, space::DirectProductSpace;
 	offset = 0
 	for fct in space.factors
 		store(v,m,n) = (ff[m] += v*coeffs[offset+n])
-		potential!(store, op, points, fct; type, quadstrat)
+		potential!(store, op, points, fct; type, quadstrat, threading)
 		offset += numfunctions(fct)
 	end
 
 	ff
 end
 
+
 function potential!(store, op, points, basis;
+	type=SVector{3,ComplexF64},
+	quadstrat=defaultquadstrat(op, basis),
+	threading::Type{Threading{:multi}})
+	P = Threads.nthreads()-1
+	if P==0
+		p = [points]
+		l = 0
+	else
+		l = div(length(points),P)
+		r = length(points)%P
+		if r == 0
+			p = [points[i*l+1:i*l+l] for i in 0:P-1]
+		else
+			p = [points[i*l+1:i*l+l] for i in 0:P-1]
+			p = [p;[points[end-r+1:end]]]
+		end
+	end
+	@assert sum(length.(p))==length(points)
+
+	Threads.@threads for i in 1:(P+1)
+		partial_store(v,m,n) = store(v,m+(i-1)*l,n)
+		potential_points!(partial_store,op,p[i],basis;type,quadstrat)
+	end
+
+
+end
+function potential!(store, op, points, basis;
+	type=SVector{3,ComplexF64},
+	quadstrat=defaultquadstrat(op, basis))
+
+	z = zeros(type,length(points))
+
+	els, ad = assemblydata(basis)
+	rs = refspace(basis)
+
+	zlocal = Array{type}(undef,numfunctions(rs))
+	qdata = quaddata(op,rs,els,quadstrat)
+
+	print("dots out of 10: ")
+
+	todo, done, pctg = length(points), 0, 0
+
+	for (p,y) in enumerate(points)
+		for (q,el) in enumerate(els)
+
+			fill!(zlocal,zero(type))
+			qr = quadrule(op,rs,p,y,q,el,qdata,quadstrat)
+			farfieldlocal!(zlocal,op,rs,y,el,qr)
+
+			# assemble from local contributions
+			for (r,z) in enumerate(zlocal)
+                for (n,b) in ad[q,r]
+					store(z*b,p,n)
+				end
+			end
+		end
+
+		done += 1
+		new_pctg = round(Int, done / todo * 100)
+		if new_pctg > pctg + 9
+				#println(todo," ",done," ",new_pctg)
+				print(".")
+				pctg = new_pctg
+		end
+	end
+
+	println("")
+
+end
+function potential_points!(store, op, points, basis;
 	type=SVector{3,ComplexF64},
 	quadstrat=defaultquadstrat(op, basis))
 

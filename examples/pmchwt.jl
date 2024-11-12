@@ -24,17 +24,18 @@ end
 μ0 = 4π*1e-7
 c = 1/√(ϵ0*μ0)
 
-λ = 2.9979563769321627
-ω = 2π*c/λ
+# λ = 2.9979563769321627
+# ω = 2π*c/λ
+ω = 10.0^8*2*pi
 
-Ω = CompScienceMeshes.tetmeshsphere(λ,0.1*λ)
-Ω = CompScienceMeshes.tetmeshsphere(λ,0.3*λ)
+# Ω = CompScienceMeshes.tetmeshsphere(λ,0.1*λ)
+Ω = CompScienceMeshes.tetmeshsphere(1.0,0.2)
 Γ = boundary(Ω)
 X = raviartthomas(Γ)
 @show numfunctions(X)
 
 ϵr = 2.0
-μr = 1.0
+μr = 3.0
 
 κ, η = ω/c, √(μ0/ϵ0)
 κ′, η′ = κ*√(ϵr*μr), η*√(μr/ϵr)
@@ -62,7 +63,7 @@ pmchwt = @discretise(
          (K+K′)[l,j] + (α*T+α′*T′)[l,m] == -e[k] - h[l],
     j∈X, m∈X, k∈X, l∈X)
 
-u = solve(pmchwt)
+u = BEAST.solve(pmchwt)
 
 Θ, Φ = range(0.0,stop=2π,length=100), 0.0
 ffpoints = [point(cos(ϕ)*sin(θ), sin(ϕ)*sin(θ), cos(θ)) for θ in Θ for ϕ in Φ]
@@ -98,10 +99,10 @@ Plotly.plot(patch(Γ, norm.(fcrm)))
 
 
 
-Z = range(-6,6,length=200)
-Y = range(-4,4,length=200)
-nfpoints = [point(0,y,z) for z in Z, y in Y]
-
+Zz = range(-1,1,length=130)
+Yy = range(-1,1,length=100)
+nfpoints = [point(z,0,y) for z in Zz, y in Yy]
+nfpoints = pts
 import Base.Threads: @spawn
 task1 = @spawn nearfield(u[m],u[j],X,X,κ,η,nfpoints,E,H)
 task2 = @spawn nearfield(-u[m],-u[j],X,X,κ′,η′,nfpoints)
@@ -117,8 +118,11 @@ Plots.contour(real.(getindex.(H_tot,2)))
 
 Plots.heatmap(Z, Y, clamp.(real.(getindex.(E_tot,1)),-1.5,1.5))
 Plots.heatmap(Z, Y, clamp.(imag.(getindex.(E_tot,1)),-1.5,1.5))
-Plots.heatmap(Z, Y, real.(getindex.(H_tot,2)))
-Plots.heatmap(Z, Y, imag.(getindex.(H_tot,2)))
+Plots.heatmap(Yy, Zz, norm.(getindex.(H_tot,2)))
+Plots.heatmap(Y, Z, norm.(getindex.(H_tot,2)))
 
 Plots.plot(real.(getindex.(E_tot[:,51],1)))
 Plots.plot(real.(getindex.(H_tot[:,51],2)))
+
+Plots.heatmap(Zz,Yy,norm.(getindex.(-Bbb[1].+Bbb[3].-Bbb[2]/2,2))/μ0,clim=(0,0.02))
+Plots.heatmap(Zz,Yy,real(getindex.(H.(pts),2)))

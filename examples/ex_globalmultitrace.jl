@@ -15,6 +15,7 @@ h = 0.125
 Γ2 =  -Mesh([point(-x,y,z) for (x,y,z) in vertices(Γ1)], deepcopy(cells(Γ1)))
 Γ = [Γ1, Γ2]
 
+
 # Beyond this point the problem description is completely independent
 # of the number of domains and their relative positioning
 
