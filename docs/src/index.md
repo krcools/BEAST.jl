@@ -32,16 +32,20 @@ pkg> add BEAST
 The following [operators](@ref operator), basis functions, and geometry representations are implemented.
 To see details and all variations, have a look at the corresponding sections of this documentation.
 
-#### Operators
+### Operators
 
-- **Integral operators**
+- **Boundary Integral operators**
     + Maxwell (3D)
-        - Single Layer
-        - Double Layer
+        - Single Layer (time-harmonic & time-domain)
+        - Double Layer (time-harmonic & time-domain)
     + Helmholtz (2D & 3D)
         - Single Layer
         - Double Layer
 
+- **Volume Integral operators**
+    + Maxwell
+        - Single Layer (time-harmonic)
+        - Double Layer (time-harmonic)
 
 - **Local Operators**
     + Identity (+ variations thereof)
@@ -50,13 +54,13 @@ To see details and all variations, have a look at the corresponding sections of 
 <br/>
 ```
 
-#### Basis functions
+### Basis functions
 
 - **Spatial**
     + Low Order 
-        - Raviart-Thomas (Rao-Wilton-Glisson)
+        - Raviart-Thomas / Rao-Wilton-Glisson
         - Buffa-Christiansen
-        - Brezzi-Douglas-Merini
+        - Brezzi-Douglas-Marini
     + High Order
         - Graglia-Wilton-Peterson (GWP)
         - B-Spline based
@@ -70,7 +74,7 @@ To see details and all variations, have a look at the corresponding sections of 
 <br/>
 ```
 
-#### Geometry Representation
+### Geometry Representations
 
 - **Low Order** ("flat")
     + Triangular

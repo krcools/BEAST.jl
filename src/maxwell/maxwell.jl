@@ -7,13 +7,11 @@ module Maxwell3D
         singlelayer(;gamma, alpha, beta)
         singlelayer(;wavenumber, alpha, beta)
 
-    Bilinear form given by:
+    Maxwell 3D single layer operator.
 
-    ```math
-        a(t,b) = α ∬_{Γ×Γ} t(x)⋅b(y) g_{γ}(x,y) dx dy + β ∬_{Γ×Γ} ∇_Γ⋅ t(x) ∇_Γ⋅ b(y) g_{γ}(x,y) dx dy
-    ```
+    Either gamma, or the wavenumber, or α and β must be provided.
 
-    with ``g_{γ} = e^{-γ|x-y|} / 4π|x-y|``.
+    If α and β are not provided explitly, they are set to ``α = -γ`` and ``β = -1/γ`` with ``γ=\\mathrm{j} k``.
     """
     function singlelayer(;
             gamma=nothing,
@@ -34,20 +32,33 @@ module Maxwell3D
         Mod.MWSingleLayer3D(gamma, alpha, beta)
     end
 
+    """
+        weaklysingular(;wavenumber)
+
+    Weakly singular part of the Maxwell 3D single layer operator.
+
+    ``α = -\\mathrm{j} k`` is set with the wavenumber ``k``.
+    """
     weaklysingular(;wavenumber) = singlelayer(;wavenumber, alpha=-im*wavenumber, beta=zero(im*wavenumber))
+
+    """
+        hypersingular(;wavenumber)
+
+    Hyper singular part of the Maxwell 3D single layer operator.
+
+    ``β = -1/\\mathrm{j} k`` is set with the wavenumber ``k``.
+    """
     hypersingular(;wavenumber) = singlelayer(; wavenumber, alpha=zero(im*wavenumber), beta=-1/(im*wavenumber))
 
     """
         doublelayer(;gamma)
-        doublelaher(;wavenumber)
+        doublelayer(;wavenumber)
 
-    Bilinear form given by:
+    Maxwell double layer operator.
 
-    ```math
-        α ∬_{Γ^2} k(x) ⋅ (∇G_γ(x-y) × j(y))
-    ```
+    Either gamma or the wavenumber must be provided. Optionally, also alpha can be provided.
 
-    with ``G_γ = e^{-γ|x-y|} / 4π|x-y|``
+    If alpha is not provided explitly, it is set to ``α = 1``.
     """
     function doublelayer(;
             alpha=nothing,
