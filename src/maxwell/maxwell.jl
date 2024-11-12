@@ -78,6 +78,15 @@ module Maxwell3D
         Mod.MWDoubleLayer3D(alpha, gamma)
     end
 
+    """
+        planewave(;
+                direction    = error("missing arguement `direction`"),
+                polarization = error("missing arguement `polarization`"),
+                wavenumber   = error("missing arguement `wavenumber`"),
+                amplitude    = one(real(typeof(wavenumber)))) 
+
+    Time-harmonic plane wave.
+    """
     planewave(;
             direction    = error("missing arguement `direction`"),
             polarization = error("missing arguement `polarization`"),

@@ -1,5 +1,5 @@
 
-# Contributing
+# [Contributing](@id contribRef)
 
 In order to contribute to this package directly create a pull request against the `master` branch. Before doing so please: 
 

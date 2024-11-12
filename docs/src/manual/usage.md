@@ -1,5 +1,5 @@
 
-# General Usage
+# [General Usage](@id usageRef)
 
 !!! info
     The fundamental approach, which applies in most cases is:
@@ -55,6 +55,10 @@ assemble
 The linear system of equations can now, for example, be solved via the iterative GMRES solver of the [Krylov.jl](https://github.com/JuliaSmoothOptimizers/Krylov.jl) package.
 However, other solver could be used.
 Subsequently, different post-processing steps can be conducted, such as computing the scattered field from the determined expansion coefficients.
+
+!!! tip
+    Key functions for the post-processing are the [`potential`](@ref potential) and [`facecurrents`](@ref facecurrents) functions.
+
 This is shown in the following:
 
 
@@ -76,14 +80,23 @@ EF = potential(MWSingleLayerField3D(gamma=im*2.0), points, u, RT)
 ```@raw html
 <figure>
   <img
-    src="../assets/currentREADME.png"
+    src="../../assets/currentREADME.png"
     alt="Setup"
     width="250" />
     &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
   <img
-    src="../assets/currentRealREADME.png"
+    src="../../assets/currentRealREADME.png"
     alt="Setup"
     width="250" />
 </figure>
 <br/>
 ```
+
+---
+## Plotting & Exporting
+
+Plotting details.
+
+Export VTK.
+
+...

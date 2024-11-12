@@ -3,15 +3,14 @@
 
 <svg
    width="181.54277mm"
-   height="87.440491mm"
-   viewBox="0 0 181.54278 87.440484"
+   height="91.652145mm"
+   viewBox="0 0 181.54278 91.652138"
    version="1.1"
    id="svg8"
    sodipodi:docname="logo_README_white.svg"
    inkscape:version="1.3.2 (091e20ef0f, 2023-11-25, custom)"
    xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
    xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
-   xmlns:xlink="http://www.w3.org/1999/xlink"
    xmlns="http://www.w3.org/2000/svg"
    xmlns:svg="http://www.w3.org/2000/svg"
    xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
@@ -24,9 +23,9 @@
      borderopacity="1.0"
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
-     inkscape:zoom="0.49497475"
-     inkscape:cx="119.198"
-     inkscape:cy="202.03051"
+     inkscape:zoom="1.4"
+     inkscape:cx="307.14286"
+     inkscape:cy="247.14286"
      inkscape:document-units="mm"
      inkscape:current-layer="layer1"
      showgrid="false"
@@ -45,192 +44,7 @@
      inkscape:pagecheckerboard="true"
      inkscape:deskcolor="#d1d1d1" />
   <defs
-     id="defs2">
-    <linearGradient
-       id="I">
-      <stop
-         id="c" />
-      <stop
-         stop-opacity="0"
-         id="d"
-         offset="1" />
-    </linearGradient>
-    <linearGradient
-       id="J">
-      <stop
-         stop-color="#737373"
-         id="e" />
-      <stop
-         stop-opacity="0"
-         stop-color="#737373"
-         id="f"
-         offset="1" />
-    </linearGradient>
-    <linearGradient
-       id="K">
-      <stop
-         stop-color="#555"
-         id="g" />
-      <stop
-         stop-color="#bbb"
-         id="h"
-         offset="1" />
-    </linearGradient>
-    <linearGradient
-       id="L">
-      <stop
-         stop-color="#afafaf"
-         id="i" />
-      <stop
-         stop-color="#888"
-         id="j"
-         offset="1" />
-    </linearGradient>
-    <linearGradient
-       id="M">
-      <stop
-         stop-color="#eee"
-         id="k" />
-      <stop
-         stop-opacity="0"
-         stop-color="#eee"
-         id="l"
-         offset="1" />
-    </linearGradient>
-    <linearGradient
-       id="N">
-      <stop
-         stop-color="#8f6b32"
-         id="m" />
-      <stop
-         stop-color="#80602c"
-         id="n"
-         offset="1" />
-    </linearGradient>
-    <linearGradient
-       id="O">
-      <stop
-         stop-color="#ddd"
-         id="o" />
-      <stop
-         stop-color="#c0c0c0"
-         id="p"
-         offset="1" />
-    </linearGradient>
-    <linearGradient
-       id="P">
-      <stop
-         stop-opacity="0.6"
-         stop-color="#eee"
-         id="q" />
-      <stop
-         stop-opacity="0"
-         stop-color="#eee"
-         id="r"
-         offset="1" />
-    </linearGradient>
-    <linearGradient
-       id="Q">
-      <stop
-         stop-color="#fff"
-         id="s" />
-      <stop
-         stop-opacity="0"
-         stop-color="#fff"
-         id="t"
-         offset="1" />
-    </linearGradient>
-    <linearGradient
-       y2="6037.5298"
-       x2="2375.5"
-       y1="6145.3101"
-       x1="2482.96"
-       gradientUnits="userSpaceOnUse"
-       id="R"
-       xlink:href="#I" />
-    <radialGradient
-       gradientUnits="userSpaceOnUse"
-       gradientTransform="matrix(1.4952966,-0.03240257,0.02371273,1.0942826,-13.241932,-4.885029)"
-       r="51.640999"
-       cy="-3.3340001"
-       cx="43.893002"
-       id="S"
-       xlink:href="#Q" />
-    <radialGradient
-       gradientUnits="userSpaceOnUse"
-       gradientTransform="matrix(3.997274,-0.03923134,0.00832319,0.8480486,-269.48909,9.0424597)"
-       r="30.466"
-       cy="0.354"
-       cx="98.889999"
-       id="T"
-       xlink:href="#P" />
-    <radialGradient
-       gradientTransform="matrix(2.1079797,-0.1619128,0.07658391,0.9970631,-93.372912,13.308219)"
-       gradientUnits="userSpaceOnUse"
-       r="16.827999"
-       cy="50.450001"
-       cx="78.947998"
-       id="U"
-       xlink:href="#O" />
-    <radialGradient
-       gradientUnits="userSpaceOnUse"
-       gradientTransform="matrix(1,0,0,0.9922685,0,0.69856)"
-       r="27.059999"
-       cy="72.040001"
-       cx="54.866001"
-       id="V"
-       xlink:href="#N" />
-    <radialGradient
-       gradientUnits="userSpaceOnUse"
-       gradientTransform="matrix(1.8055164,-0.07880052,0.0433107,0.9923561,-51.269444,5.462792)"
-       r="27.301001"
-       cy="48.48"
-       cx="57.877998"
-       id="W"
-       xlink:href="#M" />
-    <radialGradient
-       gradientUnits="userSpaceOnUse"
-       gradientTransform="matrix(1,0,0,1.0947923,0,-5.7883482)"
-       r="51.25"
-       cy="17.830999"
-       cx="47.279999"
-       id="X"
-       xlink:href="#L" />
-    <filter
-       id="Y"
-       x="-0.094501622"
-       y="-0.14298584"
-       width="1.1890032"
-       height="1.2859716">
-      <feGaussianBlur
-         id="u"
-         stdDeviation="0.74616" />
-    </filter>
-    <linearGradient
-       gradientUnits="userSpaceOnUse"
-       y2="9.7670002"
-       x2="90.540001"
-       y1="-25.663"
-       x1="93.629997"
-       id="Z"
-       xlink:href="#K" />
-    <linearGradient
-       gradientUnits="userSpaceOnUse"
-       y2="32.457001"
-       x2="68.835999"
-       y1="-26.391001"
-       x1="75.32"
-       id="a"
-       xlink:href="#J" />
-    <radialGradient
-       gradientUnits="userSpaceOnUse"
-       gradientTransform="matrix(1,0,0,0.1818182,0,99.954538)"
-       r="18.333"
-       cy="122.17"
-       cx="26.25"
-       id="b"
-       xlink:href="#I" />
-  </defs>
+     id="defs2" />
   <metadata
      id="metadata5">
     <rdf:RDF>
@@ -246,7 +60,7 @@
      inkscape:label="Ebene 1"
      inkscape:groupmode="layer"
      id="layer1"
-     transform="translate(-47.165911,-208.15819)">
+     transform="translate(-47.165911,-203.92483)">
     <g
        transform="matrix(0.13528266,-0.0352021,-0.0352021,-0.13528266,176.23459,300.0854)"
        inkscape:label="ink_ext_XXXXXX"
@@ -481,6 +295,6 @@
          id="tspan1031"
          x="105.61251"
          y="291.04358"
-         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:47.0606px;font-family:Calibri;-inkscape-font-specification:'Calibri, Bold';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-feature-settings:normal;text-align:center;writing-mode:lr-tb;text-anchor:middle;stroke-width:0.490209px;fill:#ffffff">BEAST</tspan></text>
+         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:47.0606px;font-family:Calibri;-inkscape-font-specification:'Calibri, Bold';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-feature-settings:normal;text-align:center;writing-mode:lr-tb;text-anchor:middle;fill:#ffffff;stroke-width:0.490209px">BEAST</tspan></text>
   </g>
 </svg>

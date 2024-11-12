@@ -22,8 +22,11 @@ makedocs(;
         "Manual" => Any[
             "General Usage"=>"manual/usage.md",
             "Application Examples"=>Any[
-                "Time-Hamronic EFIE"=>"manual/efie.md",
-                "Time-Domain EFIE"=>"manual/tdefie.md",
+                "Time-Harmonic"=>Any[
+                    "EFIE"=>"manual/examplesTH/efie.md",
+                    "MFIE"=>"manual/examplesTH/mfie.md",
+                ],
+                "Time-Domain"=>Any["EFIE"=>"manual/examplesTD/tdefie.md"],
             ],
         ],
         "Operators & Excitations" => Any[
@@ -45,25 +48,27 @@ makedocs(;
                 "Maxwell Double Layer"=>Any[],
             ],
             "Excitations"=>Any[
-                "Plane Wave"=>"operators/planewave.md",
-                "Dipole"=>Any[],
-                "Monopole"=>Any[],
-                "Linear Potential" => Any[],
+                "Plane Wave"=>"excitations/planewave.md",
+                "Dipole"=>"excitations/dipole.md",
+                "Monopole"=>"excitations/monopole.md",
+                "Linear Potential"=>"excitations/linearpotential.md",
             ],
         ],
-        "Bases" => Any[
+        "Basis Functions" => Any[
+            "Overview"=>"bases/overview.md",
             "Spatial"=>Any[
                 "Raviart Thomas"=>"bases/raviartthomas.md",
                 "Buffa Christiansen"=>"bases/buffachristiansen.md",
                 "Brezzi-Douglas-Marini"=>"bases/brezzidouglasmarini.md",
+                "Graglia-Wilton-Peterson"=>"bases/gragliawiltonpeterson.md",
             ],
             "Temporal"=>Any[],
         ],
-        "Geometry Representations" => Any["Flat"=>Any[], "Curvilinear"=>Any[]],
+        "Geometry Representations" => Any["Flat"=>"geometry/flat.md", "Curvilinear"=>Any[]],
         "____________________________________" => Any[],
         "Internals" => Any[
             "Overview"=>"internals/overview.md",
-            "Assembly"=>"internals/assemble.md",
+            "The Matrix Assemble Routine"=>"internals/assemble.md",
             "Quadrature"=>"internals/quadstrat.md",
             "Parametric Domain"=>Any[],
             "Multithreading"=>Any[],
@@ -79,5 +84,5 @@ deploydocs(;
     target = "build",
     push_preview = true,
     forcepush = true,
-    devbranch="feature/docs",
+    devbranch = "feature/docs",
 )

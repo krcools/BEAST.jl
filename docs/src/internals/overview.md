@@ -1,31 +1,15 @@
 
-## Features
-
-- General framework allowing to easily add support for more kernels, finite element spaces, and excitations.
-- Assembly routines that take in symbolic representations of the defining bilinear form. Support for block systems and finite element spaces defined in terms of direct products or tensor products of atomic spaces.
-- LU and iterative solution of the resulting system.
-- Computation of secondary quantities of interest such as the near field and the limiting far field.
-- Support for space-time Galerkin and convolution quadrature approaches to the solution of time domain boundary integral equations.
-- Implementation of Lagrange zeroth and first order space, Raviart-Thomas, Brezzi-Douglas-Marini, and Buffa-Christianssen vector elemenents.
+# [Internals](@id InternalsRef)
 
 
+- In general, the framework is designed such that it allows to easily add support for more kernels, finite element spaces, and excitations.
+- Key are assembly routines that take in symbolic representations of the defining bilinear form. Support for block systems and finite element spaces defined in terms of direct products or tensor products of atomic spaces.
 
 
 ```@meta
 CurrentModule = BEAST
 ```
 
-# BEAST.jl documentation
-
-BEAST provides a number of types modelling concepts and a number of algorithms for the efficient and simple implementation of boundary and finite element solvers. It provides full implementations of these concepts for the LU based solution of boundary integral equations for the Maxwell and Helmholtz systems.
-
-Because Julia only compiles code at execution time, users of this library can hook into the code provided in this package at any level. In the extreme case it suffices to provide overwrites of the `assemble` functions. In that case, only the LU solution will be performed by the code here.
-
-At the other end it suffices that users only supply integration kernels that act on the element-element interaction level. This package will manage all required steps for matrix assembly.
-
-For the Helmholtz 2D and Maxwell 3D systems, complete implementations are supplied. These models will be discussed in detail to give a more concrete idea of the APIs provides and how to extend them.
-
-Central to the solution of boundary integral equations is the assembly of the system matrix. The system matrix is fully determined by specifying a kernel G, a set of trial functions, and a set of test functions.
 
 ## Basis
 

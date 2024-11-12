@@ -6,13 +6,16 @@ via the boundary element method (BEM) and the finite element method (FEM).
 To this end, the (Petrov-) **Galerkin method** is employed.
 
 Currently, the focus is on equations encountered in **classical electromagnetism**, where frequency and time domain equations are covered.
-Several [operators](@ref operator), basis functions, and geometry representations are implemented.
+Several [operators](@ref operator), [basis functions](@ref basesRef), and geometry representations are implemented.
 
 !!! note
     SI units and for time-harmonic simulations a time convention of ``\mathrm{e}^{\,\mathrm{j}\omega t}`` are used everywhere.
 
 !!! tip
-    The code is designed such that users can also easily hack into the code and implement new features.
+    To use the code have a look at the [general usage](@ref usageRef).
+
+    However, the code is designed such that users can easily hook into the code at any level and implement new features.
+    To do so, have a look at the [internals documentation](@ref InternalsRef) and the [contribution guidelines](@ref contribRef).
     Design goals are extendability and a performant execution. 
 
 
@@ -29,7 +32,7 @@ pkg> add BEAST
 ---
 ## Overview
 
-The following [operators](@ref operator), basis functions, and geometry representations are implemented.
+The following [operators](@ref operator), [basis functions](@ref basesRef), and geometry representations are implemented.
 To see details and all variations, have a look at the corresponding sections of this documentation.
 
 ### Operators
