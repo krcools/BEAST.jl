@@ -423,6 +423,17 @@ function duallagrangec0d1(mesh, refined, jct_pred, ::Type{Val{3}})
 
             face_ctr = barytocart(coarse_chart, uv_face_ctr)
             I = CollisionDetection.find(fine_vertices, face_ctr)
+            # if length(I) != 1
+            #     println(I)
+            #     println(face_ctr)
+            #     for j in vertices(refined)
+            #         if norm(face_ctr-j) < 0.1
+            #             println(j)
+            #             println(j)
+            #         end
+            #     end
+            # end
+            
             @assert length(I) == 1
             face_center_ids[f] = I[1]
         end

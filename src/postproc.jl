@@ -134,7 +134,7 @@ function potential(op, points, coeffs, basis;
 
 	ff = zeros(type, size(points))
 	store(v,m,n) = (ff[m] += v*coeffs[n])
-	potential!(store, op, points, basis; type, quadstrat,threading)
+	potential_multi!(store, op, points, basis; type, quadstrat,threading)
 	return ff
 end
 
@@ -165,7 +165,7 @@ function potential(op, points, coeffs, space::DirectProductSpace;
 end
 
 
-function potential!(store, op, points, basis;
+function potential_multi!(store, op, points, basis;
 	type=SVector{3,ComplexF64},
 	quadstrat=defaultquadstrat(op, basis),
 	threading::Type{Threading{:multi}})
@@ -246,7 +246,7 @@ function potential_points!(store, op, points, basis;
 
 	zlocal = Array{type}(undef,numfunctions(rs))
 	qdata = quaddata(op,rs,els,quadstrat)
-
+	println(quadstrat)
 	print("dots out of 10: ")
 
 	todo, done, pctg = length(points), 0, 0

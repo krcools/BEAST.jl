@@ -9,11 +9,9 @@ ComposedOperator = Union{ComposedOperatorIntegral,ComposedOperatorLocal}
 
 struct BasisFunction <: ComposedOperatorLocal end
 struct DivBasisFunction <: ComposedOperatorLocal end
+
 const B = BasisFunction()
 Base.div(::BasisFunction) = DivBasisFunction()
-
-# export B
-# export BasisFunction
 
 
 struct TestNormal <: ComposedOperatorLocal end
@@ -23,12 +21,14 @@ struct TraceDirection <: ComposedOperatorLocal end
 
 const nt = TestNormal()
 const nb = TrialNormal()
-# export nt
-# export nb
+
 struct Potential{T} <: AbstractOperator
     operator::T
 end
+##### macro definition
 
+
+#####
 
 function Potential(linop::LinearCombinationOfOperators)
     out = ZeroOperator()
@@ -422,7 +422,7 @@ kernelvals(op::ComposedOperatorIntegral, y,x) = nothing
 quaddata(op::ComposedOperatorIntegral,rs,els,qs::SingleNumQStrat) = quadpoints(rs,els,(qs.quad_rule,))
 quadrule(op::ComposedOperatorIntegral,refspace,p,y,q,el,qdata,qs::SingleNumQStrat) = qdata[1,q]
 
-defaultquadstrat(op::ComposedOperatorIntegral, basis) = SingleNumQStrat(6)
+defaultquadstrat(op::ComposedOperatorIntegral, basis) = SingleNumQStrat(9)
 defaultquadstrat(op::ComposedOperatorIntegral,testspace::Space,trialspace::Space) = DoubleNumSauterQstrat(7,8,5,5,4,3) 
 defaultquadstrat(op::ComposedOperatorLocal,testspace::Space,trialpsace::Space) = SingleNumQStrat(8)
 

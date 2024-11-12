@@ -149,12 +149,13 @@ function momintegrals_test_refines_trial!(out, op,
         zlocal = zero(out)
         momintegrals!(op, test_local_space, trial_local_space,
             test_chart, chart, zlocal, qr)
-
-        for j in 1:3
-            for i in 1:3
-                for k in 1:3
-                    out[i,j] += zlocal[i,k] * Q[j,k]
-end end end end end
+        out .+= zlocal*transpose(Q)
+#         for j in 1:3
+#             for i in 1:3
+#                 for k in 1:3
+#                     out[i,j] += zlocal[i,k] * Q[j,k]
+# end end end 
+end end
 
 
 
@@ -196,12 +197,12 @@ function momintegrals_trial_refines_test!(out, op,
         zlocal = zero(out)
         momintegrals!(op, test_local_space, trial_local_space,
             chart, trial_chart, zlocal, qr)
-
-        for j in 1:3
-            for i in 1:3
-                for k in 1:3
-                    out[i,j] += Q[i,k] * zlocal[k,j]
-        end end end
+        out .+= Q*zlocal
+        # for j in 1:3
+        #     for i in 1:3
+        #         for k in 1:3
+        #             out[i,j] += Q[i,k] * zlocal[k,j]
+        # end end end
     end
 end
 

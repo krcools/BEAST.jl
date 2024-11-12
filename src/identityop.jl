@@ -93,7 +93,7 @@ function quadrule(op::LocalOperator, ψ::RefSpace, ϕ::RefSpace, τ,σ, (qd,A), 
         q = qd[i]
         w, p1, p2 = q[1], neighborhood(τ,q[2]), neighborhood(σ,q[2])
         A[i] = (w, (p1,p2), ψ(p1), ϕ(p2))
-
+        @assert cartesian(p1)≈cartesian(p2)
     end
     return A
 end

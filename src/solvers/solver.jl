@@ -228,8 +228,8 @@ function assemble(bf::BilForm, X::DirectProductSpace, Y::DirectProductSpace;
             y = op[end](op[1:end-1]..., y)
         end
 
-        a = term.coeff * term.kernel
-        z = materialize(a, x, y;kwargs...)
+        a = term.kernel
+        z = term.coeff * materialize(a, x, y;kwargs...)
         lift(z, Block(term.test_id), Block(term.trial_id), U, V)
     end
 end
