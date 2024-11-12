@@ -3,7 +3,7 @@ using BEAST
 
 Faces = meshsphere(1.0, 0.35)
 Edges = skeleton(Faces,1)
-
+#ciao
 faces = barycentric_refinement(Faces)
 edges = skeleton(faces,1)
 # verts = skeleton(faces,0)
