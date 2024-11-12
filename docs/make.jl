@@ -75,8 +75,9 @@ makedocs(;
 )
 
 deploydocs(;
-    repo = "github.com/krcools/BEAST.jl.git",
+    repo = "github.com/HoBeZwe/BEAST.jl.git",
     target = "build",
     push_preview = true,
     forcepush = true,
+    devbranch="feature/docs",
 )
