@@ -328,5 +328,3 @@ function momintegrals!(z, op, g, f, T, τ, σ, ι, qr::WiltonInts84Strat)
     end
 
 end
-
-

@@ -82,8 +82,6 @@ singularpart(op::MWDoubleLayer3D) = MWDoubleLayer3DSng(op.alpha, op.gamma)
 
 
 
-
-
 # function quadrule(op::MaxwellOperator3D, g::BDMRefSpace, f::BDMRefSpace,  i, τ, j, σ, qd,
 #   qs::DoubleNumWiltonSauterQStrat)
 
