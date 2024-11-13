@@ -48,7 +48,7 @@ Maxwell3D.doublelayer
 
 
 ---
-## As Linear Form
+## As Linear Map
 
 When handed to the [`potential`](@ref potential) function, the operator can be evaluated at provided points in space.
 Commonly, this is used in post-processing.

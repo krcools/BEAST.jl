@@ -6,9 +6,9 @@
 </picture>
 
 
-[![Docs-stable](https://img.shields.io/badge/docs-latest-blue.svg)](https://krcools.github.io/BEAST.jl/stable/)
-[![Docs-dev](https://img.shields.io/badge/docs-latest-blue.svg)](https://krcools.github.io/BEAST.jl/dev/)
-[![MIT license](https://img.shields.io/badge/License-MIT-blue.svg)](https://github.com/HoBeZwe/SphericalScattering.jl/blob/master/LICENSE)
+[![Docs-stable](https://img.shields.io/badge/docs-stable-blue.svg)](https://krcools.github.io/BEAST.jl/stable/)
+[![Docs-dev](https://img.shields.io/badge/docs-dev-blue.svg)](https://krcools.github.io/BEAST.jl/dev/)
+[![MIT license](https://img.shields.io/badge/License-MIT-blue.svg)](https://github.com/krcools/BEAST.jl/blob/master/LICENSE)
 [![CI](https://github.com/krcools/BEAST.jl/actions/workflows/CI.yml/badge.svg)](https://github.com/krcools/BEAST.jl/actions/workflows/CI.yml)
 [![codecov.io](http://codecov.io/github/krcools/BEAST.jl/coverage.svg?branch=master)](http://codecov.io/github/krcools/BEAST.jl?branch=master)
 [![DOI](https://zenodo.org/badge/87720391.svg)](https://zenodo.org/badge/latestdoi/87720391)
@@ -26,8 +26,8 @@ Several operators, basis functions, and geometry representations are implemented
 
 ## Documentation
 
-- Documentation for the [latest stable version](https://hobezwe.github.io/SphericalScattering.jl/stable/).
-- Documentation for the [development version](https://hobezwe.github.io/SphericalScattering.jl/dev/).
+- Documentation for the [latest stable version](https://krcools.github.io/BEAST.jl/stable/).
+- Documentation for the [development version](https://krcools.github.io/BEAST.jl/dev/).
 
 
 ## Hello World
