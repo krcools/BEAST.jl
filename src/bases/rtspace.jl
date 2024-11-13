@@ -264,7 +264,7 @@ function LinearAlgebra.cross(::NormalVector, s::RTBasis)
     @assert CompScienceMeshes.isoriented(s.geo)
     fns = similar(s.fns)
     for (i,fn) in pairs(s.fns)
-        fns[i] = [Shape(sh.cellid, sh.refid, -sh.coeff) for sh in fn]
+        fns[i] = [Shape(sh.cellid, sh.refid, sh.coeff) for sh in fn]
     end
     NDBasis(s.geo, fns, s.pos)
 end

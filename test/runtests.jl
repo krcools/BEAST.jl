@@ -80,6 +80,9 @@ include("test_handlers.jl")
 include("test_gridfunction.jl")
 
 include("test_composed_basis.jl")
+include("test_composed_operator.jl")
+include("test_analytic_excitation.jl")
+
 using TestItemRunner
 @run_package_tests
 

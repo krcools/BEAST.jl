@@ -40,12 +40,20 @@ function nedelec(surface, edges=skeleton(surface,1))
     NDBasis(surface, fns, pos)
 end
 
+# function LinearAlgebra.cross(::NormalVector, s::NDBasis)
+#     # @assert CompScienceMeshes.isoriented(s.geo)
+#     RTBasis(s.geo, s.fns, s.pos)
+# end
+
 function LinearAlgebra.cross(::NormalVector, s::NDBasis)
-    # @assert CompScienceMeshes.isoriented(s.geo)
-    RTBasis(s.geo, s.fns, s.pos)
+    @assert CompScienceMeshes.isoriented(s.geo)
+    fns = similar(s.fns)
+    for (i,fn) in pairs(s.fns)
+        fns[i] = [Shape(sh.cellid, sh.refid, -sh.coeff) for sh in fn]
+    end
+    RTBasis(s.geo, fns, s.pos)
 end
 
-
 function curl(space::NDBasis)
-    divergence(n × space)
+    -divergence(n × space)
 end

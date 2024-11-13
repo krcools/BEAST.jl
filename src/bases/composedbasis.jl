@@ -12,7 +12,7 @@ function (f::FunctionWrapper{T})(x::CompScienceMeshes.MeshPointNM)::T where {T}
     return f.func(cartesian(x))
 end
 scalartype(F::FunctionWrapper{T}) where {T} = eltype(T)
-#scalartype(::NormalVector,s::Space) = scalartype(geometry(s))
+#scalartype(::NormalVector,s::Space) = vertextype(geometry(s))
 # function scalartype(::NormalVector) 
 #     @warn "The scallartype of the NormalVector is set at Float32, if used in combination with Float64 basis or operator this is no problem, in the case of Float16 it is."
 #     return Float32
@@ -24,24 +24,28 @@ struct _BasisTimes{T} <: _BasisOperations{T}
     el1
     el2
 end
-_BasisTimes(el1::NormalVector,el2) = _BasisTimes{promote_type(scalartype(geometry(el2)),scalartype(el2))}(el1,el2)
-_BasisTimes(el2,el1::NormalVector) = _BasisTimes{promote_type(scalartype(geometry(el2)),scalartype(el2))}(el2,el1)
-_BasisTimes(el1,el2) = _BasisTimes{promote_type(scalartype(el1),scalartype(el2))}(el1,el2)
+_BasisTimes(el1::NormalVector,el2::Space) = _BasisTimes{promote_type(eltype(vertextype(geometry(el2))),scalartype(el2))}(el1,el2)
+_BasisTimes(el2::Space,el1::NormalVector) = _BasisTimes{promote_type(eltype(vertextype(geometry(el2))),scalartype(el2))}(el2,el1)
+_BasisTimes(el1::Space,el2::FunctionWrapper) = _BasisTimes{promote_type(scalartype(el1),scalartype(el2))}(el1,el2)
+_BasisTimes(el1::FunctionWrapper,el2::Space) = _BasisTimes{promote_type(scalartype(el1),scalartype(el2))}(el1,el2)
 
 struct _BasisCross{T} <: _BasisOperations{T}
     el1
     el2
 end
-_BasisCross(el1::NormalVector,el2) = _BasisCross{promote_type(scalartype(geometry(el2)),scalartype(el2))}(el1,el2)
-_BasisCross(el2,el1::NormalVector) = _BasisCross{promote_type(scalartype(geometry(el2)),scalartype(el2))}(el2,el1)
-_BasisCross(el1,el2) = _BasisCross{promote_type(scalartype(el1),scalartype(el2))}(el1,el2)
+_BasisCross(el1::NormalVector,el2::Space) = _BasisCross{promote_type(eltype(vertextype(geometry(el2))),scalartype(el2))}(el1,el2)
+_BasisCross(el2::Space,el1::NormalVector) = _BasisCross{promote_type(eltype(vertextype(geometry(el2))),scalartype(el2))}(el2,el1)
+_BasisCross(el1::FunctionWrapper,el2::Space) = _BasisCross{promote_type(scalartype(el1),scalartype(el2))}(el1,el2)
+_BasisCross(el1::Space,el2::FunctionWrapper) = _BasisCross{promote_type(scalartype(el1),scalartype(el2))}(el1,el2)
+
 struct _BasisDot{T} <: _BasisOperations{T}
     el1
     el2
 end
-_BasisDot(el1::NormalVector,el2) = _BasisDot{promote_type(scalartype(geometry(el2)),scalartype(el2))}(el1,el2)
-_BasisDot(el2,el1::NormalVector) = _BasisDot{promote_type(scalartype(geometry(el2)),scalartype(el2))}(el2,el1)
-_BasisDot(el1,el2) = _BasisDot{promote_type(scalartype(el1),scalartype(el2))}(el1,el2)
+_BasisDot(el1::NormalVector,el2::Space) = _BasisDot{promote_type(eltype(vertextype(geometry(el2))),scalartype(el2))}(el1,el2)
+_BasisDot(el2::Space,el1::NormalVector) = _BasisDot{promote_type(eltype(vertextype(geometry(el2))),scalartype(el2))}(el2,el1)
+_BasisDot(el1::Space,el2::FunctionWrapper) = _BasisDot{promote_type(scalartype(el1),scalartype(el2))}(el1,el2)
+_BasisDot(el1::FunctionWrapper,el2::Space) = _BasisDot{promote_type(scalartype(el1),scalartype(el2))}(el1,el2)
 
 # #### wrapping of the functions
 # _BasisTimes(a::Function,b::Function) = _BasisTimes(FunctionWrapper(a),FunctionWrapper(b))
@@ -65,6 +69,7 @@ refspace(a::FunctionWrapper) = a
 refspace(a::NormalVector) = a
 
 numfunctions(a::Union{NormalVector,FunctionWrapper}) = missing
+numfunctions(a::Union{NormalVector,FunctionWrapper},simp) = missing
 numfunctions(a::_BasisOperations) = coalesce(numfunctions(a.el1) , numfunctions(a.el2))
 
 geometry(a::_BasisOperations) = coalesce(geometry(a.el1),geometry(a.el2))

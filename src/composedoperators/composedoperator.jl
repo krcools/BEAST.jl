@@ -134,8 +134,8 @@ function (op::Integrand{<:CompDoubleKern})(x,y,f,g)
     end
 end
 
-defaultquadstrat(op::CompDoubleInt,tfs::Space,bfs::Space) = DoubleNumSauterQstrat(3,3,3,3,3,3)
-defaultquadstrat(op::CompSingleInt,tfs::Space,bfs::Space) = SingleNumQStrat(3)
+defaultquadstrat(op::CompDoubleInt,tfs::Space,bfs::Space) = DoubleNumSauterQstrat(5,5,5,5,5,5)
+defaultquadstrat(op::CompSingleInt,tfs::Space,bfs::Space) = SingleNumQStrat(6)
 ##### assembling the single integral 
 function assemble!(biop::CompSingleKern, tfs::Space, bfs::Space, store,
     threading::Type{Threading{:multi}};
