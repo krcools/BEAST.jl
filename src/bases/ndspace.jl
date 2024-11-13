@@ -55,5 +55,5 @@ function LinearAlgebra.cross(::NormalVector, s::NDBasis)
 end
 
 function curl(space::NDBasis)
-    -divergence(n × space)
+    divergence(n × (n × (n × space)))
 end

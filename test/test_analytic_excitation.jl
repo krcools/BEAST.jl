@@ -11,8 +11,8 @@ X = raviartthomas(Γ)
 
 ### test crosstracemw
 a = (@SVector [1.0,0.0,0.0])
-e(x) = a*exp(-1.0im*dot((@SVector [1.0,0.0,0.0]),x))# not physical but to test the traces.
-ex = BEAST.CrossTraceMW(BEAST.Trace(BEAST.FunctionWrapper{SVector{3,ComplexF64}}(e)))
+eloc(x) = a*exp(-1.0im*dot((@SVector [1.0,0.0,0.0]),x))# not physical but to test the traces.
+ex = BEAST.CrossTraceMW(BEAST.Trace(BEAST.FunctionWrapper{SVector{3,ComplexF64}}(eloc)))
 # probeer testen te verzinnen die integraal nul geven.
 
 rhs = assemble(ex, n× X)
@@ -31,8 +31,8 @@ z = PΛ  * rhs
 ### test NDotTraceMW
 
 a = (@SVector [1.0,0.0,0.0])
-e(x) = a
-ex = BEAST.NDotTrace(BEAST.Trace(BEAST.FunctionWrapper{SVector{3,Float64}}(e)))
+eloc(x) = a
+ex = BEAST.NDotTrace(BEAST.Trace(BEAST.FunctionWrapper{SVector{3,Float64}}(eloc)))
 # probeer testen te verzinnen die integraal nul geven.
 
 rhs = assemble(ex, Y)

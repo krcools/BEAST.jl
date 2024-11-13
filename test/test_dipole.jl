@@ -57,7 +57,7 @@ for U in [Float32,Float64]
     nf_H_EFIE = potential(BEAST.MWDoubleLayerField3D(𝓚), pts, j_EFIE, X)
     ff_E_EFIE = potential(MWFarField3D(𝓣), pts, j_EFIE, X)
     ff_H_EFIE = potential(BEAST.MWDoubleLayerFarField3D(𝓚), pts, j_EFIE, X)
-    ff_H_EFIE_rotated = potential(n × BEAST.MWDoubleLayerFarField3D(𝓚), pts, -j_EFIE, n × X)
+    ff_H_EFIE_rotated = -potential(n × BEAST.MWDoubleLayerFarField3D(𝓚), pts, -j_EFIE, n × X)
     ff_H_EFIE_doublerotated = potential(n × BEAST.MWDoubleLayerRotatedFarField3D(n × 𝓚), pts, -j_EFIE, X)
 
 
