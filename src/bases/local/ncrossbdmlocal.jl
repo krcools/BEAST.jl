@@ -19,6 +19,8 @@ function (f::NCrossBDMRefSpace{T})(p) where T
         (value= n × (v*tv)/j,         curl=d),]
 end
 
+numfunctions(x::NCrossBDMRefSpace, dom::CompScienceMeshes.ReferenceSimplex{2}) = 6
+#=
 const _vert_perms_ncrossbdm = [
     (1,2,3),
     (2,3,1),
@@ -35,7 +37,7 @@ const _dof_perms_ncrossbdm = [
     (2,1,6,5,4,3),
     (6,5,4,3,2,1),
 ]
-
+=#
 function dof_permutation(::NCrossBDMRefSpace, vert_permutation)
     i = findfirst(==(tuple(vert_permutation...)), _vert_perms_ncrossbdm)
     return _dof_perms_ncrossbdm[i]
