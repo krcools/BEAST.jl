@@ -23,12 +23,6 @@ function onlys(a)
     return b
 end
 
-#from paul to test something
-# Γ12 = -Mesh([point(-x-4,y,z) for (x,y,z) in vertices(Γ11)], deepcopy(cells(Γ11)))
-# Γ1 = weld(Γ11,Γ12;glueop=onlys)
-# Γ2 = Mesh([point(-x-4,-y-4,z) for (x,y,z) in vertices(Γ11)], deepcopy(cells(Γ11)))
-# Γ3 =  -Mesh([point(x,-y-4,z) for (x,y,z) in vertices(Γ11)], deepcopy(cells(Γ11)))
-
 Γ12 = -Mesh([point(x,y,-z-4) for (x,y,z) in vertices(Γ11)], deepcopy(cells(Γ11)))
 Γ1 = weld(Γ11,Γ12;glueop=onlys)
 Γ2 = Mesh([point(x,-y-4,-z-4) for (x,y,z) in vertices(Γ11)], deepcopy(cells(Γ11)))
@@ -172,23 +166,3 @@ deq = BEAST.discretise(LHSA==RHSA, (p .∈ Pₕ)..., (q .∈ Qₕ)...)
 # B = assemble(RHSA,BEAST.DirectProductSpace(Pₕ))
 u = solve(deq)
 
-# ### to check aginst previous solution
-# using JLD2
-# d = load("examples/0.5Z_#1.jld2")["dict"]
-# #comparing against previous solution
-# X_server = load("examples/RT.jld2")["dict"] 
-
-
-# resc = zeros(size(Z)) + LinearAlgebra.I
-
-# for i in 1:length(X_server)
-#     if X_server.fns[i] != RT[1].fns[i]
-#         resc[i,i] *= -1
-#     end
-# end
-
-# for i in 1:length(X_server)
-#     if X_server.fns[i] != RT[1].fns[i]
-#         resc[i+length(Xd[1]),i+length(Xd[1])] *= -1
-#     end
-# end

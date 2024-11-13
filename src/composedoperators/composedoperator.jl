@@ -1,7 +1,7 @@
 
 abstract type AbstractCompInt <: AbstractOperator end
 abstract type Kernel{T} end
-# abstract type _AbstractCompInt <: AbstractOperator end
+
 #Make these structures, those are not yet pulled trough the smartmath function
 struct CompDoubleInt{T} <: AbstractCompInt
     tfunc
