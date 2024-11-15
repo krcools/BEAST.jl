@@ -268,3 +268,11 @@ function LinearAlgebra.cross(::NormalVector, s::RTBasis)
     end
     NDBasis(s.geo, fns, s.pos)
 end
+function LinearAlgebra.cross(s::RTBasis,::NormalVector)
+    @assert CompScienceMeshes.isoriented(s.geo)
+    fns = similar(s.fns)
+    for (i,fn) in pairs(s.fns)
+        fns[i] = [Shape(sh.cellid, sh.refid, -sh.coeff) for sh in fn]
+    end
+    NDBasis(s.geo, fns, s.pos)
+end
