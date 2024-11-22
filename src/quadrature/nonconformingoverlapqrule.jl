@@ -1,7 +1,7 @@
 struct NonConformingOverlapQRule{S}
     conforming_qstrat::S
 end
-function tangent_rank(p::Simplex{U,D}) where {U,D}
+function tangent_rank(p::CompScienceMeshes.Simplex{U,D}) where {U,D}
     G = [dot(p.tangents[i], p.tangents[j]) for i in 1:D, j in 1:D]
     return rank(G) == D 
 end
