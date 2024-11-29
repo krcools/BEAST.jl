@@ -54,53 +54,53 @@ G = [BEAST.HH3DGreen(1im*k) for k in κ]
 dG0 = BEAST.HH3DGradGreen(1im*κ0)
 dG = [BEAST.HH3DGradGreen(1im*k) for k in κ]
 
-    U11 = -BEAST.strace(BEAST.PotentialIntegralOperator{2}(dG0,×,b->b),-1.0)
-    U12 = BEAST.strace(BEAST.PotentialIntegralOperator{2}(G0,*,b->n*b),-1.0)
+    U11 = -BEAST.rtrace(BEAST.PotentialIntegralOperator{2}(dG0,×,b->b),-1.0)
+    U12 = BEAST.rtrace(BEAST.PotentialIntegralOperator{2}(G0,*,b->n*b),-1.0)
     U22 = BEAST.trace(BEAST.PotentialIntegralOperator{2}(dG0,(x,y)->transpose(x)*y,b->n*b),-1.0)
 
 DDL0 = U11[a1,b1] + U12[a1,b2] + U22[a2,b2]
 
-    U11 = [-BEAST.strace(BEAST.PotentialIntegralOperator{2}(g,×,b->b),1.0) for g in dG]
-    U12 = [BEAST.strace(BEAST.PotentialIntegralOperator{2}(g,*,b->n*b),1.0) for g in G]
+    U11 = [-BEAST.rtrace(BEAST.PotentialIntegralOperator{2}(g,×,b->b),1.0) for g in dG]
+    U12 = [BEAST.rtrace(BEAST.PotentialIntegralOperator{2}(g,*,b->n*b),1.0) for g in G]
     U22 = [BEAST.trace(BEAST.PotentialIntegralOperator{2}(g,(x,y)->transpose(x)*y,b->n*b),1.0) for g in dG]
 
 DDL = [U11i[a1,b1] + er*mr*U12i[a1,b2] + U22i[a2,b2] for (U11i,U12i,U22i,er,mr) in zip(U11,U12,U22,ϵr,μr)]
 
-    U11 = -BEAST.strace(BEAST.PotentialIntegralOperator{2}(dG0,×,b->b),-1.0)
+    U11 = -BEAST.rtrace(BEAST.PotentialIntegralOperator{2}(dG0,×,b->b),-1.0)
     U21 = -BEAST.ntrace(BEAST.PotentialIntegralOperator{2}(G0,*,b->b),-1.0)
     U22 = BEAST.ntrace(BEAST.PotentialIntegralOperator{2}(dG0,*,b->b),-1.0)
 
 NDL0 = U11[a1,b1] + U21[a2,b1] + U22[a2,b2]
 
-    U11 = [-BEAST.strace(BEAST.PotentialIntegralOperator{2}(g,×,b->b),1.0) for g in dG]
+    U11 = [-BEAST.rtrace(BEAST.PotentialIntegralOperator{2}(g,×,b->b),1.0) for g in dG]
     U21 = [-BEAST.ntrace(BEAST.PotentialIntegralOperator{2}(g,*,b->b),1.0) for g in G]
     U22 = [BEAST.ntrace(BEAST.PotentialIntegralOperator{2}(g,*,b->b),1.0) for g in dG]
 
 NDL = [U11i[a1,b1] + er*mr*U21i[a2,b1] + U22i[a2,b2] for (U11i,U21i,U22i,er,mr) in zip(U11,U21,U22,ϵr,μr)]
 
-    U11 = -BEAST.strace(BEAST.PotentialIntegralOperator{2}(G0,*,b->b),-1.0)
-    U12 = BEAST.strace(BEAST.PotentialIntegralOperator{2}(dG0,*,b->b),-1.0)
+    U11 = -BEAST.rtrace(BEAST.PotentialIntegralOperator{2}(G0,*,b->b),-1.0)
+    U12 = BEAST.rtrace(BEAST.PotentialIntegralOperator{2}(dG0,*,b->b),-1.0)
     U21 = -BEAST.trace(BEAST.PotentialIntegralOperator{2}(dG0,(x,y)->transpose(x)*y,b->b),-1.0)
     U22 = -κ0^2* BEAST.trace(BEAST.PotentialIntegralOperator{2}(G0,*,b->b),-1.0)
 
 NDSL0 = U11[a1,b1] + U12[a1,b2] + U21[a2,b1] + U22[a2,b2]
 
-    U11 = [-BEAST.strace(BEAST.PotentialIntegralOperator{2}(g,*,b->b),1.0) for g in G]
-    U12 = [BEAST.strace(BEAST.PotentialIntegralOperator{2}(g,*,b->b),1.0) for g in dG]
+    U11 = [-BEAST.rtrace(BEAST.PotentialIntegralOperator{2}(g,*,b->b),1.0) for g in G]
+    U12 = [BEAST.rtrace(BEAST.PotentialIntegralOperator{2}(g,*,b->b),1.0) for g in dG]
     U21 = [-BEAST.trace(BEAST.PotentialIntegralOperator{2}(g,(x,y)->transpose(x)*y,b->b),1.0) for g in dG]
     U22 = [-k^2*BEAST.trace(BEAST.PotentialIntegralOperator{2}(g,*,b->b),1.0) for (g,k) in zip(G,κ)]
 
 NDSL = [mr*U11i[a1,b1] + 1/er*U12i[a1,b2] + 1/er*U21i[a2,b1] + 1/(er^2*mr)*U22i[a2,b2] for (U11i,U12i,U21i,U22i,er,mr) in zip(U11,U12,U21,U22,ϵr,μr)]
 
-    U11 = -κ0^2 * BEAST.pvstrace(BEAST.PotentialIntegralOperator{2}(G0,*,b->b),-1.0)-BEAST.CompDoubleInt(B->divergence(n×B),*,G0,*,B->divergence(B))
-    U12 = BEAST.strace(BEAST.PotentialIntegralOperator{2}(dG0,×,b->n*b),-1.0)
+    U11 = -κ0^2 * BEAST.pvrtrace(BEAST.PotentialIntegralOperator{2}(G0,*,b->b))-BEAST.CompDoubleInt(B->divergence(n×B),*,G0,*,B->divergence(B))
+    U12 = BEAST.rtrace(BEAST.PotentialIntegralOperator{2}(dG0,×,b->n*b),-1.0)
     U21 = -BEAST.ntrace(BEAST.PotentialIntegralOperator{2}(dG0,×,b->b),-1.0)
     U22 =  BEAST.ntrace(BEAST.PotentialIntegralOperator{2}(G0,*,b->n*b),-1.0)
 
 DNSL0 = U11[a1,b1] + U12[a1,b2] + U21[a2,b1] + U22[a2,b2]
 
-    U11 = [-k^2 * BEAST.pvstrace(BEAST.PotentialIntegralOperator{2}(g,*,b->b),1.0)-BEAST.CompDoubleInt(B->divergence(n×B),*,g,*,B->divergence(B)) for (g,k) in zip(G,κ)]
-    U12 = [BEAST.strace(BEAST.PotentialIntegralOperator{2}(g,×,b->n*b),1.0) for g in dG]
+    U11 = [-k^2 * BEAST.pvrtrace(BEAST.PotentialIntegralOperator{2}(g,*,b->b))-BEAST.CompDoubleInt(B->divergence(n×B),*,g,*,B->divergence(B)) for (g,k) in zip(G,κ)]
+    U12 = [BEAST.rtrace(BEAST.PotentialIntegralOperator{2}(g,×,b->n*b),1.0) for g in dG]
     U21 = [-BEAST.ntrace(BEAST.PotentialIntegralOperator{2}(g,×,b->b),1.0) for g in dG]
     U22 = [BEAST.ntrace(BEAST.PotentialIntegralOperator{2}(g,*,b->n*b),1.0) for (g,k) in zip(G,κ)]
 

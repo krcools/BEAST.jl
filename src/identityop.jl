@@ -33,14 +33,14 @@ defaultquadstrat(::LocalOperator, ::LinearRefSpaceTriangle, ::LinearRefSpaceTria
 # end
 
 defaultquadstrat(::LocalOperator, ::subReferenceSpace, ::subReferenceSpace) = SingleNumQStrat(6)
-# function quaddata(op::LocalOperator, g::subReferenceSpace, f::subReferenceSpace, tels, bels,
-#         qs::SingleNumQStrat)
+function quaddata(op::LocalOperator, g::subReferenceSpace, f::subReferenceSpace, tels, bels,
+        qs::SingleNumQStrat)
 
-#     u, w = trgauss(qs.quad_rule)
-#     qd = [(w[i],SVector(u[1,i],u[2,i])) for i in 1:length(w)]
-#     A = _alloc_workspace(qd, g, f, tels, bels)
-#     return qd, A
-# end
+    u, w = trgauss(qs.quad_rule)
+    qd = [(w[i],SVector(u[1,i],u[2,i])) for i in 1:length(w)]
+    A = _alloc_workspace(qd, g, f, tels, bels)
+    return qd, A
+end
 
 const LinearRefSpaceTetr = Union{NDLCCRefSpace, NDLCDRefSpace, BDM3DRefSpace}
 defaultquadstrat(::LocalOperator, ::LinearRefSpaceTetr, ::LinearRefSpaceTetr) = SingleNumQStrat(3)
@@ -138,7 +138,7 @@ defaultquadstrat(::LocalOperator, _, _) = SingleNumQStrat(6)
 # end
 
 function quaddata(op::LocalOperator, g, f, 
-    tels::Vector{<:Simplex{U,2}}, bels::Vector{<:Simplex{U,2}},
+    tels::Vector{<:CompScienceMeshes.Simplex{U,2}}, bels::Vector{<:CompScienceMeshes.Simplex{U,2}},
     qs::SingleNumQStrat) where {U}
 
     u, w = trgauss(qs.quad_rule)
