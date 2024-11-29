@@ -22,25 +22,25 @@ end
 
 const LinearRefSpaceTriangle = Union{RTRefSpace, RT2RefSpace, NDRefSpace, ND2RefSpace, BDMRefSpace, NCrossBDMRefSpace}
 defaultquadstrat(::LocalOperator, ::LinearRefSpaceTriangle, ::LinearRefSpaceTriangle) = SingleNumQStrat(6)
-function quaddata(op::LocalOperator, g::LinearRefSpaceTriangle, f::LinearRefSpaceTriangle, tels, bels,
-        qs::SingleNumQStrat)
+# function quaddata(op::LocalOperator, g::LinearRefSpaceTriangle, f::LinearRefSpaceTriangle, tels, bels,
+#         qs::SingleNumQStrat)
 
-    u, w = trgauss(qs.quad_rule)
-    qd = [(w[i],SVector(u[1,i],u[2,i])) for i in 1:length(w)]
-    A = _alloc_workspace(qd, g, f, tels, bels)
+#     u, w = trgauss(qs.quad_rule)
+#     qd = [(w[i],SVector(u[1,i],u[2,i])) for i in 1:length(w)]
+#     A = _alloc_workspace(qd, g, f, tels, bels)
 
-    return qd, A
-end
+#     return qd, A
+# end
 
 defaultquadstrat(::LocalOperator, ::subReferenceSpace, ::subReferenceSpace) = SingleNumQStrat(6)
-function quaddata(op::LocalOperator, g::subReferenceSpace, f::subReferenceSpace, tels, bels,
-        qs::SingleNumQStrat)
+# function quaddata(op::LocalOperator, g::subReferenceSpace, f::subReferenceSpace, tels, bels,
+#         qs::SingleNumQStrat)
 
-    u, w = trgauss(qs.quad_rule)
-    qd = [(w[i],SVector(u[1,i],u[2,i])) for i in 1:length(w)]
-    A = _alloc_workspace(qd, g, f, tels, bels)
-    return qd, A
-end
+#     u, w = trgauss(qs.quad_rule)
+#     qd = [(w[i],SVector(u[1,i],u[2,i])) for i in 1:length(w)]
+#     A = _alloc_workspace(qd, g, f, tels, bels)
+#     return qd, A
+# end
 
 const LinearRefSpaceTetr = Union{NDLCCRefSpace, NDLCDRefSpace, BDM3DRefSpace}
 defaultquadstrat(::LocalOperator, ::LinearRefSpaceTetr, ::LinearRefSpaceTetr) = SingleNumQStrat(3)
@@ -65,14 +65,14 @@ function quaddata(op::LocalOperator, g::LagrangeRefSpace{T,Deg,2} where {T,Deg},
 end
 
 defaultquadstrat(::LocalOperator, ::LagrangeRefSpace{T,D1,3}, ::LagrangeRefSpace{T,D2,3}) where {T,D1,D2} = SingleNumQStrat(6)
-function quaddata(op::LocalOperator, g::LagrangeRefSpace{T,Deg,3} where {T,Deg},
-    f::LagrangeRefSpace, tels::Vector, bels::Vector, qs::SingleNumQStrat)
+# function quaddata(op::LocalOperator, g::LagrangeRefSpace{T,Deg,3} where {T,Deg},
+#     f::LagrangeRefSpace, tels::Vector, bels::Vector, qs::SingleNumQStrat)
 
-    u, w = trgauss(qs.quad_rule)
-    qd = [(w[i], SVector(u[1,i], u[2,i])) for i in 1:length(w)]
-    A = _alloc_workspace(qd, g, f, tels, bels)
-    return qd, A
-end
+#     u, w = trgauss(qs.quad_rule)
+#     qd = [(w[i], SVector(u[1,i], u[2,i])) for i in 1:length(w)]
+#     A = _alloc_workspace(qd, g, f, tels, bels)
+#     return qd, A
+# end
 
 defaultquadstrat(::LocalOperator, ::LagrangeRefSpace{T,D1,4}, ::LagrangeRefSpace{T,D2,4}) where {T,D1,D2} = SingleNumQStrat(6)
 function quaddata(op::LocalOperator, g::LagrangeRefSpace{T,Deg,4} where {T,Deg},
@@ -93,15 +93,15 @@ defaultquadstrat(::LocalOperator, ::GWPDivRefSpace{<:Real,D1},
     ::GWPDivRefSpace{<:Real,D2}) where {D1,D2} = SingleNumQStrat(7)
 
 
-function quaddata(op::LocalOperator, g::GWPDivRefSpace, f::GWPDivRefSpace,
-    tels::Vector, bels::Vector,
-    qs::SingleNumQStrat)
+# function quaddata(op::LocalOperator, g::GWPDivRefSpace, f::GWPDivRefSpace,
+#     tels::Vector, bels::Vector,
+#     qs::SingleNumQStrat)
 
-    u, w = trgauss(qs.quad_rule)
-    qd = [(w[i],SVector(u[1,i],u[2,i])) for i in 1:length(w)]
-    A = _alloc_workspace(qd, g, f, tels, bels)
-    return qd, A
-end
+#     u, w = trgauss(qs.quad_rule)
+#     qd = [(w[i],SVector(u[1,i],u[2,i])) for i in 1:length(w)]
+#     A = _alloc_workspace(qd, g, f, tels, bels)
+#     return qd, A
+# end
 
 
 function quadrule(op::LocalOperator, ψ::RefSpace, ϕ::RefSpace, τ, (qd,A), qs::SingleNumQStrat)
@@ -114,21 +114,32 @@ function quadrule(op::LocalOperator, ψ::RefSpace, ϕ::RefSpace, τ, (qd,A), qs:
 end
 
 
-defaultquadstrat(::LocalOperator, ::TriangleSupport, ::TriangleSupport) = SingleNumQStrat(6)
-defaultquadstrat(::LocalOperator, ::TetraSupport, ::TetraSupport) = SingleNumQStrat(3)
-defaultquadstrat(op::LocalOperator, a::_LocalBasisOperations, b) = defaultquadstrat(op,support(a),support(b))
-defaultquadstrat(op::LocalOperator, a, b::_LocalBasisOperations) = defaultquadstrat(op,support(a),support(b))
-defaultquadstrat(op::LocalOperator, a::_LocalBasisOperations, b::_LocalBasisOperations) = defaultquadstrat(op,support(a),support(b))
+defaultquadstrat(::LocalOperator, _, _) = SingleNumQStrat(6)
+# defaultquadstrat(::LocalOperator, ::TetraSupport, ::TetraSupport) = SingleNumQStrat(3)
+# defaultquadstrat(op::LocalOperator, a::_LocalBasisOperations, b) = defaultquadstrat(op,support(a),support(b))
+# defaultquadstrat(op::LocalOperator, a, b::_LocalBasisOperations) = defaultquadstrat(op,support(a),support(b))
+# defaultquadstrat(op::LocalOperator, a::_LocalBasisOperations, b::_LocalBasisOperations) = defaultquadstrat(op,support(a),support(b))
 
-function quaddata(op::LocalOperator, g, f, tels, bels,
-    qs::SingleNumQStrat)
-    gs = support(g)
-    fs = support(f)
-    quaddata(op,g,f,gs,fs,tels,bels,qs)
-end
+# function quaddata(op::LocalOperator, g, f, tels, bels,
+#     qs::SingleNumQStrat)
+#     gs = support(g)
+#     fs = support(f)
+#     quaddata(op,g,f,gs,fs,tels,bels,qs)
+# end
 
-function quaddata(op::LocalOperator, g, f,supg::TriangleSupport,supf::TriangleSupport, tels, bels,
-        qs::SingleNumQStrat)
+# function quaddata(op::LocalOperator, g, f,supg::TriangleSupport,supf::TriangleSupport, tels, bels,
+#         qs::SingleNumQStrat)
+
+#     u, w = trgauss(qs.quad_rule)
+#     qd = [(w[i],SVector(u[1,i],u[2,i])) for i in 1:length(w)]
+#     A = _alloc_workspace(qd, g, f, tels, bels)
+
+#     return qd, A
+# end
+
+function quaddata(op::LocalOperator, g, f, 
+    tels::Vector{<:Simplex{U,2}}, bels::Vector{<:Simplex{U,2}},
+    qs::SingleNumQStrat) where {U}
 
     u, w = trgauss(qs.quad_rule)
     qd = [(w[i],SVector(u[1,i],u[2,i])) for i in 1:length(w)]

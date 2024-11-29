@@ -1,39 +1,45 @@
-
-#### trace vector 
-
-# orientation is used when test and trial chart have same displacement, in this case the test-cart is displaced in the orientation*normal(test-chart) direction.
 struct DisplacementVector{T} <: Kernel{T} 
-    orientation
+    interior::Bool
 end
 
 
 function (u::DisplacementVector)(x,disp)
     if disp == 0
-        return sign(u.orientation)*normal(x)
+        return (u.interior - !u.interior) * normal(x)
     else
         return sign(disp)*normal(x)
     end
 end
 
 
-#### trace of a potential:
-_trace(::Kernel,n,o;type=Float64) = 0, 0
-function _trace(::HH3DGradGreen,n,::Val{2};type=Float64)
-    return DisplacementVector{type}(n) , 0.5
+"""
+    _trace(kernel,interior,Val{N})
+
+    computes the jump contribution of a kernel, where N is the dimension of the potential integral.
+"""
+_trace(::Kernel,interior,_) = 0, 0
+function _trace(::HH3DGradGreen{T},interior::Bool,::Val{2}) where {T}
+    return DisplacementVector{real(T)}(interior) , real(T)(0.5)
 end
 
 """
-sign indicates if trace is taken allong the normal (+1) are opposite to the normal (-1)
+    ttrace(Potential,interior::Bool;testfunction_tangential=false)
+
+Compute the tangential trace, -n×n× Potential, of a potential operator mapping it to a boundary operator.
+
+This function assumes the normalvector on the mesh to point outwards. 
+Global multi-trace structures are supported when this function is called.
+A small acceleration can be gained by setting testfunction_tangential to true.
 """
-function ttrace(a::PotentialIntegralOperator{D},sign;testfunction_tangential=false) where {D}
-    t,f = _trace(a.kernel,sign,Val{D}())
+function ttrace(a::PotentialIntegralOperator{D},interior::Bool;testfunction_tangential=false) where {D}
+    t,f = _trace(a.kernel,interior,Val{D}())
     if testfunction_tangential
-        doubleint = CompDoubleInt(B->B,(x,y)->transpose(x)*y,a.kernel,a.pairing2,a.bfunc)
-        t!=0 && (singleint = f*CompSingleInt(B->B,(x,y)->transpose(x)*y,t,a.pairing2,a.bfunc))
+        doubleint = CompDoubleInt(B->B,(x,y)->transpose(x)*y,a.kernel,a.op2,a.bfunc)
+        t!=0 && (singleint = f*CompSingleInt(B->B,(x,y)->transpose(x)*y,t,a.op2,a.bfunc))
     else
 
-        doubleint = -1*CompDoubleInt(B-> n×(n×B),(x,y)->transpose(x)*y,a.kernel,a.pairing2,a.bfunc)
-        t!=0 && (singleint = (-f)*CompSingleInt(B -> n×(n×B),(x,y)->transpose(x)*y,t,a.pairing2,a.bfunc))
+        doubleint = -1*CompDoubleInt(B-> n×(n×B),(x,y)->transpose(x)*y,a.kernel,a.op2,a.bfunc)
+        t!=0 && (singleint = (-f)*CompSingleInt(B -> n×(n×B),(x,y)->transpose(x)*y,t,a.op2,a.bfunc))
     end
     if t==0
      
@@ -44,11 +50,18 @@ function ttrace(a::PotentialIntegralOperator{D},sign;testfunction_tangential=fal
         return doubleint + singleint
     end
 end
+"""
+    ntrace(Potential,interior::Bool)
 
-function ntrace(a::PotentialIntegralOperator{D},sign) where {D}
-    t,f = _trace(a.kernel,sign,Val{D}())
-    doubleint = CompDoubleInt(B-> B*n,(x,y)->transpose(x)*y,a.kernel,a.pairing2,a.bfunc)
-    t!=0 && (singleint = f*CompSingleInt(B-> B*n,(x,y)->transpose(x)*y,t,a.pairing2,a.bfunc))
+Compute the normal trace, n⋅ Potential, of a potential operator mapping it to a boundary operator.
+
+This function assumes the normalvector on the mesh to point outwards. 
+Global multi-trace structures are supported when this function is called.
+"""
+function ntrace(a::PotentialIntegralOperator{D},interior::Bool) where {D}
+    t,f = _trace(a.kernel,interior,Val{D}())
+    doubleint = CompDoubleInt(B-> B*n,(x,y)->transpose(x)*y,a.kernel,a.op2,a.bfunc)
+    t!=0 && (singleint = f*CompSingleInt(B-> B*n,(x,y)->transpose(x)*y,t,a.op2,a.bfunc))
     
     if t==0
         return doubleint
@@ -57,11 +70,18 @@ function ntrace(a::PotentialIntegralOperator{D},sign) where {D}
         return doubleint + singleint
     end
 end
+"""
+    trace(Potential,interior::Bool)
 
-function trace(a::PotentialIntegralOperator{D},sign) where {D}
-    t,f = _trace(a.kernel,sign,Val{D}())
-    doubleint = CompDoubleInt(B->B,*,a.kernel,a.pairing2,a.bfunc)
-    t!=0 && (singleint = f*CompSingleInt(B->B,*,t,a.pairing2,a.bfunc))
+Compute the trace of a potential operator mapping it to a boundary operator.
+
+This function assumes the normalvector on the mesh to point outwards. 
+Global multi-trace structures are supported when this function is called.
+"""
+function trace(a::PotentialIntegralOperator{D},interior::Bool) where {D}
+    t,f = _trace(a.kernel,interior,Val{D}())
+    doubleint = CompDoubleInt(B->B,*,a.kernel,a.op2,a.bfunc)
+    t!=0 && (singleint = f*CompSingleInt(B->B,*,t,a.op2,a.bfunc))
     
     if t==0
         return doubleint
@@ -70,11 +90,18 @@ function trace(a::PotentialIntegralOperator{D},sign) where {D}
         return doubleint + singleint
     end
 end
+"""
+    rtrace(Potential,interior::Bool)
 
-function strace(a::PotentialIntegralOperator{D},sign) where {D}
-    t,f = _trace(a.kernel,sign,Val{D}())
-    doubleint = CompDoubleInt(B-> B × n,(x,y)->transpose(x)*y,a.kernel,a.pairing2,a.bfunc)
-    t!=0 && (singleint = f*CompSingleInt(B-> B × n,(x,y)->transpose(x)*y,t,a.pairing2,a.bfunc))
+Compute the rotated trace, n × Potential, of a potential operator mapping it to a boundary operator.
+
+This function assumes the normalvector on the mesh to point outwards. 
+Global multi-trace structures are supported when this function is called.
+"""
+function rtrace(a::PotentialIntegralOperator{D},interior::Bool) where {D}
+    t,f = _trace(a.kernel,interior,Val{D}())
+    doubleint = CompDoubleInt(B-> B × n,(x,y)->transpose(x)*y,a.kernel,a.op2,a.bfunc)
+    t!=0 && (singleint = f*CompSingleInt(B-> B × n,(x,y)->transpose(x)*y,t,a.op2,a.bfunc))
     
     if t==0
         return doubleint
@@ -83,37 +110,67 @@ function strace(a::PotentialIntegralOperator{D},sign) where {D}
         return doubleint + singleint
     end
 end
+"""
+    pvttrace(Potential,interior::Bool;testfunction_tangential=false)
 
+Compute the principal value of the tangential trace, -n×n× Potential.
+
+A small acceleration can be gained by setting testfunction_tangential to true.
+"""
 # the principal value of the trace.
-function pvttrace(a::PotentialIntegralOperator{D},sign;testfunction_tangential=false) where {D}
+function pvttrace(a::PotentialIntegralOperator{D};testfunction_tangential=false) where {D}
     if testfunction_tangential
-        doubleint = CompDoubleInt(B->B,(x,y)->transpose(x)*y,a.kernel,a.pairing2,a.bfunc)
+        doubleint = CompDoubleInt(B->B,(x,y)->transpose(x)*y,a.kernel,a.op2,a.bfunc)
     else
-        doubleint = -1*CompDoubleInt(B-> n×(n×B),(x,y)->transpose(x)*y,a.kernel,a.pairing2,a.bfunc)
+        doubleint = -1*CompDoubleInt(B-> n×(n×B),(x,y)->transpose(x)*y,a.kernel,a.op2,a.bfunc)
     end
     return doubleint
 end
 
-function pvntrace(a::PotentialIntegralOperator{D},sign) where {D}
+"""
+    pvntrace(Potential,interior::Bool)
 
-    doubleint = CompDoubleInt(B-> B*n,(x,y)->transpose(x)*y,a.kernel,a.pairing2,a.bfunc)
+Compute the principal value of the normal trace, n⋅ Potential.
+
+This function assumes the normalvector on the mesh to point outwards. 
+"""
+function pvntrace(a::PotentialIntegralOperator{D}) where {D}
+
+    doubleint = CompDoubleInt(B-> B*n,(x,y)->transpose(x)*y,a.kernel,a.op2,a.bfunc)
 
     return doubleint
 end
 
-function pvtrace(a::PotentialIntegralOperator{D},sign) where {D}
-    doubleint = CompDoubleInt(B-> B,*,a.kernel,a.pairing2,a.bfunc)
+"""
+    pvtrace(Potential,interior::Bool)
+
+Compute the principal value of the  trace.
+"""
+function pvtrace(a::PotentialIntegralOperator{D}) where {D}
+    doubleint = CompDoubleInt(B-> B,*,a.kernel,a.op2,a.bfunc)
 
     return doubleint
 end
 
-function pvstrace(a::PotentialIntegralOperator{D},sign) where {D}
-    doubleint = CompDoubleInt(B-> B × n,(x,y)->transpose(x)*y,a.kernel,a.pairing2,a.bfunc)
+"""
+    pvrtrace(Potential,interior::Bool)
+
+Compute the principal value of the rotated trace, n× Potential.
+
+This function assumes the normalvector on the mesh to point outwards. 
+"""
+function pvrtrace(a::PotentialIntegralOperator{D}) where {D}
+    doubleint = CompDoubleInt(B-> B × n,(x,y)->transpose(x)*y,a.kernel,a.op2,a.bfunc)
     return doubleint
 end
 
+"""
+    volumetrace(Potential)
+
+Mapping the potential to a volume operator.
+"""
 function volumetrace(a::PotentialIntegralOperator{D}) where {D}
-    CompDoubleInt(B->B,(x,y)->transpose(x)*y,a.kernel,a.pairing2,a.bfunc)
+    CompDoubleInt(B->B,(x,y)->transpose(x)*y,a.kernel,a.op2,a.bfunc)
 end
 
 

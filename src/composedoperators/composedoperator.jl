@@ -5,17 +5,17 @@ abstract type Kernel{T} end
 #Make these structures, those are not yet pulled trough the smartmath function
 struct CompDoubleInt{T} <: AbstractCompInt
     tfunc
-    pairing1
+    op1
     kernel::Kernel{T}
-    pairing2
+    op2
     bfunc
 end
 
 struct CompSingleInt{T} <: AbstractCompInt
     tfunc
-    pairing1
+    op1
     kernel::Kernel{T}
-    pairing2
+    op2
     bfunc
 end
 scalartype(op::CompDoubleInt{T}) where {T} = T 
@@ -24,17 +24,17 @@ scalartype(op::CompSingleInt{T}) where {T} = T
 
 #the functionallity is pased to the basis at this point.
 struct CompDoubleKern{T,U,V,W} <: IntegralOperator
-    pairing1::U
+    op1::U
     kernel::W
-    pairing2::V
+    op2::V
 end
 function CompDoubleKern(p1,k::Kernel{T},p2) where {T}
     CompDoubleKern{T,typeof(p1),typeof(p2),typeof(k)}(p1,k,p2)
 end
 struct CompSingleKern{T,U,V,W} <: LocalOperator
-    pairing1::U
+    op1::U
     kernel::W
-    pairing2::V
+    op2::V
 end
 function CompSingleKern(p1,k::Kernel{T},p2) where {T}
     CompSingleKern{T,typeof(p1),typeof(p2),typeof(k)}(p1,k,p2)
@@ -42,8 +42,8 @@ end
 scalartype(op::CompDoubleKern{T}) where {T} = T 
 scalartype(op::CompSingleKern{T}) where {T} = T 
 
-integralop(a::CompDoubleInt) = CompDoubleKern(a.pairing1,a.kernel,a.pairing2)
-integralop(a::CompSingleInt) = CompSingleKern(a.pairing1,a.kernel,a.pairing2)
+integralop(a::CompDoubleInt) = CompDoubleKern(a.op1,a.kernel,a.op2)
+integralop(a::CompSingleInt) = CompSingleKern(a.op1,a.kernel,a.op2)
 
 
 function assemble!(op::AbstractCompInt, tfs::AbstractSpace, bfs::AbstractSpace,
@@ -118,8 +118,8 @@ end
 ##### integrand evaluation
 function integrand(op::CompSingleKern,kerneldata,x,f,g,disp)
     kernel = op.kernel(x,disp)
-    op1 = op.pairing1
-    op2 = op.pairing2
+    op1 = op.op1
+    op2 = op.op2
 
     op1(f.value,op2(kernel,g.value))
 
@@ -127,8 +127,8 @@ end
 
 function (op::Integrand{<:CompDoubleKern})(x,y,f,g)
     kernel = op.operator.kernel(x,y)
-    op1 = op.operator.pairing1
-    op2 = op.operator.pairing2
+    op1 = op.operator.op1
+    op2 = op.operator.op2
     _integrands(f,g) do fi, gi
         op1(fi.value,op2(kernel,gi.value))
     end
