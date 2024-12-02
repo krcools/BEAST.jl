@@ -5,10 +5,13 @@ using Makeitso
 using BakerStreet
 using DataFrames
 
+fn = splitext(splitdir(@__FILE__)[end])[1]
+
 @target solutions () -> begin
     function payload(;h)
         d = 1.0
-        Γ = meshcuboid(d, d, d/2, h)
+        Γ = meshsphere(radius=d, h=h)
+        # Γ = meshcuboid(d, d, d/2, h)
         X = raviartthomas(Γ)
 
         κ, η = 1.0, 1.0
@@ -32,12 +35,13 @@ using DataFrames
 
     α = 0.8
     h = collect(0.4 * α.^(0:15))
-    runsims(payload, "solutions"; h)
-    return loadsims("solutions")
+    runsims(payload, "$fn/solutions"; h)
+    return loadsims("$fn/solutions")
 end
 
-@target compute_errors (solutions) -> begin
-    df = loadsims("solutions")
+
+@target errors (solutions) -> begin
+    df = loadsims("$(fn)/solutions")
     numrows = size(df,1)
 
     uref = df.u[1]
@@ -51,24 +55,54 @@ end
     S11 = assemble(s, Xref, Xref)
     term11 = real(dot(uref, S11*uref))
 
-    for i in reverse(2:numrows)
-        r = df[i,:]
+    function payload(;h)
+        r = getrow(df; h=h)
         (;h, u, X) = r
-        @show r, length(u)
         Γ = geometry(X)
 
         S12 = assemble(s, Xref, X; quadstrat=[qstrat12])
         S22 = assemble(s, X, X)
-        errs[i] = sqrt(term11 - 2*real(dot(uref, S12*u)) + real(dot(u, S22*u)))
-        @show errs[i]
+        err = sqrt(term11 - 2*real(dot(uref, S12*u)) + real(dot(u, S22*u)))
+        return (;err)
     end
 
-    return errs
+    runsims(payload, "$(fn)/errors", h=df.h[end:-1:2])
+    return loadsims("$(fn)/errors")
 end
+
+# @target compute_errors (solutions) -> begin
+#     df = loadsims("sphere/solutions")
+#     numrows = size(df,1)
+
+#     uref = df.u[1]
+#     Xref = df.X[1]
+#     Γref = geometry(Xref)
+
+#     errs = zeros(numrows)
+#     s = -Maxwell3D.singlelayer(gamma=1.0)
+#     qstrat12 = BEAST.NonConformingIntegralOpQStrat(BEAST.DoubleNumSauterQstrat(3, 4, 6, 6, 6, 6))
+
+#     S11 = assemble(s, Xref, Xref)
+#     term11 = real(dot(uref, S11*uref))
+
+#     for i in reverse(2:numrows)
+#         r = df[i,:]
+#         (;h, u, X) = r
+#         @show r, length(u)
+#         Γ = geometry(X)
+
+#         S12 = assemble(s, Xref, X; quadstrat=[qstrat12])
+#         S22 = assemble(s, X, X)
+#         errs[i] = sqrt(term11 - 2*real(dot(uref, S12*u)) + real(dot(u, S22*u)))
+#         @show errs[i]
+#     end
+
+#     return errs
+# end
 
 
 @target weak_errors (solutions) -> begin
-    df = loadsims("solutions")
+    df = loadsims("sphere/solutions")
 
     α = df.h[1] / df.h[2]
     W1 = reverse(df.u_Snorm)
@@ -78,7 +112,7 @@ end
 end
 
 
-@make compute_errors
+@make errors
 # df = loadsims("solutions")
 # error()
 
