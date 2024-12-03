@@ -14,7 +14,7 @@ Xd = raviartthomas(Γd)
 
 ∇G = BEAST.HH3DGradGreen(0.0)
 Z = BEAST.PotentialIntegralOperator{2}(∇G,×,b->b)
-K = BEAST.ttrace(Z,-1.0;testfunction_tangential=false) #-1.0 trace taken allong the test normal (from outside to inside)
+K = BEAST.ttrace(Z,false;testfunction_tangential=false) #-1.0 trace taken allong the test normal (from outside to inside)
 M = assemble(K,X,X;quadstrat = [BEAST.DoubleNumSauterQstrat(6,6,6,6,6,6),BEAST.SingleNumQStrat(6)])
 
 
@@ -38,7 +38,7 @@ M_displaced = assemble(K,Xd,X;quadstrat = [BEAST.DoubleNumSauterQstrat(6,6,6,6,6
 Xm = raviartthomas(Γ_mirror)
 Xdm = raviartthomas(Γd_mirror)
 
-K = ttrace(Z,0.0) #number does not matter here, trace part should just be spawned, this number only matters fr selfpatch or if user is not carefull with displacement meshes
+K = ttrace(Z,true) #number does not matter here, trace part should just be spawned, this number only matters fr selfpatch or if user is not carefull with displacement meshes
 M = assemble(K,Xm,X;quadstrat = [BEAST.DoubleNumSauterQstrat(6,6,6,6,6,6),BEAST.SingleNumQStrat(6)])
 
 K_compare = Maxwell3D.doublelayer(wavenumber = 0.0) + 0.5*NCross() #trace from outside to inside

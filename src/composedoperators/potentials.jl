@@ -10,8 +10,8 @@ struct PotentialIntegralOperatorKern{U,V}
     op2::V
 end
 
-function integrand(a::PotentialIntegralOperatorKern,y,krn,f,x)
-    return a.op2(a.kernel(y,x),f)
+function integrand(a::PotentialIntegralOperatorKern,krn,y,f,x)
+    return a.op2(a.kernel(y,x),f.value)
 end
 function potential(op::PotentialIntegralOperator, points, coeffs, basis; 
     type=SVector{3,ComplexF64},
