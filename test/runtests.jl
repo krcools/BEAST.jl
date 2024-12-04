@@ -77,6 +77,8 @@ include("test_td_tensoroperator.jl")
 include("test_variational.jl")
 
 include("test_handlers.jl")
+include("test_ncrossbdm.jl")
+include("test_curl_lagc0d1_lagc0d2.jl")
 include("test_gridfunction.jl")
 
 using TestItemRunner
