@@ -16,13 +16,16 @@ scalartype(p::PlaneWaveHH3DTD) = eltype(p.amplitude)
 
 
 function(f::PlaneWaveHH3DTD)(r,t)
+    r = cartesian(r)
+    t = cartesian(t)[1]
+
     k = f.direction
     u = sum(k[i]*r[i] for i in 1:length(k))
     #u = dot(f.direction, r)
     a = f.amplitude
     c = f.speed_of_light
     h = f.signature
-    a * h(c*cartesian(t)[1] - u)
+    a * h(c*t - u)
 end
 
 

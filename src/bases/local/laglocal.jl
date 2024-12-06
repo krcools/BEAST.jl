@@ -9,8 +9,11 @@ numfunctions(s::LagrangeRefSpace{T,1,3}, ch::CompScienceMeshes.ReferenceSimplex{
 numfunctions(s::LagrangeRefSpace{T,2,3}, ch::CompScienceMeshes.ReferenceSimplex{2}) where {T} = 6
 numfunctions(s::LagrangeRefSpace{T,Dg}, ch::CompScienceMeshes.ReferenceSimplex{D}) where {T,Dg,D} = binomial(D+Dg,Dg)
 
+#valuetype(ref::LagrangeRefSpace{T}, charttype) where {T} =
+#        SVector{numfunctions(ref), Tuple{T,T}}
+
 valuetype(ref::LagrangeRefSpace{T}, charttype) where {T} =
-        SVector{numfunctions(ref), Tuple{T,T}}
+        SVector{1, T}
 
 
 # Evaluate constant lagrange elements on anything

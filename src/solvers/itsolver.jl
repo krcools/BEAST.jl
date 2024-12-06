@@ -91,7 +91,7 @@ function LinearAlgebra.mul!(y::AbstractVecOrMat, solver::GMRESSolver, x::Abstrac
     return y
 end
 
-LinearAlgebra.adjoint(A::GMRESSolver) = GMRESSolver(adjoint(A.linear_operator), A.maxiter, A.restart, A.abstol, A.reltol, A.verbose)
+LinearAlgebra.adjoint(A::GMRESSolver) = GMRESSolver(adjoint(A.linear_operator); maxiter=A.maxiter, restart=A.restart, abstol=A.abstol, reltol=A.reltol, verbose=A.verbose, left_preconditioner=A.left_preconditioner)
 LinearAlgebra.transpose(A::GMRESSolver) = GMRESSolver(transpose(A.linear_operator), A.maxiter, A.restart, A.abstol, A.reltol, A.verbose)
 
 

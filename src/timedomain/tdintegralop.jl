@@ -169,7 +169,7 @@ end
 
 
 function assemble!(op::RetardedPotential, testST::Space, trialST::Space, store,
-    threading::Type{Threading{:single}}=Threading{:single}; quadstrat=defaultquadstrat(op, testST, trialST))
+    threading::Type{Threading{:single}}; quadstrat=defaultquadstrat(op, testST, trialST))
 
     assemble_chunk!(op, testST, trialST, store; quadstrat=quadstrat)
 end
