@@ -23,3 +23,4 @@ end
 defaultquadstrat(op::PotentialIntegralOperator, basis) = SingleNumQStrat(6)
 quaddata(op::PotentialIntegralOperatorKern,rs,els,qs::SingleNumQStrat) = quadpoints(rs,els,(qs.quad_rule,))
 quadrule(op::PotentialIntegralOperatorKern,refspace,p,y,q,el,qdata,qs::SingleNumQStrat) = qdata[1,q]
+kernelvals(op::PotentialIntegralOperatorKern,y,p) = nothing
