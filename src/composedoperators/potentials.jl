@@ -20,3 +20,6 @@ function potential(op::PotentialIntegralOperator, points, coeffs, basis;
     return potential(PotentialIntegralOperatorKern(op.kernel,op.op2),points,coeffs,op.bfunc(basis);type,quadstrat)
 end
 
+defaultquadstrat(op::PotentialIntegralOperator, basis) = SingleNumQStrat(6)
+quaddata(op::PotentialIntegralOperatorKern,rs,els,qs::SingleNumQStrat) = quadpoints(rs,els,(qs.quad_rule,))
+quadrule(op::PotentialIntegralOperatorKern,refspace,p,y,q,el,qdata,qs::SingleNumQStrat) = qdata[1,q]
