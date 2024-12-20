@@ -81,6 +81,10 @@ include("test_ncrossbdm.jl")
 include("test_curl_lagc0d1_lagc0d2.jl")
 include("test_gridfunction.jl")
 
+include("test_composed_basis.jl")
+include("test_composed_operator.jl")
+include("test_analytic_excitation.jl")
+
 using TestItemRunner
 @run_package_tests
 
