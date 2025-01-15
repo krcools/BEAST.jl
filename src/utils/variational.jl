@@ -286,6 +286,11 @@ function getindex(A, v::HilbertVector, u::HilbertVector)
     BilForm(v.space, u.space, terms)
 end
 
+function getindex(A::AbstractMatrix, v::HilbertVector, u::HilbertVector)
+    terms = [ BilTerm(v.idx, u.idx, v.opstack, u.opstack, 1, A) ]
+    BilForm(v.space, u.space, terms)
+end
+
 
 function getindex(A::BEAST.BlockDiagonalOperator, V::Vector{HilbertVector}, U::Vector{HilbertVector})
     op = A.op

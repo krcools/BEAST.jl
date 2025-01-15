@@ -147,7 +147,7 @@ function gwpcurl(mesh, edges=nothing; order)
             _addshapes!(fns, cell, gids, lids, inv(α'))
         end
 
-        order < 2 && continue
+        order < 1 && continue
         face_ch = chart(mesh, cell)
         gids = Ne + (cell-1)*nf .+ (1:nf)
         lids = localindices(localspace, refdom, Val{2}, 1)
