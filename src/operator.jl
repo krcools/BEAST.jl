@@ -89,7 +89,7 @@ function assemble(operator::AbstractOperator, test_functions, trial_functions;
 end
 
 
-function assemble(A::Matrix, testfns, trialfns)
+function assemble(A::AbstractMatrix, testfns, trialfns)
     @assert numfunctions(testfns) == size(A,1)
     @assert numfunctions(trialfns) == size(A,2)
     return A
@@ -137,15 +137,15 @@ function allocatestorage(operator::AbstractOperator, test_functions, trial_funct
 end
 
 
-function allocatestorage(operator::LinearCombinationOfOperators,
-        test_functions::SpaceTimeBasis, trial_functions::SpaceTimeBasis,
-        storage_policy::Type{Val{:bandedstorage}},
-        long_delays_policy::Type{LongDelays{:ignore}})
+# function allocatestorage(operator::LinearCombinationOfOperators,
+#         test_functions::SpaceTimeBasis, trial_functions::SpaceTimeBasis,
+#         storage_policy::Type{Val{:bandedstorage}},
+#         long_delays_policy::Type{LongDelays{:ignore}})
 
-    # This works when are terms in the LC can share storage
-    return allocatestorage(operator.ops[end], test_functions, trial_functions,
-        storage_policy, long_delays_policy)
-end
+#     # This works when are terms in the LC can share storage
+#     return allocatestorage(operator.ops[end], test_functions, trial_functions,
+#         storage_policy, long_delays_policy)
+# end
 
 
 function allocatestorage(operator::LinearCombinationOfOperators,

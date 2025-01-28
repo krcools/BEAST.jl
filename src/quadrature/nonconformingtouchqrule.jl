@@ -26,13 +26,13 @@ function momintegrals!(op,
     isempty(σs) && return
 
     # test conformity
-    for a in τs
-        for b in σs
-            if !_test_conformity(a, b)
-                @infiltrate
-            end
-        end
-    end
+    # for a in τs
+    #     for b in σs
+    #         if !_test_conformity(a, b)
+    #             @infiltrate
+    #         end
+    #     end
+    # end
 
     # volume(σ) ≈ sum(volume.(σs)) || @infiltrate
 
@@ -144,13 +144,8 @@ function _conforming_refinement_touching_triangles(τ,σ,i,j)
     μ = faces(σ)[j]
     ρ = CompScienceMeshes.intersection(λ,μ)[1]
 
-    # τ_verts = [τ[mod1(i+2,3)], τ[mod1(i,3)], τ[mod1(i+1,3)]]
-    # σ_verts = [σ[mod1(j+2,3)], σ[mod1(j,3)], σ[mod1(j+1,3)]]
-    # τ_verts = [v for v in τ.vertices]
-    # σ_verts = [v for v in σ.vertices]
     τ_verts = Array(τ.vertices)
     σ_verts = Array(σ.vertices)
-    # @show typeof(τ_verts)
 
     T = coordtype(τ)
     P = eltype(τ.vertices)
@@ -187,28 +182,20 @@ function _conforming_refinement_touching_triangles(τ,σ,i,j)
     insert!(σ_verts, p, V[2])
     insert!(σ_verts, p, V[1])
 
-    # println(τ_verts)
-    # println(σ_verts)
-
     τ_charts = [ simplex(τ_verts[mod1(new_i,5)], τ_verts[mod1(new_i+s,5)], τ_verts[mod1(new_i+s+1,5)]) for s in 1:3 ]
     σ_charts = [ simplex(σ_verts[mod1(new_j,5)], σ_verts[mod1(new_j+s,5)], σ_verts[mod1(new_j+s+1,5)]) for s in 1:3 ]
-    # σ_charts = [ simplex(σ_verts[1], σ_verts[i], σ_verts[i+1]) for i in 2:length(σ_verts)-1 ]
 
-    h = volume(τ)
-    τ_charts = [ch for ch in τ_charts if volume(ch) .> 1e6 * eps(T) * h]
-    σ_charts = [ch for ch in σ_charts if volume(ch) .> 1e6 * eps(T) * h]
-
+    τ_charts = [ch for ch in τ_charts if volume(ch) .> 1e6 * eps(T) * volume(τ)]
+    σ_charts = [ch for ch in σ_charts if volume(ch) .> 1e6 * eps(T) * volume(σ)]
     τ_charts = [ch for ch in τ_charts if volume(ch) .> 1e6 * eps(T)]
     σ_charts = [ch for ch in σ_charts if volume(ch) .> 1e6 * eps(T)]
 
-    signs = Int.(sign.(dot.(normal.(τ_charts),Ref(normal(τ)))))
-    τ_charts = flip_normal.(τ_charts,signs)
-    signs = Int.(sign.(dot.(normal.(σ_charts),Ref(normal(σ)))))
-    σ_charts = flip_normal.(σ_charts,signs)
-
-
-    # τ_charts = τ_charts[volume.(τ_charts) .> 1e3 * eps(T) * h]
-    # σ_charts = τ_charts[volume.(σ_charts) .> 1e3 * eps(T) * h]
+    # signs = Int.(sign.(dot.(normal.(τ_charts),Ref(normal(τ)))))
+    # @assert all(signs .== 1)
+    # τ_charts = flip_normal.(τ_charts,signs)
+    # signs = Int.(sign.(dot.(normal.(σ_charts),Ref(normal(σ)))))
+    # @assert all(signs .== 1)
+    # σ_charts = flip_normal.(σ_charts,signs)
 
     return τ_charts, σ_charts
 end
