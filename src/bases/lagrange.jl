@@ -1085,6 +1085,22 @@ function localindices(dof::_LagrangeGlobalFaceDoFs, chart::CompScienceMeshes.Sim
     return []
 end
 
+function localindices(dof::_LagrangeGlobalNodesDoFs, chart::CompScienceMeshes.Simplex,
+    localspace::LagrangeRefSpace{<:Real,1}, i)
+    return [i]
+end
+
+function localindices(dof::_LagrangeGlobalEdgeDoFs, chart::CompScienceMeshes.Simplex,
+    localspace::LagrangeRefSpace{<:Real,1}, i)
+    return []
+end
+
+function localindices(dof::_LagrangeGlobalFaceDoFs, chart::CompScienceMeshes.Simplex,
+    localspace::LagrangeRefSpace{<:Real,1}, i)
+    return []
+end
+
+
 
 function lagrangec0(mesh::CompScienceMeshes.AbstractMesh{<:Any,3}; order)
 
@@ -1135,6 +1151,7 @@ function lagrangec0(mesh::CompScienceMeshes.AbstractMesh{<:Any,3}; order)
             end
         end
 
+        order < 2 && continue
         E = R12[nzrange(C12,cell)]
         I = V12[nzrange(C12,cell)]
         for (i,e) in zip(I, E)

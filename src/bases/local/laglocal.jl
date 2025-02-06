@@ -201,14 +201,15 @@ function (f::LagrangeRefSpace{T,2,3})(t) where T
     j = jacobian(t)
     p = t.patch
 
+
     σ = sign(dot(normal(t), cross(p[1]-p[3],p[2]-p[3])))
      SVector(
         (value=u*(2*u-1), curl=σ*(p[3]-p[2])*(4u-1)/j),
-        (value=v*(2*v-1), curl=σ*(p[1]-p[3])*(4v-1)/j),
-        (value=w*(2*w-1), curl=σ*(p[2]-p[1])*(4w-1)/j),
-        (value=4*v*w, curl=4*σ*(w*(p[1]-p[3])+v*(p[2]-p[1]))/j),
-        (value=4*w*u, curl=4*σ*(w*(p[3]-p[2])+u*(p[2]-p[1]))/j),
         (value=4*u*v, curl=4*σ*(u*(p[1]-p[3])+v*(p[3]-p[2]))/j),
+        (value=v*(2*v-1), curl=σ*(p[1]-p[3])*(4v-1)/j),
+        (value=4*w*u, curl=4*σ*(w*(p[3]-p[2])+u*(p[2]-p[1]))/j),
+        (value=4*v*w, curl=4*σ*(w*(p[1]-p[3])+v*(p[2]-p[1]))/j),
+        (value=w*(2*w-1), curl=σ*(p[2]-p[1])*(4w-1)/j),
     )
 end
 
@@ -451,22 +452,23 @@ end
 function interpolate(fields, interpolant::LagrangeRefSpace{T,Degree,3}, chart) where {T,Degree}
 
     dim = binomial(2+Degree, Degree)
-
-    I = 0:Degree
-    s = range(0,1,length=Degree+1)
-    Is = zip(I,s)
-    idx = 1
     vals = Vector{Vector{T}}()
-    for (i,ui) in Is
-        for (j,vj) in Is
-            for (k,wk) in Is
-                i + j + k == Degree || continue
-                @assert ui + vj + wk ≈ 1
-                p = neighborhood(chart, (ui,vj))
-                push!(vals, fields(p))
-                idx += 1
-    end end end
-
+    if Degree > 0
+        I = 0:Degree
+        s = range(0,1,length=Degree+1)
+        Is = zip(I,s)
+        for (i,ui) in Is
+            for (j,vj) in Is
+                for (k,wk) in Is
+                    i + j + k == Degree || continue
+                    @assert ui + vj + wk ≈ 1
+                    p = neighborhood(chart, (ui,vj))
+                    push!(vals, fields(p))
+        end end end
+    else
+        p = center(chart)
+        push!(vals, fields(p))
+    end
     # Q = hcat(vals...)
     Q = Matrix{T}(undef, length(vals[1]), length(vals))
     for i in eachindex(vals)
