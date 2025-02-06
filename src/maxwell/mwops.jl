@@ -81,6 +81,16 @@ regularpart(op::MWDoubleLayer3D) = MWDoubleLayer3DReg(op.alpha, op.gamma)
 singularpart(op::MWDoubleLayer3D) = MWDoubleLayer3DSng(op.alpha, op.gamma)
 
 
+struct MWDoubleLayer3DLoop{T,K} <: MaxwellOperator3DReg{T,K}
+    alpha::T
+    gamma::K
+end
+
+
+MWDoubleLayer3DLoop(gamma) = MWDoubleLayer3DLoop(1.0, gamma) # For legacy purposes
+
+
+
 
 # function quadrule(op::MaxwellOperator3D, g::BDMRefSpace, f::BDMRefSpace,  i, τ, j, σ, qd,
 #   qs::DoubleNumWiltonSauterQStrat)
@@ -220,6 +230,23 @@ function (igd::Integrand{<:MWDoubleLayer3DReg})(x,y,f,g)
     expo = exp(-γR)
     green = (expo - 1 + γR - 0.5*γR^2) * (i4pi*iR)
     gradgreen = ( -(γR + 1)*expo + (1 - 0.5*γR^2) ) * (i4pi*iR^3) * r
+
+    fvalue = getvalue(f)
+    gvalue = getvalue(g)
+    G = cross.(Ref(gradgreen), gvalue)
+    return _krondot(fvalue, G)
+end
+
+
+function (igd::Integrand{<:MWDoubleLayer3DLoop})(x,y,f,g)
+
+    γ = igd.operator.gamma
+
+    r = cartesian(x) - cartesian(y)
+    R = norm(r)
+    γR = γ*R
+    iR = 1/R
+    gradgreen = -im*exp(-γR)*( im*γR + im*expm1(γR)) * iR^3/(4pi) * r
 
     fvalue = getvalue(f)
     gvalue = getvalue(g)
