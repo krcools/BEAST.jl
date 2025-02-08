@@ -2,22 +2,22 @@ using Documenter
 using DocumenterCitations
 using BEAST
 
-bib = CitationBibliography(joinpath(@__DIR__, "src", "refs.bib"); style = :alpha)
+bib = CitationBibliography(joinpath(@__DIR__, "src", "refs.bib"); style=:alpha)
 
 makedocs(;
-    modules = [BEAST],
-    authors = "Kristof Cools and contributors",
-    sitename = "BEAST.jl",
-    format = Documenter.HTML(;
-        prettyurls = get(ENV, "CI", "false") == "true",
-        canonical = "https://krcools.github.io/BEAST.jl",
-        edit_link = "master",
-        assets = String[],
-        collapselevel = 1,
-        sidebar_sitename = true,
+    modules=[BEAST],
+    authors="Kristof Cools and contributors",
+    sitename="BEAST.jl",
+    format=Documenter.HTML(;
+        prettyurls=get(ENV, "CI", "false") == "true",
+        canonical="https://krcools.github.io/BEAST.jl",
+        edit_link="master",
+        assets=String[],
+        collapselevel=1,
+        sidebar_sitename=true,
     ),
-    plugins = [bib],
-    pages = [
+    plugins=[bib],
+    pages=[
         "Introduction" => "index.md",
         "Manual" => Any[
             "General Usage"=>"manual/usage.md",
@@ -80,9 +80,9 @@ makedocs(;
 )
 
 deploydocs(;
-    repo = "github.com/HoBeZwe/BEAST.jl.git",
-    target = "build",
-    push_preview = true,
-    forcepush = true,
-    devbranch = "feature/docs",
+    repo="github.com/krcools/BEAST.jl.git",
+    target="build",
+    push_preview=true,
+    forcepush=true,
+    #devbranch = "feature/docs",
 )
