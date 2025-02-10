@@ -1,10 +1,11 @@
 # Quadrature strategies
 
-## Introduction
-
 There are many ways to approximately compute the singular integrals that appear in boundary element discretisations of surface and volume integral euqations.
 
 BEAST.jl is configured to select reasonable defaults, but advanced users may want to select their own quadrature rules. This section provides information on how to do this.
+
+!!! warning
+    TODO: discuss directly available/implemented singularity treatment
 
 ## quaddata and quadrule
 

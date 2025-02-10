@@ -1,8 +1,11 @@
 # Solving the Time Domain EFIE using Marching-on-in-Time
 
+!!! warning
+    Make the following an @example which is actually executed.
+
 If broadband information is required or if the system under study will be coupled to non-linear components, the scattering problem should be solved directly in the time domain, i.e. as a hyperbolic evolution problem.
 
-## Building the geometry
+### Building the geometry
 
 Building the geometry and defining the spatial finite elements happens in completely the same manner as for frequency domain simulations:
 
@@ -14,6 +17,8 @@ D, dx = 1.0, 0.3
 X = raviartthomas(Γ)
 nothing # hide
 ```
+
+### Basis functions
 
 Time domain currents are approximated in the tensor product of a spatial and temporal finite element space:
 
@@ -34,6 +39,8 @@ U = BEAST.timebasisdelta(Δt, Nt)
 nothing # hide
 ```
 
+### Excitation
+
 We want to solve the EFIE, i.e. we want to find the current $j$ such that
 
 $Tj = -e^i,$
@@ -49,6 +56,8 @@ E = BEAST.planewave(x, z, BEAST.derive(gaussian), 1.0)
 T = BEAST.MWSingleLayerTDIO(1.0,-1.0,-1.0,2,0)
 nothing; # hide
 ```
+
+### Setting up the LSE
 
 Using the finite element spaces defined above this retarded potential equation can be discretized.
 
@@ -71,6 +80,9 @@ W0 = inv(Z0)
 x = BEAST.marchonintime(W0,Z,-B,Nt)
 nothing # hide
 ```
+
+### Post processing
+
 Computing the values of the induced current is now possible in the same manner as for frequency domain simulations by first converting our MOT solution back to the frequency domain using the fourier transform, along with some adjustments.
 
 ```julia

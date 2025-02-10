@@ -13,6 +13,16 @@ mutable struct PlaneWaveVIE{T,P} <: Functional
     PlaneWaveVIE{T,P}(d,p,k,a)
 end
 
+"""
+  planewavevie(;
+      direction    = error("missing arguement `direction`"),
+      polarization = error("missing arguement `polarization`"),
+      wavenumber   = error("missing arguement `wavenumber`"),
+      amplitude    = 1,
+      ) 
+
+For volume integral equations
+"""
 planewavevie(;
     direction    = error("missing arguement `direction`"),
     polarization = error("missing arguement `polarization`"),
@@ -58,6 +68,14 @@ function LinearPotentialVIE_(d,a = 1)
   return LinearPotentialVIE{T,P}(d,a)
 end
 
+"""
+  linearpotentialvie(;
+    direction    = error("missing argument `direction`"),
+    amplitude    = 1,
+  )
+
+Linear potential for volume integral equations.
+"""
 linearpotentialvie(;
   direction    = error("missing argument `direction`"),
   amplitude    = 1,

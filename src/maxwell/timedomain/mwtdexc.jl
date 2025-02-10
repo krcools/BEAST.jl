@@ -5,7 +5,11 @@ mutable struct PlaneWaveMWTD{T,F,P} <: TDFunctional{T}
   amplitude::F
 end
 
+"""
+    planewave(polarisation,direction,amplitude,speedoflight)
 
+Time-domain plane wave.
+"""
 function planewave(polarisation,direction,amplitude,speedoflight)
     PlaneWaveMWTD(direction,polarisation,speedoflight,amplitude)
 end

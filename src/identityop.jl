@@ -1,3 +1,9 @@
+
+"""
+    Identity <: LocalOperator
+
+The identity operator.
+"""
 struct Identity <: LocalOperator
 end
 
@@ -5,6 +11,11 @@ kernelvals(biop::Identity, x) = nothing
 integrand(op::Identity, kernel, x, g, f) = dot(f[1], g[1])
 scalartype(op::Identity) = Union{}
 
+"""
+    NCross <: LocalOperator
+
+The identity operator where the trial function is rotated.
+"""
 struct NCross <: LocalOperator
 end
 
