@@ -211,7 +211,7 @@ reversestrat(a::SauterSchwab3D.Singularity5DFace) = SauterSchwab3D.Singularity5D
 reversestrat(a::SauterSchwab3D.Singularity4DPoint) = SauterSchwab3D.Singularity4DPoint(a.S, a.T)
 reversestrat(a::SauterSchwab3D.Singularity4DEdge) = SauterSchwab3D.Singularity4DEdge(a.S, a.T)
 reversestrat(a::SauterSchwab3D.Singularity4DFace) = SauterSchwab3D.Singularity4DFace(a.S, a.T)
-
+reversestrat(a::T) where {T <: SauterSchwab3D.SauterSchwab3DStrategy} = T(reversestrat(a.sing),a.qps)
 
 function momintegrals!(op::Operator,
     test_local_space, trial_local_space,
