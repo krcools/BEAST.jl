@@ -112,6 +112,7 @@ function quadrule(op::IntegralOperator, g::RefSpace, f::RefSpace,
     qd, qs::DoubleNumSauterQstrat) 
     qr_boundary(op, g, f, i, τ, j, σ, qd, qs)
 end
+_TransposedStrat(a::DoubleQuadRule) = a
 function quadrule(op::IntegralOperator, g::RefSpace, f::RefSpace, 
     i, τ::CompScienceMeshes.Simplex{<:Any, 2},
     j, σ::CompScienceMeshes.Simplex{<:Any, 3}, 
