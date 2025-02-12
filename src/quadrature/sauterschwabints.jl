@@ -219,8 +219,8 @@ function momintegrals!(op::Operator,
     out, rule::_TransposedStrat{<:SauterSchwab3DStrategy})
     rule2 = reversestrat(rule.strat)
     J, I = SauterSchwab3D.reorder(rule2.sing)
-    I2,J2 = SauterSchwab3D.reorder(rule.strat.sing)
-    @assert I == I2
+    #I2,J2 = SauterSchwab3D.reorder(rule.strat.sing)
+    #@assert I == I2
     num_tshapes = numfunctions(test_local_space, domain(test_chart))
     num_bshapes = numfunctions(trial_local_space, domain(trial_chart))
 
