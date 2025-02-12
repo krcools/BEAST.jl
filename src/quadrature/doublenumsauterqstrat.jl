@@ -27,7 +27,7 @@ function quaddata(op::IntegralOperator,
 end
 function quaddata(op::IntegralOperator,
     test_local_space::RefSpace, trial_local_space::RefSpace,
-    test_charts::Vector{CompScienceMeshes.Simplex{<:Any, 3}}, trial_charts::Vector{CompScienceMeshes.Simplex{<:Any, 3}}, qs::DoubleNumSauterQstrat)
+    test_charts::Vector{<:CompScienceMeshes.Simplex{<:Any, 3}}, trial_charts::Vector{<:CompScienceMeshes.Simplex{<:Any, 3}}, qs::DoubleNumSauterQstrat)
 
     #The combinations of rules (6,7) and (5,7 are) BAAAADDDD
     # they result in many near singularity evaluations with any
@@ -44,7 +44,7 @@ function quaddata(op::IntegralOperator,
 end
 function quaddata(op::IntegralOperator,
     test_local_space::RefSpace, trial_local_space::RefSpace,
-    test_charts::Vector{CompScienceMeshes.Simplex{<:Any, 2}}, trial_charts::Vector{CompScienceMeshes.Simplex{<:Any, 3}}, qs::DoubleNumSauterQstrat)
+    test_charts::Vector{<:CompScienceMeshes.Simplex{<:Any, 2}}, trial_charts::Vector{<:CompScienceMeshes.Simplex{<:Any, 3}}, qs::DoubleNumSauterQstrat)
 
     #The combinations of rules (6,7) and (5,7 are) BAAAADDDD
     # they result in many near singularity evaluations with any
@@ -62,7 +62,7 @@ end
 
 function quaddata(op::IntegralOperator,
     test_local_space::RefSpace, trial_local_space::RefSpace,
-    test_charts::Vector{CompScienceMeshes.Simplex{<:Any, 3}}, trial_charts::Vector{CompScienceMeshes.Simplex{<:Any, 2}}, qs::DoubleNumSauterQstrat)
+    test_charts::Vector{<:CompScienceMeshes.Simplex{<:Any, 3}}, trial_charts::Vector{<:CompScienceMeshes.Simplex{<:Any, 2}}, qs::DoubleNumSauterQstrat)
 
     #The combinations of rules (6,7) and (5,7 are) BAAAADDDD
     # they result in many near singularity evaluations with any
