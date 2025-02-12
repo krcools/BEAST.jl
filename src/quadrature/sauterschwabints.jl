@@ -161,5 +161,71 @@ function momintegrals!(op::Operator,
     nothing
 end
 
+function momintegrals!(op::Operator,
+    test_local_space, trial_local_space,
+    test_chart, trial_chart,
+    out, rule::SauterSchwab3DStrategy)
+
+    I, J = SauterSchwab3D.reorder(rule.sing)
+
+    num_tshapes = numfunctions(test_local_space, domain(test_chart))
+    num_bshapes = numfunctions(trial_local_space, domain(trial_chart))
+
+    igd = Integrand(op, test_local_space, trial_local_space, test_chart, trial_chart)
+    igdp = pulledback_integrand(igd, I, test_chart, J, trial_chart)
+    G = SauterSchwab3D.sauterschwab_parameterized(igdp, rule)
+    out[1:num_tshapes, 1:num_bshapes] .+= G
+    nothing
+end
+
+# abstract type Singularity end
+# abstract type Singularity6D <: Singularity end
+# abstract type Singularity5D <: Singularity end
+# abstract type Singularity4D <: Singularity end
+
+# struct Singularity6DPositiveDistance  <: Singularity6D end
+# struct Singularity6DPoint  <: Singularity6D T::SVector{1,Int64}; S::SVector{1,Int64} end
+# struct Singularity6DEdge   <: Singularity6D T::SVector{2,Int64}; S::SVector{2,Int64} end
+# struct Singularity6DFace   <: Singularity6D T::SVector{3,Int64}; S::SVector{3,Int64} end
+# struct Singularity6DVolume <: Singularity6D T::SVector{4,Int64}; S::SVector{4,Int64} end
+
+# struct Singularity5DPositiveDistance  <: Singularity5D end
+# struct Singularity5DPoint  <: Singularity5D T::SVector{1,Int64}; S::SVector{1,Int64} end
+# struct Singularity5DEdge   <: Singularity5D T::SVector{2,Int64}; S::SVector{2,Int64} end
+# struct Singularity5DFace   <: Singularity5D T::SVector{3,Int64}; S::SVector{3,Int64} end
+
+# struct Singularity4DPositiveDistance  <: Singularity4D end
+# struct Singularity4DPoint  <: Singularity4D T::SVector{1,Int64}; S::SVector{1,Int64} end
+# struct Singularity4DEdge   <: Singularity4D T::SVector{2,Int64}; S::SVector{2,Int64} end
+# struct Singularity4DFace   <: Singularity4D T::SVector{3,Int64}; S::SVector{3,Int64} end
+
+reverse(a::Singularity6DPoint) = Singularity6DPoint(a.S, a.T)
+reverse(a::Singularity6DEdge) = Singularity6DEdge(a.S, a.T)
+reverse(a::Singularity6DFace) = Singularity6DFace(a.S, a.T)
+reverse(a::Singularity6DVolume) = Singularity6DVolume(a.S, a.T)
+
+reverse(a::Singularity5DPoint) = Singularity5DPoint(a.S, a.T)
+reverse(a::Singularity5DEdge) = Singularity5DEdge(a.S, a.T)
+reverse(a::Singularity5DFace) = Singularity5DFace(a.S, a.T)
+
+reverse(a::Singularity4DPoint) = Singularity4DPoint(a.S, a.T)
+reverse(a::Singularity4DEdge) = Singularity4DEdge(a.S, a.T)
+reverse(a::Singularity4DFace) = Singularity4DFace(a.S, a.T)
 
 
+function momintegrals!(op::Operator,
+    test_local_space, trial_local_space,
+    test_chart, trial_chart,
+    out, rule::_TransposedStrat{<:SauterSchwab3DStrategy})
+    rule2 = reverse(rule.strat)
+    I, J = SauterSchwab3D.reorder(rule2.sing)
+
+    num_tshapes = numfunctions(test_local_space, domain(test_chart))
+    num_bshapes = numfunctions(trial_local_space, domain(trial_chart))
+
+    igd = (u,v) -> Integrand(op, test_local_space, trial_local_space, test_chart, trial_chart)(v,u)
+    igdp = pulledback_integrand(igd, J, trial_chart, I, test_chart)
+    G = SauterSchwab3D.sauterschwab_parameterized(igdp, rule2)
+    out[1:num_tshapes, 1:num_bshapes] .+= G
+    nothing
+end
