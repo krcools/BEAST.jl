@@ -41,3 +41,6 @@ function momintegrals!(biop,
 
     return z
 end
+
+
+_TransposedStrat(a::DoubleQuadRule) = a
