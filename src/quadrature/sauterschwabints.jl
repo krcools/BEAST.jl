@@ -199,25 +199,25 @@ end
 # struct Singularity4DEdge   <: Singularity4D T::SVector{2,Int64}; S::SVector{2,Int64} end
 # struct Singularity4DFace   <: Singularity4D T::SVector{3,Int64}; S::SVector{3,Int64} end
 
-reverse(a::SauterSchwab3D.Singularity6DPoint) = SauterSchwab3D.Singularity6DPoint(a.S, a.T)
-reverse(a::SauterSchwab3D.Singularity6DEdge) = SauterSchwab3D.Singularity6DEdge(a.S, a.T)
-reverse(a::SauterSchwab3D.Singularity6DFace) = SauterSchwab3D.Singularity6DFace(a.S, a.T)
-reverse(a::SauterSchwab3D.Singularity6DVolume) = SauterSchwab3D.Singularity6DVolume(a.S, a.T)
+reversestrat(a::SauterSchwab3D.Singularity6DPoint) = SauterSchwab3D.Singularity6DPoint(a.S, a.T)
+reversestrat(a::SauterSchwab3D.Singularity6DEdge) = SauterSchwab3D.Singularity6DEdge(a.S, a.T)
+reversestrat(a::SauterSchwab3D.Singularity6DFace) = SauterSchwab3D.Singularity6DFace(a.S, a.T)
+reversestrat(a::SauterSchwab3D.Singularity6DVolume) = SauterSchwab3D.Singularity6DVolume(a.S, a.T)
 
-reverse(a::SauterSchwab3D.Singularity5DPoint) = SauterSchwab3D.Singularity5DPoint(a.S, a.T)
-reverse(a::SauterSchwab3D.Singularity5DEdge) = SauterSchwab3D.Singularity5DEdge(a.S, a.T)
-reverse(a::SauterSchwab3D.Singularity5DFace) = SauterSchwab3D.Singularity5DFace(a.S, a.T)
+reversestrat(a::SauterSchwab3D.Singularity5DPoint) = SauterSchwab3D.Singularity5DPoint(a.S, a.T)
+reversestrat(a::SauterSchwab3D.Singularity5DEdge) = SauterSchwab3D.Singularity5DEdge(a.S, a.T)
+reversestrat(a::SauterSchwab3D.Singularity5DFace) = SauterSchwab3D.Singularity5DFace(a.S, a.T)
 
-reverse(a::SauterSchwab3D.Singularity4DPoint) = SauterSchwab3D.Singularity4DPoint(a.S, a.T)
-reverse(a::SauterSchwab3D.Singularity4DEdge) = SauterSchwab3D.Singularity4DEdge(a.S, a.T)
-reverse(a::SauterSchwab3D.Singularity4DFace) = SauterSchwab3D.Singularity4DFace(a.S, a.T)
+reversestrat(a::SauterSchwab3D.Singularity4DPoint) = SauterSchwab3D.Singularity4DPoint(a.S, a.T)
+reversestrat(a::SauterSchwab3D.Singularity4DEdge) = SauterSchwab3D.Singularity4DEdge(a.S, a.T)
+reversestrat(a::SauterSchwab3D.Singularity4DFace) = SauterSchwab3D.Singularity4DFace(a.S, a.T)
 
 
 function momintegrals!(op::Operator,
     test_local_space, trial_local_space,
     test_chart, trial_chart,
     out, rule::_TransposedStrat{<:SauterSchwab3DStrategy})
-    rule2 = reverse(rule.strat)
+    rule2 = reversestrat(rule.strat)
     I, J = SauterSchwab3D.reorder(rule2.sing)
 
     num_tshapes = numfunctions(test_local_space, domain(test_chart))
