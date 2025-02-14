@@ -149,10 +149,10 @@ function qr_volume(op::IntegralOperator, g::RefSpace, f::RefSpace, i, τ, j, σ,
     #singData = SauterSchwab3D.Singularity{D,hits}(idx_t, idx_s )
    @assert hits <= 4
 
-    hits == 4 && return SauterSchwab3D.CommonVolume6D(SauterSchwab3D.Singularity6DVolume(idx_t,idx_s),(qd.sing_qp[1],qd.sing_qp[2],qd.sing_qp[4]))
-    hits == 3 && return SauterSchwab3D.CommonFace6D(SauterSchwab3D.Singularity6DFace(idx_t,idx_s),(qd.sing_qp[1],qd.sing_qp[2],qd.sing_qp[3]))
-    hits == 2 && return SauterSchwab3D.CommonEdge6D(SauterSchwab3D.Singularity6DEdge(idx_t,idx_s),(qd.sing_qp[1],qd.sing_qp[2],qd.sing_qp[3],qd.sing_qp[4]))
-    hits == 1 && return SauterSchwab3D.CommonVertex6D(SauterSchwab3D.Singularity6DPoint(idx_t,idx_s),qd.sing_qp[3])
+    hits == 4 && return SauterSchwab3D.CommonVolume6D_S(SauterSchwab3D.Singularity6DVolume(idx_t,idx_s),(qd.sing_qp[1],qd.sing_qp[2],qd.sing_qp[4]))
+    hits == 3 && return SauterSchwab3D.CommonFace6D_S(SauterSchwab3D.Singularity6DFace(idx_t,idx_s),(qd.sing_qp[1],qd.sing_qp[2],qd.sing_qp[3]))
+    hits == 2 && return SauterSchwab3D.CommonEdge6D_S(SauterSchwab3D.Singularity6DEdge(idx_t,idx_s),(qd.sing_qp[1],qd.sing_qp[2],qd.sing_qp[3],qd.sing_qp[4]))
+    hits == 1 && return SauterSchwab3D.CommonVertex6D_S(SauterSchwab3D.Singularity6DPoint(idx_t,idx_s),qd.sing_qp[3])
 
 
 
@@ -193,9 +193,9 @@ function qr_boundary(op::IntegralOperator, g::RefSpace, f::RefSpace, i, τ, j,  
     #singData = SauterSchwab3D.Singularity{D,hits}(idx_t, idx_s )
    
 
-    hits == 3 && return SauterSchwab3D.CommonFace5D(SauterSchwab3D.Singularity5DFace(idx_t,idx_s),(qd.sing_qp[1],qd.sing_qp[2],qd.sing_qp[3]))
-    hits == 2 && return SauterSchwab3D.CommonEdge5D(SauterSchwab3D.Singularity5DEdge(idx_t,idx_s),(qd.sing_qp[1],qd.sing_qp[2],qd.sing_qp[3]))
-    hits == 1 && return SauterSchwab3D.CommonVertex5D(SauterSchwab3D.Singularity5DPoint(idx_t,idx_s),(qd.sing_qp[3],qd.sing_qp[2]))
+    hits == 3 && return SauterSchwab3D.CommonFace5D_S(SauterSchwab3D.Singularity5DFace(idx_t,idx_s),(qd.sing_qp[1],qd.sing_qp[2],qd.sing_qp[3]))
+    hits == 2 && return SauterSchwab3D.CommonEdge5D_S(SauterSchwab3D.Singularity5DEdge(idx_t,idx_s),(qd.sing_qp[1],qd.sing_qp[2],qd.sing_qp[3]))
+    hits == 1 && return SauterSchwab3D.CommonVertex5D_S(SauterSchwab3D.Singularity5DPoint(idx_t,idx_s),(qd.sing_qp[3],qd.sing_qp[2]))
 
 
     return DoubleQuadRule(
