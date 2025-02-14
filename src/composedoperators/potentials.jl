@@ -1,5 +1,6 @@
 #D: dimension of manifold over which integration is performed
-struct PotentialIntegralOperator{D}
+abstract type PotentialOperator end
+struct PotentialIntegralOperator{D} <: PotentialOperator
     kernel
     op2
     bfunc
