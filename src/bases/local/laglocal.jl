@@ -405,3 +405,24 @@ function interpolate(fields, interpolant::LagrangeRefSpace{T,Degree,3}, chart) w
     end
     return Q
 end
+
+function interpolate(fields, interpolant::LagrangeRefSpace{T,1,3}, chart) where {T}
+    vals = Vector{Vector{T}}()
+
+
+    p1 = neighborhood(chart, (1,0))
+    p2 = neighborhood(chart, (0,1))
+    p3 = neighborhood(chart, (0,0))
+    push!(vals, fields(p1))
+    push!(vals, fields(p2))
+    push!(vals, fields(p3))
+    
+   
+
+    # Q = hcat(vals...)
+    Q = Matrix{T}(undef, length(vals[1]), length(vals))
+    for i in eachindex(vals)
+        Q[:,i] .= vals[i]
+    end
+    return Q
+end
