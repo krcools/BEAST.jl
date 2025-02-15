@@ -296,10 +296,15 @@ function singleduallagd0(fine, F, v; interpolatory=false)
 
     T = coordtype(fine)
     fn = Shape{T}[]
+    vol = T(0.0)
+    for cellid in F
+        ptch = chart(fine, cellid)
+        vol += volume(ptch)
+    end
     for cellid in F
         # cell = cells(fine)[cellid]
         ptch = chart(fine, cellid)
-        coeff = interpolatory ? T(1.0) : 1 / volume(ptch) / length(F)
+        coeff = interpolatory ? T(1.0) : 1 / vol
         refid = 1
         push!(fn, Shape(cellid, refid, coeff))
     end
@@ -498,7 +503,6 @@ end
 
 
 function duallagrangec0d1(mesh, refined, jct_pred, ::Type{Val{3}})
-
     T = coordtype(mesh)
     num_faces = dimension(mesh)+1
 
@@ -559,7 +563,9 @@ function duallagrangec0d1(mesh, refined, jct_pred, ::Type{Val{3}})
                 fine_idcs = cells(refined)[c]
                 local_id = something(findfirst(isequal(v), fine_idcs),0)
                 @assert local_id != 0
-                shape = Shape(c, local_id, 1/n/2)
+                #shape = Shape(c, local_id, 1/n/2)
+                shape = Shape(c, local_id, 1/2)
+                
                 push!(fns[i], shape)
             end
         end
@@ -572,7 +578,7 @@ function duallagrangec0d1(mesh, refined, jct_pred, ::Type{Val{3}})
                 fine_idcs = cells(refined)[c]
                 local_id = something(findfirst(isequal(v), fine_idcs),0)
                 @assert local_id != 0
-                shape = Shape(c, local_id, 1/n/2)
+                shape = Shape(c, local_id, 1/(n/2))
                 push!(fns[i], shape)
             end
         end
@@ -1045,4 +1051,22 @@ function lagrangec0(mesh::CompScienceMeshes.AbstractMesh{<:Any,3}; order)
     for f in mesh pos[nV + nE + (f-1)*nf + 1: nV + nE + f*nf] .= Ref(cartesian(center(chart(mesh, f)))) end
 
     return LagrangeBasis{order,0,localdim}(mesh, fns, pos)
+end
+
+function _surface(X)
+    C = unitfunctioncxd0(X.geo)
+    G = assemble(Identity(),X,X)
+    u = Vector(assemble(Identity(),X,C)[1:end,1])
+    dot(u,G\u)
+end
+@testitem "duallagrangec0d1" begin
+    using CompScienceMeshes
+    Γ = meshcuboid(1.0,1.0,1.0,0.5)
+    @test BEAST._surface(duallagrangec0d1(Γ)) ≈ 6.0
+end
+
+@testitem "duallagrangecxd0" begin
+    using CompScienceMeshes
+    Γ = meshcuboid(1.0,1.0,1.0,0.5)
+    @test BEAST._surface(duallagrangecxd0(Γ)) ≈ 6.0
 end
