@@ -5,7 +5,7 @@ struct PotentialIntegralOperator{D,U,V,W} <: PotentialOperator
     op2::V
     bfunc::W
 end
-
+PotentialIntegralOperator{D}(a,b,c) where {D} = PotentialIntegralOperator{D,typeof(a),typeof(b),typeof(c)}(a,b,c)
 struct PotentialIntegralOperatorKern{U,V}
     kernel::U
     op2::V
