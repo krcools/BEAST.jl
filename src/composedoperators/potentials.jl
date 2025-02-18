@@ -1,9 +1,9 @@
 #D: dimension of manifold over which integration is performed
 abstract type PotentialOperator end
-struct PotentialIntegralOperator{D} <: PotentialOperator
-    kernel
-    op2
-    bfunc
+struct PotentialIntegralOperator{D,U,V,W} <: PotentialOperator
+    kernel::U
+    op2::V
+    bfunc::W
 end
 
 struct PotentialIntegralOperatorKern{U,V}
