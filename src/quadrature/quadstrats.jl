@@ -1,23 +1,11 @@
 using InteractiveUtils
 
-struct DoubleNumWiltonSauterQStrat{R,S}
-    outer_rule_far::R
-    inner_rule_far::R
-    outer_rule_near::R
-    inner_rule_near::R
-    sauter_schwab_common_tetr::S
-    sauter_schwab_common_face::S
-    sauter_schwab_common_edge::S
-    sauter_schwab_common_vert::S
-end
 
 
-struct DoubleNumQStrat{R}
-    outer_rule::R
-    inner_rule::R
-end
 
-struct SauterSchwab3DQStrat{R,S}
+
+
+struct SauterSchwab3DQStrat{R,S} <: AbstractQuadStrat
     outer_rule::R
     inner_rule::R
     sauter_schwab_1D::S
@@ -26,7 +14,7 @@ struct SauterSchwab3DQStrat{R,S}
     sauter_schwab_4D::S
 end
 
-struct OuterNumInnerAnalyticQStrat{R}
+struct OuterNumInnerAnalyticQStrat{R} <: AbstractQuadStrat
     outer_rule::R
 end
 

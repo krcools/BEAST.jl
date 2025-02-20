@@ -1,3 +1,14 @@
+struct DoubleNumWiltonSauterQStrat{R,S} <: AbstractQuadStrat
+    outer_rule_far::R
+    inner_rule_far::R
+    outer_rule_near::R
+    inner_rule_near::R
+    sauter_schwab_common_tetr::S
+    sauter_schwab_common_face::S
+    sauter_schwab_common_edge::S
+    sauter_schwab_common_vert::S
+end
+
 function quaddata(op::IntegralOperator,
     test_local_space, trial_local_space,
     test_charts, trial_charts, qs::DoubleNumWiltonSauterQStrat)

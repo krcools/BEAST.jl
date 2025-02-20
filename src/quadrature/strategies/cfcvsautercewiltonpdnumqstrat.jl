@@ -1,4 +1,4 @@
-struct CommonFaceVertexSauterCommonEdgeWiltonPostitiveDistanceNumQStrat{R,S}
+struct CommonFaceVertexSauterCommonEdgeWiltonPostitiveDistanceNumQStrat{R,S} <: AbstractQuadStrat
     outer_rule_far::R
     inner_rule_far::R
     outer_rule_near::R

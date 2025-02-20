@@ -92,16 +92,18 @@ Assemble the system matrix corresponding to the operator `operator` tested with 
 function assemble(operator::AbstractOperator, test_functions, trial_functions;
     storage_policy = Val{:bandedstorage},
     threading = Threading{:multi},
-    quadstrat=defaultquadstrat(operator, test_functions, trial_functions))
+    quadstrat=defaultquadstrat)
 
     Z, store = allocatestorage(operator, test_functions, trial_functions,
         storage_policy)
-    assemble!(operator, test_functions, trial_functions, store, threading; quadstrat)
+    qs = defaultquadstrat(operator, test_functions, trial_functions)
+    assemble!(operator, test_functions, trial_functions,
+        store, threading; quadstrat=qs)
     return Z()
 end
 
 
-function assemble(A::AbstractMatrix, testfns, trialfns)
+function assemble(A::AbstractMatrix, testfns, trialfns; kwargs...)
     @assert numfunctions(testfns) == size(A,1)
     @assert numfunctions(trialfns) == size(A,2)
     return A

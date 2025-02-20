@@ -28,6 +28,9 @@ Kop = Maxwell3D.doublelayer(wavenumber=0.0)
 
 qs = BEAST.defaultquadstrat(Kop, X, Y)
 qs = BEAST.DoubleNumWiltonSauterQStrat(1, 1, 12, 13, 12, 12, 12, 12)
+@show qs
+@show qs(Kop, X, Y)
+@show qs(Kop, Y, X)
 K1 = assemble(Kop, X, Y; quadstrat=qs)
 K2 = assemble(Kop, Y, X; quadstrat=qs)
 
