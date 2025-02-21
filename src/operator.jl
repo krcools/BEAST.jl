@@ -96,7 +96,7 @@ function assemble(operator::AbstractOperator, test_functions, trial_functions;
 
     Z, store = allocatestorage(operator, test_functions, trial_functions,
         storage_policy)
-    qs = defaultquadstrat(operator, test_functions, trial_functions)
+    qs = quadstrat(operator, test_functions, trial_functions)
     assemble!(operator, test_functions, trial_functions,
         store, threading; quadstrat=qs)
     return Z()
