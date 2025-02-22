@@ -31,15 +31,15 @@ This function assumes the normalvector on the mesh to point outwards.
 Global multi-trace structures are supported when this function is called.
 A small acceleration can be gained by setting testfunction_tangential to true.
 """
-function ttrace(a::PotentialIntegralOperator{D},interior::Bool;testfunction_tangential=false) where {D}
+function ttrace(a::PotentialIntegralOperator{D},interior::Bool,testfunctionmap = x->(n× x)×n;testfunction_tangential=false) where {D}
     t,f = _trace(a.kernel,interior,Val{D}())
     if testfunction_tangential
-        doubleint = CompDoubleInt(B->B,(x,y)->transpose(x)*y,a.kernel,a.op2,a.bfunc)
-        t!=0 && (singleint = f*CompSingleInt(B->B,(x,y)->transpose(x)*y,t,a.op2,a.bfunc))
+        doubleint = CompDoubleInt(B->testfunctionmap(B),(x,y)->transpose(x)*y,a.kernel,a.op2,a.bfunc)
+        t!=0 && (singleint = f*CompSingleInt(B->testfunctionmap(B),(x,y)->transpose(x)*y,t,a.op2,a.bfunc))
     else
 
-        doubleint = -1*CompDoubleInt(B-> n×(n×B),(x,y)->transpose(x)*y,a.kernel,a.op2,a.bfunc)
-        t!=0 && (singleint = (-f)*CompSingleInt(B -> n×(n×B),(x,y)->transpose(x)*y,t,a.op2,a.bfunc))
+        doubleint = CompDoubleInt(B->testfunctionmap(B),(x,y)->transpose(x)*y,a.kernel,a.op2,a.bfunc)
+        t!=0 && (singleint = (f)*CompSingleInt(B -> testfunctionmap(B),(x,y)->transpose(x)*y,t,a.op2,a.bfunc))
     end
     if t==0
      
@@ -58,10 +58,10 @@ Compute the normal trace, n⋅ Potential, of a potential operator mapping it to 
 This function assumes the normalvector on the mesh to point outwards. 
 Global multi-trace structures are supported when this function is called.
 """
-function ntrace(a::PotentialIntegralOperator{D},interior::Bool) where {D}
+function ntrace(a::PotentialIntegralOperator{D},interior::Bool,testfunctionmap = x->x*n) where {D}
     t,f = _trace(a.kernel,interior,Val{D}())
-    doubleint = CompDoubleInt(B-> B*n,(x,y)->transpose(x)*y,a.kernel,a.op2,a.bfunc)
-    t!=0 && (singleint = f*CompSingleInt(B-> B*n,(x,y)->transpose(x)*y,t,a.op2,a.bfunc))
+    doubleint = CompDoubleInt(B-> testfunctionmap(B),(x,y)->transpose(x)*y,a.kernel,a.op2,a.bfunc)
+    t!=0 && (singleint = f*CompSingleInt(B-> testfunctionmap(B),(x,y)->transpose(x)*y,t,a.op2,a.bfunc))
     
     if t==0
         return doubleint
@@ -78,10 +78,10 @@ Compute the trace of a potential operator mapping it to a boundary operator.
 This function assumes the normalvector on the mesh to point outwards. 
 Global multi-trace structures are supported when this function is called.
 """
-function trace(a::PotentialIntegralOperator{D},interior::Bool) where {D}
+function trace(a::PotentialIntegralOperator{D},interior::Bool,testfunctionmap = x->x) where {D}
     t,f = _trace(a.kernel,interior,Val{D}())
-    doubleint = CompDoubleInt(B->B,*,a.kernel,a.op2,a.bfunc)
-    t!=0 && (singleint = f*CompSingleInt(B->B,*,t,a.op2,a.bfunc))
+    doubleint = CompDoubleInt(B->testfunctionmap(B),*,a.kernel,a.op2,a.bfunc)
+    t!=0 && (singleint = f*CompSingleInt(B->testfunctionmap(B),*,t,a.op2,a.bfunc))
     
     if t==0
         return doubleint
@@ -98,10 +98,10 @@ Compute the rotated trace, n × Potential, of a potential operator mapping it to
 This function assumes the normalvector on the mesh to point outwards. 
 Global multi-trace structures are supported when this function is called.
 """
-function rtrace(a::PotentialIntegralOperator{D},interior::Bool) where {D}
+function rtrace(a::PotentialIntegralOperator{D},interior::Bool,testfunctionmap = x->x×n) where {D}
     t,f = _trace(a.kernel,interior,Val{D}())
-    doubleint = CompDoubleInt(B-> B × n,(x,y)->transpose(x)*y,a.kernel,a.op2,a.bfunc)
-    t!=0 && (singleint = f*CompSingleInt(B-> B × n,(x,y)->transpose(x)*y,t,a.op2,a.bfunc))
+    doubleint = CompDoubleInt(B-> testfunctionmap(B),(x,y)->transpose(x)*y,a.kernel,a.op2,a.bfunc)
+    t!=0 && (singleint = f*CompSingleInt(B-> testfunctionmap(B),(x,y)->transpose(x)*y,t,a.op2,a.bfunc))
     
     if t==0
         return doubleint
@@ -118,11 +118,11 @@ Compute the principal value of the tangential trace, -n×n× Potential.
 A small acceleration can be gained by setting testfunction_tangential to true.
 """
 # the principal value of the trace.
-function pvttrace(a::PotentialIntegralOperator{D};testfunction_tangential=false) where {D}
+function pvttrace(a::PotentialIntegralOperator{D},testfunctionmap = x->n×(x×n);testfunction_tangential=false) where {D}
     if testfunction_tangential
-        doubleint = CompDoubleInt(B->B,(x,y)->transpose(x)*y,a.kernel,a.op2,a.bfunc)
+        doubleint = CompDoubleInt(B->testfunctionmap(B),(x,y)->transpose(x)*y,a.kernel,a.op2,a.bfunc)
     else
-        doubleint = -1*CompDoubleInt(B-> n×(n×B),(x,y)->transpose(x)*y,a.kernel,a.op2,a.bfunc)
+        doubleint = CompDoubleInt(B-> testfunctionmap(B),(x,y)->transpose(x)*y,a.kernel,a.op2,a.bfunc)
     end
     return doubleint
 end
@@ -134,9 +134,9 @@ Compute the principal value of the normal trace, n⋅ Potential.
 
 This function assumes the normalvector on the mesh to point outwards. 
 """
-function pvntrace(a::PotentialIntegralOperator{D}) where {D}
+function pvntrace(a::PotentialIntegralOperator{D}, testfunctionmap = x->n*x) where {D}
 
-    doubleint = CompDoubleInt(B-> B*n,(x,y)->transpose(x)*y,a.kernel,a.op2,a.bfunc)
+    doubleint = CompDoubleInt(B-> testfunctionmap(B),(x,y)->transpose(x)*y,a.kernel,a.op2,a.bfunc)
 
     return doubleint
 end
@@ -146,8 +146,8 @@ end
 
 Compute the principal value of the  trace.
 """
-function pvtrace(a::PotentialIntegralOperator{D}) where {D}
-    doubleint = CompDoubleInt(B-> B,*,a.kernel,a.op2,a.bfunc)
+function pvtrace(a::PotentialIntegralOperator{D},testfunctionmap = x->x) where {D}
+    doubleint = CompDoubleInt(B-> testfunctionmap(B),*,a.kernel,a.op2,a.bfunc)
 
     return doubleint
 end
@@ -159,8 +159,8 @@ Compute the principal value of the rotated trace, n× Potential.
 
 This function assumes the normalvector on the mesh to point outwards. 
 """
-function pvrtrace(a::PotentialIntegralOperator{D}) where {D}
-    doubleint = CompDoubleInt(B-> B × n,(x,y)->transpose(x)*y,a.kernel,a.op2,a.bfunc)
+function pvrtrace(a::PotentialIntegralOperator{D}, testfunctionmap = x->x×n) where {D}
+    doubleint = CompDoubleInt(B-> testfunctionmap(B),(x,y)->transpose(x)*y,a.kernel,a.op2,a.bfunc)
     return doubleint
 end
 
@@ -169,8 +169,8 @@ end
 
 Mapping the potential to a volume operator.
 """
-function volumetrace(a::PotentialIntegralOperator{D}) where {D}
-    CompDoubleInt(B->B,(x,y)->transpose(x)*y,a.kernel,a.op2,a.bfunc)
+function volumetrace(a::PotentialIntegralOperator{D}, testfunctionmap = x->x) where {D}
+    CompDoubleInt(B->testfunctionmap(B),(x,y)->transpose(x)*y,a.kernel,a.op2,a.bfunc)
 end
 
 
