@@ -59,8 +59,10 @@ end
 
 function assemble!(biop::LocalOperator, tfs::Space, bfs::Space, store,
         threading::Type{Threading{:multi}};
-        quadstrat=defaultquadstrat(biop, tfs, bfs))
+        quadstrat=defaultquadstrat)
 
+        quadstrat = quadstrat(biop, tfs, bfs)
+ 
     if geometry(tfs) == geometry(bfs)
         return assemble_local_matched!(biop, tfs, bfs, store; quadstrat)
     end
@@ -74,7 +76,9 @@ end
 
 function assemble!(biop::LocalOperator, tfs::Space, bfs::Space, store,
     threading::Type{Threading{:single}};
-    quadstrat=defaultquadstrat(biop, tfs, bfs))
+    quadstrat=defaultquadstrat)
+
+    quadstrat = quadstrat(biop, tfs, bfs)
 
     if geometry(tfs) == geometry(bfs)
         return assemble_local_matched!(biop, tfs, bfs, store; quadstrat)
