@@ -31,7 +31,7 @@ RT = raviartthomas(Γ)       # define basis functions
 # --- 3. compute the RHS and system matrix
 e = assemble(𝑒, RT)         # assemble RHS
 T = assemble(𝑇, RT, RT)     # assemble system matrix
-typeof(T) #hide
+nothing #hide
 ```
 
 ---

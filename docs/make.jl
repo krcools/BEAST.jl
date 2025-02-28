@@ -21,6 +21,7 @@ makedocs(;
         "Introduction" => "index.md",
         "Manual" => Any[
             "General Usage"=>"manual/usage.md",
+            "Customising Quadrature Rules" => "manual/quadstrat.md",
             "Application Examples"=>Any[
                 "Time-Harmonic"=>Any[
                     "EFIE"=>"manual/examplesTH/efie.md",
@@ -28,6 +29,7 @@ makedocs(;
                 ],
                 "Time-Domain"=>Any["EFIE"=>"manual/examplesTD/tdefie.md"],
             ],
+            "System of Equations and Bilinear Forms" => "manual/bilinear.md",
         ],
         "Operators & Excitations" => Any[
             "Overview"=>"operators/overview.md",
