@@ -73,3 +73,53 @@ println(norm(uX[m]))
 println(norm(uX[j]))
 nothing # hide
 ```
+
+## Calderon preconditioning for the PMCHWT
+
+Let's try to speed up convergence of the iterative solver by constructing a Calderon preconditioner. We opt for a block diagonal preconditioner containing only single layer contributions. The wavenumber used for construction of the preconditioner is purely imaginary to avoid the introduction of resonances.
+
+```@example transmission
+Ty  = Maxwell3D.singlelayer(gamma=κ1)
+
+c = Ty[k,j] + Ty[l,m]
+```
+
+We also require discrete versions of the duality pairing to map primal test coefficients to dual expansion coefficients
+
+```@example transmission
+Nx = BEAST.NCross()
+d = Nx[k,j] + Nx[l,m]
+```
+
+The corresponding block matrices can be built as before by appealing to the `assemble` function
+
+```@example transmission
+BC = buffachristiansen(Γ)
+Y = BEAST.DirectProductSpace([BC,BC])
+
+Cyy = assemble(c, Y, Y)
+Dxy = assemble(d, X, Y)
+```
+
+A *lazy* inverse for the discrete duality can be constructed by wrapping the block matrix in a Krylov solver object:
+
+```@example transmission
+DYX = BEAST.GMRESSolver(Dxy, verbose=false)
+DXY = BEAST.GMRESSolver(Dxy', verbose=false)
+```
+
+We have now all the ingredients to write down the system we want to solve:
+
+```@example transmission
+PAXx = DXY * Cyy * DYX * Axx
+PbX = DXY * Cyy * DYX * bx
+
+PSXx = BEAST.GMRESSolver(PAXx)
+
+u1, ch1 = solve(SXX, bx)
+u2, ch2 = solve(PSXx, PbX)
+
+norm(u1-u2), ch1.iters, ch2.iters
+```
+
+Even for this small example, the solution was reconstructed in a much smaller number of iterations. Because objects of type `GMRESSolver` effectively behave as the inverse of the wrapped `LinearMap`, an internal iterative solver to compute the action of the inverse of the duality pairing is triggered during each outer iteration without introducing notational overhead!
