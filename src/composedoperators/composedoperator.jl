@@ -46,7 +46,7 @@ integralop(a::CompDoubleInt) = CompDoubleKern(a.op1,a.kernel,a.op2)
 integralop(a::CompSingleInt) = CompSingleKern(a.op1,a.kernel,a.op2)
 
 
-function assemble!(op::AbstractCompInt, tfs::AbstractSpace, bfs::AbstractSpace,
+function assemble!(op::AbstractCompInt, tfs::Space, bfs::Space,
     store, threading = Threading{:multi};
     quadstrat=defaultquadstrat(op, tfs, bfs))
 
