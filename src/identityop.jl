@@ -114,7 +114,7 @@ function quadrule(op::LocalOperator, ψ::RefSpace, ϕ::RefSpace, τ, (qd,A), qs:
 end
 
 
-defaultquadstrat(::LocalOperator, _, _) = SingleNumQStrat(6)
+defaultquadstrat(::LocalOperator, _::Space, _::Space) = SingleNumQStrat(6)
 # defaultquadstrat(::LocalOperator, ::TetraSupport, ::TetraSupport) = SingleNumQStrat(3)
 # defaultquadstrat(op::LocalOperator, a::_LocalBasisOperations, b) = defaultquadstrat(op,support(a),support(b))
 # defaultquadstrat(op::LocalOperator, a, b::_LocalBasisOperations) = defaultquadstrat(op,support(a),support(b))
