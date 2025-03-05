@@ -20,6 +20,12 @@ function potential(op::PotentialIntegralOperator, points, coeffs, basis;
 
     return potential(PotentialIntegralOperatorKern(op.kernel,op.op2),points,coeffs,op.bfunc(basis);type,quadstrat)
 end
+function potential(op::PotentialIntegralOperator, points, coeffs, basis::DirectProductSpace; 
+    type=SVector{3,ComplexF64},
+	quadstrat=defaultquadstrat(op, basis))
+
+    return potential(PotentialIntegralOperatorKern(op.kernel,op.op2),points,coeffs,op.bfunc(basis);type,quadstrat)
+end
 
 defaultquadstrat(op::PotentialIntegralOperator, basis) = SingleNumQStrat(6)
 quaddata(op::PotentialIntegralOperatorKern,rs,els,qs::SingleNumQStrat) = quadpoints(rs,els,(qs.quad_rule,))
