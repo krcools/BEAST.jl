@@ -83,7 +83,7 @@ defaultquadstrat(lc::LinearCombinationOfOperators, tfs::Space, bfs::DirectProduc
 defaultquadstrat(lc::LinearCombinationOfOperators, tfs::DirectProductSpace, bfs::DirectProductSpace) =
     [defaultquadstrat(op,tfs.factors[1],bfs.factors[1]) for op in lc.ops]
 
-    function assemble(operator::AbstractOperator, test_functions, trial_functions;
+function assemble(operator::AbstractOperator, test_functions, trial_functions;
     storage_policy = Val{:bandedstorage},
     # long_delays_policy = LongDelays{:compress},
     threading = Threading{:multi},
@@ -208,7 +208,7 @@ function assemble!(op::TransposedOperator, tfs::Space, bfs::Space,
 end
 
 
-function assemble!(op::LinearCombinationOfOperators, tfs::AbstractSpace, bfs::AbstractSpace,
+function assemble!(op::LinearCombinationOfOperators, tfs::Space, bfs::Space,
     store, threading = Threading{:multi};
     quadstrat=defaultquadstrat(op, tfs, bfs))
 
