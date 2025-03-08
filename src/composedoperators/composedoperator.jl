@@ -182,16 +182,16 @@ function assemble_local_mixed!(biop::CompSingleKern, tfs::Space{T}, bfs::Space{T
 
                 if overlap(tcell, bcell)
 
-                    isct = intersection(tcell, bcell)
+                    isct = intersection2(tcell, bcell)
                     disp = displacement(displacementchart(geometry(tfs),p),displacementchart(geometry(bfs),q)) #number to multiply with test normal, if zero use the orientation of displacementvector
-                    for cell in isct
-                        volume(cell) < tol && continue
+                    for (cellt,cellb) in isct
+                        volume(cellb) < tol && continue
 
-                        P = restrict(brefs, bcell, cell)
-                        Q = restrict(trefs, tcell, cell)
+                        P = restrict(brefs, bcell, cellb)
+                        Q = restrict(trefs, tcell, cellt)
 
-                        qr = quadrule(biop, trefs, brefs, cell, qd, quadstrat)
-                        zlocal = cellinteractions(biop, trefs, brefs, cell, qr, disp)
+                        qr = quadrule(biop, trefs, brefs, cellt,cellb, qd, quadstrat)
+                        zlocal = cellinteractions(biop, trefs, brefs, cellt, qr, disp)
                         zlocal = Q * zlocal * P'
 
                         for i in 1 : num_trefs
@@ -247,3 +247,14 @@ function cellinteractions(biop::CompSingleKern, trefs::U, brefs::V, cell, qr, di
 
     return zlocal
 end
+
+function quadrule(op::CompSingleKern, ψ::RefSpace, ϕ::RefSpace, cellt,cellb, (qd,A), qs::SingleNumQStrat)
+    for i in eachindex(qd)
+        q = qd[i]
+        w, pt = q[1], neighborhood(cellt,q[2])
+        pb = carttobary(cellb,cartesian(pt))
+        A[i] = (w, p, ψ(pt), ϕ(pb))
+    end
+    return A
+end
+
