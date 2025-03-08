@@ -253,7 +253,7 @@ function quadrule(op::CompSingleKern, ψ::RefSpace, ϕ::RefSpace, cellt,cellb, (
         q = qd[i]
         w, pt = q[1], neighborhood(cellt,q[2])
         pb = carttobary(cellb,cartesian(pt))
-        A[i] = (w, p, ψ(pt), ϕ(pb))
+        A[i] = (w, pt, ψ(pt), ϕ(pb))
     end
     return A
 end
