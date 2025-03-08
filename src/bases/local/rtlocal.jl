@@ -120,8 +120,10 @@ function interpolate(fields, interpolant::RTRefSpace, chart)
         x = cartesian(p)
         u = carttobary(chart, x)
         q = neighborhood(chart, u)
-        n = normal(q)
-
+        t1 = chart.tangents[1]
+        t2 = chart.tangents[2]
+        n = cross(t1,t2)
+        n = normalize(n)
         # minus because in CSM the tangent points towards vertex[1]
         t = -tangents(p,1)
         m = cross(t,n)
