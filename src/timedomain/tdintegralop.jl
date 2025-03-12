@@ -249,6 +249,7 @@ function assemble_chunk!(op::RetardedPotential, testST, trialST, store;
     V = refspace(trialspace)
     W = refspace(timebasisfunction)
 
+    # qs = quadstrat(op, testST, trialST)
     qd = quaddata(op, U, V, W, testels, trialels, nothing, quadstrat)
 
     ugeo = geometry(testspace)

@@ -1,8 +1,9 @@
 abstract type TDFunctional{T} end
 Base.eltype(x::TDFunctional{T}) where {T} = T
 
+defaultquadstrat(exc::TDFunctional, testfns) = nothing
 
-function quaddata(exc::TDFunctional, testrefs, timerefs, testels, timeels)
+function quaddata(exc::TDFunctional, testrefs, timerefs, testels, timeels, quadstrat::Any)
 
     testqd = quadpoints(testrefs, testels, (2,))
     timeqd = quadpoints(timerefs, timeels, (10,))
@@ -13,14 +14,14 @@ end
 
 function quaddata(excitation::TDFunctional,
         test_refspace, time_refspace::DiracBoundary,
-        test_elements, time_elements)
+        test_elements, time_elements, quadstrat::Any)
 
     test_quad_data = quadpoints(test_refspace, test_elements, (2,))
 
     test_quad_data, nothing
 end
 
-function quadrule(exc::TDFunctional, testrefs, timerefs, p, τ, r, ρ, qd)
+function quadrule(exc::TDFunctional, testrefs, timerefs, p, τ, r, ρ, qd, quadstrat::Any)
 
     MultiQuadStrategy(
         qd[1][1,p],
@@ -31,7 +32,7 @@ function quadrule(exc::TDFunctional, testrefs, timerefs, p, τ, r, ρ, qd)
 
 end
 
-function quadrule(exc::TDFunctional, testrefs, timerefs::DiracBoundary, p, τ, r, ρ, qd)
+function quadrule(exc::TDFunctional, testrefs, timerefs::DiracBoundary, p, τ, r, ρ, qd, quadstrat::Any)
 
     MultiQuadStrategy(
         qd[1][1,p],
@@ -41,23 +42,23 @@ function quadrule(exc::TDFunctional, testrefs, timerefs::DiracBoundary, p, τ, r
 end
 
 # TODO: implement quadstrat support as in the frequency domain
-function assemble(exc::TDFunctional, testST; quaddata=quaddata, quadrule=quadrule, quadstrat=nothing)
+function assemble(exc::TDFunctional, testST; quadstrat=defaultquadstrat)
     
     stagedtimestep = isa(temporalbasis(testST), BEAST.StagedTimeStep)
     if stagedtimestep
-        return staged_assemble(exc, testST; quaddata=quaddata, quadrule=quadrule)
+        return staged_assemble(exc, testST; quadstrat)
     end
     
     testfns = spatialbasis(testST)
     timefns = temporalbasis(testST)
     Z = zeros(eltype(exc), numfunctions(testfns), numfunctions(timefns))
     store(v,m,k) = (Z[m,k] += v)
-    assemble!(exc, testST, store, quaddata=quaddata, quadrule=quadrule)
+    assemble!(exc, testST, store; quadstrat)
     return Z
 end
 
-function staged_assemble(exc::TDFunctional, testST::SpaceTimeBasis; 
-    quaddata=quaddata, quadrule=quadrule)
+function staged_assemble(exc::TDFunctional, testST::SpaceTimeBasis; quadstrat=defaultquadstrat)
+    # quaddata=quaddata, quadrule=quadrule)
 
     @warn "staged assemble of the right-hand side"
     testfns = spatialbasis(testST)
@@ -69,14 +70,14 @@ function staged_assemble(exc::TDFunctional, testST::SpaceTimeBasis;
     for i = 1:stageCount
         store(v,m,k) = (Z[(m-1)*stageCount+i,k] += v)
         tbsd = TimeBasisDeltaShifted(timebasisdelta(Δt, Nt), timefns.c[i])
-        assemble!(exc, testfns ⊗ tbsd, store,
-            quaddata=quaddata, quadrule=quadrule)
+        assemble!(exc, testfns ⊗ tbsd, store; quadstrat)
+            # quaddata=quaddata, quadrule=quadrule)
     end
     return Z
 end
 
-function assemble!(exc::TDFunctional, testST, store;
-    quaddata=quaddata, quadrule=quadrule)
+function assemble!(exc::TDFunctional, testST, store; quadstrat=defaultquadstrat)
+    # quaddata=quaddata, quadrule=quadrule)
     testfns = spatialbasis(testST)
     timefns = temporalbasis(testST)
 
@@ -86,8 +87,9 @@ function assemble!(exc::TDFunctional, testST, store;
     testels, testad = assemblydata(testfns)
     timeels, timead = assemblydata(timefns)
 
-    
-    qd = quaddata(exc, testrefs, timerefs, testels, timeels)
+    @show quadstrat
+    qs = quadstrat(exc, testST)
+    qd = quaddata(exc, testrefs, timerefs, testels, timeels, qs)
     
     num_testshapes = numfunctions(testrefs, domain(first(testels)))
     z = zeros(eltype(exc), num_testshapes, numfunctions(timerefs))
@@ -97,7 +99,7 @@ function assemble!(exc::TDFunctional, testST, store;
             ρ = timeels[r]
 
             fill!(z, 0)
-            qr = quadrule(exc, testrefs, timerefs, p, τ, r, ρ, qd)
+            qr = quadrule(exc, testrefs, timerefs, p, τ, r, ρ, qd, qs)
             momintegrals!(z, exc, testrefs, timerefs, τ, ρ, qr)
 
             for i in 1 : num_testshapes

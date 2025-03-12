@@ -103,6 +103,8 @@ end
 function assemble!(dl::MWDoubleLayerTDIO, W::SpaceTimeBasis, V::SpaceTimeBasis, store,
     threading::Type{Threading{:multi}}; quadstrat=defaultquadstrat(dl,W,V))
 
+    quadstrat = quadstrat(dl, W, V)
+
 	X, T = spatialbasis(W), temporalbasis(W)
 	Y, U = spatialbasis(V), temporalbasis(V)
 	if CompScienceMeshes.refines(geometry(Y), geometry(X))
