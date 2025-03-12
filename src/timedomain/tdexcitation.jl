@@ -40,7 +40,8 @@ function quadrule(exc::TDFunctional, testrefs, timerefs::DiracBoundary, p, τ, r
 
 end
 
-function assemble(exc::TDFunctional, testST; quaddata=quaddata, quadrule=quadrule)
+# TODO: implement quadstrat support as in the frequency domain
+function assemble(exc::TDFunctional, testST; quaddata=quaddata, quadrule=quadrule, quadstrat=nothing)
     
     stagedtimestep = isa(temporalbasis(testST), BEAST.StagedTimeStep)
     if stagedtimestep

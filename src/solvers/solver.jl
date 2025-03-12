@@ -146,7 +146,8 @@ end
 scalartype(lf::LinForm) = scalartype(lf.terms...)
 scalartype(lt::LinTerm) = scalartype(lt.coeff, lt.functional)
 
-function assemble(lform::LinForm, X::DirectProductSpace)
+function assemble(lform::LinForm, X::DirectProductSpace;
+    quadstrat=BEAST.defaultquadstrat)
 
     @assert !isempty(lform.terms)
 
@@ -178,7 +179,7 @@ function assemble(lform::LinForm, X::DirectProductSpace)
         x = X.factors[m]
 
         for op in reverse(t.test_ops) x = op[end](op[1:end-1]..., x) end
-        b = assemble(t.functional, x)
+        b = assemble(t.functional, x; quadstrat)
         B[Block(m),Block(1)] = t.coeff * b
     end
 
