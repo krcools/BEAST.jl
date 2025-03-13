@@ -1,72 +1,63 @@
-# BEAST
 
-Boundary Element Analysis and Simulation Toolkit
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/src/assets/logo_README_white.svg" height="170">
+  <source media="(prefers-color-scheme: light)" srcset="docs/src/assets/logo_README.svg" height="170">
+  <img alt="" src="" height="170">
+</picture>
 
+
+[![Docs-stable](https://img.shields.io/badge/docs-stable-blue.svg)](https://krcools.github.io/BEAST.jl/stable/)
+[![Docs-dev](https://img.shields.io/badge/docs-dev-blue.svg)](https://krcools.github.io/BEAST.jl/dev/)
+[![MIT license](https://img.shields.io/badge/License-MIT-blue.svg)](https://github.com/krcools/BEAST.jl/blob/master/LICENSE)
 [![CI](https://github.com/krcools/BEAST.jl/actions/workflows/CI.yml/badge.svg)](https://github.com/krcools/BEAST.jl/actions/workflows/CI.yml)
 [![codecov.io](http://codecov.io/github/krcools/BEAST.jl/coverage.svg?branch=master)](http://codecov.io/github/krcools/BEAST.jl?branch=master)
-[![Documentation](https://img.shields.io/badge/docs-latest-blue.svg)](https://krcools.github.io/BEAST.jl/dev/)
 [![DOI](https://zenodo.org/badge/87720391.svg)](https://zenodo.org/badge/latestdoi/87720391)
+
 
 ## Introduction
 
-This package contains common basis functions and assembly routines for the implementation of
-boundary element methods. Examples are included for the 2D and 3D Helmholtz equations and for
-the 3D Maxwell equations.
+This Julia package, the *boundary element analysis and simulation toolkit (BEAST)*, provides routines to convert integral and differential equations to linear systems of equations
+via the boundary element method (BEM) and the finite element method (FEM). 
+To this end, the (Petrov-) **Galerkin method** is employed.
 
-Support for the space-time Galerkin based solution of time domain integral equations is in
-place for the 3D Helmholtz and Maxwell equations.
+Currently, the focus is on equations encountered in **classical electromagnetism**, where frequency and time domain equations are covered.
+Several operators, basis functions, and geometry representations are implemented.
 
-## Installation
 
-Installing `BEAST` is done by entering the package manager (enter `]` at the julia REPL) and issuing:
+## Documentation
 
-```
-pkg>add BEAST
-```
+- Documentation for the [latest stable version](https://krcools.github.io/BEAST.jl/stable/).
+- Documentation for the [development version](https://krcools.github.io/BEAST.jl/dev/).
 
-To run the examples, the following steps are required in addition:
-
-```
-pkg> add CompScienceMeshes # For the creation of scatterer geometries
-pkg> add Plots             # For visualising the results
-pkg> add GR                # Other Plots compatible back-ends can be chosen
-```
-
-Examples can be run by:
-
-```
-julia>using BEAST
-julia>d = dirname(pathof(BEAST))
-julia>include(joinpath(d,"../examples/efie.jl"))
-```
 
 ## Hello World
 
-To solve scattering of a time harmonic electromagnetic plane wave by a perfectly conducting
-sphere:
+To solve scattering of a time-harmonic electromagnetic plane wave by a perfectly conducting sphere:
 
 ```julia
-using CompScienceMeshes, BEAST
+using CompScienceMeshes
+using BEAST
 
-Γ = readmesh(joinpath(dirname(pathof(BEAST)),"../examples/sphere2.in"))
-X = raviartthomas(Γ)
+# --- basis functions
+Γ  = meshsphere(1.0, 2.5)   # triangulate sphere of radius one
+RT = raviartthomas(Γ)       # define basis functions
 
-t = Maxwell3D.singlelayer(wavenumber=1.0)
-E = Maxwell3D.planewave(direction=ẑ, polarization=x̂, wavenumber=1.0)
-e = (n × E) × n
+# --- operators & excitation
+𝑇 = Maxwell3D.singlelayer(wavenumber=2.0)                             # integral operator
+𝐸 = Maxwell3D.planewave(direction=x̂, polarization=ẑ, wavenumber=2.0)  # excitation
+𝑒 = (n × 𝐸) × n # tangential part
 
-@hilbertspace j
-@hilbertspace k
-efie = @discretise t[k,j]==e[k]  j∈X k∈X
-u = gmres(efie)
+# --- compute the RHS and system matrix
+e = assemble(𝑒, RT)         # assemble RHS
+T = assemble(𝑇, RT, RT)     # assemble system matrix
+
+# --- solve
+u = T \ -e
+
+# ... post processing ...
 ```
-![](output.png)
-
-## Features
-
-- General framework allowing to easily add support for more kernels, finite element spaces, and excitations.
-- Assembly routines that take in symbolic representations of the defining bilinear form. Support for block systems and finite element spaces defined in terms of direct products or tensor products of atomic spaces.
-- LU and iterative solution of the resulting system.
-- Computation of secondary quantities of interest such as the near field and the limiting far field.
-- Support for space-time Galerkin and convolution quadrature approaches to the solution of time domain boundary integral equations.
-- Implementation of Lagrange zeroth and first order space, Raviart-Thomas, Brezzi-Douglas-Marini, and Buffa-Christianssen vector elemenents.
+<p align="center">
+  <img src="docs/src/assets/currentREADME.png" height="240">
+  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+  <img src="docs/src/assets/currentRealREADME.png" height="240">
+</p>

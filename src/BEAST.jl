@@ -195,6 +195,7 @@ include("bases/local/localcomposedbasis.jl")
 
 include("operator.jl")
 
+include("quadrature/strategies/quadstrat.jl")
 include("quadrature/quadstrats.jl")
 include("quadrature/doublenumqstrat.jl")
 include("quadrature/doublenumsauterqstrat.jl")

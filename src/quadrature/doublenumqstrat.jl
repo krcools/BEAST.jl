@@ -1,3 +1,8 @@
+struct DoubleNumQStrat{R} <: AbstractQuadStrat
+    outer_rule::R
+    inner_rule::R
+end
+
 function quaddata(operator::IntegralOperator,
     local_test_basis, local_trial_basis,
     test_elements, trial_elements, qs::DoubleNumQStrat)

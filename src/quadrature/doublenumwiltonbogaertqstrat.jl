@@ -1,4 +1,4 @@
-struct DoubleNumWiltonBogaertQStrat{R}
+struct DoubleNumWiltonBogaertQStrat{R} <: AbstractQuadStrat
     outer_rule_far::R
     inner_rule_far::R
     outer_rule_near::R

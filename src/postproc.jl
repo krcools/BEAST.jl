@@ -129,6 +129,12 @@ function facecurrents(u, X::DirectProductSpace)
 	fcr, m
 end
 
+
+"""
+	potential(op, points, coeffs, basis)
+
+Evaluate operator for a given bases and expansion coefficients at the given points.
+"""
 function potential(op, points, coeffs, basis;
 	type=SVector{3,ComplexF64},
 	quadstrat=defaultquadstrat(op, basis))

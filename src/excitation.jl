@@ -37,10 +37,11 @@ end
 function assemble!(field::Functional, tfs::Space, store;
     quadstrat=defaultquadstrat(field, tfs))
 
+    qs = quadstrat(field, tfs)
     tels, tad = assemblydata(tfs)
 
     trefs = refspace(tfs)
-    qd = quaddata(field, trefs, tels, quadstrat)
+    qd = quaddata(field, trefs, tels, qs)
 
     tgeo = geometry(tfs)
     tdom = domain(chart(tgeo, first(tgeo)))
@@ -49,7 +50,7 @@ function assemble!(field::Functional, tfs::Space, store;
     for (t, tcell) in enumerate(tels)
 
         # compute the testing with the reference elements
-        qr = quadrule(field, trefs, t, tcell, qd, quadstrat)
+        qr = quadrule(field, trefs, t, tcell, qd, qs)
         blocal = celltestvalues(trefs, tcell, field, qr)
 
         for i in 1 : num_trefs

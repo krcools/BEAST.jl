@@ -1,14 +1,5 @@
 abstract type MWFarField <: FarField end
 
-"""
-Operator to compute the far field of a current distribution. In particular, given the current distribution ``j`` this operator allows for the computation of
-
-```math
-A j = n × ∫_Γ e^{γ ̂x ⋅ y} dy
-```
-
-where ``̂x`` is the unit vector in the direction of observation. Note that the assembly routing expects the observation directions to be normalised by the caller.
-"""
 struct MWFarField3D{K, U} <: MWFarField
   gamma::K
   amplitude::U
@@ -23,6 +14,11 @@ struct MWDoubleLayerRotatedFarField3D{K,U} <: MWFarField
     amplitude::U
 end
 
+"""
+    MWFarField3D(;gamma, amplitude)
+
+Maxwell single layer far-field operator for 3D.
+"""
 function MWFarField3D(;
   gamma=nothing,
   wavenumber=nothing,
@@ -38,6 +34,11 @@ end
 
 MWFarField3D(op::MWSingleLayer3D{T,U}) where {T,U} = MWFarField3D(op.gamma, sqrt(op.α*op.β))
 
+"""
+  MWDoubleLayerFarField3D(;gamma, amplitude)
+
+Maxwell double layer far-field operator for 3D.
+"""
 function MWDoubleLayerFarField3D(;
   gamma=nothing,
   wavenumber=nothing,
@@ -74,6 +75,11 @@ function integrand(op::MWFarField3DDropConstant,krn,y,f,p)
   op.coeff*(y × (krn * f[1])) × y
 end
 
+"""
+  MWDoubleLayerRotatedFarField3D
+
+Rotated Maxwell double layer far-field operator for 3D.
+"""
 function MWDoubleLayerRotatedFarField3D(;
     gamma=nothing,
     wavenumber=nothing,

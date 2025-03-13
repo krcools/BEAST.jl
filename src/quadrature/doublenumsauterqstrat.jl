@@ -1,4 +1,4 @@
-struct DoubleNumSauterQstrat{R,S}
+struct DoubleNumSauterQstrat{R,S} <: AbstractQuadStrat
     outer_rule::R
     inner_rule::R
     sauter_schwab_common_tetr::S
