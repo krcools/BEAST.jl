@@ -259,9 +259,9 @@ function assemble(bf::BilForm, X::DirectProductSpace, Y::DirectProductSpace;
             y = op[end](op[1:end-1]..., y)
         end
         
-        a = term.coeff * term.kernel
+        a = term.kernel
         # qs = quadstrat(a, x, y)
-        z = materialize(a, x, y; quadstrat)
+        z = term.coeff * materialize(a, x, y; quadstrat)
 
         Smap = lift(z, Block(term.test_id), Block(term.trial_id), U, V)
         T = promote_type(T, eltype(Smap))
