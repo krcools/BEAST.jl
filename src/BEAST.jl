@@ -205,6 +205,7 @@ include("quadrature/strategies/cfcvsautercewiltonpdnumqstrat.jl")
 include("quadrature/strategies/testrefinestrialqstrat.jl")
 include("quadrature/strategies/trialrefinestestqstrat.jl")
 
+
 include("excitation.jl")
 include("gridfunction.jl")
 include("localop.jl")
@@ -235,6 +236,10 @@ include("timedomain/rkcq.jl")
 include("timedomain/zdomain.jl")
 include("timedomain/td_symmetric_quadstrat.jl")
 
+include("quadrature/strategies/timedomain/excitation/numspacenumtimeqstrat.jl")
+
+include("quadrature/rules/timedomain/excitation/multiquadqrule.jl")
+include("quadrature/rules/timedomain/excitation/singlequad2qrule.jl")
 
 # Support for Maxwell equations
 include("maxwell/mwexc.jl")
