@@ -84,7 +84,7 @@ include("test_gridfunction.jl")
 include("test_hh_lsvie.jl")
 
 using TestItemRunner
-@run_package_tests
+@run_package_tests filter=ti->!(:example in ti.tags)
 
 
 try

@@ -119,21 +119,21 @@ function integrand(biop::DoubleLayerTransposed, kernel, fp, mp, fq, mq)
     fp[1] * dot(np, kernel.gradgreen) * fq[1]
 end
 
-mutable struct PlaneWaveDirichlet{T,P} <: Functional
+mutable struct PlaneWaveDirichlet{T,P} <: Functional{T}
     wavenumber::T
     direction::P
 end
 
 scalartype(x::PlaneWaveDirichlet{T}) where {T} = complex(T)
 
-mutable struct PlaneWaveNeumann{T,P} <: Functional
+mutable struct PlaneWaveNeumann{T,P} <: Functional{T}
     wavenumber::T
     direction::P
 end
 
 scalartype(x::PlaneWaveNeumann{T}) where {T} = complex(T)
 
-mutable struct ScalarTrace{T,F} <: Functional
+mutable struct ScalarTrace{T,F} <: Functional{T}
     field::F
 end
 

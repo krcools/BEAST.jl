@@ -1,4 +1,4 @@
-mutable struct PlaneWaveVIE{T,P} <: Functional
+mutable struct PlaneWaveVIE{T,P} <: Functional{T}
     direction::P
     polarisation::P
     wavenumber::T
@@ -55,7 +55,7 @@ integrand(::PlaneWaveVIE, test_vals, field_val) = test_vals[1] ⋅ field_val
 
 
 # Excitation for Lippmann Schwinger Volume Integral Equation
-mutable struct LinearPotentialVIE{T,P} <: Functional
+mutable struct LinearPotentialVIE{T,P} <: Functional{T}
   direction::P
   amplitude::T
 end

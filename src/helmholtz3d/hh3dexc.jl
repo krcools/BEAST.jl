@@ -122,7 +122,7 @@ end
 
 dot(::NormalVector, m::gradHH3DMonopole) = NormalDerivative(HH3DMonopole(m.position, m.gamma, m.amplitude))
 
-mutable struct DirichletTrace{T,F} <: Functional
+mutable struct DirichletTrace{T,F} <: Functional{T}
     field::F
 end
 
@@ -138,7 +138,7 @@ end
 
 integrand(::DirichletTrace, test_vals, field_vals) = dot(test_vals[1], field_vals)
 
-struct NormalDerivative{T,F} <: Functional
+struct NormalDerivative{T,F} <: Functional{T}
     field::F
 end
 

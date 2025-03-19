@@ -287,3 +287,8 @@ function assemble(bf::BilForm, pairs::Pair...)
     dbf = discretise(bf, pairs...)
     assemble(dbf)
 end
+
+function assemble(bf::LinForm, pairs::Pair...)
+    dbf = discretise(bf, pairs...)
+    assemble(dbf)
+end

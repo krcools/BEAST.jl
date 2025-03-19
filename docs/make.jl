@@ -21,6 +21,7 @@ makedocs(;
         "Introduction" => "index.md",
         "Manual" => Any[
             "General Usage"=>"manual/usage.md",
+            "Defining custom excitations"=>"manual/customexc.md",
             "Customising Quadrature Rules" => "manual/quadstrat.md",
             "Application Examples"=>Any[
                 "Time-Harmonic"=>Any[
