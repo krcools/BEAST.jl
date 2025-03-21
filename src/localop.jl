@@ -62,6 +62,9 @@ function assemble!(biop::LocalOperator, tfs::Space, bfs::Space, store,
         quadstrat=defaultquadstrat)
 
         quadstrat = quadstrat(biop, tfs, bfs)
+
+    numfunctions(tfs) == 0 && return
+    numfunctions(bfs) == 0 && return
  
     if geometry(tfs) == geometry(bfs)
         return assemble_local_matched!(biop, tfs, bfs, store; quadstrat)
@@ -398,4 +401,31 @@ function cellinteractions(biop, trefs::U, brefs::V, cell, qr) where {U<:RefSpace
     end
 
     return zlocal
+end
+
+
+@testitem "assemble!: zero sized block" begin
+    using CompScienceMeshes
+
+    fn = joinpath(pathof(BEAST), "../../examples/assets/sphere45.in")
+    m1 = readmesh(fn)
+    m2 = m1[Int[]]
+
+    X = BEAST.DirectProductSpace([raviartthomas(m) for m in [m1, m2]])
+    Id = BEAST.Identity()
+
+    @hilbertspace j[1:2]
+    @hilbertspace k[1:2]
+    a = Id[k[1],j[1]] + Id[k[2],j[2]]
+
+    A = assemble(a, X, X)
+    import BEAST.BlockArrays
+
+    n1 = numfunctions(X[1])
+    n2 = numfunctions(X[2])
+
+    @test n2 == 0
+
+    @test BlockArrays.blocksize(A) == (2,2)
+    @test BlockArrays.blocksizes(A) == ([n1,n2], [n1,n2])
 end
