@@ -14,10 +14,10 @@ function assemble(operator::AbstractSpaceTimeOperator, test_functions, trial_fun
     if stagedtimestep
         return assemble(RungeKuttaConvolutionQuadrature(operator), test_functions, trial_functions)
     end
-    Z, store = allocatestorage(operator, test_functions, trial_functions,
+    freeze, store = allocatestorage(operator, test_functions, trial_functions,
         storage_policy, long_delays_policy)
     assemble!(operator, test_functions, trial_functions, store, threading; quadstrat)
-    return Z()
+    return freeze()
 end
 
 

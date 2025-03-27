@@ -119,28 +119,43 @@ function integrand(biop::DoubleLayerTransposed, kernel, fp, mp, fq, mq)
     fp[1] * dot(np, kernel.gradgreen) * fq[1]
 end
 
-mutable struct PlaneWaveDirichlet{T,P} <: Functional{T}
+struct PlaneWaveDirichlet{T,P} <: Functional{T}
     wavenumber::T
     direction::P
 end
 
 scalartype(x::PlaneWaveDirichlet{T}) where {T} = complex(T)
 
-mutable struct PlaneWaveNeumann{T,P} <: Functional{T}
+struct PlaneWaveNeumann{T,P} <: Functional{T}
     wavenumber::T
     direction::P
 end
 
 scalartype(x::PlaneWaveNeumann{T}) where {T} = complex(T)
 
-mutable struct ScalarTrace{T,F} <: Functional{T}
+struct ScalarTrace{T,F} <: Functional{T}
     field::F
 end
 
 ScalarTrace(f::F) where {F} = ScalarTrace{scalartype(f), F}(f)
 ScalarTrace{T}(f::F) where {T,F} = ScalarTrace{T,F}(f)
 
+strace(f::F) where {F} = ScalarTrace{scalartype(f), F}(f)
 strace(f, mesh::Mesh) = ScalarTrace(f)
+
+@testitem "scalar trace" begin
+    using CompScienceMeshes
+    fn = joinpath(pathof(BEAST), "../../test/assets/sphere45.in")
+    Γ = readmesh(fn)
+    X = lagrangecxd0(Γ)
+
+    U = Helmholtz3D.planewave(wavenumber=1.0, direction=ẑ)
+    u = strace(U)
+
+    ux = assemble(u, X)
+    @test u isa BEAST.ScalarTrace
+    @test BEAST.scalartype(u) == ComplexF64
+end
 
 (s::ScalarTrace)(x) = s.field(cartesian(x))
 integrand(s::ScalarTrace, tx, fx) = dot(tx.value, fx)
