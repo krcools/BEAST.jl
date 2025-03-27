@@ -407,7 +407,7 @@ end
 @testitem "assemble!: zero sized block" begin
     using CompScienceMeshes
 
-    fn = joinpath(pathof(BEAST), "../../examples/assets/sphere45.in")
+    fn = joinpath(dirname(pathof(BEAST)), "../examples/assets/sphere45.in")
     m1 = readmesh(fn)
     m2 = m1[Int[]]
 
