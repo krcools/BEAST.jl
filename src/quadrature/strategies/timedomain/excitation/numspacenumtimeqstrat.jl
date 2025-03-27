@@ -62,7 +62,7 @@ end
     using CompScienceMeshes
     using LinearAlgebra
 
-    fn = joinpath(pathof(BEAST), "../../test/assets/sphere45.in")
+    fn = joinpath(dirname(pathof(BEAST)), "../test/assets/sphere45.in")
 
     mesh = readmesh(fn)
     RT = raviartthomas(mesh)
