@@ -145,7 +145,7 @@ strace(f, mesh::Mesh) = ScalarTrace(f)
 
 @testitem "scalar trace" begin
     using CompScienceMeshes
-    fn = joinpath(pathof(BEAST), "../../test/assets/sphere45.in")
+    fn = joinpath(dirname(pathof(BEAST)), "../test/assets/sphere45.in")
     Γ = readmesh(fn)
     X = lagrangecxd0(Γ)
 
