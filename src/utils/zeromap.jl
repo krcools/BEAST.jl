@@ -15,10 +15,6 @@ function LinearMaps._unsafe_mul!(y::AbstractVector, L::ZeroMap, x::AbstractVecto
     y .*= β
 end
 
-# function LinearAlgebra.mul!(Y::PseudoBlockMatrix, c::Number, X::ZeroMap, a::Number, b::Number)
-#     @assert b == 1
-#     return Y
-# end
 
 function LinearMaps._unsafe_mul!(Y::AbstractMatrix, X::ZeroMap, c::Number, a::Number, b::Number)
     rmul!(Y, b)
