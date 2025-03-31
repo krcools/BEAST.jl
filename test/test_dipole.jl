@@ -6,7 +6,9 @@ using StaticArrays
 using LinearAlgebra
 using BlockArrays
 
+# U = Float32
 for U in [Float32,Float64]
+    @show U
 
     c = U(3e8)
     μ0 = U(4*π*1e-7)
@@ -80,6 +82,9 @@ for U in [Float32,Float64]
     nf_E_BCMFIE = potential(MWSingleLayerField3D(𝓣), pts, j_BCMFIE, X)
     nf_H_BCMFIE = potential(BEAST.MWDoubleLayerField3D(𝓚), pts, j_BCMFIE, X)
     ff_E_BCMFIE = potential(MWFarField3D(𝓣), pts, j_BCMFIE, X)
+
+    @show length(pts)
+    @show norm.(nf_E_BCMFIE - E.(pts)) ./ norm.(E.(pts))
 
     @test norm(nf_E_BCMFIE - E.(pts))/norm(E.(pts)) ≈ 0 atol=0.01
     @test norm(nf_H_BCMFIE - H.(pts))/norm(H.(pts)) ≈ 0 atol=0.01

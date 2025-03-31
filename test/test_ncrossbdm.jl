@@ -21,7 +21,7 @@ end
 
 #testing their connectivity on a mesh 
 
-m=meshsphere(radius=1,h=1.0)
+m=meshsphere(radius=1.0, h=1.0)
 nodes = skeleton(m,0)
 edges = skeleton(m,1)
 
