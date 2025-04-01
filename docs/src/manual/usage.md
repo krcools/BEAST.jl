@@ -15,13 +15,18 @@ The available basis functions and corresponding geometry representations, availa
 
 The fundamental procedure is exemplified for the electric field integral equation (EFIE); further common steps are discussed afterwards:
 
+```@setup introductory
+import PlotlyBase
+import PlotlyDocumenter
+```
+
 ```@example introductory
 using CompScienceMeshes
 using BEAST
 
 # --- 1. basis functions
-Γ  = meshsphere(1.0, 2.5)   # triangulate sphere of radius one
-RT = raviartthomas(Γ)       # define basis functions
+Γ  = meshsphere(radius=1.0, h=0.4)   # triangulate sphere of radius one
+RT = raviartthomas(Γ)                # define basis functions
 
 # --- 2. operators & excitation
 𝑇 = Maxwell3D.singlelayer(wavenumber=2.0)                             # integral operator
@@ -63,11 +68,18 @@ This is shown in the following:
 
 
 ```@example introductory
-using Krylov
+using Krylov, LinearAlgebra
 
 # --- solve linear system iteratively
 u, ch = Krylov.gmres(T, -e, rtol=1e-5)
 
+fcr, geo = facecurrents(u, RT)
+pt = CompScienceMeshes.patch(Γ, norm.(fcr))
+pl = PlotlyBase.Plot(pt)
+PlotlyDocumenter.to_documenter(pl) # hide
+```
+
+```@example introductory
 # --- post processing: compute scattered electric field at two Cartesian points
 points = [[3.0, 4.0, 2.0], [3.0, 4.0, 3.0]]
 EF = potential(MWSingleLayerField3D(gamma=im*2.0), points, u, RT)
