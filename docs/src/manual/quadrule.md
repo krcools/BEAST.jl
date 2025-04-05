@@ -19,7 +19,7 @@ In this tutorial we assume that the test mesh is conforming to the barycentric r
 
 Because of the a priori knowledge about the relative constellation of the meshes, the construction in the second case will automatically result in a pair of mutually conforming meshes that can safely be send off to `cstrat`.
 
-THe first step in defining a new quadrature strategy is the definition of the corresponding type:
+The first step in defining a new quadrature strategy is the definition of the corresponding type:
 
 ```julia
 struct NonConfTestBaryRefOfTrialQStrat{P} <: BEAST.AbstractQuadStrat
@@ -55,8 +55,10 @@ end
 
 The function body is essentially a one-to-one translation of the quadrature rule selection algorithm above to julia. The object `qd` passed to `quadrule` is the cache computed by quadrule. In our case, it is simply passed on to the underlying conforming quadrature rule in the case of well separated triangles.
 
+Next, we define a type representing the quadrature rule that is used when test triangle and trial triangle are not well-separated:
+
 ```julia
-struct NonConfTestBaryRefOfTrialQStrat{S}
+struct TestInBaryRefOfTrialQRule{S}
     conforming_qstrat::S
 end
 ```
@@ -147,13 +149,13 @@ momintegrals!(outq, op,
     trial_functions, nothing, chart, qr)
 ```
 
-This call to `momintegrals!` calculates interactions between the shape functions on the original test chart and the shape functions on one of the six subcharts in the refinement of the trial chart. The corresponding contribution to the interaction with the shape functions on the coarse trial chart can be calculated if we know how the restriction of the coarse shape functions to any of the subcharts can be written as linear combinations of the shape on that subchart. This information is given by
+This call to `momintegrals!` calculates interactions between the shape functions on the original test chart and the shape functions on one of the six subcharts in the refinement of the trial chart. The corresponding contribution to the interaction with the shape functions on the coarse trial chart can be calculated if we know how the restriction of the coarse shape functions to any of the subcharts can be written as linear combinations of the shape on that subchart. This information is provided by
 
 ```julia
 BEAST.restrict!(Q, trial_local_space, trial_chart, chart, X[q])
 ```
 
-For efficiency, the overlap function from the domain of `chart` to the domain of `test_chart` has to be supplied.
+For efficiency, the overlap function from the domain of `chart` to the domain of `trial_chart` has to be supplied.
 
 !!! note
     The quadrature strategy and related quadrature rules implemented here can be rearded as meta-strategies, and meta-rules, as they defer most of the heavy lifting to underlying strategies and rules for mutually conforming meshes.
