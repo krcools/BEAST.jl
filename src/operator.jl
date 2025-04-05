@@ -81,6 +81,13 @@ transpose(op::Operator) = TransposedOperator(op)
 defaultquadstrat(lc::LinearCombinationOfOperators, tfs, bfs) =
     [defaultquadstrat(op,tfs,bfs) for op in lc.ops]
 
+defaultquadstrat(lc::LinearCombinationOfOperators, tfs::DirectProductSpace, bfs::Space) =
+    [defaultquadstrat(op,tfs.factors[1],bfs) for op in lc.ops]
+defaultquadstrat(lc::LinearCombinationOfOperators, tfs::Space, bfs::DirectProductSpace) =
+    [defaultquadstrat(op,tfs,bfs.factors[1]) for op in lc.ops]
+defaultquadstrat(lc::LinearCombinationOfOperators, tfs::DirectProductSpace, bfs::DirectProductSpace) =
+    [defaultquadstrat(op,tfs.factors[1],bfs.factors[1]) for op in lc.ops]
+
 """
     assemble(operator, test_functions, trial_functions;
         storage_policy = Val{:bandedstorage},
@@ -218,7 +225,7 @@ function assemble!(op::TransposedOperator, tfs::Space, bfs::Space,
 end
 
 
-function assemble!(op::LinearCombinationOfOperators, tfs::AbstractSpace, bfs::AbstractSpace,
+function assemble!(op::LinearCombinationOfOperators, tfs::Space, bfs::Space,
     store, threading = Threading{:multi};
     quadstrat=defaultquadstrat(op, tfs, bfs))
 

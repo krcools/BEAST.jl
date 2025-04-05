@@ -195,7 +195,7 @@ function interpolate(fields, interpolant::GWPCurlRefSpace{T,Degree}, chart) wher
     end
 
     Q = hcat(Q1,Q2,Q3)
-    if d > 1
+    if d >= 1
         S = ((i,j,d+2-i-j) for i in 1:d+1 for j in 1:d+1 if d+2-i-j > 0)
         for (i,j,k) in S
             p_chart = neighborhood(chart, (s[i+1],s[j+1]))
