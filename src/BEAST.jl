@@ -204,6 +204,7 @@ include("quadrature/commonfaceoverlappingedgeqstrat.jl")
 include("quadrature/strategies/cfcvsautercewiltonpdnumqstrat.jl")
 include("quadrature/strategies/testrefinestrialqstrat.jl")
 include("quadrature/strategies/trialrefinestestqstrat.jl")
+include("quadrature/strategies/nonconftestbaryrefoftrialqstrat.jl")
 
 
 include("excitation.jl")
@@ -223,6 +224,7 @@ include("quadrature/nonconformingoverlapqrule.jl")
 include("quadrature/nonconformingtouchqrule.jl")
 include("quadrature/rules/testrefinestrialqrule.jl")
 include("quadrature/rules/trialrefinestestqrule.jl")
+include("quadrature/rules/testinbaryrefoftrialqrule.jl")
 
 include("postproc.jl")
 include("postproc/segcurrents.jl")

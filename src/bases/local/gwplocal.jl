@@ -164,7 +164,7 @@ function interpolate(fields, interpolant::GWPCurlRefSpace{T,Degree}, chart) wher
         k = (d+2)-i-j
         u_edge = s[j+1]
         p_edge = neighborhood(edge, (u_edge,))
-        @show cartesian(p_edge)
+        # @show cartesian(p_edge)
         t_edge = -tangents(p_edge, 1)
         vals = fields_edge(u_edge)
         [dot(t_edge, val) for val in vals]

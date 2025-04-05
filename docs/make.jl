@@ -21,8 +21,9 @@ makedocs(;
         "Introduction" => "index.md",
         "Manual" => Any[
             "General Usage"=>"manual/usage.md",
-            "Defining custom excitations"=>"manual/customexc.md",
-            "Customising Quadrature Rules" => "manual/quadstrat.md",
+            "Custom excitations"=>"manual/customexc.md",
+            "Setting the Quadrature Strategy" => "manual/quadstrat.md",
+            "Custom Quadrature Rules" => "manual/quadrule.md",
             "Application Examples"=>Any[
                 "Time-Harmonic"=>Any[
                     "EFIE"=>"manual/examplesTH/efie.md",
