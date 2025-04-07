@@ -190,6 +190,9 @@ include("bases/stagedtimestep.jl")
 include("bases/timebasis.jl")
 include("bases/tensorbasis.jl")
 
+include("bases/composedbasis.jl")
+include("bases/local/localcomposedbasis.jl")
+
 include("operator.jl")
 
 include("quadrature/strategies/quadstrat.jl")
@@ -294,8 +297,11 @@ include("solvers/itsolver.jl")
 
 include("utils/plotlyglue.jl")
 
-
-
+include("composedoperators/composedoperator.jl")
+include("composedoperators/displacementmesh.jl")
+include("composedoperators/potentials.jl")
+include("composedoperators/trace.jl")
+include("composedoperators/analytic_excitation.jl")
 
 const x̂ = point(1, 0, 0)
 const ŷ = point(0, 1, 0)
