@@ -6,7 +6,6 @@
 </picture>
 
 
-[![Docs-stable](https://img.shields.io/badge/docs-stable-blue.svg)](https://krcools.github.io/BEAST.jl/stable/)
 [![Docs-dev](https://img.shields.io/badge/docs-dev-blue.svg)](https://krcools.github.io/BEAST.jl/dev/)
 [![MIT license](https://img.shields.io/badge/License-MIT-blue.svg)](https://github.com/krcools/BEAST.jl/blob/master/LICENSE)
 [![CI](https://github.com/krcools/BEAST.jl/actions/workflows/CI.yml/badge.svg)](https://github.com/krcools/BEAST.jl/actions/workflows/CI.yml)
