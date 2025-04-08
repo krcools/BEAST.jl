@@ -17,7 +17,10 @@ function BEAST.quadrule(a, 𝒳, 𝒴, i, τ, j, σ, qd,
 end
 
 @testitem "NonConfTestBaryRefOfTrialQStrat" begin
-    using CompScienceMeshes
+    using BEAST, Test
+    using CompScienceMeshes, LinearAlgebra
+
+    @show pathof(CompScienceMeshes)
 
     fnm = joinpath(dirname(pathof(BEAST)), "../test/assets/sphere45.in")
     Γ1 = BEAST.readmesh(fnm)
@@ -37,7 +40,6 @@ end
     @time Kyx3 = assemble(K, Y, X; quadstrat=qs3)
     @time Kyx4 = assemble(K, Y1, X; quadstrat=qs1)
 
-    using LinearAlgebra
     @test norm(Kyx1 - Kyx2) < 0.05
     @test norm(Kyx1 - Kyx3) < 0.05
     @test norm(Kyx2 - Kyx3) < 0.002

@@ -136,20 +136,29 @@ function interpolate!(out, interpolant::RefSpace, chart1, interpolee::RefSpace, 
 end
 
 
-function interpolate(fields, interpolant::RTRefSpace, chart)
-    Q = map(faces(chart)) do face
-        p = center(face)
-        x = cartesian(p)
-        u = carttobary(chart, x)
-        q = neighborhood(chart, u)
-        n = normal(q)
+function interpolate(fields, interpolant::RTRefSpace{T}, chart) where {T}
+    Q = map(CompScienceMeshes.subcharts(chart, Val{1})) do (face, inj)
+
+        u_face = T(1//2)
+        p_face = neighborhood(face, (u_face,))
+        t_face = -tangents(p_face, 1)
+        u_chart = cartesian(neighborhood(inj, u_face))
+        p_chart = neighborhood(chart, u_chart)
+        n_chart = normal(p_chart)
+        m_face = cross(t_face, n_chart)
+
+        # p = center(face)
+        # x = cartesian(p)
+        # u = carttobary(chart, x)
+        # q = neighborhood(chart, u)
+        # n = normal(q)
 
         # minus because in CSM the tangent points towards vertex[1]
-        t = -tangents(p,1)
-        m = cross(t,n)
+        # t = -tangents(p,1)
+        # m = cross(t,n)
 
-        fieldvals = fields(q)
-        q = [dot(fv,m) for fv in fieldvals]
+        fieldvals = fields(p_chart)
+        q = [dot(fv,m_face) for fv in fieldvals]
     end
 
     return hcat(Q...)
@@ -174,44 +183,48 @@ end
 # end
 
 # TODO: remove when new version CompScienceMeshes is released
-function subcharts(
-    c::CompScienceMeshes.Simplex{U,2}, ::Type{Val{1}}) where {U}
+# function subcharts(
+#     c::CompScienceMeshes.Simplex{U,2}, ::Type{Val{1}}) where {U}
 
-    T = coordtype(c)
-    d = (
-        point(T, 1, 0),
-        point(T, 0, 1),
-        point(T, 0, 0),
-    )
-    tp = (
-        (simplex(c[2], c[3]), simplex(d[2], d[3])),
-        (simplex(c[3], c[1]), simplex(d[3], d[1])),
-        (simplex(c[1], c[2]), simplex(d[1], d[2])),
-    )
-    return tp
-end
+#     T = coordtype(c)
+#     d = (
+#         point(T, 1, 0),
+#         point(T, 0, 1),
+#         point(T, 0, 0),
+#     )
+#     v = c.vertices
+#     E1 = simplex(v[2], v[3])
+#     E2 = simplex(v[3], v[1])
+#     E3 = simplex(v[1], v[2])
+
+#     e1 = simplex(d[2], d[3])
+#     e2 = simplex(d[3], d[1])
+#     e3 = simplex(d[1], d[2])
+#     tp = (
+#         (E1, e1),
+#         (E2, e2),
+#         (E3, e3),
+#     )
+#     return tp
+# end
 
 function interpolate!(out, fields, interpolant::RTRefSpace{T}, chart) where {T}
-    n_chart = normal(chart)
+    # n_chart = normal(chart)
 
     for (f,(face, inj)) in zip(axes(out,2),
-        subcharts(chart, Val{1}))
+        CompScienceMeshes.subcharts(chart, Val{1}))
 
-        # fields_face = trace(face, chart, fields)
         u_face = T(1//2)
         p_face = neighborhood(face, (u_face,))
         t_face = -tangents(p_face, 1)
-        m_face = cross(t_face, n_chart)
-        # vals = fields_face(u_face)
         u_chart = cartesian(neighborhood(inj, u_face))
         p_chart = neighborhood(chart, u_chart)
+        n_chart = normal(p_chart)
+        m_face = cross(t_face, n_chart)
         vals = fields(p_chart)        
         for (g,val) in zip(axes(out, 1), vals)
             out[g,f] = dot(m_face, val)
-        end
-        # out[:,f] = [dot(m_face, val) for val in vals]
-    end
-end
+end end end
 
 
 function restrict(ϕ::RefSpace, dom1, dom2)
