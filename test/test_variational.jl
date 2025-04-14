@@ -45,9 +45,9 @@ dbf = BEAST.discretise(bf, j=>X, k=>X)
 dlf = BEAST.discretise(lf, j=>X)
 
 space_mappings = (j=>X, k=>X,)
-for sm in space_mappings
-    @show sm
-end
+# for sm in space_mappings
+#     @show sm
+# end
 
 M = assemble(dbf)
 A = Matrix(M)

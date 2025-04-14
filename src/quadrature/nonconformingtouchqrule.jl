@@ -9,8 +9,8 @@ function momintegrals!(op,
     τ::CompScienceMeshes.Simplex, σ::CompScienceMeshes.Simplex,
     out, qrule::NonConformingTouchQRule)
 
-    # test_locspace = refspace(test_functions)
-    # bsis_locspace = refspace(bsis_functions)
+    num_tshapes = numfunctions(test_locspace, domain(τ))
+    num_bshapes = numfunctions(bsis_locspace, domain(σ))
 
     T = coordtype(τ)
     P = eltype(τ.vertices)
@@ -25,50 +25,44 @@ function momintegrals!(op,
     isempty(τs) && return
     isempty(σs) && return
 
-    # test conformity
-    # for a in τs
-    #     for b in σs
-    #         if !_test_conformity(a, b)
-    #             @infiltrate
-    #         end
-    #     end
-    # end
-
-    # volume(σ) ≈ sum(volume.(σs)) || @infiltrate
-
-    # if volume(τ) ≈ sum(volume.(τs)) else
-    #     @show volume(τ)
-    #     @show sum(volume.(τs))
-    #     error()
-    # end
-    # @assert volume(σ) ≈ sum(volume.(σs))
-
     @assert all(volume.(τs) .> 1e3 * eps(T) * (volume(τ)))
     @assert all(volume.(σs) .> 1e3 * eps(T) * (volume(σ)))
  
+    test_overlaps = map(τs) do tchart
+        simplex(
+            carttobary(τ, tchart.vertices[1]),
+            carttobary(τ, tchart.vertices[2]),
+            carttobary(τ, tchart.vertices[3]))
+    end
+
+    trial_overlaps = map(σs) do bchart
+        simplex(
+            carttobary(σ, bchart.vertices[1]),
+            carttobary(σ, bchart.vertices[2]),
+            carttobary(σ, bchart.vertices[3]))
+    end
+
     qstrat = qrule.conforming_qstrat
     qdata = quaddata(op, test_locspace, bsis_locspace, τs, σs, qstrat)
 
-    any(volume.(τs) .< 1e-13) && @infiltrate
-    any(volume.(σs) .< 1e-13) && @infiltrate
+    @assert !any(volume.(τs) .< 1e-13)
+    @assert !any(volume.(σs) .< 1e-13)
 
+    zlocal = zero(out)
+    P = zeros(T, num_tshapes, num_tshapes)
+    Q = zeros(T, num_bshapes, num_bshapes)
     for (p,tchart) in enumerate(τs)
+        restrict!(P, test_locspace, τ, tchart, test_overlaps[p])
         for (q,bchart) in enumerate(σs)
+            restrict!(Q, bsis_locspace, σ, bchart, trial_overlaps[q])
+            
             qrule = quadrule(op, test_locspace, bsis_locspace,
                 p, tchart, q, bchart, qdata, qstrat)
-            # @show qrule
 
-            P = restrict(test_locspace, τ, tchart)
-            Q = restrict(bsis_locspace, σ, bchart)
-            zlocal = zero(out)
-
-            # momintegrals!(zlocal, op,
-            #     test_locspace, nothing, tchart,
-            #     bsis_locspace, nothing, bchart, qrule)
+            fill!(zlocal, 0)
             momintegrals!(op, test_locspace, bsis_locspace,
                 tchart, bchart, zlocal, qrule)
 
-            # out .+= P * zlocal * Q'
             for i in axes(P,1)
                 for j in axes(Q,1)
                     for k in axes(P,2)

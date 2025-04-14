@@ -381,8 +381,6 @@ end
 # fields[i] ≈ sum(Q[j,i] * interpolant[j].value for j in 1:numfunctions(interpolant))
 function interpolate(fields, interpolant::LagrangeRefSpace{T,Degree,3}, chart) where {T,Degree}
 
-    dim = binomial(2+Degree, Degree)
-
     I = 0:Degree
     s = range(0,1,length=Degree+1)
     Is = zip(I,s)
@@ -398,10 +396,31 @@ function interpolate(fields, interpolant::LagrangeRefSpace{T,Degree,3}, chart) w
                 idx += 1
     end end end
 
-    # Q = hcat(vals...)
     Q = Matrix{T}(undef, length(vals[1]), length(vals))
     for i in eachindex(vals)
         Q[:,i] .= vals[i]
     end
     return Q
 end
+
+
+function interpolate!(out, fields, interpolant::LagrangeRefSpace{T,Degree,3}, chart) where {T,Degree}
+    Is = zip((0:Degree), range(0,1,length=Degree+1))
+    idx = 0
+    for (i,ui) in Is
+        for (j,vj) in Is
+            for (k,wk) in Is
+                i + j + k == Degree || continue; idx += 1
+                @assert ui + vj + wk ≈ 1
+                p = neighborhood(chart, (ui,vj))
+                vals = fields(p)
+                for (g, val) in zip(axes(out, 1), vals)
+                    out[g,idx] = val
+end end end end end
+
+function interpolate!(out, fields, interpolant::LagrangeRefSpace{T,0,3}, chart) where {T}
+    p = center(chart)
+    vals = fields(p)
+    for (g, val) in zip(axes(out, 1), vals)
+        out[g,1] = val
+end end

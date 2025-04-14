@@ -83,8 +83,8 @@ for U in [Float32,Float64]
     nf_H_BCMFIE = potential(BEAST.MWDoubleLayerField3D(𝓚), pts, j_BCMFIE, X)
     ff_E_BCMFIE = potential(MWFarField3D(𝓣), pts, j_BCMFIE, X)
 
-    @show length(pts)
-    @show norm.(nf_E_BCMFIE - E.(pts)) ./ norm.(E.(pts))
+    # @show length(pts)
+    # @show norm.(nf_E_BCMFIE - E.(pts)) ./ norm.(E.(pts))
 
     @test norm(nf_E_BCMFIE - E.(pts))/norm(E.(pts)) ≈ 0 atol=0.01
     @test norm(nf_H_BCMFIE - H.(pts))/norm(H.(pts)) ≈ 0 atol=0.01

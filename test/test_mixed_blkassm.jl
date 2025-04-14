@@ -43,7 +43,7 @@ for T in [Float32, Float64]
     local X = raviartthomas(Γ)
     local Y = buffachristiansen(Γ)
 
-    println("Number of RWG functions: ", numfunctions(X))
+    # println("Number of RWG functions: ", numfunctions(X))
 
     T_blockassembler = hassemble(𝓣, X, X)
     T_standardassembler = assemble(𝓣, X, X)

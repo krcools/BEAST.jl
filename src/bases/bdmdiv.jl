@@ -18,7 +18,8 @@ end
 
 function brezzidouglasmarini(mesh, cellpairs::Array{Int,2})
 
-    @warn "brezzidouglasmarini(mesh, cellpairs) assumes mesh is oriented"
+    @assert CompScienceMeshes.isoriented(mesh) "brezzidouglasmarini assumes mesh is oriented"
+    # @warn "brezzidouglasmarini(mesh, cellpairs) assumes mesh is oriented"
 
     @assert size(cellpairs,1) == 2
 

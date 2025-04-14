@@ -20,7 +20,7 @@ end
     using BEAST, Test
     using CompScienceMeshes, LinearAlgebra
 
-    @show pathof(CompScienceMeshes)
+    # @show pathof(CompScienceMeshes)
 
     fnm = joinpath(dirname(pathof(BEAST)), "../test/assets/sphere45.in")
     Γ1 = BEAST.readmesh(fnm)

@@ -34,16 +34,15 @@ function BEAST.momintegrals!(out, op,
         CompScienceMeshes.simplex(v[3], e[2], c),
         CompScienceMeshes.simplex(v[1], c, e[2]))
 
-    C = CompScienceMeshes.cartesian(
-        CompScienceMeshes.neighborhood(trial_chart, c))
-    V = CompScienceMeshes.cartesian.((
-        CompScienceMeshes.neighborhood(trial_chart, v[1]),
-        CompScienceMeshes.neighborhood(trial_chart, v[2]),
-        CompScienceMeshes.neighborhood(trial_chart, v[3])))
-    E = CompScienceMeshes.cartesian.((
-        CompScienceMeshes.neighborhood(trial_chart, e[1]),
-        CompScienceMeshes.neighborhood(trial_chart, e[2]),
-        CompScienceMeshes.neighborhood(trial_chart, e[3])))
+    C = CompScienceMeshes.cartesian(trial_chart, c)
+    V = (
+        CompScienceMeshes.cartesian(trial_chart, v[1]),
+        CompScienceMeshes.cartesian(trial_chart, v[2]),
+        CompScienceMeshes.cartesian(trial_chart, v[3]))
+    E = (
+        CompScienceMeshes.cartesian(trial_chart, e[1]),
+        CompScienceMeshes.cartesian(trial_chart, e[2]),
+        CompScienceMeshes.cartesian(trial_chart, e[3]))
 
     trial_charts = (
         CompScienceMeshes.simplex(V[1], E[3], C),
@@ -57,7 +56,7 @@ function BEAST.momintegrals!(out, op,
     qd = BEAST.quaddata(op, test_local_space, trial_local_space,
         (test_chart,), trial_charts, quadstrat)
 
-    Q = zeros(T, num_tshapes, num_bshapes)
+    Q = zeros(T, num_tshapes, num_tshapes)
     out1 = zero(out)
     for (q,chart) in enumerate(trial_charts)
         qr1 = BEAST.quadrule(op, test_local_space, trial_local_space,

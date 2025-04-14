@@ -86,7 +86,7 @@ makedocs(;
 deploydocs(;
     repo="github.com/krcools/BEAST.jl.git",
     target="build",
-    push_preview=true,
-    forcepush=true,
+    # push_preview=true,
+    forcepush=false,
     #devbranch = "feature/docs",
 )
