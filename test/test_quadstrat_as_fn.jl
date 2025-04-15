@@ -5,7 +5,7 @@
     pd = dirname(pathof(BEAST))
     fn = joinpath(pd, "../test/assets/sphere45.in")
     Γ = CompScienceMeshes.readmesh(fn)
-    @show length(Γ)
+    # @show length(Γ)
 
     X = raviartthomas(Γ)
     @show numfunctions(X)
@@ -31,7 +31,7 @@ end
     pd = dirname(pathof(BEAST))
     fn = joinpath(pd, "../test/assets/sphere45.in")
     Γ = CompScienceMeshes.readmesh(fn)
-    @show length(Γ)
+    # @show length(Γ)
 
     X = raviartthomas(Γ)
     @show numfunctions(X)

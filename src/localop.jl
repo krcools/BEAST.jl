@@ -145,7 +145,7 @@ end
 function assemble_local_refines!(biop::LocalOperator, tfs::Space, bfs::Space, store;
     quadstrat=defaultquadstrat(biop, tfs, bfs))
 
-    println("Using 'refines' algorithm for local assembly:")
+    # println("Using 'refines' algorithm for local assembly:")
 
     tgeo = geometry(tfs)
     bgeo = geometry(bfs)

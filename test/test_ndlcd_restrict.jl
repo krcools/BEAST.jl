@@ -31,8 +31,8 @@ for T in [Float32, Float64]
     for j in axes(Q,1)
         x = Fp[j].value
         y = sum(Q[j,i]*fp[i].value for i in axes(Q,2))
-        @show x
-        @show y
+        # @show x
+        # @show y
         @test x ≈ y
     end
 end
