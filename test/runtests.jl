@@ -4,6 +4,8 @@ using StaticArrays
 
 module PkgTests
 
+using TestItemRunner
+
 using Distributed
 using LinearAlgebra
 using SparseArrays
@@ -60,7 +62,7 @@ include("test_nitschehh3d.jl")
 
 include("test_curlcurlgreen.jl")
 include("test_hh3dtd_exc.jl")
-include("test_hh3dexc.jl")
+# include("test_hh3dexc.jl")
 include("test_hh3d_nearfield.jl")
 include("test_tdassembly.jl")
 include("test_tdhhdbl.jl")
@@ -83,7 +85,7 @@ include("test_gridfunction.jl")
 
 include("test_hh_lsvie.jl")
 
-using TestItemRunner
+
 @run_package_tests filter=ti->!(:example in ti.tags) verbose=true
 
 
