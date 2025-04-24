@@ -11,7 +11,8 @@ defaultquadstrat(op::QuasiLocalSingleLayerMW,
     tfs::RTRefSpace, bfs::RTRefSpace) = DoubleNumSauterQstrat(4,5,5,5,4,3)
 
 oprange(op::QuasiLocalSingleLayerMW) = op.range
-
+Base.:*(a::T, op::QuasiLocalSingleLayerMW) where {T<:Number} =
+    QuasiLocalSingleLayerMW(op.gamma, a*op.alpha, a*op.beta, op.range, op.nominator)
 
 struct ExponentialNominator{R}
     gamma::R
@@ -85,4 +86,12 @@ end
     @test norm(Z12-W12) < 1e-19
     @test norm(Z12) == 0
     @test length(nonzeros(Z11)) / length(Z11) < 0.86
+
+    @hilbertspace j
+    @hilbertspace k
+    Q1 = assemble(t1[k,j], j∈X1, k∈X1)
+    Q2 = assemble(t1[k,j] + t1[k,j], j∈X1, k∈X1)
+
+    @test Q1.A.lmap isa SparseMatrixCSC
+    @test Q2.maps[1].A.lmap isa SparseMatrixCSC
 end
