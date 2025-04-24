@@ -35,7 +35,9 @@ function allocatestorage(op::QuasiLocalOperator,
             Mall = reduce(vcat, M)
             Nall = reduce(vcat, N)
             Vall = reduce(vcat, V)
-            return sparse(Mall,Nall,Vall, nrows, ncols)
+            S = sparse(Mall,Nall,Vall, nrows, ncols)
+            @info "Compression rate: $(length(nonzeros(S)) / (nrows*ncols))"
+            return S
         end
     
         return freeze, storeq2

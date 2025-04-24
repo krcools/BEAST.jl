@@ -67,6 +67,9 @@ end
     X1 = raviartthomas(Γ1)
     X2 = raviartthomas(Γ2)
 
+    qs = BEAST.defaultquadstrat(t1, X1, X1)
+    @show qs
+
     @time Z11 = assemble(t1, X1, X1)
     @time W11 = assemble(t2, X1, X1)
     @time Z12 = assemble(t1, X1, X2)

@@ -109,12 +109,6 @@ function (igd::Integrand)(x,y,f,g)
 
 end
 
-# function CompScienceMeshes.permute_vertices(
-#     ch::CompScienceMeshes.RefQuadrilateral, I)
-
-#     V = vertices(ch)
-#     return Quadrilateral(V[I[1]], V[I[2]], V[I[3]], V[I[4]])
-# end
 
 struct PulledBackIntegrand{I,C1,C2}
     igd::I
@@ -156,7 +150,7 @@ function momintegrals!(op::Operator,
     igd = Integrand(op, test_local_space, trial_local_space, test_chart, trial_chart)
     igdp = pulledback_integrand(igd, I, test_chart, J, trial_chart)
     G = SauterSchwabQuadrature.sauterschwab_parameterized(igdp, rule)
-    # out[1:num_tshapes, 1:num_bshapes] .+= G
+
     for j in 1:num_bshapes
         for i in 1:num_tshapes
             out[i,j] += G[i,j]
