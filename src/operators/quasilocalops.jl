@@ -64,15 +64,13 @@ function assemblechunk!(op::QuasiLocalOperator, tfs::Space, bfs::Space, store321
 
     tels, tad, tact = tr
     bels, bad, bact = br
-    # @show size(tad.data)
-    # @show size(bad.data)
 
     @assert length(tels) == size(tad.data, 3)
     @assert length(bels) == size(bad.data, 3)
 
     qd = quaddata(op, trefs, brefs, tels, bels, quadstrat)
     zlocal = zeros(T, num_trefs, num_brefs)
-    tree = elementstree(bels)
+    tree = elementstree(bels, 1.1)
 
     δ = oprange(op)
     tid = Threads.threadid()
@@ -82,12 +80,14 @@ function assemblechunk!(op::QuasiLocalOperator, tfs::Space, bfs::Space, store321
     for (p,(tcell,tptr)) in enumerate(zip(tels, tact))
 
         tc, ts = boundingbox(tcell.vertices)
-        pred = (c,s) -> boxesoverlap(c,s,tc,ts + δ/2)
+        # pred = (c,s) -> boxesoverlap(c,s,tc,ts + δ/2)
 
-        for box in boxes(tree, pred)
+        for box in boxes(tree, tc, ts + δ/2)
             for q in box
-                # q is the index into bels: the active basis charts
                 bcell = bels[q]
+                bc, bs = boundingbox(bcell.vertices)
+                norm(tc-bc) - 2*(ts+bs)*sqrt(3) > δ && continue
+
                 bptr = bact[q]
                 @assert q <= length(bels)
                 @assert q <= size(bad.data, 3)

@@ -61,6 +61,12 @@ end
     Γ2 = CompScienceMeshes.translate(Γ1, point(0,0,3.0))
     # Γ = meshsphere(radius=1.0, h=0.075)
 
+    import Pkg
+    @show pathof(BEAST.CollisionDetection)
+    for d in Pkg.project().dependencies
+        @show d
+    end
+
     δ = 0.025
     γ = 1/δ
     t1 = BEAST.QuasiLocalSingleLayerMW(γ, 12*δ)
