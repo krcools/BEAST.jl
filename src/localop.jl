@@ -264,7 +264,7 @@ function elementstree(elements, expansion_ratio=1)
         end
     end
 
-    return Octree(points, radii, expansion_ratio)
+    return Octree(points, radii, T(expansion_ratio))
 end
 
 
