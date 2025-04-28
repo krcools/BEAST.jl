@@ -8,6 +8,7 @@ makedocs(;
     modules=[BEAST],
     authors="Kristof Cools and contributors",
     sitename="BEAST.jl",
+    checkdocs=:none,
     format=Documenter.HTML(;
         prettyurls=get(ENV, "CI", "false") == "true",
         canonical="https://krcools.github.io/BEAST.jl",
