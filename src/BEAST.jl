@@ -69,6 +69,11 @@ export HH3DDoubleLayerNear
 export HH3DDoubleLayerTransposedNear
 export HH3DHyperSingularNear
 
+export HH2DSingleLayerNear
+export HH2DDoubleLayerNear
+export HH2DDoubleLayerTransposedNear
+export HH2DHyperSingularNear
+
 export NitscheHH3
 export MWSingleLayerTDIO
 export MWDoubleLayerTDIO
@@ -278,6 +283,7 @@ include("helmholtz3d/helmholtz3d.jl")
 include("helmholtz3d/wiltonints.jl")
 
 include("helmholtz2d/hh2dexc.jl")
+include("helmholtz2d/hh2dnear.jl")
 include("helmholtz2d/hh2dops.jl")
 include("helmholtz2d/helmholtz2d.jl")
 
