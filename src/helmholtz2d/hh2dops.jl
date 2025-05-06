@@ -1,27 +1,103 @@
 import SpecialFunctions: hankelh2
 
-abstract type HelmholtzOperator2D <: IntegralOperator end
-scalartype(::HelmholtzOperator2D) = ComplexF64
+abstract type HelmholtzOperator2D{T, K} <: IntegralOperator end
 
-struct SingleLayer{T} <: HelmholtzOperator2D
-    wavenumber::T
+# Some unfortunate code duplication from mwops.jl
+# TODO: Maybe we can unify by introducing another layer of abstract types
+# or using Holy traits?
+scalartype(op::HelmholtzOperator2D{T, K}) where {T, K <: Val{0}} = T
+scalartype(op::HelmholtzOperator2D{T, K}) where {T, K} = promote_type(T, K)
+
+
+# TODO: Another example of code duplication from mwops.jl
+# Maybe any integral operator has a gamma field?
+# Do we have counter examples?
+function isstatic(op::HelmholtzOperator2D)
+    return typeof(op.gamma) == Val{0}
 end
 
-struct HyperSingular{T} <: HelmholtzOperator2D
-    wavenumber::T
+"""
+    hh2d_makegammacomplexifneeded(gamma)
+
+Returns a complexified gamma. Unlike the 3D-case, the handling of the Green's
+function is more complicated as, for example, the static kernel is not the
+of the dynamic kernel limit for k → 0
+
+First, recall that throughout BEAST, we assume a dependency of exp(+iωt).
+The wavenumber k and gamma are related via  γ = ik (and thus k = -iγ).
+Accordingly, the homogeneous 2D Helmholtz equation reads
+    - Δu - k² u = - Δu + γ² u = 0
+
+For physically meaning full real gamma (i.e., γ >= 0), the solutions are
+real-valued. For this reason, we will use gamma and not k to deduce the
+underlying scalartype of the operator.
+
+The Green's functions
+
+2D Laplace:
+    G(x, y) = -1/(2π)* ln|x - y|
+
+2D modified Helmholtz equation:
+    G(x, y) = 1/(2π)* K₀(γ |x - y|)
+
+2D Helmholtz equation
+    G(x, y) = -i/4 * H₀⁽²⁾(-iγ |x - y|)
+where γ = ik (and thus k = -iγ)
+"""
+function hh2d_makegammacomplexifneeded(gamma::Real)
+    if gamma < 0.0
+        return Complex(gamma)
+    else
+        return gamma
+    end
 end
 
-struct DoubleLayer{T} <: HelmholtzOperator2D
-    wavenumber::T
+function hh2d_makegammacomplexifneeded(gamma)
+    return gamma
 end
 
-struct DoubleLayerTransposed{T} <: HelmholtzOperator2D
-    wavenumber::T
+struct HH2DSingleLayerFDBIO{T, K} <: HelmholtzOperator2D{T, K}
+    alpha::T
+    gamma::K
+
+    function HH2DSingleLayerFDBIO(alpha, gamma)
+        gamma = hh2d_makegammacomplexifneeded(gamma)
+        new{typeof(alpha),typeof(gamma)}(alpha, gamma)
+    end
 end
 
+struct HH2DDoubleLayerFDBIO{T, K} <: HelmholtzOperator2D{T, K}
+    alpha::T
+    gamma::K
 
+    function HH2DDoubleLayerFDBIO(alpha, gamma)
+        gamma = hh2d_makegammacomplexifneeded(gamma)
+        new{typeof(alpha),typeof(gamma)}(alpha, gamma)
+    end
+end
+
+struct HH2DDoubleLayerTransposedFDBIO{T, K} <: HelmholtzOperator2D{T, K}
+    alpha::T
+    gamma::K
+
+    function HH2DDoubleLayerTransposedFDBIO(alpha, gamma)
+        gamma = hh2d_makegammacomplexifneeded(gamma)
+        new{typeof(alpha),typeof(gamma)}(alpha, gamma)
+    end
+end
+
+struct HH2DHyperSingularFDBIO{T, K} <: HelmholtzOperator2D{T, K}
+    alpha::T
+    gamma::K
+
+    function HH2DHyperSingularFDBIO(alpha, gamma)
+        gamma = hh2d_makegammacomplexifneeded(gamma)
+        new{typeof(alpha),typeof(gamma)}(alpha, gamma)
+    end
+end
 
 mutable struct KernelValsHelmholtz2D
+    gamma
     wavenumber
     vect
     dist
@@ -30,37 +106,66 @@ mutable struct KernelValsHelmholtz2D
     txty
 end
 
+# Kernel values for 2D Laplace BIE operators
+function kernelvals(biop::HelmholtzOperator2D{T, K}, tgeo, bgeo) where {T, K <: Val{0}}
 
-function kernelvals(biop::HelmholtzOperator2D, tgeo, bgeo)
+    error("We currently do not support 2D Laplace equation")
+end
 
-    k = biop.wavenumber
+# Kernel values for 2D modified Helmholtz equation BIE operators
+function kernelvals(biop::HelmholtzOperator2D{T, K}, tgeo, bgeo) where {T, K <: Real}
+
+    error("We currently do not support 2D modified Helmholtz equation")
+end
+
+# Kernel values for 2D Helmholtz equation BIE operators
+function kernelvals(biop::HelmholtzOperator2D{T, K}, tgeo, bgeo) where {T, K <: Complex}
+
+    # Even though the evaluation of the Hankel function delivers
+    # in general a complex output (sole exception if wavenumber is purely imaginary)
+    # the Hankel function is evaluated much faster if the wavenumber is purely real
+    if iszero(real(biop.gamma))
+        k = imag(biop.gamma)
+    else
+        k = -im*gamma
+    end
     r = tgeo.cart - bgeo.cart
     R = norm(r)
 
     kr = k * R
     hankels = hankelh2.([0 1], kr)
-    green = -im / 4 * hankels[1]
-    gradgreen = k * im / 4 * hankels[2] * r / R
+    green = - biop.alpha * im / 4 * hankels[1]
+    gradgreen = biop.alpha * k * im / 4 * hankels[2] * r / R
 
     txty = dot(normal(tgeo), normal(bgeo))
 
-    KernelValsHelmholtz2D(k, r, R, green, gradgreen, txty)
+    KernelValsHelmholtz2D(gamma, k, r, R, green, gradgreen, txty)
 end
-
 
 shapevals(op::HelmholtzOperator2D, ϕ, ts) = shapevals(ValDiff(), ϕ, ts)
 
-
-function integrand(biop::SingleLayer, kerneldata, tvals,
+function integrand(biop::HH2DSingleLayerFDBIO, kerneldata, tvals,
     tgeo, bvals, bgeo)
 
     gx = tvals[1]
     fy = bvals[1]
 
-    gx * kerneldata.green * fy
+    return gx * kerneldata.green * fy
 end
 
-function integrand(biop::HyperSingular, kernel, tvals, tgeo,
+function integrand(biop::HH2DDoubleLayerFDBIO, kernel, fp, mp, fq, mq)
+    nq = normal(mq)
+
+    return fp[1] * dot(nq, -kernel.gradgreen) * fq[1]
+end
+
+function integrand(biop::HH2DDoubleLayerTransposedFDBIO, kernel, fp, mp, fq, mq)
+    np = normal(mp)
+
+    return fp[1] * dot(np, kernel.gradgreen) * fq[1]
+end
+
+function integrand(biop::HH2DHyperSingularFDBIO, kernel, tvals, tgeo,
     bvals, bgeo)
 
     gx = tvals[1]
@@ -73,17 +178,7 @@ function integrand(biop::HyperSingular, kernel, tvals, tgeo,
     G    = kernel.green
     txty = kernel.txty
 
-    (dgx * dfy - k*k * txty * gx * fy) * G
-end
-
-function integrand(biop::DoubleLayer, kernel, fp, mp, fq, mq)
-    nq = normal(mq)
-    fp[1] * dot(nq, -kernel.gradgreen) * fq[1]
-end
-
-function integrand(biop::DoubleLayerTransposed, kernel, fp, mp, fq, mq)
-    np = normal(mp)
-    fp[1] * dot(np, kernel.gradgreen) * fq[1]
+    return (dgx * dfy - k*k * txty * gx * fy) * G
 end
 
 function cellcellinteractions!(biop::HelmholtzOperator2D, tshs, bshs, tcell, bcell, z)
