@@ -39,7 +39,7 @@ function GMRESSolver(op::L;
     m, n = size(op)
     @assert m == n
 
-    maxiter == 0 && (maxiter = div(n, 5))
+    maxiter == 0 && (maxiter = n)
     restart == 0 && (restart = n)
 
     P = typeof(Pl)
@@ -92,7 +92,7 @@ function LinearAlgebra.mul!(y::AbstractVecOrMat, solver::GMRESSolver, x::Abstrac
 end
 
 LinearAlgebra.adjoint(A::GMRESSolver) = GMRESSolver(adjoint(A.linear_operator); maxiter=A.maxiter, restart=A.restart, abstol=A.abstol, reltol=A.reltol, verbose=A.verbose, left_preconditioner=A.left_preconditioner)
-LinearAlgebra.transpose(A::GMRESSolver) = GMRESSolver(transpose(A.linear_operator), A.maxiter, A.restart, A.abstol, A.reltol, A.verbose)
+LinearAlgebra.transpose(A::GMRESSolver) = GMRESSolver(transpose(A.linear_operator); maxiter=A.maxiter, restart=A.restart, abstol=A.abstol, reltol=A.reltol, verbose=A.verbose, left_preconditioner=A.left_preconditioner)
 
 
 

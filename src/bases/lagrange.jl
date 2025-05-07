@@ -1072,12 +1072,12 @@ end
 
 function localindices(dof::_LagrangeGlobalNodesDoFs, chart::CompScienceMeshes.Simplex,
     localspace::LagrangeRefSpace{<:Real,2}, i)
-    return [i]
+    return [1,3,6][[i]]
 end
 
 function localindices(dof::_LagrangeGlobalEdgeDoFs, chart::CompScienceMeshes.Simplex,
     localspace::LagrangeRefSpace{<:Real,2}, i)
-    return [3+i]
+    return [5,4,2][[i]]
 end
 
 function localindices(dof::_LagrangeGlobalFaceDoFs, chart::CompScienceMeshes.Simplex,
