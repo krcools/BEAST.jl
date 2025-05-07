@@ -81,7 +81,7 @@ regularpart(op::MWDoubleLayer3D) = MWDoubleLayer3DReg(op.alpha, op.gamma)
 singularpart(op::MWDoubleLayer3D) = MWDoubleLayer3DSng(op.alpha, op.gamma)
 
 
-struct MWDoubleLayer3DLoop{T,K} <: MaxwellOperator3DReg{T,K}
+struct MWDoubleLayer3DLoop{T,K} <: MaxwellOperator3D{T,K}
     alpha::T
     gamma::K
 end
@@ -246,7 +246,7 @@ function (igd::Integrand{<:MWDoubleLayer3DLoop})(x,y,f,g)
     R = norm(r)
     γR = γ*R
     iR = 1/R
-    gradgreen = -im*exp(-γR)*( im*γR + im*expm1(γR)) * iR^3/(4pi) * r
+    gradgreen = -(γ*exp(-γR)*iR+expm1(-γR)*iR^2)*iR/(4π)*r  # -(expm1(γR)*(1+γR)+γR)*iR^3/(4pi) * r #-im*exp(-γR)*( im*γR + im*expm1(γR)) * iR^3/(4pi) * r
 
     fvalue = getvalue(f)
     gvalue = getvalue(g)

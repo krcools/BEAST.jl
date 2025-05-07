@@ -53,6 +53,45 @@ end
 
 *(a::Number, e::PlaneWaveMW) = PlaneWaveMW(e.direction, e.polarisation, e.gamma, a*e.amplitude)
 
+
+mutable struct PlaneWaveExtractedKernelMW{T,P}
+  direction::P
+  polarisation::P
+  gamma::T
+  amplitude::T
+end
+
+function PlaneWaveExtractedKernelMW(d,p,γ,a = 1)
+    T = promote_type(eltype(d), eltype(p), typeof(γ), typeof(a))
+    P = similar_type(typeof(d), T)
+    PlaneWaveExtractedKernelMW{T,P}(d,p,γ,a)
+end
+
+scalartype(x::PlaneWaveExtractedKernelMW{T,P}) where {T,P} = promote_type(T, eltype(P)) 
+
+
+function (e::PlaneWaveExtractedKernelMW)(x)
+  γ = e.gamma
+  d = e.direction
+  u = e.polarisation
+  a = e.amplitude
+  a * expm1(-γ * dot(d, x)) * u
+end
+
+function curl(field::PlaneWaveExtractedKernelMW)
+  γ = field.gamma
+  d = field.direction
+  u = field.polarisation
+  a = field.amplitude
+  v = d × u
+  b = -a * γ
+  PlaneWaveExtractedKernelMW(d, v, γ, b)
+end
+
+*(a::Number, e::PlaneWaveExtractedKernelMW) = PlaneWaveExtractedKernelMW(e.direction, e.polarisation, e.gamma, a*e.amplitude)
+
+
+
 abstract type Dipole end
 
 mutable struct DipoleMW{T,P} <: Dipole
@@ -160,6 +199,7 @@ scalartype(t::TangTraceMW) = scalartype(t.field)
 
 cross(::NormalVector, p::Function) = CrossTraceMW(p)
 cross(::NormalVector, p::PlaneWaveMW) = CrossTraceMW(p)
+cross(::NormalVector, p::PlaneWaveExtractedKernelMW) = CrossTraceMW(p)
 cross(::NormalVector, p::Dipole) = CrossTraceMW(p)
 cross(t::CrossTraceMW, ::NormalVector) = TangTraceMW(t.field)
 

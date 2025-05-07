@@ -22,7 +22,7 @@ function integrand(op::Curl, kernel, x, g, f)
 scalartype(op::Curl) = Union{}
 
 
-defaultquadstrat(::LocalOperator, ::GWPDivRefSpace{<:Real,D1},::LagrangeRefSpace{T,D2,D3}) where {T,D1,D2,D3} = SingleNumQStrat(7)
+defaultquadstrat(::LocalOperator, ::GWPDivRefSpace{<:Real,D1},::LagrangeRefSpace{T,D2,D3}) where {T,D1,D2,D3} = SingleNumQStrat(9)
 function quaddata(op::LocalOperator, g::GWPDivRefSpace, f::LagrangeRefSpace{T,D2,D1} where {T,D1,D2} , tels, bels, qs::SingleNumQStrat)
 
     u, w = trgauss(qs.quad_rule)
@@ -118,7 +118,7 @@ end
 
 
 defaultquadstrat(::LocalOperator, ::GWPDivRefSpace{<:Real,D1},
-    ::GWPDivRefSpace{<:Real,D2}) where {D1,D2} = SingleNumQStrat(7)
+    ::GWPDivRefSpace{<:Real,D2}) where {D1,D2} = SingleNumQStrat(9)
 
 
 function quaddata(op::LocalOperator, g::GWPDivRefSpace, f::GWPDivRefSpace,
