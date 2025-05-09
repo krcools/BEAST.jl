@@ -18,7 +18,7 @@ W0 = inv(Z0)
 x = BEAST.mot(W0,Z,B,Nt)
 
 n = 20
-@show x[n]
+# @show x[n]
 @show exp(-n*Δt)
 @show norm(x[n]-exp(-n*Δt))
 

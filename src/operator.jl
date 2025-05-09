@@ -19,6 +19,11 @@ end
 scalartype(op::TransposedOperator) = scalartype(op.op)
 defaultquadstrat(op::TransposedOperator, tfs::Space, bfs::Space) = defaultquadstrat(op.op, tfs, bfs)
 
+"""
+    LinearCombinationOfOperators{T} <: AbstractOperator
+
+A linear combination of operators.
+"""
 mutable struct LinearCombinationOfOperators{T} <: AbstractOperator
     coeffs::Vector{T}
     ops::Vector
@@ -76,20 +81,29 @@ transpose(op::Operator) = TransposedOperator(op)
 defaultquadstrat(lc::LinearCombinationOfOperators, tfs, bfs) =
     [defaultquadstrat(op,tfs,bfs) for op in lc.ops]
 
+"""
+    assemble(operator, test_functions, trial_functions;
+        storage_policy = Val{:bandedstorage},
+        threading = Threading{:multi},
+        quadstrat=defaultquadstrat(operator, test_functions, trial_functions))
+
+Assemble the system matrix corresponding to the operator `operator` tested with the test functions `test_functions` and the trial functions `trial_functions`.
+"""
 function assemble(operator::AbstractOperator, test_functions, trial_functions;
     storage_policy = Val{:bandedstorage},
-    # long_delays_policy = LongDelays{:compress},
     threading = Threading{:multi},
-    quadstrat=defaultquadstrat(operator, test_functions, trial_functions))
+    quadstrat=defaultquadstrat)
 
     Z, store = allocatestorage(operator, test_functions, trial_functions,
         storage_policy)
-    assemble!(operator, test_functions, trial_functions, store, threading; quadstrat)
+    # qs = quadstrat(operator, test_functions, trial_functions)
+    assemble!(operator, test_functions, trial_functions,
+        store, threading; quadstrat)
     return Z()
 end
 
 
-function assemble(A::Matrix, testfns, trialfns)
+function assemble(A::AbstractMatrix, testfns, trialfns; kwargs...)
     @assert numfunctions(testfns) == size(A,1)
     @assert numfunctions(trialfns) == size(A,2)
     return A
@@ -137,15 +151,15 @@ function allocatestorage(operator::AbstractOperator, test_functions, trial_funct
 end
 
 
-function allocatestorage(operator::LinearCombinationOfOperators,
-        test_functions::SpaceTimeBasis, trial_functions::SpaceTimeBasis,
-        storage_policy::Type{Val{:bandedstorage}},
-        long_delays_policy::Type{LongDelays{:ignore}})
+# function allocatestorage(operator::LinearCombinationOfOperators,
+#         test_functions::SpaceTimeBasis, trial_functions::SpaceTimeBasis,
+#         storage_policy::Type{Val{:bandedstorage}},
+#         long_delays_policy::Type{LongDelays{:ignore}})
 
-    # This works when are terms in the LC can share storage
-    return allocatestorage(operator.ops[end], test_functions, trial_functions,
-        storage_policy, long_delays_policy)
-end
+#     # This works when are terms in the LC can share storage
+#     return allocatestorage(operator.ops[end], test_functions, trial_functions,
+#         storage_policy, long_delays_policy)
+# end
 
 
 function allocatestorage(operator::LinearCombinationOfOperators,
@@ -168,7 +182,9 @@ end
 
 function assemble!(operator::Operator, test_functions::Space, trial_functions::Space,
     store, threading::Type{Threading{:multi}};
-    quadstrat=defaultquadstrat(operator, test_functions, trial_functions))
+    quadstrat=defaultquadstrat)
+
+    quadstrat = quadstrat(operator, test_functions, trial_functions)
 
     P = Threads.nthreads()
     numchunks = P
@@ -185,8 +201,9 @@ end end
 
 function assemble!(operator::Operator, test_functions::Space, trial_functions::Space,
     store, threading::Type{Threading{:single}};
-    quadstrat=defaultquadstrat(operator, test_functions, trial_functions))
+    quadstrat=defaultquadstrat)
 
+    quadstrat = quadstrat(operator, test_functions, trial_functions)
     assemblechunk!(operator, test_functions, trial_functions, store; quadstrat)
 end
 
@@ -205,8 +222,9 @@ function assemble!(op::LinearCombinationOfOperators, tfs::AbstractSpace, bfs::Ab
     store, threading = Threading{:multi};
     quadstrat=defaultquadstrat(op, tfs, bfs))
 
-    for (a,A,qs) in zip(op.coeffs, op.ops, quadstrat)
+    for (a,A) in zip(op.coeffs, op.ops)
         store1(v,m,n) = store(a*v,m,n)
+        qs = quadstrat(A, tfs, bfs)
         assemble!(A, tfs, bfs, store1, threading; quadstrat=qs)
     end
 end

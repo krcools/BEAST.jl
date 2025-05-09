@@ -68,7 +68,7 @@ end
 @testitem "RTQSpace construction" begin
     using CompScienceMeshes
 
-    m = CompScienceMeshes.meshrectangle(2.0, 2.0, 1.0; structured=:quadrilateral)
+    m = CompScienceMeshes.meshrectangle(2.0, 2.0, 1.0; element=:quadrilateral)
     edges = skeleton(m, 1)
     edges_bnd = boundary(m)
     # @show length(edges_bnd)
@@ -85,7 +85,7 @@ end
 
 @testitem "RTQSpace assembly data" begin
     using CompScienceMeshes
-    m = CompScienceMeshes.meshrectangle(2.0, 2.0, 1.0; structured=:quadrilateral)
+    m = CompScienceMeshes.meshrectangle(2.0, 2.0, 1.0; element=:quadrilateral)
     edges = skeleton(m, 1)
     edges_bnd = boundary(m)
     pred = !in(edges_bnd)

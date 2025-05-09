@@ -18,3 +18,5 @@ function (f::NCrossBDMRefSpace{T})(p) where T
         (value= n × (u*tu)/j,         curl=d),
         (value= n × (v*tv)/j,         curl=d),]
 end
+
+numfunctions(x::NCrossBDMRefSpace, dom::CompScienceMeshes.ReferenceSimplex{2}) = 6

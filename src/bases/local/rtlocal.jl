@@ -101,6 +101,17 @@ function interpolate(interpolant::RefSpace, chart1, interpolee::RefSpace, chart2
     interpolate(fields, interpolant, chart1)
 end
 
+function interpolate!(out, interpolant::RefSpace, chart1, interpolee::RefSpace, chart2)
+    function fields(p)
+        x = cartesian(p)
+        v = carttobary(chart2, x)
+        r = neighborhood(chart2, v)
+        fieldvals = [f.value for f in interpolee(r)]
+    end
+
+    interpolate!(out, fields, interpolant, chart1)
+end
+
 
 function interpolate(interpolant::RefSpace, chart1, interpolee::RefSpace, chart2, ch1toch2)
     function fields(p1)
@@ -113,33 +124,79 @@ function interpolate(interpolant::RefSpace, chart1, interpolee::RefSpace, chart2
     interpolate(fields, interpolant, chart1)
 end
 
+function interpolate!(out, interpolant::RefSpace, chart1, interpolee::RefSpace, chart2, ch1toch2)
+    function fields(p1)
+        u1 = parametric(p1)
+        u2 = cartesian(ch1toch2, u1)
+        p2 = neighborhood(chart2, u2)
+        fieldvals = [f.value for f in interpolee(p2)]
+    end
 
-function interpolate(fields, interpolant::RTRefSpace, chart)
-    Q = map(faces(chart)) do face
-        p = center(face)
-        x = cartesian(p)
-        u = carttobary(chart, x)
-        q = neighborhood(chart, u)
-        n = normal(q)
+    interpolate!(out, fields, interpolant, chart1)
+end
+
+
+function interpolate(fields, interpolant::RTRefSpace{T}, chart) where {T}
+    Q = map(CompScienceMeshes.subcharts(chart, Val{1})) do (face, inj)
+
+        u_face = T(1//2)
+        p_face = neighborhood(face, (u_face,))
+        t_face = -tangents(p_face, 1)
+        u_chart = cartesian(inj, u_face)
+        p_chart = neighborhood(chart, u_chart)
+        n_chart = normal(p_chart)
+        m_face = cross(t_face, n_chart)
+
+        # p = center(face)
+        # x = cartesian(p)
+        # u = carttobary(chart, x)
+        # q = neighborhood(chart, u)
+        # n = normal(q)
 
         # minus because in CSM the tangent points towards vertex[1]
-        t = -tangents(p,1)
-        m = cross(t,n)
+        # t = -tangents(p,1)
+        # m = cross(t,n)
 
-        fieldvals = fields(q)
-        q = [dot(fv,m) for fv in fieldvals]
+        fieldvals = fields(p_chart)
+        q = [dot(fv,m_face) for fv in fieldvals]
     end
 
     return hcat(Q...)
 end
 
 
+function interpolate!(out, fields, interpolant::RTRefSpace{T}, chart) where {T}
+
+    for (f,(face, inj)) in zip(axes(out,2),
+        CompScienceMeshes.subcharts(chart, Val{1}))
+
+        u_face = T(1//2)
+        p_face = neighborhood(face, (u_face,))
+        t_face = -tangents(p_face, 1)
+        u_chart = cartesian(inj, u_face)
+        p_chart = neighborhood(chart, u_chart)
+        n_chart = normal(p_chart)
+        m_face = cross(t_face, n_chart)
+        vals = fields(p_chart)        
+        for (g,val) in zip(axes(out, 1), vals)
+            out[g,f] = dot(m_face, val)
+end end end
+
+
 function restrict(ϕ::RefSpace, dom1, dom2)
     interpolate(ϕ, dom2, ϕ, dom1)
 end
 
+function restrict!(out, ϕ::RefSpace, dom1, dom2)
+    interpolate!(out, ϕ, dom2, ϕ, dom1)
+end
+
 function restrict(ϕ::RefSpace, dom1, dom2, dom2todom1)
     interpolate(ϕ, dom2, ϕ, dom1, dom2todom1)
+end
+
+function restrict!(out, ϕ::RefSpace, dom1, dom2, dom2todom1)
+    interpolate!(out, ϕ, dom2, ϕ, dom1, dom2todom1)
 end
 
 const _dof_rtperm_matrix = [
@@ -167,6 +224,3 @@ const _dof_rtperm_matrix = [
                 0 1 0;
                 1 0 0]
 ]
-
-
-# Support for zeroth order elements on quadrilaterals

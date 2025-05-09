@@ -1,4 +1,4 @@
-struct SelfSauterOtherwiseDNumQStrat{R,S}
+struct SelfSauterOtherwiseDNumQStrat{R,S} <: AbstractQuadStrat
     outer_rule::R
     inner_rule::R
     sauter_schwab_common::S

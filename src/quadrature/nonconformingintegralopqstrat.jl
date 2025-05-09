@@ -1,4 +1,4 @@
-struct NonConformingIntegralOpQStrat{S}
+struct NonConformingIntegralOpQStrat{S} <: AbstractQuadStrat
     conforming_qstrat::S
 end
 

@@ -1,4 +1,4 @@
-struct TestRefinesTrialQStrat{S}
+struct TestRefinesTrialQStrat{S} <: AbstractQuadStrat
     conforming_qstrat::S
 end
 

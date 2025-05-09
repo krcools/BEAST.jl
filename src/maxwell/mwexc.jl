@@ -185,54 +185,6 @@ end
 *(a::Number, d::DipoleMW) = DipoleMW(d.location, a .* d.orientation, d.gamma)
 *(a::Number, d::curlDipoleMW) = curlDipoleMW(d.location, a .* d.orientation, d.gamma)
 
-mutable struct CrossTraceMW{F} <: Functional
-  field::F
-end
-
-scalartype(x::CrossTraceMW) = scalartype(x.field)
-
-mutable struct TangTraceMW{F} <: Functional
-  field::F
-end
-
-scalartype(t::TangTraceMW) = scalartype(t.field)
-
-cross(::NormalVector, p::Function) = CrossTraceMW(p)
-cross(::NormalVector, p::PlaneWaveMW) = CrossTraceMW(p)
-cross(::NormalVector, p::PlaneWaveExtractedKernelMW) = CrossTraceMW(p)
-cross(::NormalVector, p::Dipole) = CrossTraceMW(p)
-cross(t::CrossTraceMW, ::NormalVector) = TangTraceMW(t.field)
-
-function (ϕ::CrossTraceMW)(p)
-  F = ϕ.field
-  x = cartesian(p)
-  n = normal(p)
-  return n × F(x)
-end
-
-function (ϕ::TangTraceMW)(p)
-  F = ϕ.field
-  x = cartesian(p)
-  n = normal(p)
-  return (n × F(x)) × n
-end
-
-integrand(::TangTraceMW, gx, ϕx) = gx[1] ⋅ ϕx
-integrand(::CrossTraceMW, test_vals, field_val) = test_vals[1] ⋅ field_val
-
-struct NDotTrace{T,F} <: Functional
-  field::F
-end
-
-NDotTrace(f::F) where {F} = NDotTrace{scalartype(f), F}(f)
-NDotTrace{T}(f::F) where {T,F} = NDotTrace{T,F}(f)
-scalartype(s::NDotTrace{T}) where {T} = T
-
-(ϕ::NDotTrace)(p) = dot(normal(p), ϕ.field(cartesian(p)))
-integrand(::NDotTrace, g, ϕ) = dot(g.value, ϕ)
-LinearAlgebra.dot(::NormalVector, f) = NDotTrace(f)
-
-
 
 mutable struct CurlGreen{T,U,V}
   wavenumber::T
@@ -256,8 +208,8 @@ mutable struct CurlCurlGreen{T,U,V}
   position::V
 end
 
-cross(::NormalVector, p::CurlGreen) = CrossTraceMW(p)
-cross(::NormalVector, p::CurlCurlGreen) = CrossTraceMW(p)
+# cross(::NormalVector, p::CurlGreen) = CrossTraceMW(p)
+# cross(::NormalVector, p::CurlCurlGreen) = CrossTraceMW(p)
 
 function (f::CurlCurlGreen)(x)
   γ = im * f.wavenumber

@@ -1,4 +1,4 @@
-struct CommonFaceOverlappingEdgeQStrat{S}
+struct CommonFaceOverlappingEdgeQStrat{S} <: AbstractQuadStrat
     conforming_qstrat::S
 end
 

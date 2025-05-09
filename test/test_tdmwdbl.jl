@@ -66,7 +66,7 @@ qrl = BEAST.quadrule(K, refspace(X), refspace(Y), refspace(T2),
     1, test_els[1], 1, trial_els[1], 1, time_els[1], qdt, qs)
 z = zeros(Float64, 3, 3, 10)
 BEAST.innerintegrals!(z, K, x, refspace(X), refspace(Y), refspace(T2), test_els[1], trial_els[1], (0.0, 20.0), qrl, w)
-@test_broken !any(isnan.(z))
+@test !any(isnan.(z))
 
 verts = trial_els[1].vertices
 import WiltonInts84
@@ -85,4 +85,4 @@ h = 0.0
 using StaticArrays
 m = SVector(-0.7071067811865474, 0.7071067811865478, -0.0)
 iG, vG = WiltonInts84.segintsg(a, b, p, h, m, Val{2})
-@test_broken !any(isnan.(iG))
+@test !any(isnan.(iG))

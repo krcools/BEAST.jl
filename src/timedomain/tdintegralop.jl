@@ -14,10 +14,10 @@ function assemble(operator::AbstractSpaceTimeOperator, test_functions, trial_fun
     if stagedtimestep
         return assemble(RungeKuttaConvolutionQuadrature(operator), test_functions, trial_functions)
     end
-    Z, store = allocatestorage(operator, test_functions, trial_functions,
+    freeze, store = allocatestorage(operator, test_functions, trial_functions,
         storage_policy, long_delays_policy)
     assemble!(operator, test_functions, trial_functions, store, threading; quadstrat)
-    return Z()
+    return freeze()
 end
 
 
@@ -256,6 +256,7 @@ function assemble_chunk!(op::RetardedPotential, testST, trialST, store;
     V = refspace(trialspace)
     W = refspace(timebasisfunction)
 
+    # qs = quadstrat(op, testST, trialST)
     qd = quaddata(op, U, V, W, testels, trialels, nothing, quadstrat)
 
     ugeo = geometry(testspace)

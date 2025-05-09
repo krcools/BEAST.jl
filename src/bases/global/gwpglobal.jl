@@ -39,7 +39,7 @@ end
     localspace = BEAST.GWPCurlRefSpace{T,degree}()
     dofs = BEAST.GWPGlobalEdgeDoFs(degree)
     A = BEAST.globaldofs(edge_ch, face_ch, localspace, dofs)
-    display(round.(A, digits=3))
+    # display(round.(A, digits=3))
 end
 
 function globaldofs(edge_ch, face_ch, localspace, dof::GWPGlobalFaceDoFs)
@@ -92,7 +92,7 @@ end
     localspace = BEAST.GWPCurlRefSpace{T,degree}()
     dofs = BEAST.GWPGlobalFaceDoFs(degree)
     A = BEAST.globaldofs(edge_ch, face_ch, localspace, dofs)
-    display(round.(A, digits=3))
+    # display(round.(A, digits=3))
 end
 
 function _addshapes!(fns, cell, gids, lids, β)

@@ -9,8 +9,8 @@ function momintegrals!(op,
     τ::CompScienceMeshes.Simplex, σ::CompScienceMeshes.Simplex,
     out, qrule::NonConformingTouchQRule)
 
-    # test_locspace = refspace(test_functions)
-    # bsis_locspace = refspace(bsis_functions)
+    num_tshapes = numfunctions(test_locspace, domain(τ))
+    num_bshapes = numfunctions(bsis_locspace, domain(σ))
 
     T = coordtype(τ)
     P = eltype(τ.vertices)
@@ -25,50 +25,44 @@ function momintegrals!(op,
     isempty(τs) && return
     isempty(σs) && return
 
-    # test conformity
-    for a in τs
-        for b in σs
-            if !_test_conformity(a, b)
-                @infiltrate
-            end
-        end
-    end
-
-    # volume(σ) ≈ sum(volume.(σs)) || @infiltrate
-
-    # if volume(τ) ≈ sum(volume.(τs)) else
-    #     @show volume(τ)
-    #     @show sum(volume.(τs))
-    #     error()
-    # end
-    # @assert volume(σ) ≈ sum(volume.(σs))
-
     @assert all(volume.(τs) .> 1e3 * eps(T) * (volume(τ)))
     @assert all(volume.(σs) .> 1e3 * eps(T) * (volume(σ)))
  
+    test_overlaps = map(τs) do tchart
+        simplex(
+            carttobary(τ, tchart.vertices[1]),
+            carttobary(τ, tchart.vertices[2]),
+            carttobary(τ, tchart.vertices[3]))
+    end
+
+    trial_overlaps = map(σs) do bchart
+        simplex(
+            carttobary(σ, bchart.vertices[1]),
+            carttobary(σ, bchart.vertices[2]),
+            carttobary(σ, bchart.vertices[3]))
+    end
+
     qstrat = qrule.conforming_qstrat
     qdata = quaddata(op, test_locspace, bsis_locspace, τs, σs, qstrat)
 
-    any(volume.(τs) .< 1e-13) && @infiltrate
-    any(volume.(σs) .< 1e-13) && @infiltrate
+    @assert !any(volume.(τs) .< 1e-13)
+    @assert !any(volume.(σs) .< 1e-13)
 
+    zlocal = zero(out)
+    P = zeros(T, num_tshapes, num_tshapes)
+    Q = zeros(T, num_bshapes, num_bshapes)
     for (p,tchart) in enumerate(τs)
+        restrict!(P, test_locspace, τ, tchart, test_overlaps[p])
         for (q,bchart) in enumerate(σs)
+            restrict!(Q, bsis_locspace, σ, bchart, trial_overlaps[q])
+            
             qrule = quadrule(op, test_locspace, bsis_locspace,
                 p, tchart, q, bchart, qdata, qstrat)
-            # @show qrule
 
-            P = restrict(test_locspace, τ, tchart)
-            Q = restrict(bsis_locspace, σ, bchart)
-            zlocal = zero(out)
-
-            # momintegrals!(zlocal, op,
-            #     test_locspace, nothing, tchart,
-            #     bsis_locspace, nothing, bchart, qrule)
+            fill!(zlocal, 0)
             momintegrals!(op, test_locspace, bsis_locspace,
                 tchart, bchart, zlocal, qrule)
 
-            # out .+= P * zlocal * Q'
             for i in axes(P,1)
                 for j in axes(Q,1)
                     for k in axes(P,2)
@@ -144,13 +138,8 @@ function _conforming_refinement_touching_triangles(τ,σ,i,j)
     μ = faces(σ)[j]
     ρ = CompScienceMeshes.intersection(λ,μ)[1]
 
-    # τ_verts = [τ[mod1(i+2,3)], τ[mod1(i,3)], τ[mod1(i+1,3)]]
-    # σ_verts = [σ[mod1(j+2,3)], σ[mod1(j,3)], σ[mod1(j+1,3)]]
-    # τ_verts = [v for v in τ.vertices]
-    # σ_verts = [v for v in σ.vertices]
     τ_verts = Array(τ.vertices)
     σ_verts = Array(σ.vertices)
-    # @show typeof(τ_verts)
 
     T = coordtype(τ)
     P = eltype(τ.vertices)
@@ -187,28 +176,20 @@ function _conforming_refinement_touching_triangles(τ,σ,i,j)
     insert!(σ_verts, p, V[2])
     insert!(σ_verts, p, V[1])
 
-    # println(τ_verts)
-    # println(σ_verts)
-
     τ_charts = [ simplex(τ_verts[mod1(new_i,5)], τ_verts[mod1(new_i+s,5)], τ_verts[mod1(new_i+s+1,5)]) for s in 1:3 ]
     σ_charts = [ simplex(σ_verts[mod1(new_j,5)], σ_verts[mod1(new_j+s,5)], σ_verts[mod1(new_j+s+1,5)]) for s in 1:3 ]
-    # σ_charts = [ simplex(σ_verts[1], σ_verts[i], σ_verts[i+1]) for i in 2:length(σ_verts)-1 ]
 
-    h = volume(τ)
-    τ_charts = [ch for ch in τ_charts if volume(ch) .> 1e6 * eps(T) * h]
-    σ_charts = [ch for ch in σ_charts if volume(ch) .> 1e6 * eps(T) * h]
-
+    τ_charts = [ch for ch in τ_charts if volume(ch) .> 1e6 * eps(T) * volume(τ)]
+    σ_charts = [ch for ch in σ_charts if volume(ch) .> 1e6 * eps(T) * volume(σ)]
     τ_charts = [ch for ch in τ_charts if volume(ch) .> 1e6 * eps(T)]
     σ_charts = [ch for ch in σ_charts if volume(ch) .> 1e6 * eps(T)]
 
-    signs = Int.(sign.(dot.(normal.(τ_charts),Ref(normal(τ)))))
-    τ_charts = flip_normal.(τ_charts,signs)
-    signs = Int.(sign.(dot.(normal.(σ_charts),Ref(normal(σ)))))
-    σ_charts = flip_normal.(σ_charts,signs)
-
-
-    # τ_charts = τ_charts[volume.(τ_charts) .> 1e3 * eps(T) * h]
-    # σ_charts = τ_charts[volume.(σ_charts) .> 1e3 * eps(T) * h]
+    # signs = Int.(sign.(dot.(normal.(τ_charts),Ref(normal(τ)))))
+    # @assert all(signs .== 1)
+    # τ_charts = flip_normal.(τ_charts,signs)
+    # signs = Int.(sign.(dot.(normal.(σ_charts),Ref(normal(σ)))))
+    # @assert all(signs .== 1)
+    # σ_charts = flip_normal.(σ_charts,signs)
 
     return τ_charts, σ_charts
 end

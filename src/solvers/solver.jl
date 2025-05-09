@@ -146,7 +146,8 @@ end
 scalartype(lf::LinForm) = scalartype(lf.terms...)
 scalartype(lt::LinTerm) = scalartype(lt.coeff, lt.functional)
 
-function assemble(lform::LinForm, X::DirectProductSpace)
+function assemble(lform::LinForm, X::DirectProductSpace;
+    quadstrat=BEAST.defaultquadstrat)
 
     @assert !isempty(lform.terms)
 
@@ -178,7 +179,7 @@ function assemble(lform::LinForm, X::DirectProductSpace)
         x = X.factors[m]
 
         for op in reverse(t.test_ops) x = op[end](op[1:end-1]..., x) end
-        b = assemble(t.functional, x)
+        b = assemble(t.functional, x; quadstrat)
         B[Block(m),Block(1)] = t.coeff * b
     end
 
@@ -221,8 +222,9 @@ lift(a,I,J,U,V) = LiftedMaps.LiftedMap(a,I,J,U,V)
 lift(a::ConvolutionOperators.AbstractConvOp ,I,J,U,V) =
     ConvolutionOperators.LiftedConvOp(a, U, V, I, J)
 
+
 function assemble(bf::BilForm, X::DirectProductSpace, Y::DirectProductSpace;
-    materialize=BEAST.assemble)
+    materialize=BEAST.assemble, quadstrat=BEAST.defaultquadstrat)
 
     T = Int32
     @assert !isempty(bf.terms)
@@ -258,7 +260,8 @@ function assemble(bf::BilForm, X::DirectProductSpace, Y::DirectProductSpace;
         end
         
         a = term.coeff * term.kernel
-        z = materialize(a, x, y)
+        # qs = quadstrat(a, x, y)
+        z = materialize(a, x, y; quadstrat)
 
         Smap = lift(z, Block(term.test_id), Block(term.trial_id), U, V)
         T = promote_type(T, eltype(Smap))
@@ -281,6 +284,11 @@ function assemble(bf::BilForm, X::Space, Y::Space)
 end
 
 function assemble(bf::BilForm, pairs::Pair...)
+    dbf = discretise(bf, pairs...)
+    assemble(dbf)
+end
+
+function assemble(bf::LinForm, pairs::Pair...)
     dbf = discretise(bf, pairs...)
     assemble(dbf)
 end

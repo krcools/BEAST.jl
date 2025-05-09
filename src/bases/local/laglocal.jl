@@ -12,8 +12,8 @@ numfunctions(s::LagrangeRefSpace{T,Dg}, ch::CompScienceMeshes.ReferenceSimplex{D
 #valuetype(ref::LagrangeRefSpace{T}, charttype) where {T} =
 #        SVector{numfunctions(ref), Tuple{T,T}}
 
-valuetype(ref::LagrangeRefSpace{T}, charttype) where {T} =
-        SVector{1, T}
+valuetype(ref::LagrangeRefSpace{T}, charttype) where {T} = T 
+ #       SVector{1, T}
 
 
 # Evaluate constant lagrange elements on anything
@@ -476,3 +476,25 @@ function interpolate(fields, interpolant::LagrangeRefSpace{T,Degree,3}, chart) w
     end
     return Q
 end
+
+
+function interpolate!(out, fields, interpolant::LagrangeRefSpace{T,Degree,3}, chart) where {T,Degree}
+    Is = zip((0:Degree), range(0,1,length=Degree+1))
+    idx = 0
+    for (i,ui) in Is
+        for (j,vj) in Is
+            for (k,wk) in Is
+                i + j + k == Degree || continue; idx += 1
+                @assert ui + vj + wk ≈ 1
+                p = neighborhood(chart, (ui,vj))
+                vals = fields(p)
+                for (g, val) in zip(axes(out, 1), vals)
+                    out[g,idx] = val
+end end end end end
+
+function interpolate!(out, fields, interpolant::LagrangeRefSpace{T,0,3}, chart) where {T}
+    p = center(chart)
+    vals = fields(p)
+    for (g, val) in zip(axes(out, 1), vals)
+        out[g,1] = val
+end end
