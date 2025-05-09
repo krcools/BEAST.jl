@@ -35,6 +35,9 @@ makedocs(;
             ],
             "System of Equations and Bilinear Forms" => "manual/bilinear.md",
         ],
+        "Tutorials" => Any[
+            "tutorials/efie.md",
+        ],
         "Operators & Excitations" => Any[
             "Overview"=>"operators/overview.md",
             "Local Operators"=>Any["Identiy"=>"operators/identity.md",],
