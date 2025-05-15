@@ -51,6 +51,7 @@ Q2 = fr2()
     using CompScienceMeshes
     using LinearAlgebra
     using LinearMaps
+    using SparseArrays
 
     Γ = meshsphere(radius=1.0, h=0.35)
     X = raviartthomas(Γ)
@@ -62,7 +63,7 @@ Q2 = fr2()
     @hilbertspace j
 
 
-    Idlk = Id[k,j]
+    Idkj = Id[k,j]
     term = Idkj.terms[1]
     dpsX = BEAST.DirectProductSpace([X])
 
