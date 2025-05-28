@@ -1,7 +1,7 @@
 using CompScienceMeshes
 using BEAST
 using LinearAlgebra
-import Plotly
+import PlotlyJS
 
 # Exterior wavenumber
 κ₀ = 3.0
@@ -63,8 +63,8 @@ u = solve(deq)
 fcrm = [facecurrents(u[qᵢ][m], Xᵢ)[1] for (qᵢ,Xᵢ) ∈ zip(q,Xₕ)]
 fcrj = [facecurrents(u[qᵢ][j], Xᵢ)[1] for (qᵢ,Xᵢ) ∈ zip(q,Xₕ)]
 
-Plotly.plot([patch(Γᵢ, norm.(fcrᵢ), caxis=(0,2)) for (fcrᵢ,Γᵢ) ∈ zip(fcrm,Γ)])
-Plotly.plot([patch(Γᵢ, norm.(fcrᵢ), caxis=(0,2)) for (fcrᵢ,Γᵢ) ∈ zip(fcrj,Γ)])
+PlotlyJS.plot([patch(Γᵢ, norm.(fcrᵢ), caxis=(0,2)) for (fcrᵢ,Γᵢ) ∈ zip(fcrm,Γ)])
+PlotlyJS.plot([patch(Γᵢ, norm.(fcrᵢ), caxis=(0,2)) for (fcrᵢ,Γᵢ) ∈ zip(fcrj,Γ)])
 
 function nearfield(um,Xm,uj,Xj,κ,η,points)
 
@@ -96,5 +96,22 @@ Hi = getindex.(EHi,2)
 Etot = Eo + sum(Ei)
 Htot = Ho + sum(Hi)
 
-import Plots
-Plots.heatmap(Xs, Zs, clamp.(real.(getindex.(Etot,2)),-2.0,2.0); colormap=:viridis)
+# import Plots
+# Plots.heatmap(Xs, Zs, clamp.(real.(getindex.(Etot,2)),-2.0,2.0); colormap=:viridis)
+
+hm1 = PlotlyJS.heatmap(x=Xs, y=Zs, z=real.(getindex.(Ei[1],2)),
+    colorscale="Viridis",
+    zmin=-2, zmax=2)
+hm2 = PlotlyJS.heatmap(x=Xs, y=Zs, z=real.(getindex.(Ei[2],2)),
+    colorscale="Viridis",
+    zmin=-2, zmax=2)
+hmo = PlotlyJS.heatmap(x=Xs, y=Zs, z=real.(getindex.(Eo,2)),
+    colorscale="Viridis",
+    zmin=-2, zmax=2)
+hmt = PlotlyJS.heatmap(x=Xs, y=Zs, z=real.(getindex.(Etot,2)),
+    colorscale="Viridis",
+    zmin=-2, zmax=2)
+PlotlyJS.plot(hm1)
+PlotlyJS.plot(hm2)
+PlotlyJS.plot(hmo)
+PlotlyJS.plot(hmt)

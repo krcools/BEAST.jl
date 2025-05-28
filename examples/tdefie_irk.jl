@@ -1,4 +1,4 @@
-using CompScienceMeshes, BEAST, StaticArrays, LinearAlgebra, Plots
+using CompScienceMeshes, BEAST, StaticArrays, LinearAlgebra #, Plots
 
 Γ = meshsphere(radius=1.0, h=0.45)
 X = raviartthomas(Γ)
@@ -24,8 +24,8 @@ T = TDMaxwell3D.singlelayer(speedoflight=1.0, numdiffs=1)
 tdefie_irk = @discretise T[j′,j] == -1E[j′]   j∈V  j′∈V
 xefie_irk = solve(tdefie_irk)
 
-import Plots
-Plots.plot(xefie_irk[1,:])
+import PlotlyJS
+PlotlyJS.plot(xefie_irk[1,:])
 
 
 
