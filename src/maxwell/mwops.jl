@@ -197,6 +197,13 @@ function gamma_wavenumber_handler(gamma, wavenumber)
         else
             gamma = im*wavenumber
         end
+    else
+        # gamma supplied, set wavenumber
+        if iszero(real(gamma))
+            wavenumber = imag(gamma)
+        else
+            wavenumber = -im*gamma
+        end
     end
 
     return gamma, wavenumber
@@ -224,7 +231,7 @@ end
 
 function operator_parameter_handler(alpha, gamma, wavenumber)
 
-gamma, wavenumber = gamma_wavenumber_handler(gamma, wavenumber)
+    gamma, wavenumber = gamma_wavenumber_handler(gamma, wavenumber)
 
     if alpha === nothing
         if isstatic(gamma) # static problem
@@ -234,5 +241,5 @@ gamma, wavenumber = gamma_wavenumber_handler(gamma, wavenumber)
         end
     end
 
-return alpha, gamma
+    return alpha, gamma
 end

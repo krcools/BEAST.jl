@@ -5,65 +5,47 @@ module Helmholtz2D
     using LinearAlgebra
 
     function singlelayer(;
-        #alpha=nothing,
-        #gamma=nothing,
+        alpha=nothing,
+        gamma=nothing,
         wavenumber=nothing
     )
 
-        #alpha, gamma = Mod.operator_parameter_handler(alpha, gamma, wavenumber)
+        alpha, gamma = Mod.operator_parameter_handler(alpha, gamma, wavenumber)
 
-        return Mod.SingleLayer(wavenumber)
+        return Mod.HH2DSingleLayerFDBIO(alpha, gamma)
     end
 
     function doublelayer(;
-        #alpha=nothing,
-        #gamma=nothing,
+        alpha=nothing,
+        gamma=nothing,
         wavenumber=nothing
     )
 
-        #alpha, gamma = Mod.operator_parameter_handler(alpha, gamma, wavenumber)
+        alpha, gamma = Mod.operator_parameter_handler(alpha, gamma, wavenumber)
 
-        return Mod.DoubleLayer(wavenumber)
+        return Mod.HH2DDoubleLayerFDBIO(alpha, gamma)
     end
 
     function doublelayer_transposed(;
-        #alpha=nothing,
-        #gamma=nothing,
+        alpha=nothing,
+        gamma=nothing,
         wavenumber=nothing
     )
 
-        #alpha, gamma = Mod.operator_parameter_handler(alpha, gamma, wavenumber)
+        alpha, gamma = Mod.operator_parameter_handler(alpha, gamma, wavenumber)
 
-        return Mod.DoubleLayerTransposed(wavenumber)
+        return Mod.HH2DDoubleLayerTransposedFDBIO(alpha, gamma)
     end
 
     function hypersingular(;
-        #alpha=nothing,
-        #beta=nothing,
-        #gamma=nothing,
+        alpha=nothing,
+        gamma=nothing,
         wavenumber=nothing
     )
-        #=
-        gamma, wavenumber = Mod.gamma_wavenumber_handler(gamma, wavenumber)
+  
+        alpha, gamma = Mod.operator_parameter_handler(alpha, gamma, wavenumber)
 
-        if alpha === nothing
-            if Mod.isstatic(gamma) #static case
-                alpha = 0.0  # In the long run, this should probably be rather 'nothing'
-            else
-                alpha = gamma^2
-            end
-
-        end
-
-        if beta === nothing
-            if Mod.isstatic(gamma) #static case
-                beta = one(alpha)
-            else
-                beta = one(gamma)
-            end
-        end
-     =#
-        return Mod.HyperSingular(wavenumber)
+        return Mod.HH2DHyperSingularFDBIO(alpha, gamma)
     end
 
     function planewave(;
