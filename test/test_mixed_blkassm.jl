@@ -36,7 +36,7 @@
         η = T(sqrt(μ/ε))
 
         a = T(1)
-        Γ = CompScienceMeshes.meshcuboid(a,a,a,T(0.2))
+        Γ = CompScienceMeshes.meshcuboid(a,a,a,T(0.2); generator=:compsciencemeshes)
 
         𝓣 = Maxwell3D.singlelayer(wavenumber=k)
         𝓚 = Maxwell3D.doublelayer(wavenumber=k)

@@ -233,7 +233,8 @@ function assemble(bf::BilForm, X::DirectProductSpace, Y::DirectProductSpace;
 
     if spaceTimeBasis
         p = [numstages(temporalbasis(ch)) for ch in X.factors]
-        lincombv = ConvolutionOperators.LiftedConvOp[]
+        # lincombv = ConvolutionOperators.LiftedConvOp[]
+        lincombv = ConvolutionOperators.AbstractConvOp[]
     else
         p = 1
         lincombv = LinearMap[]
@@ -259,11 +260,11 @@ function assemble(bf::BilForm, X::DirectProductSpace, Y::DirectProductSpace;
             y = op[end](op[1:end-1]..., y)
         end
         
-        a = term.coeff * term.kernel
+        a = term.kernel
         # qs = quadstrat(a, x, y)
         z = materialize(a, x, y; quadstrat)
 
-        Smap = lift(z, Block(term.test_id), Block(term.trial_id), U, V)
+        Smap = term.coeff * lift(z, Block(term.test_id), Block(term.trial_id), U, V)
         T = promote_type(T, eltype(Smap))
         push!(lincombv, Smap)
     end

@@ -68,10 +68,18 @@ typeof(uX)
 The solution of this iterative process *remembers* its block structure. This makes it easy to select the electric and magnetic components:
 
 ```@example transmission
+import PlotlyBase
+import PlotlyDocumenter # hide
 using LinearAlgebra
-println(norm(uX[m]))
-println(norm(uX[j]))
-nothing # hide
+
+fcrm, geom = facecurrents(uX[m], RT)
+fcrj, geoj = facecurrents(uX[j], RT)
+
+ptm = CompScienceMeshes.patch(geom, norm.(fcrm); caxis=(0,1.2) , showscale=false)
+ptj= CompScienceMeshes.patch(geoj, norm.(fcrj); caxis=(0,1.2))
+
+pl = [ PlotlyBase.Plot(ptm) PlotlyBase.Plot(ptj) ]
+PlotlyDocumenter.to_documenter(pl) # hide
 ```
 
 ## Calderon preconditioning for the PMCHWT
@@ -119,6 +127,7 @@ PSXx = BEAST.GMRESSolver(PAXx)
 u1, ch1 = solve(SXX, bx)
 u2, ch2 = solve(PSXx, PbX)
 
+using LinearAlgebra
 norm(u1-u2), ch1.iters, ch2.iters
 ```
 

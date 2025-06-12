@@ -31,6 +31,6 @@ for U in [Float32, Float64]
 
     local BilForm = BEAST.Variational.BilForm(:i, :j, bilterms)
     local BXX = BEAST.assemble(BilForm, X, X)
-    @assert BXX isa BEAST.LiftedMaps.LiftedMap
+    # @assert BXX.lmap isa BEAST.LiftedMaps.LiftedMap
     # @test typeof(assemble(BilForm, X, X)) == LinearMaps.LinearCombination{U, Vector{LinearMaps.LinearMap}}
 end

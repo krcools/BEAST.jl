@@ -53,6 +53,8 @@ include("test_assemble_refinements.jl")
 
 include("test_dipole.jl")
 
+include("test_sauterschwabints1D.jl")
+
 include("test_wiltonints.jl")
 include("test_sauterschwabints.jl")
 include("test_hh3dints.jl")

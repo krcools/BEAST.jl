@@ -54,10 +54,6 @@ export TimeBasisDeltaShifted
 export ntrace
 export strace
 export ttrace
-export SingleLayer
-export DoubleLayer
-export DoubleLayerTransposed
-export HyperSingular
 export HH3DSingleLayerTDBIO
 export HH3DDoubleLayerTDBIO
 export ∂n, grad
@@ -205,6 +201,7 @@ include("quadrature/strategies/cfcvsautercewiltonpdnumqstrat.jl")
 include("quadrature/strategies/testrefinestrialqstrat.jl")
 include("quadrature/strategies/trialrefinestestqstrat.jl")
 include("quadrature/strategies/nonconftestbaryrefoftrialqstrat.jl")
+include("quadrature/strategies/timedomain/nothingqstrat.jl")
 
 
 include("excitation.jl")
@@ -220,6 +217,7 @@ include("interpolation.jl")
 include("quadrature/rules/momintegrals.jl")
 include("quadrature/doublenumints.jl")
 include("quadrature/singularityextractionints.jl")
+include("quadrature/SauterSchwabQuadrature1D.jl")
 include("quadrature/sauterschwabints.jl")
 include("quadrature/nonconformingoverlapqrule.jl")
 include("quadrature/nonconformingtouchqrule.jl")
@@ -259,8 +257,6 @@ include("maxwell/maxwell.jl")
 include("maxwell/sourcefield.jl")
 
 # Support for the Helmholtz equation
-include("helmholtz2d/helmholtzop.jl")
-
 include("helmholtz3d/hh3dexc.jl")
 include("helmholtz3d/hh3dops.jl")
 include("helmholtz3d/nitsche.jl")
@@ -269,6 +265,10 @@ include("helmholtz3d/hh3dfar.jl")
 include("helmholtz3d/hh3d_sauterschwabqr.jl")
 include("helmholtz3d/helmholtz3d.jl")
 include("helmholtz3d/wiltonints.jl")
+
+include("helmholtz2d/hh2dexc.jl")
+include("helmholtz2d/hh2dops.jl")
+include("helmholtz2d/helmholtz2d.jl")
 
 #suport for Volume Integral equation
 include("volumeintegral/vie.jl")
