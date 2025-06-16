@@ -62,10 +62,10 @@ end
     # Γ = meshsphere(radius=1.0, h=0.075)
 
     import Pkg
-    @show pathof(BEAST.CollisionDetection)
-    for d in Pkg.project().dependencies
-        @show d
-    end
+    # @show pathof(BEAST.CollisionDetection)
+    # for d in Pkg.project().dependencies
+    #     @show d
+    # end
 
     δ = 0.025
     γ = 1/δ
@@ -75,7 +75,7 @@ end
     X2 = raviartthomas(Γ2)
 
     qs = BEAST.defaultquadstrat(t1, X1, X1)
-    @show qs
+    # @show qs
 
     @time Z11 = assemble(t1, X1, X1)
     @time W11 = assemble(t2, X1, X1)
@@ -98,6 +98,6 @@ end
     Q1 = assemble(t1[k,j], j∈X1, k∈X1)
     Q2 = assemble(t1[k,j] + t1[k,j], j∈X1, k∈X1)
 
-    @test Q1.A.lmap isa SparseMatrixCSC
-    @test Q2.maps[1].A.lmap isa SparseMatrixCSC
+    @test Q1.lmap.A.lmap isa SparseMatrixCSC
+    @test Q2.maps[1].lmap.A.lmap isa SparseMatrixCSC
 end

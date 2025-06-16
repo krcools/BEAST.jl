@@ -25,7 +25,7 @@ for U in [Float32,Float64]
     η = sqrt(μ/ε)
 
     a = U(1)
-    Γ_orig = CompScienceMeshes.meshcuboid(a,a,a,U(0.1))
+    Γ_orig = CompScienceMeshes.meshcuboid(a,a,a,U(0.1); generator=:compsciencemeshes)
     local Γ = translate(Γ_orig,SVector(U(-a/2),U(-a/2),U(-a/2)))
 
     Φ, Θ = U.([0.0]), range(U(0),stop=U(π),length=100)

@@ -204,6 +204,7 @@ include("quadrature/strategies/cfcvsautercewiltonpdnumqstrat.jl")
 include("quadrature/strategies/testrefinestrialqstrat.jl")
 include("quadrature/strategies/trialrefinestestqstrat.jl")
 include("quadrature/strategies/nonconftestbaryrefoftrialqstrat.jl")
+include("quadrature/strategies/timedomain/nothingqstrat.jl")
 
 
 include("excitation.jl")

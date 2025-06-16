@@ -10,7 +10,6 @@ function planewave(direction, speedoflight::Number, signature, amplitude=one(spe
     PlaneWaveHH3DTD(direction, speedoflight, signature, amplitude)
 end
 
-#scalartype(p::PlaneWaveHH3DTD) = eltype(p.amplitude)
 scalartype(p::PlaneWaveHH3DTD) = scalartype(p.amplitude)
 
 *(a, f::PlaneWaveHH3DTD) = PlaneWaveHH3DTD(f.direction, f.speed_of_light, f.signature, a*f.amplitude)

@@ -29,7 +29,7 @@ mutable struct EmptyRP{T} <: RetardedPotential{T}
     speed_of_light::T
 end
 Base.eltype(::EmptyRP) = Int
-defaultquadstrat(::EmptyRP, tfs, bfs) = nothing
+defaultquadstrat(::EmptyRP, tfs, bfs) = NothingQStrategy()
 quaddata(op::EmptyRP, xs...) = nothing
 quadrule(op::EmptyRP, xs...) = nothing
 momintegrals!(z, op::EmptyRP, xs...) = nothing
@@ -177,7 +177,8 @@ end
 function assemble!(op::RetardedPotential, testST::Space, trialST::Space, store,
     threading::Type{Threading{:multi}}=Threading{:multi}; quadstrat=defaultquadstrat(op, testST, trialST))
 
-    #@show quadstrat
+    quadstrat = quadstrat(op, testST, trialST)
+    @show quadstrat
 
 	Y, S = spatialbasis(testST), temporalbasis(testST)
     X, R = spatialbasis(trialST), temporalbasis(trialST)
@@ -206,7 +207,7 @@ function assemble!(op::RetardedPotential, testST::Space, trialST::Space, store,
         X_q = subset(X, clo:chi)
 
 		store1 = (v,m,n,k) -> store(v,rlo+m-1,clo+n-1,k)
-		assemble_chunk!(op, Y_p ⊗ S, X_q ⊗ R, store1)
+		assemble_chunk!(op, Y_p ⊗ S, X_q ⊗ R, store1; quadstrat)
 	end
     #println("")
 

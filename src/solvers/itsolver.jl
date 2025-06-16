@@ -112,7 +112,7 @@ LinearAlgebra.transpose(A::GMRESSolver) = GMRESSolver(transpose(A.linear_operato
 
 
 
-function gmres_ch(eq::DiscreteEquation; maxiter=0, restart=0, tol=0)
+function gmres_ch(eq::DiscreteEquation; maxiter=0, restart=0, tol=0, verbose=true)
 
     lhs = eq.equation.lhs
     rhs = eq.equation.rhs
@@ -124,9 +124,9 @@ function gmres_ch(eq::DiscreteEquation; maxiter=0, restart=0, tol=0)
     Z = assemble(lhs, X, Y)
 
     if tol == 0
-        invZ = GMRESSolver(Z, maxiter=maxiter, restart=restart)
+        invZ = GMRESSolver(Z; maxiter, restart, verbose)
     else
-        invZ = GMRESSolver(Z, maxiter=maxiter, restart=restart, reltol=tol)
+        invZ = GMRESSolver(Z; maxiter, restart, reltol=tol, verbose)
     end
     x, ch = solve(invZ, b)
     # x = invZ * b
