@@ -138,6 +138,8 @@ include("utils/linearspace.jl")
 include("utils/zeromap.jl")
 include("utils/rank1map.jl")
 include("utils/lagpolys.jl")
+include("utils/butchertableau.jl")
+include("utils/variational.jl")
 
 include("bases/localbasis.jl")
 include("bases/local/laglocal.jl")
@@ -288,8 +290,6 @@ include("maxwell/timedomain/mwtdops.jl")
 include("maxwell/timedomain/mwtdexc.jl")
 include("maxwell/timedomain/tdfarfield.jl")
 
-include("utils/butchertableau.jl")
-include("utils/variational.jl")
 
 include("solvers/solver.jl")
 include("solvers/lusolver.jl")
