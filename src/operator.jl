@@ -220,7 +220,7 @@ end
 
 function assemble!(op::LinearCombinationOfOperators, tfs::AbstractSpace, bfs::AbstractSpace,
     store, threading = Threading{:multi};
-    quadstrat=defaultquadstrat(op, tfs, bfs))
+    quadstrat=defaultquadstrat)
 
     for (a,A) in zip(op.coeffs, op.ops)
         store1(v,m,n) = store(a*v,m,n)
