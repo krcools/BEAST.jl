@@ -22,6 +22,7 @@ print(join(tt(BEAST.SpaceTimeOperator), &quot;&quot;))</code></pre><pre class="d
  │   │   │   ├─ BEAST.HH3DSingleLayerFDBIO
  │   │   │   ├─ BEAST.HH3DSingleLayerSng
  │   │   │   └─ HH3DHyperSingularFDBIO
+ │   │   ├─ BEAST.MWDoubleLayer3DLoop
  │   │   ├─ BEAST.MWDoubleLayer3DSng
  │   │   ├─ BEAST.MWSingleLayer3DSng
  │   │   ├─ BEAST.MaxwellOperator3DReg
@@ -39,19 +40,29 @@ print(join(tt(BEAST.SpaceTimeOperator), &quot;&quot;))</code></pre><pre class="d
  │   │   └─ SingleLayerTrace
  │   ├─ BEAST.QuasiLocalOperator
  │   │   └─ BEAST.QuasiLocalSingleLayerMW
- │   └─ VIEOperator
- │       ├─ BEAST.BoundaryOperator
- │       │   ├─ BEAST.VIEBoundary
- │       │   ├─ BEAST.VIEBoundary2
- │       │   └─ BEAST.VIEhhBoundary
- │       └─ BEAST.VolumeOperator
- │           ├─ BEAST.VIEDoubleLayer
- │           ├─ BEAST.VIESingleLayer
- │           ├─ BEAST.VIESingleLayer2
- │           ├─ BEAST.VIEhhVolume
- │           ├─ BEAST.VIEhhVolumegradG
- │           └─ BEAST.VIEhhVolumek0
+ │   ├─ VIEOperator
+ │   │   ├─ BEAST.BoundaryOperator
+ │   │   │   ├─ BEAST.VIEBoundary
+ │   │   │   ├─ BEAST.VIEBoundary2
+ │   │   │   └─ BEAST.VIEhhBoundary
+ │   │   └─ BEAST.VolumeOperator
+ │   │       ├─ BEAST.VIEDoubleLayer
+ │   │       ├─ BEAST.VIESingleLayer
+ │   │       ├─ BEAST.VIESingleLayer2
+ │   │       ├─ BEAST.VIEhhVolume
+ │   │       ├─ BEAST.VIEhhVolumegradG
+ │   │       └─ BEAST.VIEhhVolumek0
+ │   └─ VSIEOperator
+ │       ├─ BEAST.BoundarySurfaceOperator
+ │       │   ├─ BEAST.BoundarySurfaceOperatorT
+ │       │   └─ BEAST.VSIEBoundary
+ │       ├─ BEAST.VSIEOperatorT
+ │       └─ BEAST.VolumeSurfaceOperator
+ │           ├─ BEAST.VSIEDoubleLayer
+ │           ├─ BEAST.VSIESingleLayer
+ │           └─ BEAST.VolumeSurfaceOperatorT
  └─ BEAST.LocalOperator
+     ├─ BEAST.Curl
      ├─ BEAST.Multiplicative
      ├─ Identity
      └─ NCross
@@ -68,4 +79,4 @@ BEAST.SpaceTimeOperator
  │   ├─ BEAST.MWDoubleLayerTransposedTDIO
  │   ├─ MWDoubleLayerTDIO
  │   └─ MWSingleLayerTDIO
- └─ BEAST.TensorOperator</code></pre></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../../tutorials/efie/">« EFIE</a><a class="docs-footer-nextpage" href="../identity/">Identiy »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.12.0 on <span class="colophon-date" title="Monday 16 June 2025 14:45">Monday 16 June 2025</span>. Using Julia version 1.11.5.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
+ └─ BEAST.TensorOperator</code></pre></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../../tutorials/efie/">« EFIE</a><a class="docs-footer-nextpage" href="../identity/">Identiy »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.12.0 on <span class="colophon-date" title="Tuesday 17 June 2025 10:04">Tuesday 17 June 2025</span>. Using Julia version 1.11.5.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
