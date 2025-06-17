@@ -175,6 +175,7 @@ function momintegrals!(z, biop::VIEOperator,
     wimps = strat.inner_quad_points
 
     M, N = size(z)
+   
 
     for womp in womps
         tgeo = womp.point
@@ -191,7 +192,7 @@ function momintegrals!(z, biop::VIEOperator,
 
 
             igd = integrand(biop, kernel, tvals, tgeo, bvals, bgeo)
-        
+       
             for m in 1 : length(tvals)
                
                 for n in 1 : length(bvals)
@@ -202,5 +203,6 @@ function momintegrals!(z, biop::VIEOperator,
         end
     end
 
-    return z
+    #return z
 end
+

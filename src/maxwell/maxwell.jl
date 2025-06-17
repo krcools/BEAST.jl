@@ -94,6 +94,14 @@ module Maxwell3D
             amplitude    = one(real(typeof(wavenumber)))) =
         Mod.PlaneWaveMW(direction, polarization, wavenumber*im, amplitude)
 
+
+    planewaveExtractedKernel(;
+            direction    = error("missing arguement `direction`"),
+            polarization = error("missing arguement `polarization`"),
+            wavenumber   = error("missing arguement `wavenumber`"),
+            amplitude    = one(real(typeof(wavenumber)))) =
+        Mod.PlaneWaveExtractedKernelMW(direction, polarization, wavenumber*im, amplitude)
+
     farfield(;
         wavenumber = error("missing argument: `wavenumber`")) =
             Mod.MWFarField3D(wavenumber=wavenumber)

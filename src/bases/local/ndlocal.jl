@@ -8,6 +8,11 @@ there is no well defined concept of adjacent-ness.
 """
 mutable struct NDRefSpace{T} <: RefSpace{T} end
 
+function valuetype(ref::NDRefSpace{T}, charttype::Type) where {T}
+    SVector{universedimension(charttype),T}
+end
+
+
 function (ϕ::NDRefSpace)(nbd)
 
     u, v = parametric(nbd)

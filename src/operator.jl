@@ -209,8 +209,8 @@ end
 
 
 
-function assemble!(op::TransposedOperator, tfs::Space, bfs::Space,
-    store, threading = Threading{:multi};
+function assemble!(op::TransposedOperator, tfs::Space, bfs::Space, store,
+    threading::Type{Threading{:multi}} = Threading{:multi};
     quadstrat=defaultquadstrat(op, tfs, bfs))
 
     store1(v,m,n) = store(v,n,m)
@@ -220,7 +220,7 @@ end
 
 function assemble!(op::LinearCombinationOfOperators, tfs::AbstractSpace, bfs::AbstractSpace,
     store, threading = Threading{:multi};
-    quadstrat=defaultquadstrat(op, tfs, bfs))
+    quadstrat=defaultquadstrat)
 
     for (a,A) in zip(op.coeffs, op.ops)
         store1(v,m,n) = store(a*v,m,n)

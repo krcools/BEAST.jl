@@ -2,14 +2,15 @@ import IterativeSolvers
 
 
 
-struct GMRESSolver{T,L,R,P} <: LinearMap{T}
+struct GMRESSolver{T,L,R,PL,PR} <: LinearMap{T}
     linear_operator::L
     maxiter::Int
     restart::Int
     abstol::R
     reltol::R
     verbose::Bool
-    left_preconditioner::P
+    left_preconditioner::PL
+    right_preconditioner::PR
 end
 
 
@@ -18,7 +19,9 @@ Base.axes(A::GMRESSolver) = reverse(axes(A.linear_operator))
 
 function GMRESSolver(op::L;
     left_preconditioner = nothing,
+    right_preconditioner = nothing,
     Pl = nothing,
+    Pr = nothing,
     maxiter=0,
     restart=0,
     abstol::R = zero(real(eltype(op))),
@@ -36,15 +39,27 @@ function GMRESSolver(op::L;
     end
     @assert Pl != nothing
 
+    if right_preconditioner == nothing
+        Pr == nothing && (Pr = IterativeSolvers.Identity())
+    else
+        if Pr == nothing
+            Pr = BEAST.Preconditioner(right_preconditioner)
+        else
+            error("Either supply Pl or left_preconditioner, not both.")
+        end
+    end
+    @assert Pr != nothing
+
     m, n = size(op)
     @assert m == n
 
-    maxiter == 0 && (maxiter = div(n, 5))
+    maxiter == 0 && (maxiter = n)
     restart == 0 && (restart = n)
 
-    P = typeof(Pl)
+    PL = typeof(Pl)
+    PR = typeof(Pr)
     T = eltype(op)
-    GMRESSolver{T,L,R,P}(op, maxiter, restart, abstol, reltol, verbose, Pl)
+    GMRESSolver{T,L,R,PL,PR}(op, maxiter, restart, abstol, reltol, verbose, Pl, Pr)
 end
 
 
@@ -68,7 +83,8 @@ function solve!(x, solver::GMRESSolver, b; abstol=solver.abstol, reltol=solver.r
         reltol=reltol,
         abstol=abstol,
         verbose=solver.verbose,
-        Pl=solver.left_preconditioner)
+        Pl=solver.left_preconditioner,
+        Pr=solver.right_preconditioner)
     return x, ch
 end
 
@@ -91,14 +107,8 @@ function LinearAlgebra.mul!(y::AbstractVecOrMat, solver::GMRESSolver, x::Abstrac
     return y
 end
 
-LinearAlgebra.adjoint(A::GMRESSolver) = GMRESSolver(adjoint(A.linear_operator);
-    maxiter=A.maxiter,
-    restart=A.restart,
-    abstol=A.abstol,
-    reltol=A.reltol,
-    left_preconditioner=A.left_preconditioner,
-    verbose=A.verbose)
-LinearAlgebra.transpose(A::GMRESSolver) = GMRESSolver(transpose(A.linear_operator), A.maxiter, A.restart, A.abstol, A.reltol, A.verbose)
+LinearAlgebra.adjoint(A::GMRESSolver) = GMRESSolver(adjoint(A.linear_operator); maxiter=A.maxiter, restart=A.restart, abstol=A.abstol, reltol=A.reltol, verbose=A.verbose, Pl=A.right_preconditioner, Pr=A.left_preconditioner)
+LinearAlgebra.transpose(A::GMRESSolver) = GMRESSolver(transpose(A.linear_operator); maxiter=A.maxiter, restart=A.restart, abstol=A.abstol, reltol=A.reltol, verbose=A.verbose, Pl=A.right_preconditioner, Pr=A.left_preconditioner)
 
 
 
