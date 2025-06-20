@@ -88,6 +88,9 @@ end
 
 MWDoubleLayer3DLoop(gamma) = MWDoubleLayer3DLoop(1.0, gamma) # For legacy purposes
 
+#MWDoubleLayer3DLoop does not support DoubleNumWiltonSauterQStrat 
+defaultquadstrat(op::MWDoubleLayer3DLoop, tfs::RTRefSpace, bfs::RTRefSpace) = DoubleNumSauterQstrat(6,7,5,5,4,3)
+
 ################################################################################
 #
 #  Kernel definitions
