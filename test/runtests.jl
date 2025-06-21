@@ -86,7 +86,8 @@ include("test_curl_lagc0d1_lagc0d2.jl")
 include("test_gridfunction.jl")
 
 include("test_hh_lsvie.jl")
-
+include("test_vie.jl")
+include("test_evie_dvie.jl")
 
 @run_package_tests filter=ti->!(:example in ti.tags) verbose=true
 
