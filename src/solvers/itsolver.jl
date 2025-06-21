@@ -92,7 +92,7 @@ end
 function Base.:*(A::GMRESSolver, b::AbstractVector)
 
     T = promote_type(eltype(A), eltype(b))
-    y = PseudoBlockVector{T}(undef, (axes(A,2),))
+    y = BlockedVector{T}(undef, (axes(A,2),))
 
     mul!(y, A, b)
 end
@@ -132,7 +132,7 @@ function gmres_ch(eq::DiscreteEquation; maxiter=0, restart=0, tol=0, verbose=tru
     # x = invZ * b
 
     ax = nestedrange(Y, 1, numfunctions)
-    return PseudoBlockVector(x, (ax,)), ch
+    return BlockedVector(x, (ax,)), ch
 end
 
 gmres(eq::DiscreteEquation; maxiter=0, restart=0, tol=0) = gmres_ch(eq; maxiter, restart, tol)[1]

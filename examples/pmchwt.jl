@@ -94,7 +94,7 @@ A_pmchwt_precond = precond*A_pmchwt
 #GMREs
 import IterativeSolvers
 cT = promote_type(eltype(A_pmchwt), eltype(rhs))
-x = PseudoBlockVector{cT}(undef, M)
+x = BlockedVector{cT}(undef, M)
 fill!(x, 0)
 x, ch = IterativeSolvers.gmres!(x, A_pmchwt, rhs, log=true,  reltol=1e-6)
 fill!(x, 0)

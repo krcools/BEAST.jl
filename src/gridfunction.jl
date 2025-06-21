@@ -62,7 +62,7 @@ end
     ax = BEAST.NestedUnitRanges.nestedrange(X, 1, numfunctions)
 
     coeffs = rand(numfunctions(X))
-    coeffs = BEAST.BlockArrays.PseudoBlockVector(coeffs, (ax,))
+    coeffs = BEAST.BlockArrays.BlockedVector(coeffs, (ax,))
 
     u = BEAST.FEMFunction(coeffs, X)
 

@@ -73,9 +73,9 @@ bq = assemble(b, Qₕ)
 
 u = Matrix(Bqp) \ Vector(bq) 
 
-import BEAST.BlockArrays.PseudoBlockVector
+import BEAST.BlockArrays.BlockedVector
 import BEAST.NestedUnitRanges.nestedrange
-u = PseudoBlockVector(u, (nestedrange(Pₕ, 1, numfunctions),))
+u = BlockedVector(u, (nestedrange(Pₕ, 1, numfunctions),))
 
 # deq = BEAST.discretise(B==b, (p .∈ Pₕ)..., (q .∈ Qₕ)...)
 # u = solve(deq)
