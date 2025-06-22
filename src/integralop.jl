@@ -132,7 +132,7 @@ end
 
 
 function assemblechunk_body!(biop,
-        test_space, test_elements, test_assembly_data, tefst_cell_ptrs,
+        test_space, test_elements, test_assembly_data, test_cell_ptrs,
         trial_space, trial_elements, trial_assembly_data, trial_cell_ptrs,
         qd, zlocal, store; quadstrat)
 
