@@ -1,0 +1,2 @@
+struct NothingQStrategy <: AbstractQuadStrat
+end

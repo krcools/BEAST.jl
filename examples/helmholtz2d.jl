@@ -4,8 +4,10 @@ h = 2π / 51; Γ = meshcircle(1.0, h)
 X, Y = lagrangecxd0(Γ), lagrangec0d1(Γ)
 
 κ = 1.0
-S, Dᵀ = SingleLayer(κ), DoubleLayerTransposed(κ)
-D, N  = DoubleLayer(κ), HyperSingular(κ)
+S = Helmholtz2D.singlelayer(; wavenumber=κ)
+Dᵀ = Helmholtz2D.doublelayer_transposed(; wavenumber = κ)
+D = Helmholtz2D.doublelayer(; wavenumber=κ)
+N = Helmholtz2D.hypersingular(; wavenumber=κ)
 I  = Identity()
 
 # TM scattering

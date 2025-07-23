@@ -13,9 +13,9 @@ for T in [Float32, Float64]
     X = lagrangec0d1(Γ)
     @test numvertices(Γ)-2 == numfunctions(X)
 
-    hypersingular = HyperSingular(κ)
+    hypersingular = Helmholtz2D.hypersingular(; wavenumber=κ)
     identityop    = Identity()
-    doublelayer   = DoubleLayer(κ)
+    doublelayer   = Helmholtz2D.doublelayer(; wavenumber=κ)
 
     @show BEAST.defaultquadstrat(hypersingular, X, X)
     # @show @which BEAST.defaultquadstrat(hypersingular, X, X)
@@ -26,7 +26,9 @@ for T in [Float32, Float64]
     @test size(I) == (numfunctions(X), numfunctions(X))
     @test rank(I) == numfunctions(X)
 
-    @time e = assemble(PlaneWaveNeumann(κ, point(0.0, 1.0)), X)
+    E = Helmholtz2D.planewave(wavenumber=κ, direction=point(1.0,0.0))
+    @time e = assemble(BEAST.NormalDerivative(E), X)
+    #e = assemble(PlaneWaveNeumann(κ, point(0.0, 1.0)), X)
     @test length(e) == numfunctions(X)
 
     x1 = N \ e;

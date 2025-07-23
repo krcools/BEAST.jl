@@ -69,6 +69,9 @@ Computes the matrix of operator biop wrt the finite element spaces tfs and bfs
 function assemblechunk!(biop::IntegralOperator, tfs::Space, bfs::Space, store;
         quadstrat=defaultquadstrat(biop, tfs, bfs))
 
+    numfunctions(tfs) == 0 && return
+    numfunctions(bfs) == 0 && return
+
     tr = assemblydata(tfs); tr == nothing && return
     br = assemblydata(bfs); br == nothing && return
 
@@ -98,33 +101,33 @@ function assemblechunk!(biop::IntegralOperator, tfs::Space, bfs::Space, store;
         tfs, test_elements, tad, tcells,
         bfs, bsis_elements, bad, bcells,
         qd, zlocal, store; quadstrat=qs)
+end
 
-    # if CompScienceMeshes.refines(tgeo, bgeo)
-    #     assemblechunk_body_test_refines_trial!(biop,
-    #         tfs, test_elements, tad, tcells,
-    #         bfs, bsis_elements, bad, bcells,
-    #         qd, zlocal, store; quadstrat)
-    #     qs = TestRefinesTrialQStrat(quadstrat)
-    #     # assemblechunk_body!(biop,
-    #     #     tfs, test_elements, tad, tcells,
-    #     #     bfs, bsis_elements, bad, bcells,
-    #     #     qd, zlocal, store; quadstrat=qs)
-    # elseif CompScienceMeshes.refines(bgeo, tgeo)
-    #     qs = TrialRefinesTestQStrat(quadstrat)
-    #     assemblechunk_body!(biop,
-    #         tfs, test_elements, tad, tcells,
-    #         bfs, bsis_elements, bad, bcells,
-    #         qd, zlocal, store; quadstrat=qs)
-    #     # assemblechunk_body_trial_refines_test!(biop,
-    #     #     tfs, test_elements, tad, tcells,
-    #     #     bfs, bsis_elements, bad, bcells,
-    #     #     qd, zlocal, store; quadstrat)
-    # else
-    #     assemblechunk_body!(biop,
-    #         tfs, test_elements, tad, tcells,
-    #         bfs, bsis_elements, bad, bcells,
-    #         qd, zlocal, store; quadstrat)
-    # end
+@testitem "assemble!: zero sized block" begin
+    using CompScienceMeshes
+    import BEAST.BlockArrays
+
+    fn = joinpath(dirname(pathof(BEAST)), "../examples/assets/sphere45.in")
+    m1 = readmesh(fn)
+    m2 = m1[Int[]]
+
+    X = BEAST.DirectProductSpace([raviartthomas(m) for m in [m1, m2]])
+    T = Maxwell3D.singlelayer(gamma=1.0)
+
+    @hilbertspace j[1:2]
+    @hilbertspace k[1:2]
+    a = T[k[1],j[1]] + T[k[1],j[2]] + T[k[2],j[2]] + T[k[2],j[1]]
+
+    A = assemble(a, X, X)
+    M = AbstractMatrix(A)
+
+    n1 = numfunctions(X[1])
+    n2 = numfunctions(X[2])
+
+    @test n2 == 0
+
+    @test BlockArrays.blocksize(M) == (2,2)
+    @test BlockArrays.blocksizes(M) == [(n1,n1) (n1,n2); (n2,n1) (n2,n2)]
 end
 
 
@@ -136,8 +139,10 @@ function assemblechunk_body!(biop,
     test_shapes = refspace(test_space)
     trial_shapes = refspace(trial_space)
 
+
+    verbose = (length(test_elements) > 256)
     myid = Threads.threadid()
-    myid == 1 && print("dots out of 10: ")
+    verbose && myid == 1 && print("dots out of 10: ")
     todo, done, pctg = length(test_elements), 0, 0
     for (p,(tcell,tptr)) in enumerate(zip(test_elements, test_cell_ptrs))
         for (q,(bcell,bptr)) in enumerate(zip(trial_elements, trial_cell_ptrs))
@@ -160,94 +165,14 @@ function assemblechunk_body!(biop,
         done += 1
         new_pctg = round(Int, done / todo * 100)
         if new_pctg > pctg + 9
-            myid == 1 && print(".")
+            verbose && myid == 1 && print(".")
             pctg = new_pctg
     end end
-    myid == 1 && println("")
+    verbose && myid == 1 && println("")
 end
 
 
-# function assemblechunk_body_test_refines_trial!(biop,
-#     test_functions, test_charts, test_assembly_data, test_cells,
-#     trial_functions, trial_charts, trial_assembly_data, trial_cells,
-#     qd, zlocal, store; quadstrat)
 
-#     test_shapes = refspace(test_functions)
-#     trial_shapes = refspace(trial_functions)
-
-#     myid = Threads.threadid()
-#     myid == 1 && print("dots out of 10: ")
-#     todo, done, pctg = length(test_charts), 0, 0
-#     for (p,(tcell,tchart)) in enumerate(zip(test_cells, test_charts))
-#         for (q,(bcell,bchart)) in enumerate(zip(trial_cells, trial_charts))
-
-#             fill!(zlocal, 0)
-#             qrule = quadrule(biop, test_shapes, trial_shapes, p, tchart, q, bchart, qd, quadstrat)
-#             # @show ("1", qrule)
-#             momintegrals_test_refines_trial!(zlocal, biop,
-#                 test_functions, tcell, tchart,
-#                 trial_functions, bcell, bchart,
-#                 qrule, quadstrat)
-
-#             I = length(test_assembly_data[p])
-#             J = length(trial_assembly_data[q])
-#             for j in 1 : J, i in 1 : I
-#                 zij = zlocal[i,j]
-#                 for (n,b) in trial_assembly_data[q][j]
-#                     zb = zij*b
-#                     for (m,a) in test_assembly_data[p][i]
-#                         store(a*zb, m, n)
-#         end end end end
-
-#         done += 1
-#         new_pctg = round(Int, done / todo * 100)
-#         if new_pctg > pctg + 9
-#             myid == 1 && print(".")
-#             pctg = new_pctg
-#         end end
-#     myid == 1 && println("")
-# end
-
-
-# function assemblechunk_body_trial_refines_test!(biop,
-#     test_functions, test_charts, test_assembly_data, test_cells,
-#     trial_functions, trial_charts, trial_assembly_data, trial_cells,
-#     qd, zlocal, store; quadstrat)
-
-#     test_shapes = refspace(test_functions)
-#     trial_shapes = refspace(trial_functions)
-
-#     myid = Threads.threadid()
-#     myid == 1 && print("dots out of 10: ")
-#     todo, done, pctg = length(test_charts), 0, 0
-#     for (p,(tcell,tchart)) in enumerate(zip(test_cells, test_charts))
-#         for (q,(bcell,bchart)) in enumerate(zip(trial_cells, trial_charts))
-
-#             fill!(zlocal, 0)
-#             qrule = quadrule(biop, test_shapes, trial_shapes, p, tchart, q, bchart, qd, quadstrat)
-#             momintegrals_trial_refines_test!(zlocal, biop,
-#                 test_functions, tcell, tchart,
-#                 trial_functions, bcell, bchart,
-#                 qrule, quadstrat)
-                
-#             I = length(test_assembly_data[p])
-#             J = length(trial_assembly_data[q])
-#             for j in 1 : J, i in 1 : I
-#                 zij = zlocal[i,j]
-#                 for (n,b) in trial_assembly_data[q][j]
-#                     zb = zij*b
-#                     for (m,a) in test_assembly_data[p][i]
-#                         store(a*zb, m, n)
-#         end end end end
-
-#         done += 1
-#         new_pctg = round(Int, done / todo * 100)
-#         if new_pctg > pctg + 9
-#             myid == 1 && print(".")
-#             pctg = new_pctg
-#         end end
-#     myid == 1 && println("")
-# end
 
 
 

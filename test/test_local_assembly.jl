@@ -45,3 +45,30 @@ fr2, st2 = BEAST.allocatestorage(Id, BC, RT, Val{:bandedstorage}, BEAST.LongDela
 BEAST.assemble_local_mixed!(Id, BC, RT, st2)
 Q2 = fr2()
 @test isapprox(Q1, Q2, atol=1e-8)
+
+
+@testitem "localop assembly returns sparse" begin
+    using CompScienceMeshes
+    using LinearAlgebra
+    using LinearMaps
+    using SparseArrays
+
+    Γ = meshsphere(radius=1.0, h=0.35)
+    X = raviartthomas(Γ)
+    @show numfunctions(X)
+
+    Id = BEAST.Identity()
+
+    @hilbertspace k
+    @hilbertspace j
+
+
+    Idkj = Id[k,j]
+    term = Idkj.terms[1]
+    dpsX = BEAST.DirectProductSpace([X])
+
+    Z1 = assemble(Idkj, dpsX, dpsX)
+    # T = typeof(Z1.lmap.A.lmap)
+
+    @test Z1.lmap.A.lmap isa SparseMatrixCSC
+end

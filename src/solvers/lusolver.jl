@@ -35,5 +35,5 @@ function solve(eq)
     println("done.")
 
     ax = nestedrange(Y, 1, numfunctions)
-    return PseudoBlockVector(u, (ax,))
+    return BlockedVector(u, (ax,))
 end

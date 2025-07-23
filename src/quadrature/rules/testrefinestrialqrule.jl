@@ -22,17 +22,26 @@ function momintegrals!(out, op,
     parent_mesh = CompScienceMeshes.parent(test_mesh)
     trial_charts = [chart(test_mesh, p) for p in CompScienceMeshes.children(parent_mesh, trial_cell)]
 
+    trial_overlaps = map(trial_charts) do chart
+        simplex(
+            carttobary(trial_chart, chart.vertices[1]),
+            carttobary(trial_chart, chart.vertices[2]),
+            carttobary(trial_chart, chart.vertices[3]))
+    end
+
     quadstrat = qr.conforming_qstrat
     qd = quaddata(op, test_local_space, trial_local_space,
         [test_chart], trial_charts, quadstrat)
 
+    zlocal = zero(out)
+    Q = zeros(coordtype(trial_chart), num_bshapes, num_bshapes)
     for (q,chart) in enumerate(trial_charts)
+        restrict!(Q, trial_local_space, trial_chart, chart, trial_overlaps[q])
+
         qr = quadrule(op, test_local_space, trial_local_space,
             1, test_chart, q ,chart, qd, quadstrat)
-            
-        Q = restrict(trial_local_space, trial_chart, chart)
-        zlocal = zero(out)
 
+        fill!(zlocal, 0)
         momintegrals!(zlocal, op,
             test_functions, nothing, test_chart,
             trial_functions, nothing, chart, qr)

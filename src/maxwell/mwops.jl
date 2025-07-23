@@ -81,69 +81,12 @@ regularpart(op::MWDoubleLayer3D) = MWDoubleLayer3DReg(op.alpha, op.gamma)
 singularpart(op::MWDoubleLayer3D) = MWDoubleLayer3DSng(op.alpha, op.gamma)
 
 
+struct MWDoubleLayer3DLoop{T,K} <: MaxwellOperator3D{T,K}
+    alpha::T
+    gamma::K
+end
 
-# function quadrule(op::MaxwellOperator3D, g::BDMRefSpace, f::BDMRefSpace,  i, τ, j, σ, qd,
-#   qs::DoubleNumWiltonSauterQStrat)
-
-#   hits = 0
-#   dtol = 1.0e3 * eps(eltype(eltype(τ.vertices)))
-#   dmin2 = floatmax(eltype(eltype(τ.vertices)))
-#   for t in τ.vertices
-#       for s in σ.vertices
-#           d2 = LinearAlgebra.norm_sqr(t-s)
-#           dmin2 = min(dmin2, d2)
-#           hits += (d2 < dtol)
-#       end
-#   end
-
-#   hits == 3 && return SauterSchwabQuadrature.CommonFace(qd.gausslegendre[3])
-#   hits == 2 && return SauterSchwabQuadrature.CommonEdge(qd.gausslegendre[2])
-#   hits == 1 && return SauterSchwabQuadrature.CommonVertex(qd.gausslegendre[1])
-
-#   h2 = volume(σ)
-#   xtol2 = 0.2 * 0.2
-#   k2 = abs2(gamma(op))
-#   return DoubleQuadRule(
-#       qd.tpoints[1,i],
-#       qd.bpoints[1,j],)
-# end
-
-
-# function qrdf(op::MaxwellOperator3D, g::RTRefSpace, f::RTRefSpace, i, τ, j, σ, qd)
-#   # defines coincidence of points
-#   dtol = 1.0e3 * eps(eltype(eltype(τ.vertices)))
-
-#   # decides on whether to use singularity extraction
-#   xtol = 0.2
-
-#   k = norm(gamma(op))
-
-#   hits = 0
-#   xmin = xtol
-#   for t in τ.vertices
-#     for s in σ.vertices
-#       d = norm(t-s)
-#       xmin = min(xmin, k*d)
-#       if d < dtol
-#         hits +=1
-#         break
-#       end
-#     end
-#   end
-
-#   xmin < xtol && return WiltonSERule(
-#     qd.tpoints[1,i],
-#     DoubleQuadRule(
-#       qd.tpoints[2,i],
-#       qd.bpoints[2,j],
-#     ),
-#   )
-#   return DoubleQuadRule(
-#     qd.tpoints[1,i],
-#     qd.bpoints[1,j],
-#   )
-
-# end
+MWDoubleLayer3DLoop(gamma) = MWDoubleLayer3DLoop(1.0, gamma) # For legacy purposes
 
 ################################################################################
 #
@@ -220,6 +163,23 @@ function (igd::Integrand{<:MWDoubleLayer3DReg})(x,y,f,g)
     expo = exp(-γR)
     green = (expo - 1 + γR - 0.5*γR^2) * (i4pi*iR)
     gradgreen = ( -(γR + 1)*expo + (1 - 0.5*γR^2) ) * (i4pi*iR^3) * r
+
+    fvalue = getvalue(f)
+    gvalue = getvalue(g)
+    G = cross.(Ref(gradgreen), gvalue)
+    return _krondot(fvalue, G)
+end
+
+
+function (igd::Integrand{<:MWDoubleLayer3DLoop})(x,y,f,g)
+
+    γ = igd.operator.gamma
+
+    r = cartesian(x) - cartesian(y)
+    R = norm(r)
+    γR = γ*R
+    iR = 1/R
+    gradgreen = -(γ*exp(-γR)*iR+expm1(-γR)*iR^2)*iR/(4π)*r  # -(expm1(γR)*(1+γR)+γR)*iR^3/(4pi) * r #-im*exp(-γR)*( im*γR + im*expm1(γR)) * iR^3/(4pi) * r
 
     fvalue = getvalue(f)
     gvalue = getvalue(g)

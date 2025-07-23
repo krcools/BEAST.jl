@@ -8,6 +8,7 @@ makedocs(;
     modules=[BEAST],
     authors="Kristof Cools and contributors",
     sitename="BEAST.jl",
+    checkdocs=:none,
     format=Documenter.HTML(;
         prettyurls=get(ENV, "CI", "false") == "true",
         canonical="https://krcools.github.io/BEAST.jl",
@@ -21,6 +22,10 @@ makedocs(;
         "Introduction" => "index.md",
         "Manual" => Any[
             "General Usage"=>"manual/usage.md",
+            "Custom excitations"=>"manual/customexc.md",
+            "Setting the Quadrature Strategy" => "manual/quadstrat.md",
+            "Custom Quadrature Rules" => "manual/quadrule.md",
+            "Custom Operators" => "manual/customop.md",
             "Application Examples"=>Any[
                 "Time-Harmonic"=>Any[
                     "EFIE"=>"manual/examplesTH/efie.md",
@@ -28,6 +33,10 @@ makedocs(;
                 ],
                 "Time-Domain"=>Any["EFIE"=>"manual/examplesTD/tdefie.md"],
             ],
+            "System of Equations and Bilinear Forms" => "manual/bilinear.md",
+        ],
+        "Tutorials" => Any[
+            "tutorials/efie.md",
         ],
         "Operators & Excitations" => Any[
             "Overview"=>"operators/overview.md",
@@ -82,7 +91,7 @@ makedocs(;
 deploydocs(;
     repo="github.com/krcools/BEAST.jl.git",
     target="build",
-    push_preview=true,
-    forcepush=true,
+    # push_preview=true,
+    forcepush=false,
     #devbranch = "feature/docs",
 )
