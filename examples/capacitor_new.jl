@@ -3,14 +3,14 @@ using CompScienceMeshes
 using LinearAlgebra
 using SparseArrays
 
-import Plotly
-import Plots
-Plots.plotly()
+import PlotlyJS
+# import Plots
+# Plots.plotly()
 
-function Base.:+(a::S, b::S) where {S<:BEAST.Space}
-    @assert geometry(a) == geometry(b)
-    S(geometry(a), [a.fns; b.fns], [a.pos; b.pos])
-end
+# function Base.:+(a::S, b::S) where {S<:BEAST.Space}
+#     @assert geometry(a) == geometry(b)
+#     S(geometry(a), [a.fns; b.fns], [a.pos; b.pos])
+# end
 
 l = w = 1.0 #Length and width of capacitor plates
 d = 0.1     #seperation of plates
@@ -59,7 +59,7 @@ Y1 = RT_pt1 * C1
 
 # This is ugly and will fail if the two ports are not equal...
 D = sparse(reshape([fill(+1.0, length(edges_pt0)); fill(-1.0, length(edges_pt1))],length(edges_pt0)+length(edges_pt1),1))
-RT_pt = RT_pt0 + RT_pt1
+RT_pt = BEAST.union([RT_pt0, RT_pt1])
 Z = RT_pt * D
 
 @hilbertspace x y0 y1 z
@@ -88,24 +88,26 @@ u = solve(efie)
 @show length(u[y1])
 @show length(u[z])
 
-S = (((X + Y0) + Y1) + Z)
+# S = (((X + Y0) + Y1) + Z)
+S = BEAST.DirectProductSpace([X, Y0, Y1, Z])
 fcr, geo = facecurrents(u, S)
-Plotly.plot(patch(geo, norm.(fcr))) |> display
+PlotlyJS.plot(patch(geo, norm.(fcr))) |> display
 
 # Compute the Scalar Potential across the ports. Note how a voltage
 # gap of 1V comes out as a 'natural' condition on the solution.
 zs = range(-0.5, stop=0.5, length=100)
 pts = [point(0.5,0.5,z) for z ∈ zs]
 Φ = potential(MWSingleLayerPotential3D(κ), pts, u, S; type=ComplexF64)
-Plots.plot(zs, real(Φ), xlabel="height",ylabel="scalar potential",label=false) |> display
+sc1 = PlotlyJS.scatter(x=zs, y=real(Φ), xlabel="height",ylabel="scalar potential",label=false)
+PlotlyJS.Plot(sc1)
 
 # Plot current along γ₀ and γ₁. Note: in this symmetric situation, we 
 # expect these to be opposite on corresponding points of the two ports.
 # In general this is not true; in fact, the two ports could have different shape and size
-traceS0 = ntrace(S, γ₀)
-traceS1 = ntrace(S, γ₁)
-fcr0, geo0 = facecurrents(u, traceS0)
-fcr1, geo1 = facecurrents(u, traceS1)
-Plots.plot()
-Plots.plot!(imag.(fcr0))
-Plots.plot!(imag.(fcr1)) |> display
+# traceS0 = ntrace(S, γ₀)
+# traceS1 = ntrace(S, γ₁)
+# fcr0, geo0 = facecurrents(u, traceS0)
+# fcr1, geo1 = facecurrents(u, traceS1)
+# Plots.plot()
+# Plots.plot!(imag.(fcr0))
+# Plots.plot!(imag.(fcr1)) |> display

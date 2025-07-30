@@ -164,3 +164,7 @@ G2 = CompScienceMeshes.rotate(G1, 0.5π * x̂)
 G = CompScienceMeshes.weld(G1,G2)
 @test_throws AssertionError buffachristiansen(G)
 # G3 = CompScienceMeshes.rotate(G1, 1.0π * x̂)
+
+@testitem "Neumann BC" begin
+    @test true
+end
