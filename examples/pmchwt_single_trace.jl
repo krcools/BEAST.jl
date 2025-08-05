@@ -190,14 +190,13 @@ end
 
 x = range(-2.0,2.0,length=150)
 z = range(-1.5,2.5,length=100)
-nf = make(nearfield; h=0.12, κ=1.0, x=x, z=z)
+nf = make(nearfield; h=0.08, κ=2.0, x=x, z=z)
 
 Etot = sum(nf.E)
 Htot = sum(nf.H)
 
 using LinearAlgebra
 using PlotlyJS
-
 hm1 = PlotlyJS.heatmap(x=x, y=z, z=real.(getindex.(nf.E[1],2)), colorscale="Viridis", zmin=-2, zmax=2)
 hm2 = PlotlyJS.heatmap(x=x, y=z, z=real.(getindex.(nf.E[2],2)), colorscale="Viridis", zmin=-2, zmax=2)
 hm3 = PlotlyJS.heatmap(x=x, y=z, z=real.(getindex.(nf.E[3],2)), colorscale="Viridis", zmin=-2, zmax=2)

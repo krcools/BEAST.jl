@@ -303,6 +303,7 @@ include("maxwell/timedomain/tdfarfield.jl")
 include("solvers/solver.jl")
 include("solvers/lusolver.jl")
 include("solvers/itsolver.jl")
+include("solvers/gmres.jl")
 
 include("utils/plotlyglue.jl")
 
