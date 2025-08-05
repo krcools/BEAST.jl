@@ -1,3 +1,5 @@
+- GMRES from Krylov.jl wrapped as a LinearMap
+
 # Changelog
 
 - Function `union` for a vector of spaces of the same type and defined on the same mesh returns a space containing the union of the functions in the input spaces.

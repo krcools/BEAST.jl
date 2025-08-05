@@ -61,21 +61,15 @@ Y = BEAST.DirectProductSpace([BC,BC])
 Cyy = assemble(c, Y, Y)
 Dxy = assemble(d, X, Y)
 
-DYX = BEAST.GMRESSolver(Dxy, verbose=false)
-DXY = BEAST.GMRESSolver(Dxy', verbose=false)
+Di = BEAST.GMRES(Dxy, verbose=0)
+Dt = BEAST.GMRES(Dxy', verbose=0)
+P = Dt * Cyy * Di
 
-PAXx = DXY * Cyy * DYX * Axx
-PbX = DXY * Cyy * DYX * bx
+S1 = BEAST.GMRES(Axx; restart=true, atol=1e-8, rtol=1e-8, verbose=0, memory=200)
+u1, ch1 = solve(S1, bx);
 
-PSXx = BEAST.GMRESSolver(PAXx)
-
-@time u1, ch1 = solve(SXX, bx);
-u2, ch2 = solve(PSXx, PbX)
+S2 = BEAST.GMRES(Axx; M=P, restart=true, atol=1e-6, rtol=1e-6, verbose=1, memory=200)
+u2, ch2 = solve(S2, bx);
 
 using LinearAlgebra
-norm(u1-u2), ch1.iters, ch2.iters
-
-S3 = BEAST.GMRES(Axx; restart=true, atol=1e-8, rtol=1e-8, verbose=0, memory=200)
-@time u3, ch3 = solve(S3, bx);
-S4 = BEAST.GMRES(Axx; M=DXY * Cyy * DYX, restart=true, atol=1e-8, rtol=1e-8, verbose=0, memory=200)
-@time u4, ch4 = solve(S4, bx);
+norm(u1-u2), ch1.niter, ch2.niter
