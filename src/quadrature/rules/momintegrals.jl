@@ -1,6 +1,6 @@
 function momintegrals!(out, op,
-    test_functions::Space, test_cellptr, test_chart,
-    trial_functions::Space, trial_cellptr, trial_chart,
+    test_functions, test_cellptr, test_chart,
+    trial_functions, trial_cellptr, trial_chart,
     quadrule)
 
     local_test_space = refspace(test_functions)

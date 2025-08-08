@@ -4,8 +4,8 @@
 
     h1 = 0.2
     h2 = 0.176
-    m1 = meshcuboid(1.0, 1.0, 1.0, h1)
-    m2 = meshcuboid(1.0, 1.0, 1.0, h2)
+    m1 = meshcuboid(1.0, 1.0, 1.0, h1; generator=:gmsh)
+    m2 = meshcuboid(1.0, 1.0, 1.0, h2; generator=:gmsh)
 
     E = Maxwell3D.planewave(;direction=point(0,0,1), polarization=point(1,0,0), wavenumber=0.0)
     e = n × E

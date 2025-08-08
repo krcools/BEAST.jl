@@ -28,7 +28,7 @@ vals = [f.value for f in X(ctr)]
 itpol = sum(w*val for (w,val) in zip(Q3,vals))
 @test itpol ≈ constant_vector_field
 
-using TestItems
+# using TestItems
 @testitem "restrict RT0" begin
     using CompScienceMeshes
 

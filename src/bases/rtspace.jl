@@ -7,6 +7,9 @@ mutable struct RTBasis{T,M,P} <: Space{T}
 end
 
 RTBasis(geo, fns) = RTBasis(geo, fns, Vector{vertextype(geo)}(undef,length(fns)))
+Base.similar(space::RTBasis{T,M,P} where {T,M,P}, geo, fns, pos) = RTBasis(geo, fns, pos)
+
+
 
 positions(rt) = rt.pos
 refspace(space::RTBasis{T}) where {T} = RTRefSpace{T}()

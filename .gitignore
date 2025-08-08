@@ -13,4 +13,5 @@ profile/
 /Manifest.toml
 /test/Manifest.toml
 /docs/Manifest.toml
-/data/
+/examples/Manifest.toml
+data/

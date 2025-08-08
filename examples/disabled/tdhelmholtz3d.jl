@@ -12,7 +12,7 @@ e = BEAST.planewave(point(0,0,1), c, gaussian)
 
 X = lagrangecxd0(G)
 
-Δt, Nt = 0.08, 300
+Δt, Nt = 1.0, 300
 #T = timebasisshiftedlagrange(Δt, Nt, 0)
 #T = timebasiscxd0(Δt, Nt)
 T = timebasisc0d1(Δt, Nt)

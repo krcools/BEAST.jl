@@ -23,6 +23,36 @@ kernelvals(op::NCross, mp) = nothing
 integrand(op::NCross, kernel, x, g, f) = dot(g[1], normal(x) × f[1])
 scalartype(op::NCross) = Union{}
 
+struct Curl <: LocalOperator
+end
+
+kernelvals(biop::Curl, x) = nothing
+function integrand(op::Curl, kernel, x, g, f)
+     dot(f.curl, g.value)
+ end
+scalartype(op::Curl) = Union{}
+
+
+defaultquadstrat(::LocalOperator, ::GWPDivRefSpace{<:Real,D1},::LagrangeRefSpace{T,D2,D3}) where {T,D1,D2,D3} = SingleNumQStrat(9)
+function quaddata(op::LocalOperator, g::GWPDivRefSpace, f::LagrangeRefSpace{T,D2,D1} where {T,D1,D2} , tels, bels, qs::SingleNumQStrat)
+
+    u, w = trgauss(qs.quad_rule)
+    qd = [(w[i],SVector(u[1,i],u[2,i])) for i in 1:length(w)]
+    A = _alloc_workspace(qd, g, f, tels, bels)
+
+    return qd, A
+end
+
+defaultquadstrat(::LocalOperator, ::RTRefSpace,  ::LagrangeRefSpace{T,D2,D1}) where {T,D1,D2} = SingleNumQStrat(6)
+function quaddata(op::LocalOperator, g::RTRefSpace, f::LagrangeRefSpace{T,D2,D1} where {T,D1,D2} , tels, bels, qs::SingleNumQStrat)
+
+    u, w = trgauss(qs.quad_rule)
+    qd = [(w[i],SVector(u[1,i],u[2,i])) for i in 1:length(w)]
+    A = _alloc_workspace(qd, g, f, tels, bels)
+
+    return qd, A
+end
+
 function _alloc_workspace(qd, g, f, tels, bels)
     q = qd[1]
     τ = tels[1]
@@ -101,7 +131,7 @@ support(::LinearRefSpaceTriangle) = TriangleSupport()
 support(::LinearRefSpaceTetr) = TetraSupport()
 
 defaultquadstrat(::LocalOperator, ::GWPDivRefSpace{<:Real,D1},
-    ::GWPDivRefSpace{<:Real,D2}) where {D1,D2} = SingleNumQStrat(7)
+    ::GWPDivRefSpace{<:Real,D2}) where {D1,D2} = SingleNumQStrat(9)
 
 
 # function quaddata(op::LocalOperator, g::GWPDivRefSpace, f::GWPDivRefSpace,

@@ -14,7 +14,7 @@ mutable struct MWSingleLayerTDIO{T} <: RetardedPotential{T}
 end
 
 function Base.:*(a::Number, op::MWSingleLayerTDIO)
-	@info "scalar product a * op (SL)"
+	# @info "scalar product a * op (SL)"
 	MWSingleLayerTDIO(
 		op.speed_of_light,
 		a * op.ws_weight,
@@ -30,7 +30,7 @@ mutable struct MWDoubleLayerTDIO{T} <: RetardedPotential{T}
 end
 
 function Base.:*(a::Number, op::MWDoubleLayerTDIO)
-	@info "scalar product a * op (DL)"
+	# @info "scalar product a * op (DL)"
 	MWDoubleLayerTDIO(
 		op.speed_of_light,
 		a * op.weight,
@@ -44,7 +44,7 @@ mutable struct MWDoubleLayerTransposedTDIO{T} <: RetardedPotential{T}
 end
 
 function Base.:*(a::Number, op::MWDoubleLayerTransposedTDIO)
-	@info "scalar product a * op (DL)"
+	# @info "scalar product a * op (DL)"
 	MWDoubleLayerTransposedTDIO(
 		op.speed_of_light,
 		a * op.weight,
@@ -103,6 +103,8 @@ end
 function assemble!(dl::MWDoubleLayerTDIO, W::SpaceTimeBasis, V::SpaceTimeBasis, store,
     threading::Type{Threading{:multi}}; quadstrat=defaultquadstrat(dl,W,V))
 
+    quadstrat = quadstrat(dl, W, V)
+
 	X, T = spatialbasis(W), temporalbasis(W)
 	Y, U = spatialbasis(V), temporalbasis(V)
 	if CompScienceMeshes.refines(geometry(Y), geometry(X))
@@ -118,7 +120,7 @@ function assemble!(dl::MWDoubleLayerTDIO, W::SpaceTimeBasis, V::SpaceTimeBasis, 
 	Y, S = spatialbasis(W), temporalbasis(W)
 	splits = [round(Int,s) for s in range(0, stop=numfunctions(Y), length=P+1)]
 
-	@info "Starting assembly with $P threads:"
+	# @info "Starting assembly with $P threads:"
 	Threads.@threads for i in 1:P
 		lo, hi = splits[i]+1, splits[i+1]
 		lo <= hi || continue

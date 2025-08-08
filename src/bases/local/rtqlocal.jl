@@ -63,8 +63,8 @@ end
     val1 = f(p)[1]
     val2 = sum(Q[1,i] * ϕ.value for (i,ϕ) in zip(axes(Q,2), rtq(p)))
 
-    @show val1
-    @show val2
+    # @show val1
+    # @show val2
     @test val1 ≈ val2
 end
 
@@ -113,7 +113,7 @@ end
         point(0,1,0)]
     chart1 = CompScienceMeshes.Quadrilateral(vertices...)
     for I in BEAST._vrtperm_matrix_rtq
-        @show I
+        # @show I
         chart2 = CompScienceMeshes.Quadrilateral(
             vertices[I[1]],
             vertices[I[2]],

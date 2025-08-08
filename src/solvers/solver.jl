@@ -229,11 +229,19 @@ function assemble(bf::BilForm, X::DirectProductSpace, Y::DirectProductSpace;
     T = Int32
     @assert !isempty(bf.terms)
 
-    spaceTimeBasis = isa(X.factors[1], BEAST.SpaceTimeBasis)
+    Q = X.factors[1]
+    while Q isa BEAST.DirectProductSpace
+        Q = Q.factors[1]
+    end
+    spaceTimeBasis = isa(Q, BEAST.SpaceTimeBasis)
 
     if spaceTimeBasis
-        p = [numstages(temporalbasis(ch)) for ch in X.factors]
-        lincombv = ConvolutionOperators.LiftedConvOp[]
+        if X[1] isa DirectProductSpace
+            p = 1
+        else
+            p = [numstages(temporalbasis(ch)) for ch in X.factors]
+        end
+        lincombv = ConvolutionOperators.AbstractConvOp[]
     else
         p = 1
         lincombv = LinearMap[]
@@ -263,7 +271,7 @@ function assemble(bf::BilForm, X::DirectProductSpace, Y::DirectProductSpace;
         # qs = quadstrat(a, x, y)
         z = term.coeff * materialize(a, x, y; quadstrat)
 
-        Smap = lift(z, Block(term.test_id), Block(term.trial_id), U, V)
+        Smap = term.coeff * lift(z, Block(term.test_id), Block(term.trial_id), U, V)
         T = promote_type(T, eltype(Smap))
         push!(lincombv, Smap)
     end
@@ -284,6 +292,11 @@ function assemble(bf::BilForm, X::Space, Y::Space)
 end
 
 function assemble(bf::BilForm, pairs::Pair...)
+    dbf = discretise(bf, pairs...)
+    assemble(dbf)
+end
+
+function assemble(bf::LinForm, pairs::Pair...)
     dbf = discretise(bf, pairs...)
     assemble(dbf)
 end

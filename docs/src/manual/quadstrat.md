@@ -6,6 +6,8 @@ This page describes how the user can intervene in this system.
 
 ## List of implemented quadrature strategies
 
+In BEAST, a clear distinction is made between a **quadrature rule**, which is a numerical algorithm that computes approximate values of a given integral with a given domain (a pair of panels in the case of BEM) and a given integral (comprising testing functions, trial functions, and a fundamental solution in the case of BEM). Different integrands and domains call for different quadrature rules. For a fixed integrand structure, the algorithm that chooses for any given constellation of panels the most appropriate rule is called the **quadrature strategy**.
+
 The algorithm that determines which quadrature rule is used for any given geometric constellation of interacting panels is called the quadrature strategy. The list of strategies currently implemented in BEAST is:
 
 ```@example introductory

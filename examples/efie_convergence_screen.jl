@@ -43,13 +43,10 @@ end
 
 @target errors (solutions) -> begin
     df = loadsims("$(fn)/solutions")
-    numrows = size(df,1)
 
     uref = df.u[1]
     Xref = df.X[1]
-    Γref = geometry(Xref)
 
-    errs = zeros(numrows)
     s = -Maxwell3D.singlelayer(gamma=1.0)
     qstrat12 = BEAST.NonConformingIntegralOpQStrat(BEAST.DoubleNumSauterQstrat(3, 4, 6, 6, 6, 6))
 
@@ -59,7 +56,6 @@ end
     function payload(;h)
         r = getrow(df; h=h)
         (;h, u, X) = r
-        Γ = geometry(X)
 
         S12 = assemble(s, Xref, X; quadstrat=[qstrat12])
         S22 = assemble(s, X, X)
@@ -97,8 +93,8 @@ Plotly.plot(patch(geo, log10.(norm.(fcr))))
 
 df2 = loadsims("$fn/errors")
 plot(log10.(df2.h), log10.(df2.err), marker=:.)
-plot!(log10.(df2.h), -0.25 .+ 0.5*log10.(df2.h), label="p = 0.5")
-plot!(log10.(df2.h), 0.1 .+ 0.7*log10.(df2.h), label="p = 0.625")
+plot!(log10.(df2.h), -0.1 .+ 0.5*log10.(df2.h), label="p = 0.5")
+# plot!(log10.(df2.h), 0.1 .+ 0.7*log10.(df2.h), label="p = 0.625")
 plot!(log10.(df2.h), 0.2 .+ 0.75*log10.(df2.h), label="p = 0.75")
-plot!(log10.(df2.h), 0.625 .+ 1.0*log10.(df2.h), label="p = 1")
-plot!(log10.(df2.h), 1.5 .+ 1.5*log10.(df2.h), label="p = 1.5")
+# plot!(log10.(df2.h), 0.625 .+ 1.0*log10.(df2.h), label="p = 1")
+# plot!(log10.(df2.h), 1.5 .+ 1.5*log10.(df2.h), label="p = 1.5")

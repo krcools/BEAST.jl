@@ -56,6 +56,28 @@ function curl(ref::LagrangeRefSpace{T,1,3} where {T}, sh, el)
     return [sh1, sh2]
 end
 
+#=
+function curl(ref::LagrangeRefSpace{T,2,3}, sh, el) where T
+
+    j = 1.0 #volume(el) * factorial(dimension(el))
+
+    if sh.refid < 4
+        sh1 = Shape(sh.cellid, mod1(2*sh.refid+1,6), -sh.coeff*j)
+        sh2 = Shape(sh.cellid, mod1(2*sh.refid+2,6), 3*sh.coeff*j)
+        sh3 = Shape(sh.cellid, mod1(2*sh.refid+3,6), -3*sh.coeff*j)
+        sh4 = Shape(sh.cellid, mod1(2*sh.refid+4,6), sh.coeff*j)
+
+        return [sh1, sh2, sh3, sh4]
+    else 
+        sh1 = Shape(sh.cellid, 2*mod1(sh.refid,3)-1, 4*sh.coeff*j)
+        sh2 = Shape(sh.cellid, 2*mod1(sh.refid,3), -4*sh.coeff*j)
+
+        return [sh1, sh2]
+    end 
+
+end
+=#
+
 function gradient(ref::LagrangeRefSpace{T,1,4}, sh, tet) where {T}
     this_vert = tet.vertices[sh.refid]
     # other_verts = deleteat(tet.vertices, sh.refid)
@@ -176,14 +198,15 @@ function (f::LagrangeRefSpace{T,2,3})(t) where T
     j = jacobian(t)
     p = t.patch
 
+
     σ = sign(dot(normal(t), cross(p[1]-p[3],p[2]-p[3])))
      SVector(
         (value=u*(2*u-1), curl=σ*(p[3]-p[2])*(4u-1)/j),
-        (value=v*(2*v-1), curl=σ*(p[1]-p[3])*(4v-1)/j),
-        (value=w*(2*w-1), curl=σ*(p[2]-p[1])*(4w-1)/j),
-        (value=4*v*w, curl=4*σ*(w*(p[1]-p[3])+v*(p[2]-p[1]))/j),
-        (value=4*w*u, curl=4*σ*(w*(p[3]-p[2])+u*(p[2]-p[1]))/j),
         (value=4*u*v, curl=4*σ*(u*(p[1]-p[3])+v*(p[3]-p[2]))/j),
+        (value=v*(2*v-1), curl=σ*(p[1]-p[3])*(4v-1)/j),
+        (value=4*w*u, curl=4*σ*(w*(p[3]-p[2])+u*(p[2]-p[1]))/j),
+        (value=4*v*w, curl=4*σ*(w*(p[1]-p[3])+v*(p[2]-p[1]))/j),
+        (value=w*(2*w-1), curl=σ*(p[2]-p[1])*(4w-1)/j),
     )
 end
 
@@ -203,6 +226,50 @@ function curl(ref::LagrangeRefSpace{T,2,3} where {T}, sh, el)
         sh4 = Shape(sh.cellid, mod1(2*sh.refid+7,6), z*sh.coeff)
     end
     return [sh1, sh2, sh3, sh4]
+end
+
+function restrict(f::LagrangeRefSpace{T,2}, dom1, dom2) where T
+
+    D = numfunctions(f)
+    Q = zeros(T, D, D)
+
+    # for each point of the new domain
+    for i in 1:3
+
+        #vertices
+        v = dom2.vertices[i]
+
+        # find the barycentric coordinates in dom1
+        uvn = carttobary(dom1, v)
+
+        # evaluate the shape functions in this point
+        x = neighborhood(dom1, uvn)
+        fx = f(x)
+
+        for j in 1:D
+            Q[j,i] = fx[j][1]
+        end
+        
+            
+        #edges
+        # find the center of edge i of dom2
+        a = dom2.vertices[mod1(i+1,3)]
+        b = dom2.vertices[mod1(i+2,3)]
+        v = (a + b) / 2
+
+        # find the barycentric coordinates in dom1
+        uvn = carttobary(dom1, v)
+
+        # evaluate the shape functions in this point
+        x = neighborhood(dom1, uvn)
+        fx = f(x)
+  
+        for j in 4:D
+            Q[j,i+3] = fx[j][1]
+        end
+    end
+
+    return Q
 end
 
 
@@ -382,22 +449,23 @@ end
 function interpolate(fields, interpolant::LagrangeRefSpace{T,Degree,3}, chart) where {T,Degree}
 
     dim = binomial(2+Degree, Degree)
-
-    I = 0:Degree
-    s = range(0,1,length=Degree+1)
-    Is = zip(I,s)
-    idx = 1
     vals = Vector{Vector{T}}()
-    for (i,ui) in Is
-        for (j,vj) in Is
-            for (k,wk) in Is
-                i + j + k == Degree || continue
-                @assert ui + vj + wk ≈ 1
-                p = neighborhood(chart, (ui,vj))
-                push!(vals, fields(p))
-                idx += 1
-    end end end
-
+    if Degree > 0
+        I = 0:Degree
+        s = range(0,1,length=Degree+1)
+        Is = zip(I,s)
+        for (i,ui) in Is
+            for (j,vj) in Is
+                for (k,wk) in Is
+                    i + j + k == Degree || continue
+                    @assert ui + vj + wk ≈ 1
+                    p = neighborhood(chart, (ui,vj))
+                    push!(vals, fields(p))
+        end end end
+    else
+        p = center(chart)
+        push!(vals, fields(p))
+    end
     # Q = hcat(vals...)
     Q = Matrix{T}(undef, length(vals[1]), length(vals))
     for i in eachindex(vals)
@@ -426,3 +494,25 @@ function interpolate(fields, interpolant::LagrangeRefSpace{T,1,3}, chart) where 
     end
     return Q
 end
+
+
+function interpolate!(out, fields, interpolant::LagrangeRefSpace{T,Degree,3}, chart) where {T,Degree}
+    Is = zip((0:Degree), range(0,1,length=Degree+1))
+    idx = 0
+    for (i,ui) in Is
+        for (j,vj) in Is
+            for (k,wk) in Is
+                i + j + k == Degree || continue; idx += 1
+                @assert ui + vj + wk ≈ 1
+                p = neighborhood(chart, (ui,vj))
+                vals = fields(p)
+                for (g, val) in zip(axes(out, 1), vals)
+                    out[g,idx] = val
+end end end end end
+
+function interpolate!(out, fields, interpolant::LagrangeRefSpace{T,0,3}, chart) where {T}
+    p = center(chart)
+    vals = fields(p)
+    for (g, val) in zip(axes(out, 1), vals)
+        out[g,1] = val
+end end

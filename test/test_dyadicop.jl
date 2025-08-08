@@ -25,7 +25,9 @@ using BEAST
     @hilbertspace k[1:2]
 
     X2 = X × X
-    A2 = assemble(@discretise(BEAST.diag(op)[k,j], k∈X2, j∈X2))
+    bf = sum(op[k[i],j[i]] for i in 1:2)
+    A2 = assemble(bf, X2, X2)
+    # A2 = assemble(@discretise(BEAST.diag(op)[k,j], k∈X2, j∈X2))
     M2 = Matrix(A2)
 
     nX = length(X)

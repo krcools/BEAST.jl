@@ -3,11 +3,22 @@ abstract type HH3DTDBIO{T} <: RetardedPotential{T} end
 struct HH3DSingleLayerTDBIO{T} <: HH3DTDBIO{T}
     "speed of light"
     speed_of_light::T
+    "operator coefficient"
+    weight::T
     "number of temporal differentiations"
     num_diffs::Int
 end
 
-HH3DSingleLayerTDBIO(c) = HH3DSingleLayerTDBIO(c, 0)
+HH3DSingleLayerTDBIO(c) = HH3DSingleLayerTDBIO(c, 1.0, 0)
+
+
+function Base.:*(a::Number, op::HH3DSingleLayerTDBIO)
+	#@info "scalar product a * op (SL)"
+	HH3DSingleLayerTDBIO(
+		op.speed_of_light,
+		a * op.weight,
+		op.num_diffs)
+end
 
 struct HH3DHyperSingularTDBIO{T} <: HH3DTDBIO{T}
     speed_of_light::T
@@ -22,6 +33,18 @@ function HH3DHyperSingularTDBIO(;speed_of_light, numdiffs)
     HH3DHyperSingularTDBIO(speed_of_light, id, id, numdiffs+1, numdiffs-1)
 end
 
+
+function Base.:*(a::Number, op::HH3DHyperSingularTDBIO)
+	#@info "scalar product a * op (HS)"
+	HH3DHyperSingularTDBIO(
+		op.speed_of_light,
+		a * op.weight_of_weakly_singular_term,
+        a * op.weight_of_hyper_singular_term,
+		op.num_diffs_on_weakly_singular_term,
+        op.num_diffs_on_hyper_singular_term)
+end
+
+
 struct HH3DDoubleLayerTDBIO{T} <: HH3DTDBIO{T}
     speed_of_light::T
     weight::T
@@ -31,12 +54,12 @@ end
 HH3DDoubleLayerTDBIO(;speed_of_light) = HH3DDoubleLayerTDBIO(speed_of_light,one(speed_of_light),0)
 
 
-defaultquadstrat(::HH3DTDBIO, tfs, bfs) = nothing
+defaultquadstrat(::HH3DTDBIO, tfs, bfs) = NothingQStrategy()
 
 # See: ?BEAST.quaddata for help
 function quaddata(operator::HH3DTDBIO,
         test_local_space, trial_local_space, time_local_space,
-        test_element, trial_element, time_element, quadstrat::Nothing)
+        test_element, trial_element, time_element, quadstrat::NothingQStrategy)
 
     dmax = numfunctions(time_local_space)-1
     bn = binomial.((0:dmax),(0:dmax)')
@@ -44,7 +67,7 @@ function quaddata(operator::HH3DTDBIO,
     V = eltype(test_element[1].vertices)
     ws = WiltonInts84.workspace(V)
     order = 4
-    @show order
+    #@show order
     quadpoints(test_local_space, test_element, (order,)), bn, ws
 
 end
@@ -54,7 +77,7 @@ end
 function quadrule(operator::HH3DTDBIO,
         test_local_space, trial_local_space, time_local_space,
         p, test_element, q, trial_element, r, time_element,
-        quad_data, quadstrat::Nothing)
+        quad_data, quadstrat::NothingQStrategy)
 
     # WiltonInts84Strat(quad_data[1,p])
     qd = quad_data
@@ -89,7 +112,7 @@ function innerintegrals!(zlocal, operator::HH3DSingleLayerTDBIO,
         trial_element[3],
         x, r, R, Val{2}, quad_rule.workspace)
 
-    a = dx / (4*pi)
+    a = dx / (4*pi) * operator.weight
     D = operator.num_diffs
     @assert D == 0
     @assert numfunctions(test_local_space, domain(test_element))  == 1
