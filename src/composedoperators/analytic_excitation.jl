@@ -1,4 +1,4 @@
-struct Trace{T,F} <: Functional
+struct Trace{T,F} <: Functional{T}
     field::F
 end
   
