@@ -231,10 +231,21 @@ function assemble!(op::LinearCombinationOfOperators, tfs::Space, bfs::Space,
 
     for (a,A) in zip(op.coeffs, op.ops)
         store1(v,m,n) = store(a*v,m,n)
-        qs = quadstrat(A, tfs, bfs)
+      #  qs = quadstrat(A, tfs, bfs)
+        assemble!(A, tfs, bfs, store1, threading; quadstrat=quadstrat)
+    end
+end
+function assemble!(op::LinearCombinationOfOperators, tfs::Space, bfs::Space,
+    store, threading = Threading{:multi};
+    quadstrat::Vector = defaultquadstrat)
+
+    for (i,(a,A)) in enumerate(zip(op.coeffs, op.ops))
+        store1(v,m,n) = store(a*v,m,n)
+        qs = quadstrat[i]
         assemble!(A, tfs, bfs, store1, threading; quadstrat=qs)
     end
 end
+
 
 
 # Support for direct product spaces

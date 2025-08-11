@@ -5,7 +5,7 @@ using BEAST
 using Test
 using StaticArrays
 
-Γ = meshcuboid(1.0,1.0,1.0,1.0)
+Γ = meshcuboid(1.0,1.0,1.0,1.0; generator=:compsciencemeshes)
 X = raviartthomas(Γ)
 func = BEAST.FunctionWrapper{Float64}(x->2.0)
 Y = BEAST._BasisTimes(X,func)
@@ -18,7 +18,7 @@ m2 = assemble(K,X,X)
 L = lagrangecxd0(Γ)
 Z = BEAST._BasisTimes(L,n)
 m3 = assemble(K,Z,Z)
-@test norm(m3) ≈ 0.08420116178577139
+@test norm(m3) ≈ 0.10751130304639696
 
 m1 = assemble(NCross(),X,X)
 m2 = assemble(Identity(),X×n,X)

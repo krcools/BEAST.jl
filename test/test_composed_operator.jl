@@ -7,7 +7,7 @@ using StaticArrays
 
 
 # different options to compute selfpatch trace
-Γ = meshcuboid(1.0,1.0,1.0,0.4)
+Γ = meshcuboid(1.0,1.0,1.0,0.4; generator=:compsciencemeshes)
 Γd = BEAST.GlobalDisplacementMesh(Γ,1.0)
 X = raviartthomas(Γ)
 Xd = raviartthomas(Γd)
@@ -41,7 +41,7 @@ Xdm = raviartthomas(Γd_mirror)
 K = ttrace(Z,true) #number does not matter here, trace part should just be spawned, this number only matters fr selfpatch or if user is not carefull with displacement meshes
 M = assemble(K,Xm,X;quadstrat = [BEAST.SingleNumQStrat(6),BEAST.DoubleNumSauterQstrat(6,6,6,6,6,6)])
 
-K_compare = Maxwell3D.doublelayer(wavenumber = 0.0) + 0.5*NCross() #trace from outside to inside
+K_compare = Maxwell3D.doublelayer(wavenumber = 0.0) - 0.5*NCross() #trace from outside to inside
 M_compare = assemble(K_compare,Xm,X;quadstrat = [BEAST.SingleNumQStrat(6),BEAST.DoubleNumSauterQstrat(6,6,6,6,6,6)])
 
 M_displaced = assemble(K,Xdm,X;quadstrat = [BEAST.SingleNumQStrat(6),BEAST.DoubleNumSauterQstrat(6,6,6,6,6,6)])
