@@ -39,6 +39,71 @@ end
 
 scalartype(f::gradHH2DPlaneWave{P,K,T}) where {P,K,T} = promote_type(eltype(P), K, T)
 
+"""
+    HH2DMonopole
+
+Potential of a monopole-type point source (e.g., of an electric charge)
+"""
+struct HH2DMonopole{P,K,T}
+    position::P
+    gamma::K
+    amplitude::T
+end
+
+scalartype(x::HH2DMonopole{P,K,T}) where {P,K,T} = promote_type(eltype(P), K, T)
+
+function (f::HH2DMonopole)(r::CompScienceMeshes.MeshPointNM)
+    return f(cartesian(r))
+end
+
+function (f::HH2DMonopole)(r)
+    γ = f.gamma
+    p = f.position
+    a = f.amplitude
+
+    return a*hankelh2(0, -im*γ * norm(r - p))
+end
+
+struct gradHH2DMonopole{P,K,T}
+    position::P
+    gamma::K
+    amplitude::T
+end
+
+scalartype(x::gradHH2DMonopole{P,K,T}) where {P,K,T} = promote_type(eltype(P), K, T)
+
+function (f::gradHH2DMonopole)(r)
+    a = f.amplitude
+    γ = f.gamma
+    p = f.position
+    vecR = r - p
+    R = norm(vecR)
+
+    return a * -hankelh2(1, -im*γ * R) * (-im*γ) * vecR / R
+end
+
+function (f::gradHH2DMonopole)(mp::CompScienceMeshes.MeshPointNM)
+    r = cartesian(mp)
+    return dot(normal(mp), f(r))
+end
+
+function grad(m::HH2DMonopole)
+    return gradHH2DMonopole(m.position, m.gamma, m.amplitude)
+end
+
+*(a::Number, m::HH2DMonopole) = HH2DMonopole(m.position, m.gamma, a * m.amplitude)
+*(a::Number, m::gradHH2DMonopole) = gradHH2DMonopole(m.position, m.gamma, a * m.amplitude)
+
+dot(::NormalVector, m::gradHH2DMonopole) = NormalDerivative(HH2DMonopole(m.position, m.gamma, m.amplitude))
+
+function (f::NormalDerivative{T,F})(manipoint) where {T,F<:HH2DMonopole}
+    m = f.field
+    grad_m = grad(m)
+    n = normal(manipoint)
+    r = cartesian(manipoint)
+    return dot(n, grad_m(r))
+end
+
 struct ScalarTrace{T,F} <: Functional{T}
     field::F
 end
