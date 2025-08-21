@@ -73,7 +73,7 @@ function TME_pec_planewave(E0,k,a,pts)
     return [TME_pec_planewave(E0,k,a,cart2polar(p[1],p[2])...) for p in pts]
 end
 
-Esca_ana = TME_pec_planewave(E0,k,r,pts)
+Esca_ana = TME_pec_planewave(E0,k,a,pts)
 
 abs.(Esca_num - Esca_ana) ./ abs.(Esca_ana)
 norm(Esca_num - Esca_ana) ./ norm(Esca_ana)
@@ -92,7 +92,7 @@ norm(Esca_num - Esca_ana) ./ norm(Esca_ana)
 # Analytical expression used for scattered field: Eq 6.5.38
 
 # Analytical result
-function TM_pec_line_curr(I,k,a,ρ,φ,ρp,φp)
+function TME_pec_line_curr(I,k,a,ρ,φ,ρp,φp)
     n = 0
     A_d(n) = besselj(n,k*a)/hankelh2(n,k*a)
     val(n) = A_d(n) * hankelh2(n,k*ρ) * hankelh2(n,k*ρp) * exp(im*n*(φ-φp))
@@ -109,9 +109,9 @@ function TM_pec_line_curr(I,k,a,ρ,φ,ρp,φp)
     return η*k*I/4 * ret
 end
 
-function TM_pec_line_curr(I,k,a,pts,spt)
+function TME_pec_line_curr(I,k,a,pts,spt)
     cart2polar(x,y) = SVector(sqrt(x^2+y^2), atan(y,x))
-    return [TM_pec_line_curr(I,k,a,cart2polar(p[1],p[2])..., spt[1],spt[2]) for p in pts]
+    return [TME_pec_line_curr(I,k,a,cart2polar(p[1],p[2])..., spt[1],spt[2]) for p in pts]
 end
 # Rhs: Line current: Monopole
 # Numerical evaluation
@@ -130,7 +130,7 @@ Einc = Helmholtz2D.monopole(;position = SVector(xp,yp), wavenumber=k, amplitude 
 pts = meshcircle(3.0*a, 3.0*0.6*a).vertices
 Esca_num = -im*η*k * potential(HH2DSingleLayerNear(im*k),pts,𝗷,X0;type=ComplexF64)
 
-Esca_ana = TM_pec_line_curr(I,k,a,pts,SVector(ρp,φp))
+Esca_ana = TME_pec_line_curr(I,k,a,pts,SVector(ρp,φp))
 
 abs.(Esca_num - Esca_ana) ./ abs.(Esca_ana)
 norm(Esca_num - Esca_ana) / norm(Esca_ana)
