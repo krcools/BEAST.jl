@@ -52,6 +52,20 @@ defaultquadstrat(op::HH2DNear, basis) = SingleNumQStrat(20)
 quaddata(op::HH2DNear,rs,els,qs::SingleNumQStrat) = quadpoints(rs,els,(qs.quad_rule,))
 quadrule(op::HH2DNear,refspace,p,y,q,el,qdata,qs::SingleNumQStrat) = qdata[1,q]
 
+# TODO: This function is useful for changing the gradient to a curl
+# However, it is a case of type piracy.
+# (Evidently, the case is not supported by cross function due to mismatch of length)
+
+@inline function LinearAlgebra.cross(z::SVector{3,T1}, v::SVector{2,T2}) where {T1,T2}
+    z == ẑ || throw(ArgumentError("Only ẑ = (0,0,1) supported"))
+    return SVector{2,T2}(-v[2],  v[1])
+end
+
+@inline function LinearAlgebra.cross(v::SVector{2,T2}, z::SVector{3,T1}) where {T1,T2}
+    z == ẑ || throw(ArgumentError("Only ẑ = (0,0,1) supported"))
+    return SVector{2,T2}( v[2], -v[1])
+end
+
 # WARNING: Matching the HH3D we use x for the sources
 # TODO: Discuss if we change this?
 function kernelvals(op::HH2DNear,y,p)

@@ -131,6 +131,7 @@ export PlaneWaveDirichlet
 export PlaneWaveNeumann
 
 struct NormalVector end
+struct TangentVector end
 
 using CompScienceMeshes
 using Combinatorics
@@ -330,6 +331,7 @@ export x̂, ŷ, ẑ
 const n = NormalVector()
 export n
 
+export TangentTrace
 #const to = TimerOutput()
 
 end # module
