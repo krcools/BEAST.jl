@@ -54,6 +54,8 @@ include("test_assemble_refinements.jl")
 include("test_dipole.jl")
 
 include("test_sauterschwabints1D.jl")
+include("test_hh2d_exec.jl")
+include("test_hh2d_mie.jl")
 include("test_hh2d_nearfield.jl")
 
 include("test_wiltonints.jl")
@@ -89,6 +91,7 @@ include("test_gridfunction.jl")
 include("test_hh_lsvie.jl")
 include("test_vie.jl")
 include("test_evie_dvie.jl")
+include("test_hh2d_mie.jl")
 
 @run_package_tests filter=ti->!(:example in ti.tags) verbose=true
 
