@@ -11,9 +11,12 @@ const c0 = 1/sqrt(ε0*μ0)
 const η = sqrt(μ0/ε0)
 
 f = 1e9 # 1 GHz
+ω = 2π*f
 λ = c0/f
 k = 2π/λ
 h = λ/10
+ε
+μ
 a = 1.0 # radius of the scatterer
 
 circle = CompScienceMeshes.meshcircle(a, h)
@@ -134,3 +137,92 @@ Esca_ana = TME_pec_line_curr(I,k,a,pts,SVector(ρp,φp))
 
 abs.(Esca_num - Esca_ana) ./ abs.(Esca_ana)
 norm(Esca_num - Esca_ana) / norm(Esca_ana)
+
+
+
+## TE-MFIE and TE-EFIE
+
+H0 = 1.0
+ 
+Hzinc = Helmholtz2D.planewave(; amplitude=H0, wavenumber=k, direction=SVector(1.0, 0.0))
+
+Eyinc = 1 / (im * ω * ε0) * curl(Hzinc)
+
+@test Eyinc.direction == Hzinc.direction
+@test Eyinc.polarization == SVector(0.0, 1.0)
+@test Eyinc.amplitude ≈ Eyinc.gamma / (im * ω * ε0) atol=1e-15
+
+X1 = lagrangec0d1(circle)
+
+
+# TE-MFIE
+#0.5I - D
+
+D = Helmholtz2D.doublelayer(; wavenumber=k) #Helmholtz2D.hypersingular(;alpha=im*k*η, beta=-im/(k*η), wavenumber=k)
+𝗵 = -assemble(DirichletTrace(Hzinc), X1)
+𝗜 = assemble(BEAST.Identity(), X1, X1)
+𝗗 = assemble(D, X1, X1)
+
+jTEMFIE = (0.5*𝗜 - 𝗗)\𝗵
+
+Hzsca_num = potential(HH2DDoubleLayerNear(im * k), pts, jTEMFIE, X1; type=ComplexF64)
+
+# TE-EFIE
+N = Helmholtz2D.hypersingular(; wavenumber=k) #Helmholtz2D.hypersingular(;alpha=im*k*η, beta=-im/(k*η), wavenumber=k)
+𝗡 = assemble(N, X1, X1)
+𝗲t = (im * ω * ε0) * assemble(TangentTrace(Eyinc), X1)
+jTEEFIE = 𝗡 \ 𝗲t
+
+# We compute the scattered Ez component (scalar)
+Esca_num = -1 / (im * ω * ε0) * potential(HH2DHyperSingularNear(im * k), pts, 𝗷t, X1; type=SVector{2,ComplexF64})
+
+dbesselj(n,x) = besselj(n-1,x) - n/x * besselj(n,x)
+dhankelh2(n,x) = hankelh2(n-1,x) - n/x * hankelh2(n,x)
+
+function TEE_pec_planewave(H0, k, a, ρ, φ)
+    n = 0
+
+    # Jin (6.4.19)
+    b_p(n) = -(1.0im)^(-n)*dbesselj(n,k*a)/dhankelh2(n,k*a)
+
+    # Hz is not needed, but maybe we use it later for MFIE
+    valHz(n) = b_p(n) * hankelh2(n, k*ρ)*exp(im*n*φ)
+    valEφ(n) = -1/(im * ω * ε0) * k * b_p(n) * dhankelh2(n, k*ρ)*exp(im*n*φ)
+    valEρ(n) = 1/(im * ω * ε0)  * (im * n / ρ) * b_p(n) * hankelh2(n, k*ρ)*exp(im*n*φ)
+
+    retHz = valHz(0)
+    retEφ = valEφ(0)
+    retEρ = valEρ(0)
+    while true
+        n += 1
+        bufHz = valHz(n) + valHz(-n)
+        bufEφ = valEφ(n) + valEφ(-n)
+        bufEρ = valEρ(n) + valEρ(-n)
+        if abs(bufHz) >= abs(retHz) * eps(eltype(real(retHz))) * 1e3 && 
+            abs(bufEφ) >= abs(retEφ) * eps(eltype(real(retEφ))) * 1e3  && 
+            abs(bufEρ) >= abs(retEρ) * eps(eltype(real(retEρ))) * 1e3
+
+            retHz += bufHz
+            retEφ += bufEφ
+            retEρ += bufEρ
+        else
+            break
+        end
+    end
+
+    return retHz, H0*(retEρ*SVector(cos(φ), sin(φ)) + retEφ*SVector(-sin(φ), cos(φ)))
+end
+
+function TEE_pec_planewave_H(H0, k, a, pts)
+    cart2polar(x,y) = SVector(sqrt(x^2 + y^2), atan(y, x))
+    return [TEE_pec_planewave(H0, k, a, cart2polar(p[1],p[2])...) for p in pts]
+end
+
+function TEE_pec_planewave_E(H0, k, a, pts)
+    cart2polar(x,y) = SVector(sqrt(x^2 + y^2), atan(y, x))
+    return [TEE_pec_planewave(H0, k, a, cart2polar(p[1],p[2])...) for p in pts]
+end
+
+Esca_ana = TEE_pec_planewave(H0, k, a, pts)
+
+Esca_ana
