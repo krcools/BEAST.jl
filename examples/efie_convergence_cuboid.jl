@@ -10,7 +10,7 @@ fn = splitext(splitdir(@__FILE__)[end])[1]
 @target solutions () -> begin
     function payload(;h)
         d = 1.0
-        Γ = meshcuboid(d, d, d/2, h)
+        Γ = meshcuboid(d, d, d/2, h; generator=:gmsh)
         X = raviartthomas(Γ)
 
         κ, η = 1.0, 1.0
@@ -68,11 +68,11 @@ end
 end
 
 
-@make errors
+df = make(errors)
 
 using Plots
-plot(log10.(errors.h), log10.(errors.err), marker=:.)
-plot!(log10.(errors.h), -0.05 .+ 0.75*log10.(errors.h), label="p = 0.75")
+plot(log10.(df.h), log10.(df.err), marker=:.)
+plot!(log10.(df.h), -0.05 .+ 0.75*log10.(df.h), label="p = 0.75")
 
 
 
