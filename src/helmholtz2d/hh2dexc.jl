@@ -29,7 +29,7 @@ function (f::gradHH2DPlaneWave)(r)
     γ = f.gamma
     a = f.amplitude
 
-    return -γ * d * exp(-γ * dot(d, r))
+    return - a * γ * d * exp(-γ * dot(d, r))
 end
 
 function (f::gradHH2DPlaneWave)(mp::CompScienceMeshes.MeshPointNM)
@@ -64,7 +64,7 @@ scalartype(f::curlHH2DPlaneWave{P,K,T}) where {P,K,T} = promote_type(eltype(P), 
 
 function curl(m::HH2DPlaneWave)
     d = m.direction
-    polarization = -SVector(d[2], -d[1]) # By using a minus sign here, the amplitude stays positive
+    polarization = -SVector(-d[2], d[1]) # By using a minus sign here, the amplitude stays positive
     return curlHH2DPlaneWave(d, polarization, m.gamma, m.amplitude * (m.gamma))
 end
 
@@ -177,7 +177,9 @@ scalartype(s::TangentTrace{T}) where {T} = T
 function (ϕ::TangentTrace)(p)
     F = ϕ.field
     x = cartesian(p)
-    return dot(tangents(p,1), F(x))
+    t = tangents(p,1)
+    t = t / norm(t)
+    return dot(t, F(x))
 end
 
 integrand(::DirichletTrace, test_vals, field_vals) = dot(test_vals[1], field_vals)
