@@ -62,11 +62,11 @@ using Test
 
     pts = meshcircle(0.8 * r, 0.8 * 0.6 * r).vertices # sphere inside on which the potential and field are evaluated
 
-    pot_IDPSL = potential(HH2DSingleLayerNear(im * k), pts, ρ_IDPSL, X0; type=ComplexF64)
-    pot_IDPDL = potential(HH2DDoubleLayerNear(im * k), pts, ρ_IDPDL, X1; type=ComplexF64)
+    pot_IDPSL = potential(HH2DSingleLayerNear(S), pts, ρ_IDPSL, X0; type=ComplexF64)
+    pot_IDPDL = potential(HH2DDoubleLayerNear(D), pts, ρ_IDPDL, X1; type=ComplexF64)
 
-    pot_INPSL = potential(HH2DSingleLayerNear(im * k), pts, ρ_INPSL, X1; type=ComplexF64)
-    pot_INPDL = potential(HH2DDoubleLayerNear(im * k), pts, ρ_INPDL, X1; type=ComplexF64)
+    pot_INPSL = potential(HH2DSingleLayerNear(S), pts, ρ_INPSL, X1; type=ComplexF64)
+    pot_INPDL = potential(HH2DDoubleLayerNear(D), pts, ρ_INPDL, X1; type=ComplexF64)
 
     # Total field inside should be zero
     err_IDPSL_pot = norm(pot_IDPSL + Φ_inc.(pts)) / norm(Φ_inc.(pts))
@@ -77,10 +77,10 @@ using Test
     # Efield(x) = - grad Φ_inc(x)
     Efield(x) =  -grad(charge1)(x) + -grad(charge2)(x)
 
-    field_IDPSL = -potential(HH2DDoubleLayerTransposedNear(im * k), pts, ρ_IDPSL, X0; type=SVector{2,ComplexF64})
-    field_IDPDL = -potential(HH2DHyperSingularNear(im * k), pts, ρ_IDPDL, X1; type=SVector{2,ComplexF64})
-    field_INPSL = -potential(HH2DDoubleLayerTransposedNear(im * k), pts, ρ_INPSL, X1; type=SVector{2,ComplexF64})
-    field_INPDL = -potential(HH2DHyperSingularNear(im * k), pts, ρ_INPDL, X1; type=SVector{2,ComplexF64})
+    field_IDPSL = -potential(HH2DDoubleLayerTransposedNear(Dt), pts, ρ_IDPSL, X0; type=SVector{2,ComplexF64})
+    field_IDPDL = -potential(HH2DHyperSingularNear(N), pts, ρ_IDPDL, X1; type=SVector{2,ComplexF64})
+    field_INPSL = -potential(HH2DDoubleLayerTransposedNear(Dt), pts, ρ_INPSL, X1; type=SVector{2,ComplexF64})
+    field_INPDL = -potential(HH2DHyperSingularNear(N), pts, ρ_INPDL, X1; type=SVector{2,ComplexF64})
 
     err_IDPSL_field = norm(field_IDPSL + Efield.(pts)) / norm(Efield.(pts))
     err_IDPDL_field = norm(field_IDPDL + Efield.(pts)) / norm(Efield.(pts))
@@ -118,20 +118,20 @@ using Test
     testcircle = meshcircle(1.2 * r, 1.2 * 0.6 * r)
     pts = testcircle.vertices[norm.(testcircle.vertices) .> r]
 
-    pot_EDPSL = potential(HH2DSingleLayerNear(im * k), pts, ρ_EDPSL, X0; type=ComplexF64)
-    pot_EDPDL = potential(HH2DDoubleLayerNear(im * k), pts, ρ_EDPDL, X1; type=ComplexF64)
-    pot_ENPDL = potential(HH2DDoubleLayerNear(im * k), pts, ρ_ENPDL, X1; type=ComplexF64)
-    pot_ENPSL = potential(HH2DSingleLayerNear(im * k), pts, ρ_ENPSL, X1; type=ComplexF64)
+    pot_EDPSL = potential(HH2DSingleLayerNear(S), pts, ρ_EDPSL, X0; type=ComplexF64)
+    pot_EDPDL = potential(HH2DDoubleLayerNear(D), pts, ρ_EDPDL, X1; type=ComplexF64)
+    pot_ENPDL = potential(HH2DDoubleLayerNear(D), pts, ρ_ENPDL, X1; type=ComplexF64)
+    pot_ENPSL = potential(HH2DSingleLayerNear(S), pts, ρ_ENPSL, X1; type=ComplexF64)
 
     err_EDPSL_pot = norm(pot_EDPSL + Φ_inc.(pts)) ./ norm(Φ_inc.(pts))
     err_EDPDL_pot = norm(pot_EDPDL + Φ_inc.(pts)) ./ norm(Φ_inc.(pts))
     err_ENPSL_pot = norm(pot_ENPSL + Φ_inc.(pts)) ./ norm(Φ_inc.(pts))
     err_ENPDL_pot = norm(pot_ENPDL + Φ_inc.(pts)) ./ norm(Φ_inc.(pts))
 
-    field_EDPSL = -potential(HH2DDoubleLayerTransposedNear(im * k), pts, ρ_EDPSL, X0; type=SVector{2,ComplexF64})
-    field_EDPDL = -potential(HH2DHyperSingularNear(im * k), pts, ρ_EDPDL, X1; type=SVector{2,ComplexF64})
-    field_ENPSL = -potential(HH2DDoubleLayerTransposedNear(im * k), pts, ρ_ENPSL, X1; type=SVector{2,ComplexF64})
-    field_ENPDL = -potential(HH2DHyperSingularNear(im * k), pts, ρ_ENPDL, X1; type=SVector{2,ComplexF64})
+    field_EDPSL = -potential(HH2DDoubleLayerTransposedNear(Dt), pts, ρ_EDPSL, X0; type=SVector{2,ComplexF64})
+    field_EDPDL = -potential(HH2DHyperSingularNear(N), pts, ρ_EDPDL, X1; type=SVector{2,ComplexF64})
+    field_ENPSL = -potential(HH2DDoubleLayerTransposedNear(Dt), pts, ρ_ENPSL, X1; type=SVector{2,ComplexF64})
+    field_ENPDL = -potential(HH2DHyperSingularNear(N), pts, ρ_ENPDL, X1; type=SVector{2,ComplexF64})
 
     err_EDPSL_field = norm(field_EDPSL + Efield.(pts)) / norm(Efield.(pts))
     err_EDPDL_field = norm(field_EDPDL + Efield.(pts)) / norm(Efield.(pts))
