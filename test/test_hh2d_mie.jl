@@ -208,12 +208,12 @@ let
     j_TMEFIE_pw =  M_TMEFIE \ ez_pw_inc
 
     # TM-EFIE: We compute the scattered Ez component (scalar)
-    Ez_pw_sca_num = -im*k*η0 * potential(HH2DSingleLayerNear(im * k), pts, j_TMEFIE_pw, X0; type=ComplexF64)
+    Ez_pw_sca_num = -potential(HH2DSingleLayerNear(𝒮), pts, j_TMEFIE_pw, X0; type=ComplexF64)
     Ez_pw_sca_ana = TM_pec_planewave_E(E0, k, a, pts)
 
     @test norm(Ez_pw_sca_ana - Ez_pw_sca_num) ./ norm(Ez_pw_sca_ana) < 0.002
 
-    Ht_pw_sca_num = -potential(HH2DDoubleLayerTransposedNear(im * k), pts, j_TMEFIE_pw, X0; type=SVector{2,ComplexF64})
+    Ht_pw_sca_num = -potential(HH2DDoubleLayerTransposedNear(𝒟ᵀ), pts, j_TMEFIE_pw, X0; type=SVector{2,ComplexF64})
     Ht_pw_sca_ana = TM_pec_planewave_H(E0, k, a, pts)
 
     @test norm(Ref(ẑ) .× Ht_pw_sca_num - Ht_pw_sca_ana) ./ norm(Ht_pw_sca_ana) < 0.002
@@ -239,7 +239,7 @@ let
     ez_lc_Einc = assemble(DirichletTrace(Ez_lc_Einc),X0)
     j_TMEFIE_lc = M_TMEFIE \ ez_lc_Einc
 
-    Ez_lc_sca_num = -im*η0*k * potential(HH2DSingleLayerNear(im*k),pts , j_TMEFIE_lc, X0;type=ComplexF64)
+    Ez_lc_sca_num = - potential(HH2DSingleLayerNear(𝒮),pts , j_TMEFIE_lc, X0;type=ComplexF64)
 
     Ez_lc_sca_ana = TM_pec_line_curr_E(I, k, a, pts, SVector(ρp,φp))
 
@@ -265,7 +265,7 @@ let
     j_TEMFIE_pw = M_TEMFIE \ hz_pw_inc
 
 
-    Hz_pw_sca_num = -potential(HH2DDoubleLayerNear(im * k), pts, j_TEMFIE_pw, X1; type=ComplexF64)
+    Hz_pw_sca_num = -potential(HH2DDoubleLayerNear(𝒟), pts, j_TEMFIE_pw, X1; type=ComplexF64)
     Hz_pw_sca_ana = TE_pec_planewave_H(H0, k, a, pts)
 
     @test norm(Hz_pw_sca_num - Hz_pw_sca_ana) /norm(Hz_pw_sca_ana) < 0.0015
@@ -280,7 +280,7 @@ let
 
     @test norm(j_TEEFIE_pw - j_TEMFIE_pw)/norm(j_TEMFIE_pw) < 0.007
 
-    Et_pw_sca_num = 1 / (im * ω * ε0) * potential(HH2DHyperSingularNear(im * k), pts, j_TEEFIE_pw, X1; type=SVector{2, ComplexF64})
+    Et_pw_sca_num = potential(HH2DHyperSingularNear(𝒩), pts, j_TEEFIE_pw, X1; type=SVector{2, ComplexF64})
     Et_pw_sca_ana = TE_pec_planewave_E(H0, k, a, pts)
 
     # We compute the scattered Ez component (scalar)
