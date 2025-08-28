@@ -142,6 +142,8 @@ function kernelvals(biop::HelmholtzOperator2D{T, K}, tgeo, bgeo) where {T, K <: 
     kr = k * R
     hankels = hankelh2.([0 1], kr)
     green = - im / 4 * hankels[1]
+
+    # Gradient with respect to observation point
     gradgreen = k * im / 4 * hankels[2] * r / R
 
     txty = dot(normal(tgeo), normal(bgeo))

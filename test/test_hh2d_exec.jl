@@ -22,7 +22,7 @@ let
     E0 = 1.0 # amplitude
     Einc = Helmholtz2D.planewave(; amplitude=E0, wavenumber=k, direction=SVector(1.0, 0.0))
 
-    Hinc = -1.0 * curl(Einc)
+    Hinc = curl(Einc)
     #hTM = assemble(TangentTrace(Hinc), X0)
 
     h1 = assemble(TangentTrace(Hinc), X0)
@@ -37,7 +37,7 @@ let
 
     E0 = 1.0 # amplitude
     Einc = Helmholtz2D.planewave(; amplitude=E0, wavenumber=k, direction=SVector(0.0, 1.0))
-    Hinc = -1.0 * curl(Einc)
+    Hinc = curl(Einc)
 
     h1 = assemble(TangentTrace(Hinc), X1)
     h2 = assemble(BEAST.NormalDerivative(Einc), X1)
