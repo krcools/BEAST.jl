@@ -419,6 +419,7 @@ end
     a = Id[k[1],j[1]] + Id[k[2],j[2]]
 
     A = assemble(a, X, X)
+    M = AbstractMatrix(A)
     import BEAST.BlockArrays
 
     n1 = numfunctions(X[1])
@@ -426,6 +427,6 @@ end
 
     @test n2 == 0
 
-    @test BlockArrays.blocksize(A) == (2,2)
-    @test BlockArrays.blocksizes(A) == ([n1,n2], [n1,n2])
+    @test BlockArrays.blocksize(M) == (2,2)
+    @test BlockArrays.blocksizes(M) == [(n1,n1) (n1,n2); (n2,n1) (n2,n2)]
 end

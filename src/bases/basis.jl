@@ -424,3 +424,30 @@ function eval(s::BEAST.Space, i::Int, cellid, u)
 
     return r
 end
+
+
+function union(spaces::Vector{S}) where {S<:Space}
+
+    geo1 = geometry(spaces[1])
+    for i in 2:length(spaces)
+        @assert geo1 == geometry(spaces[i])
+    end
+
+    fns = reduce(vcat, [s.fns for s in spaces])
+    pos = reduce(vcat, [s.pos for s in spaces])
+    return S(geo1, fns, pos)
+end
+
+@testitem "union of spaces" begin
+    using CompScienceMeshes
+   
+    m1 = meshrectangle(1.0, 1.0, 1.0, 3)
+    bnd_edges = boundary(m1)
+    int_edges = setminus(skeleton(m1, 1), bnd_edges)
+
+    X1 = raviartthomas(m1, int_edges)
+    X2 = raviartthomas(m1, bnd_edges)
+
+    X = BEAST.union([X1, X2])
+    @test numfunctions(X) == 5
+end

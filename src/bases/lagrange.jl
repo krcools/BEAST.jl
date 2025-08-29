@@ -668,19 +668,151 @@ function duallagrangec0d1(mesh, mesh2, pred, ::Type{Val{2}})
   LagrangeBasis{1,0,NF}(geometry, fns, pos)
 end
 
+"""
+    lagrangec0d2(mesh) -> basis
+
+Build lagrangec0d2 elements, including boundary vertices (meaning assuming a closed mesh).
+"""
+
+function lagrangec0d2(mesh)
+
+    #mark non connectet vertices
+    verts = skeleton(mesh, 0)
+    detached = trues(numvertices(mesh))
+    for v in cells(verts)
+        detached[v] = false
+    end
+
+    #identify
+    bnd = boundary(mesh)
+    bndverts = skeleton(bnd, 0)
+    notonbnd = trues(numvertices(mesh))
+    for v in cells(bndverts)
+        notonbnd[v] = false
+    end
+
+    vertexlist = findall(.!detached)
+   
+    edges = skeleton(mesh, 1; sort)
+    cps = cellpairs(mesh, edges, dropjunctionpair=true)
+    #only interior edges
+    ids = findall(x -> x>0, cps[2,:])
+  
+    lagrangec0d2(mesh,vertexlist,cps,Val{dimension(mesh)+1})
+end
+
+
+function lagrangec0d2(mesh, vertexlist::Vector, cellpairs::Array{Int,2}, ::Type{Val{3}})
+
+    T = coordtype(mesh)
+    U = universedimension(mesh)
+
+    numvertices = length(vertexlist)
+    numedges = size(cellpairs,2)
+
+    cellids, ncells = vertextocellmap(mesh)
+
+    Cells = cells(mesh)
+    Verts = vertices(mesh)
+
+    # create the local shapes
+    functions = Vector{Vector{Shape{Float64}}}(undef,numvertices+numedges)
+    positions = Vector{vertextype(mesh)}(undef,numvertices+numedges)
+    
+    #temp containers for vertex dof
+    fns = Vector{Vector{Shape{Float64}}}()
+    pos = Vector{vertextype(mesh)}()
+
+    sizehint!(fns, length(vertexlist))
+    sizehint!(pos, length(vertexlist))
+
+    #shape function associated with vetex dof
+    for v in vertexlist
+
+        numshapes = ncells[v]
+        numshapes == 0 && continue
+
+        shapes = Vector{Shape{Float64}}(undef,numshapes)
+        for s in 1: numshapes
+            c = cellids[v,s]
+            # cell = mesh.faces[c]
+            cell = Cells[c]
+
+            localid = something(findfirst(isequal(v), cell),0)
+            @assert localid != 0
+
+            shapes[s] = Shape(c, localid, 1.0)
+        end
+        #functions[v] = shapes
+        #positions[v] = Verts[v]
+
+        push!(fns, shapes)
+        push!(pos, mesh.vertices[v])
+    end
+
+    @assert length(fns) == numvertices
+
+    for i in 1:numvertices
+        functions[i] = fns[i]
+        positions[i] = pos[i]
+    end
+
+    #shape function associated with edge dof
+    for i in 1:numedges
+        #internal edge
+        if cellpairs[2,i] > 0
+            c1 = cellpairs[1,i]; cell1 = Cells[c1] #mesh.faces[c1]
+            c2 = cellpairs[2,i]; cell2 = Cells[c2] #mesh.faces[c2]
+            e1, e2 = getcommonedge(cell1, cell2)
+            functions[numvertices+i] = [
+              Shape(c1, abs(e1)+3, 1.0),
+              Shape(c2, abs(e2)+3, 1.0)]
+            isct = intersect(cell1, cell2)
+            @assert length(isct) == 2
+            @assert !(cell1[abs(e1)] in isct)
+            @assert !(cell2[abs(e2)] in isct)
+
+            v1 = cell1[mod1(abs(e1)+1,3)]
+            v2 = cell1[mod1(abs(e1)+2,3)]
+
+            edge = simplex(mesh.vertices[[v1,v2]]...)
+           
+            positions[numvertices+i] =  cartesian(center(edge))
+        #boundary edge   
+        else
+            c1 = cellpairs[1,i]; cell1 = Cells[c1] 
+            e1 = cellpairs[2,i]
+            functions[numvertices+i] = [
+            Shape(c1, abs(e1)+3, +1.0)]
+
+            v1 = cell1[mod1(abs(e1)+1,3)]
+            v2 = cell1[mod1(abs(e1)+2,3)]
+            edge = simplex(mesh.vertices[[v1,v2]]...)
+           
+            positions[numvertices+i] =  cartesian(center(edge))
+        end
+    end
+
+
+    NF = 6
+    LagrangeBasis{2,0,NF}(mesh, functions, positions)
+end
+
+
 gradient(space::LagrangeBasis{1,0}, geo, fns) = NDLCCBasis(geo, fns)
 # gradient(space::LagrangeBasis{1,0}, geo::CompScienceMeshes.AbstractMesh{U,3} where {U}, fns) = NDBasis(geo, fns)
 
 curl(space::LagrangeBasis{1,0}, geo, fns) = RTBasis(geo, fns)
 
-curl(space::LagrangeBasis{2,0}, geo, fns) = BDMBasis(geo, fns) 
+#curl(space::LagrangeBasis{2,0}, geo, fns) = BDMBasis(geo, fns) 
 
 gradient(space::LagrangeBasis{1,0,<:CompScienceMeshes.AbstractMesh{<:Any,2}}, geo, fns) =
     LagrangeBasis{0,-1,1}(geo, fns, space.pos)
 
-
 gradient(space::LagrangeBasis{1,0,<:CompScienceMeshes.AbstractMesh{<:Any,3}}, geo, fns) =
     NDBasis(geo, fns, space.pos)
+
+curl(space::LagrangeBasis{2,0},geo, fns) = BDMBasis(geo, fns)
 
 #
 # Sclar trace for Laggrange element based spaces
@@ -940,18 +1072,34 @@ end
 
 function localindices(dof::_LagrangeGlobalNodesDoFs, chart::CompScienceMeshes.Simplex,
     localspace::LagrangeRefSpace{<:Real,2}, i)
-    return [i]
+    return [1,3,6][[i]]
 end
 
 function localindices(dof::_LagrangeGlobalEdgeDoFs, chart::CompScienceMeshes.Simplex,
     localspace::LagrangeRefSpace{<:Real,2}, i)
-    return [3+i]
+    return [5,4,2][[i]]
 end
 
 function localindices(dof::_LagrangeGlobalFaceDoFs, chart::CompScienceMeshes.Simplex,
     localspace::LagrangeRefSpace{<:Real,2}, i)
     return []
 end
+
+function localindices(dof::_LagrangeGlobalNodesDoFs, chart::CompScienceMeshes.Simplex,
+    localspace::LagrangeRefSpace{<:Real,1}, i)
+    return [i]
+end
+
+function localindices(dof::_LagrangeGlobalEdgeDoFs, chart::CompScienceMeshes.Simplex,
+    localspace::LagrangeRefSpace{<:Real,1}, i)
+    return []
+end
+
+function localindices(dof::_LagrangeGlobalFaceDoFs, chart::CompScienceMeshes.Simplex,
+    localspace::LagrangeRefSpace{<:Real,1}, i)
+    return []
+end
+
 
 
 function lagrangec0(mesh::CompScienceMeshes.AbstractMesh{<:Any,3}; order)
@@ -1003,6 +1151,7 @@ function lagrangec0(mesh::CompScienceMeshes.AbstractMesh{<:Any,3}; order)
             end
         end
 
+        order < 2 && continue
         E = R12[nzrange(C12,cell)]
         I = V12[nzrange(C12,cell)]
         for (i,e) in zip(I, E)

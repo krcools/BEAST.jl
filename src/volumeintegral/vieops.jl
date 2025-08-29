@@ -1,31 +1,6 @@
 abstract type VIEOperator <: IntegralOperator end
-abstract type VolumeOperator <: VIEOperator end
-abstract type BoundaryOperator <: VIEOperator end
-
-struct KernelValsVIE{T,U,P,Q,K}
-    gamma::U
-    vect::P
-    dist::T
-    green::U
-    gradgreen::Q
-    tau::K
-end
-
-function kernelvals(viop::VIEOperator, p ,q)
-    Y = viop.gamma;
-    r = cartesian(p)-cartesian(q)
-    R = norm(r)
-    yR = Y*R
-
-    expn = exp(-yR)
-    green = expn / (4*pi*R)
-    gradgreen = - (Y +1/R)*green/R*r  # Derivation after p (test variable)
-    
-
-    tau = viop.tau(cartesian(q))
-
-    KernelValsVIE(Y,r,R, green, gradgreen,tau)
-end
+abstract type VolumeOperator <: VIEOperator end     # ∫∫∫_Ω ∫∫∫_Ω
+abstract type BoundaryOperator <: VIEOperator end   # ∫∫∫_Ω ∫∫_Γ or ∫∫_Γ ∫∫∫_Ω
 
 struct VIESingleLayer{T,U,P} <: VolumeOperator
     gamma::T
@@ -86,108 +61,159 @@ struct VIEhhVolumek0{T,U,P} <: VolumeOperator
 end
 
 
+"""
+The following operators are for test purposes only (EVIE and DVIE)
+"""
+
+struct DVIE_TestOp1{T,U,P} <: VolumeOperator
+    gamma::T
+    α::U
+    tau::P
+end
+
+struct DVIE_TestOp2{T,U,P} <: BoundaryOperator
+    gamma::T
+    α::U
+    tau::P
+end
+
+struct DVIE_TestOp3{T,U,P} <: VolumeOperator
+    gamma::T
+    α::U
+    tau::P
+end
+
+struct EVIE_TestOp1{T,U,P} <: VolumeOperator
+    gamma::T
+    α::U
+    tau::P
+end
+
+struct EVIE_TestOp2{T,U,P} <: BoundaryOperator
+    gamma::T
+    α::U
+    tau::P
+end
+
+struct EVIE_TestOp3{T,U,P} <: VolumeOperator
+    gamma::T
+    α::U
+    tau::P
+end
+
+
+
+#TODO: ... scalartype is also determined by the material function ... LSVIE quasistatic case => complex ...handler...
 scalartype(op::VIEOperator) = typeof(op.gamma)
 
 export VIE
 
-struct VIEIntegrand{S,T,O,K,L}
-    test_tetrahedron_element::S
-    trial_tetrahedron_element::T
-    op::O
-    test_local_space::K
-    trial_local_space::L
-end
 
 
-function (igd::VIEIntegrand)(u,v)
 
-    #mesh points
-    tgeo = neighborhood(igd.test_tetrahedron_element,v)
-    bgeo = neighborhood(igd.trial_tetrahedron_element,u)
+"""
+Integrands for the operators of the DVIE
+"""
 
-    #kernel values
-    kerneldata = kernelvals(igd.op,tgeo,bgeo)
-
-    #values & grad/div/curl of local shape functions
-    tval = igd.test_local_space(tgeo) 
-    bval = igd.trial_local_space(bgeo)
-
-    #jacobian
-    j = jacobian(tgeo) * jacobian(bgeo)
+function (igd::Integrand{<:VIESingleLayer})(x,y,f,g)
+    α = igd.operator.α
+    β = igd.operator.β
+    γ = igd.operator.gamma
     
-    integrand(igd.op, kerneldata,tval,tgeo,bval,bgeo) * j
+    r = cartesian(x) - cartesian(y)
+    R = norm(r)
+    iR = 1/R
+    green = exp(-γ*R)*(iR*i4pi)
+    gradgreen = -(γ + iR) * green * (iR * r) # Derivation after x (test variable) => "-" to get nablaG(r,r')
+    
+    Ty = igd.operator.tau(cartesian(y))
+
+    αgreenTy = α * green * Ty
+    βgradgreenTy = β * gradgreen * Ty
+
+
+    fx = @SVector[f[i].value for i in 1:4]
+    gy = @SVector[g[i].value for i in 1:4]
+
+    dfx = @SVector[f[i].divergence for i in 1:4]
+
+    @SMatrix[α * dot(fx[i],gy[j]) * αgreenTy  - dot(dfx[i] * gy[j], βgradgreenTy) for i in 1:4, j in 1:4]
+end
+
+function (igd::Integrand{<:VIEBoundary})(x,y,f,g)
+    α = igd.operator.α
+    γ = igd.operator.gamma
+    
+    r = cartesian(x) - cartesian(y)
+    R = norm(r)
+    iR = 1/R
+    green = exp(-γ*R)*(iR*i4pi)
+    gradgreen = -(γ + iR) * green * (iR * r) # Derivation after x (test variable) => "-" to get ∇_x G(x,y)
+    
+    Ty = igd.operator.tau(cartesian(y))
+
+    αgradgreenTy = α * gradgreen * Ty
+
+
+    fx = @SVector[f[i].value for i in 1:1]
+    gy = @SVector[g[i].value for i in 1:4]
+
+    @SMatrix[fx[i] * dot(gy[j], αgradgreenTy) for i in 1:1, j in 1:4]
 end
 
 
-function integrand(viop::VIESingleLayer, kerneldata, tvals, tgeo, bvals, bgeo)
 
-    gx = @SVector[tvals[i].value for i in 1:4]
-    fy = @SVector[bvals[i].value for i in 1:4]
+"""
+Integrands for the operators of the EVIE
+"""
 
-    dgx = @SVector[tvals[i].divergence for i in 1:4]
-    dfy = @SVector[bvals[i].divergence for i in 1:4]
+function (igd::Integrand{<:VIESingleLayer2})(x,y,f,g)
+    α = igd.operator.α
+    γ = igd.operator.gamma
+    
+    r = cartesian(x) - cartesian(y)
+    R = norm(r)
+    iR = 1/R
+    green = exp(-γ*R)*(iR*i4pi)
+    gradgreen = -(γ + iR) * green * (iR * r) # Derivation after x (test variable) => "-" to get nablaG(r,r')
+    
+    Ty = igd.operator.tau(cartesian(y))
 
-    G = kerneldata.green
-    gradG = kerneldata.gradgreen
-
-    Ty = kerneldata.tau
-
-    α = viop.α
-    β = viop.β
-
-    @SMatrix[α * dot(gx[i],Ty*fy[j]) * G - β * dot(dgx[i] * (Ty * fy[j]), gradG) for i in 1:4, j in 1:4]
-end
+    αgradgreenTy = α * gradgreen * Ty
 
 
-function integrand(viop::VIESingleLayer2, kerneldata, tvals, tgeo, bvals, bgeo)
-
-    gx = @SVector[tvals[i].value for i in 1:6]
-    fy = @SVector[bvals[i].value for i in 1:6]
-
-    dgx = @SVector[tvals[i].curl for i in 1:6]
-    dfy = @SVector[bvals[i].curl for i in 1:6]
-
-    G = kerneldata.green
-    gradG = kerneldata.gradgreen
-
-    Ty = kerneldata.tau
-
-    α = viop.α
-    β = viop.β
-
+    gy = @SVector[g[i].value for i in 1:6]
+    dfx = @SVector[f[i].curl for i in 1:6]
  
-    @SMatrix[dot(dgx[i] , cross(gradG, Ty*fy[j])) for i in 1:6, j in 1:6]
+    @SMatrix[dot(dfx[i], cross(αgradgreenTy, gy[j])) for i in 1:6, j in 1:6]
 end
 
-function integrand(viop::VIEBoundary, kerneldata, tvals, tgeo, bvals, bgeo)
+function (igd::Integrand{<:VIEBoundary2})(x,y,f,g)
+    α = igd.operator.α
+    γ = igd.operator.gamma
+    
+    r = cartesian(x) - cartesian(y)
+    R = norm(r)
+    iR = 1/R
+    green = exp(-γ*R)*(iR*i4pi)
+    gradgreen = -(γ + iR) * green * (iR * r) # Derivation after x (test variable) => "-" to get ∇_x G(x,y)
+    
+    Ty = igd.operator.tau(cartesian(y))
 
-    gx = @SVector[tvals[i].value for i in 1:1]
-    fy = @SVector[bvals[i].value for i in 1:4]
+    αgradgreenTy = α * gradgreen * Ty
 
-    gradG = kerneldata.gradgreen
 
-    Ty = kerneldata.tau
+    fx = @SVector[f[i].value for i in 1:3]
+    gy = @SVector[g[i].value for i in 1:6]
 
-    α = viop.α
-
-    @SMatrix[α * gx[i] * dot(Ty * fy[j], gradG) for i in 1:1, j in 1:4]
+    @SMatrix[dot(fx[i], cross(αgradgreenTy, gy[j])) for i in 1:3, j in 1:6]
 end
 
-function integrand(viop::VIEBoundary2, kerneldata, tvals, tgeo, bvals, bgeo)
 
 
-    gx = @SVector[tvals[i].value for i in 1:3]
-    fy = @SVector[bvals[i].value for i in 1:6]
-
-
-    gradG = kerneldata.gradgreen
-
-    Ty = kerneldata.tau
-
-    α = viop.α
-
-    @SMatrix[α * dot(gx[i] , cross(gradG, Ty*fy[j])) for i in 1:3, j in 1:6]
-end
+"""
+Other integrands
+"""
 
 function integrand(viop::VIEDoubleLayer, kerneldata, tvals, tgeo, bvals, bgeo)
     gx = tvals[1]
@@ -203,77 +229,226 @@ function integrand(viop::VIEDoubleLayer, kerneldata, tvals, tgeo, bvals, bgeo)
 end
 
 
-# Integrands for the operators of the Lippmann Schwinger Volume Integral Equation:
 
-function integrand(viop::VIEhhVolume, kerneldata, tvals, tgeo, bvals, bgeo)
+"""
+Integrands for the operators of the Lippmann Schwinger Volume Integral Equation (LSVIE)
+"""
 
-    gx = @SVector[tvals[i].value for i in 1:4]
-    fy = @SVector[bvals[i].value for i in 1:4]
+function (igd::Integrand{<:VIEhhVolume})(x,y,f,g)
+    α = igd.operator.α
+    γ = igd.operator.gamma
 
-    dgx = @SVector[tvals[i].gradient for i in 1:4]
-    dfy = @SVector[bvals[i].gradient for i in 1:4]
+    r = cartesian(x) - cartesian(y)
+    R = norm(r)
+    iR = 1 / R
+    green = exp(-γ*R)*(i4pi*iR)
 
-    G = kerneldata.green
-    gradG = kerneldata.gradgreen
+    Ty = igd.operator.tau(cartesian(y))
 
-    Ty = kerneldata.tau
+    αgreenTy = α * green * Ty
 
-    α = viop.α
 
-    return @SMatrix[α * dot(dgx[i], G*Ty*dfy[j]) for i in 1:4, j in 1:4]
+    dfx = @SVector[f[i].gradient for i in 1:4]
+    dgy = @SVector[g[i].gradient for i in 1:4]
+
+    return @SMatrix[dot(dfx[i], dgy[j]) * αgreenTy for i in 1:4, j in 1:4] 
+end
+
+function (igd::Integrand{<:VIEhhBoundary})(x,y,f,g)
+    α = igd.operator.α
+    γ = igd.operator.gamma
+
+    r = cartesian(x) - cartesian(y)
+    R = norm(r)
+    iR = 1 / R
+    green = exp(-γ*R)*(i4pi*iR)
+
+    Ty = igd.operator.tau(cartesian(y))
+
+    αgreenTy = α * green * Ty
+
+    nx = x.patch.normals[1]
+
+
+    fx = @SVector[f[i].value for i in 1:3]
+    dgy = @SVector[g[i].gradient for i in 1:4]
+
+    return @SMatrix[fx[i] * dot(nx, dgy[j]) * αgreenTy for i in 1:3, j in 1:4] 
+end
+
+function (igd::Integrand{<:VIEhhVolumek0})(x,y,f,g)
+    α = igd.operator.α
+    γ = igd.operator.gamma
+    
+    r = cartesian(x) - cartesian(y)
+    R = norm(r)
+    iR = 1/R
+    green = exp(-γ*R)*(iR*i4pi)
+
+    Ty = igd.operator.tau(cartesian(y))
+
+    αgreenTy = α * green * Ty
+
+
+    fx = @SVector[f[i].value for i in 1:4]
+    gy = @SVector[g[i].value for i in 1:4]
+
+    return @SMatrix[dot(fx[i], gy[j]) * αgreenTy  for i in 1:4, j in 1:4] 
+end
+
+function (igd::Integrand{<:VIEhhVolumegradG})(x,y,f,g)
+    α = igd.operator.α
+    γ = igd.operator.gamma
+    
+    r = cartesian(x) - cartesian(y)
+    R = norm(r)
+    iR = 1/R
+    green = exp(-γ*R)*(iR*i4pi)
+    gradgreen = (γ + iR) * green * (iR * r) # Derivation after y (trial variable) => "+" to get ∇_y G(x,y)
+    
+    Ty = igd.operator.tau(cartesian(y))
+
+    αgradgreenTy = α * gradgreen * Ty
+
+    fx = @SVector[f[i].value for i in 1:4]
+    dgy = @SVector[g[i].gradient for i in 1:4]
+
+    return @SMatrix[fx[i] * dot(dgy[j], αgradgreenTy) for i in 1:4, j in 1:4]
 end
 
 
-function integrand(viop::VIEhhBoundary, kerneldata, tvals, tgeo, bvals, bgeo)
 
-    gx = @SVector[tvals[i].value for i in 1:3]
-    dfy = @SVector[bvals[i].gradient for i in 1:4]
+"""
+Integrands for operators which are for test purposes only (DVIE and EVIE)
+"""
 
-    G = kerneldata.green
-    gradG = kerneldata.gradgreen
+function (igd::Integrand{<:DVIE_TestOp1})(x,y,f,g)
+    α = igd.operator.α
+    γ = igd.operator.gamma
+    
 
-    Ty = kerneldata.tau
+    r = cartesian(x) - cartesian(y)
+    R = norm(r)
+    iR = 1/R
+    green = exp(-γ*R)*(iR*i4pi)
+    gradgreen = -(γ + iR) * green * (iR * r) # Derivation after x (test variable) => "-" to get ∇_x G(x,y)
 
-    α = viop.α
+    Ty = igd.operator.tau(cartesian(y))
 
-    return @SMatrix[α * dot( tgeo.patch.normals[1]*gx[i],G*Ty*dfy[j]) for i in 1:3, j in 1:4]
+    αgradgreenTy = α * gradgreen * Ty
+
+
+    fx = @SVector[f[i].value for i in 1:4]
+    dgy = @SVector[g[i].divergence for i in 1:4]
+
+    return @SMatrix[dot(fx[i], αgradgreenTy) * dgy[j] for i in 1:4, j in 1:4]
 end
 
-function integrand(viop::VIEhhVolumek0, kerneldata, tvals, tgeo, bvals, bgeo)
+function (igd::Integrand{<:DVIE_TestOp2})(x,y,f,g)
+    α = igd.operator.α
+    γ = igd.operator.gamma
+    
+    r = cartesian(x) - cartesian(y)
+    R = norm(r)
+    iR = 1/R
+    green = exp(-γ*R)*(iR*i4pi)
 
-    gx = @SVector[tvals[i].value for i in 1:4]
-    fy = @SVector[bvals[i].value for i in 1:4]
+    Ty = igd.operator.tau(cartesian(y))
 
-    dgx = @SVector[tvals[i].gradient for i in 1:4]
-    dfy = @SVector[bvals[i].gradient for i in 1:4]
+    αgreenTy = α * green * Ty
 
-    G = kerneldata.green
-    gradG = kerneldata.gradgreen
 
-    Ty = kerneldata.tau
+    fx = @SVector[f[i].value for i in 1:1]
+    dgy = @SVector[g[i].divergence for i in 1:4]
 
-    α = viop.α
-
-    return @SMatrix[α * gx[i]*G*Ty*fy[j] for i in 1:4, j in 1:4]
+    return @SMatrix[fx[i] * dgy[j] * αgreenTy for i in 1:1, j in 1:4]
 end
 
-function integrand(viop::VIEhhVolumegradG, kerneldata, tvals, tgeo, bvals, bgeo)
+function (igd::Integrand{<:DVIE_TestOp3})(x,y,f,g)
+    α = igd.operator.α
+    γ = igd.operator.gamma
+    
 
-    gx = @SVector[tvals[i].value for i in 1:4]
-    fy = @SVector[bvals[i].value for i in 1:4]
+    r = cartesian(x) - cartesian(y)
+    R = norm(r)
+    iR = 1/R
+    green = exp(-γ*R)*(iR*i4pi)
 
-    dgx = @SVector[tvals[i].gradient for i in 1:4]
-    dfy = @SVector[bvals[i].gradient for i in 1:4]
+    Ty = igd.operator.tau(cartesian(y))
 
-    G = kerneldata.green
-    gradG = -kerneldata.gradgreen # "-" to get nabla'G(r,r')
+    αgreenTy = α * green * Ty
 
-    Ty = kerneldata.tau
 
-    α = viop.α
+    dfx = @SVector[f[i].divergence for i in 1:4]
+    dgy = @SVector[g[i].divergence for i in 1:4]
 
-    return @SMatrix[α * gx[i] * dot(gradG, Ty*dfy[j]) for i in 1:4, j in 1:4]
+    return @SMatrix[dfx[i] * dgy[j] * αgreenTy for i in 1:4, j in 1:4]
 end
+
+function (igd::Integrand{<:EVIE_TestOp1})(x,y,f,g)
+    α = igd.operator.α
+    γ = igd.operator.gamma
+    
+    r = cartesian(x) - cartesian(y)
+    R = norm(r)
+    iR = 1/R
+    green = exp(-γ*R)*(iR*i4pi)
+
+    Ty = igd.operator.tau(cartesian(y))
+
+    αgreenTy = α * green * Ty
+
+
+    dfx = @SVector[f[i].curl for i in 1:6]
+    gy = @SVector[g[i].value for i in 1:6]
+
+    return @SMatrix[dot(dfx[i], gy[j]) * αgreenTy for i in 1:6, j in 1:6]
+end
+
+function (igd::Integrand{<:EVIE_TestOp2})(x,y,f,g)
+    α = igd.operator.α
+    γ = igd.operator.gamma
+    
+    r = cartesian(x) - cartesian(y)
+    R = norm(r)
+    iR = 1/R
+    green = exp(-γ*R)*(iR*i4pi)
+
+    Ty = igd.operator.tau(cartesian(y))
+
+    αgreenTy = α * green * Ty
+
+
+    fx = @SVector[f[i].value for i in 1:3] # f[i].value is n̂ × NedeleccBasis for the EVIE, means ttrace(NedeleccBasis)
+    gy = @SVector[g[i].value for i in 1:6]
+
+    return @SMatrix[dot(fx[i], gy[j]) * αgreenTy for i in 1:3, j in 1:6]
+end
+
+function (igd::Integrand{<:EVIE_TestOp3})(x,y,f,g)
+    α = igd.operator.α
+    γ = igd.operator.gamma
+    
+    r = cartesian(x) - cartesian(y)
+    R = norm(r)
+    iR = 1/R
+    green = exp(-γ*R)*(iR*i4pi)
+    gradgreen = -(γ + iR) * green * (iR * r) # Derivation after x (test variable) => "-" to get ∇_x G(x,y)
+
+    Ty = igd.operator.tau(cartesian(y))
+
+    αgradgreenTy = α * gradgreen * Ty
+
+    fx = @SVector[f[i].value for i in 1:6]
+    gy = @SVector[g[i].value for i in 1:6]
+
+    return @SMatrix[dot(fx[i], cross(αgradgreenTy, gy[j])) for i in 1:6, j in 1:6] # cross product is bilinear (important complex material functions Ty)
+end
+
+
+
+
+
 
 
 
@@ -302,28 +477,20 @@ function quaddata(op::VIEOperator,
     return (tpoints=t_qp, bpoints=b_qp, sing_qp=sing_qp)
 end
 
-quadrule(op::VolumeOperator, g::RefSpace, f::RefSpace, i, τ, j, σ, qd, qs) = qr_volume(op, g, f, i, τ, j, σ, qd, qs)
 
-
-function qr_volume(op::VolumeOperator, g::RefSpace, f::RefSpace, i, τ, j, σ, qd,
-    qs::SauterSchwab3DQStrat)
-
-    dtol = 1.0e3 * eps(eltype(eltype(τ.vertices)))
-
+function _hits(τ, σ)
+    T = coordtype(τ)
     hits = 0
+    dtol = 1.0e3 * eps(T)
     idx_t = Int64[]
     idx_s = Int64[]
     sizehint!(idx_t,4)
     sizehint!(idx_s,4)
-    dmin2 = floatmax(eltype(eltype(τ.vertices)))
-    D = dimension(τ)+dimension(σ)
+
     for (i,t) in enumerate(τ.vertices)
         for (j,s) in enumerate(σ.vertices)
             d2 = LinearAlgebra.norm_sqr(t-s)
-            d = norm(t-s)
-            dmin2 = min(dmin2, d2)
-            # if d2 < dtol
-            if d < dtol
+            if d2 < dtol
                 push!(idx_t,i)
                 push!(idx_s,j)
                 hits +=1
@@ -332,63 +499,87 @@ function qr_volume(op::VolumeOperator, g::RefSpace, f::RefSpace, i, τ, j, σ, q
         end
     end
 
-    #singData = SauterSchwab3D.Singularity{D,hits}(idx_t, idx_s )
-   @assert hits <= 4
+    return hits, idx_t, idx_s
+end
+
+
+"""
+tetrahedron-tetrahedron quadrule for the 6D integral ∫∫∫_Ω ∫∫∫_Ω 
+"""
+function quadrule(op::VolumeOperator, g::RefSpace, f::RefSpace, 
+    i, τ::CompScienceMeshes.Simplex{<:Any, 3, <:Any, 4}, 
+    j, σ::CompScienceMeshes.Simplex{<:Any, 3, <:Any, 4}, 
+    qd, qs::SauterSchwab3DQStrat)
+
+    hits, idx_t, idx_s = _hits(τ, σ)
+
+    @assert hits <= 4
 
     hits == 4 && return SauterSchwab3D.CommonVolume6D_S(SauterSchwab3D.Singularity6DVolume(idx_t,idx_s),(qd.sing_qp[1],qd.sing_qp[2],qd.sing_qp[4]))
     hits == 3 && return SauterSchwab3D.CommonFace6D_S(SauterSchwab3D.Singularity6DFace(idx_t,idx_s),(qd.sing_qp[1],qd.sing_qp[2],qd.sing_qp[3]))
     hits == 2 && return SauterSchwab3D.CommonEdge6D_S(SauterSchwab3D.Singularity6DEdge(idx_t,idx_s),(qd.sing_qp[1],qd.sing_qp[2],qd.sing_qp[3],qd.sing_qp[4]))
     hits == 1 && return SauterSchwab3D.CommonVertex6D_S(SauterSchwab3D.Singularity6DPoint(idx_t,idx_s),qd.sing_qp[3])
+    #=
+    #Classic tensor-product quadrature rules
+    hits == 4 && return SauterSchwab3D.CommonVolume6D(SauterSchwab3D.Singularity6DVolume(idx_t,idx_s),qd.sing_qp[1])
+    hits == 3 && return SauterSchwab3D.CommonFace6D(SauterSchwab3D.Singularity6DFace(idx_t,idx_s),qd.sing_qp[1])
+    hits == 2 && return SauterSchwab3D.CommonEdge6D(SauterSchwab3D.Singularity6DEdge(idx_t,idx_s),qd.sing_qp[1])
+    hits == 1 && return SauterSchwab3D.CommonVertex6D(SauterSchwab3D.Singularity6DPoint(idx_t,idx_s),qd.sing_qp[1])
+    =#
 
-
-
-    return DoubleQuadRule(
-        qd[1][1,i],
-        qd[2][1,j])
-
+    return DoubleQuadRule(qd[1][1,i], qd[2][1,j])
 end
 
-quadrule(op::BoundaryOperator, g::RefSpace, f::RefSpace, i, τ, j, σ, qd, qs) = qr_boundary(op, g, f, i, τ, j, σ, qd, qs)
 
-function qr_boundary(op::BoundaryOperator, g::RefSpace, f::RefSpace, i, τ, j,  σ, qd,
-    qs::SauterSchwab3DQStrat)
+"""
+triangle-tetrahedron quadrule for the 5D integral ∫∫_Γ ∫∫∫_Ω
+"""
+function quadrule(op::BoundaryOperator, g::RefSpace, f::RefSpace,
+    i, τ::CompScienceMeshes.Simplex{<:Any, 2, <:Any, 3},
+    j, σ::CompScienceMeshes.Simplex{<:Any, 3, <:Any, 4},
+    qd, qs::SauterSchwab3DQStrat)
 
-    dtol = 1.0e3 * eps(eltype(eltype(τ.vertices)))
+    hits, idx_t, idx_s = _hits(τ, σ)
+   
+    @assert hits <= 3
 
-    hits = 0
-    idx_t = Int64[]
-    idx_s = Int64[]
-    sizehint!(idx_t,4)
-    sizehint!(idx_s,4)
-    dmin2 = floatmax(eltype(eltype(τ.vertices)))
-    D = dimension(τ)+dimension(σ)
-    for (i,t) in enumerate(τ.vertices)
-        for (j,s) in enumerate(σ.vertices)
-            d2 = LinearAlgebra.norm_sqr(t-s)
-            d = norm(t-s)
-            dmin2 = min(dmin2, d2)
-            # if d2 < dtol
-            if d < dtol
-                push!(idx_t,i)
-                push!(idx_s,j)
-                hits +=1
-                break
-            end
-        end
-    end
+    hits == 3 && return SauterSchwab3D.CommonFace5D_S(SauterSchwab3D.Singularity5DFace(idx_s,idx_t),(qd.sing_qp[1],qd.sing_qp[2],qd.sing_qp[3]))
+    hits == 2 && return SauterSchwab3D.CommonEdge5D_S(SauterSchwab3D.Singularity5DEdge(idx_s,idx_t),(qd.sing_qp[1],qd.sing_qp[2],qd.sing_qp[3]))
+    hits == 1 && return SauterSchwab3D.CommonVertex5D_S(SauterSchwab3D.Singularity5DPoint(idx_s,idx_t),(qd.sing_qp[3],qd.sing_qp[2]))
+    #=
+    #Classic tensor-product quadrature rules
+    hits == 3 && return SauterSchwab3D.CommonFace5D(SauterSchwab3D.Singularity5DFace(idx_s,idx_t),qd.sing_qp[1])
+    hits == 2 && return SauterSchwab3D.CommonEdge5D(SauterSchwab3D.Singularity5DEdge(idx_s,idx_t),qd.sing_qp[1])
+    hits == 1 && return SauterSchwab3D.CommonVertex5D(SauterSchwab3D.Singularity5DPoint(idx_s,idx_t),qd.sing_qp[1])
+    =#
+
+    return DoubleQuadRule(qd[1][1,i], qd[2][1,j])
+end
+
+
+"""
+tetrahedron-triangle quadrule for the 5D integral ∫∫∫_Ω ∫∫_Γ
+"""
+function quadrule(op::BoundaryOperator, g::RefSpace, f::RefSpace,
+    i, τ::CompScienceMeshes.Simplex{<:Any, 3, <:Any, 4},
+    j, σ::CompScienceMeshes.Simplex{<:Any, 2, <:Any, 3},
+    qd, qs::SauterSchwab3DQStrat)
+
+    hits, idx_t, idx_s = _hits(τ, σ)
 
     @assert hits <= 3
-    #singData = SauterSchwab3D.Singularity{D,hits}(idx_t, idx_s )
-   
 
     hits == 3 && return SauterSchwab3D.CommonFace5D_S(SauterSchwab3D.Singularity5DFace(idx_t,idx_s),(qd.sing_qp[1],qd.sing_qp[2],qd.sing_qp[3]))
     hits == 2 && return SauterSchwab3D.CommonEdge5D_S(SauterSchwab3D.Singularity5DEdge(idx_t,idx_s),(qd.sing_qp[1],qd.sing_qp[2],qd.sing_qp[3]))
     hits == 1 && return SauterSchwab3D.CommonVertex5D_S(SauterSchwab3D.Singularity5DPoint(idx_t,idx_s),(qd.sing_qp[3],qd.sing_qp[2]))
+    #=
+    #Classic tensor-product quadrature rules
+    hits == 3 && return SauterSchwab3D.CommonFace5D(SauterSchwab3D.Singularity5DFace(idx_t,idx_s),qd.sing_qp[1])
+    hits == 2 && return SauterSchwab3D.CommonEdge5D(SauterSchwab3D.Singularity5DEdge(idx_t,idx_s),qd.sing_qp[1])
+    hits == 1 && return SauterSchwab3D.CommonVertex5D(SauterSchwab3D.Singularity5DPoint(idx_t,idx_s),qd.sing_qp[1])
+    =#
 
-
-    return DoubleQuadRule(
-        qd[1][1,i],
-        qd[2][1,j])
-
+    return DoubleQuadRule(qd[1][1,i], qd[2][1,j])
 end
+
 
