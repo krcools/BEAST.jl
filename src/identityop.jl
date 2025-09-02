@@ -23,6 +23,7 @@ kernelvals(op::NCross, mp) = nothing
 integrand(op::NCross, kernel, x, g, f) = dot(g[1], normal(x) × f[1])
 scalartype(op::NCross) = Union{}
 
+#= Should be no longer be needed
 struct Curl <: LocalOperator
 end
 
@@ -31,6 +32,7 @@ function integrand(op::Curl, kernel, x, g, f)
      dot(f.curl, g.value)
  end
 scalartype(op::Curl) = Union{}
+=#
 
 
 defaultquadstrat(::LocalOperator, ::GWPDivRefSpace{<:Real,D1},::LagrangeRefSpace{T,D2,D3}) where {T,D1,D2,D3} = SingleNumQStrat(9)
