@@ -803,7 +803,7 @@ end
 gradient(space::LagrangeBasis{1,0}, geo, fns) = NDLCCBasis(geo, fns)
 # gradient(space::LagrangeBasis{1,0}, geo::CompScienceMeshes.AbstractMesh{U,3} where {U}, fns) = NDBasis(geo, fns)
 
-curl(space::LagrangeBasis{1,0}, geo, fns) = RTBasis(geo, fns)
+#curl(space::LagrangeBasis{1,0}, geo, fns) = RTBasis(geo, fns)
 
 #curl(space::LagrangeBasis{2,0}, geo, fns) = BDMBasis(geo, fns) 
 
@@ -813,7 +813,59 @@ gradient(space::LagrangeBasis{1,0,<:CompScienceMeshes.AbstractMesh{<:Any,2}}, ge
 gradient(space::LagrangeBasis{1,0,<:CompScienceMeshes.AbstractMesh{<:Any,3}}, geo, fns) =
     NDBasis(geo, fns, space.pos)
 
-curl(space::LagrangeBasis{2,0},geo, fns) = BDMBasis(geo, fns)
+#curl(space::LagrangeBasis{2,0},geo, fns) = BDMBasis(geo, fns)
+
+#curl(space::LagrangeBasis{1,0}, geo, fns) = RTBasis(geo, fns)
+
+
+function curl(X::LagrangeBasis{D,C,M,T,NF,P} , geo, fns) where {D,C,M,T,NF,P}
+      GWPDivSpace{T,M,Vector{P}}(geo, fns, deepcopy(positions(X)),D-1)
+end
+
+
+@testitem "curl - global" begin
+    using LinearAlgebra
+    using CompScienceMeshes
+    const CSM = CompScienceMeshes
+
+    T = Float64
+
+    m = CSM.meshrectangle(1.0, 1.0, 0.5, 3)
+    X = BEAST.lagrangec0(m; order=1)
+    curlX = BEAST.curl(X)
+
+    x = BEAST.refspace(X)
+    curlx = BEAST.refspace(curlX)
+
+    err = zero(T)
+    for i in eachindex(X.fns)
+        fn = X.fns[i]
+        for j in eachindex(fn)
+            cellid = X.fns[i][j].cellid
+            ch = chart(m, cellid)
+            
+            u = (0.2341, 0.4312)
+            p = neighborhood(ch, u)
+
+            r1 = zeros(T,3)
+            ϕp = x(p)
+            for sh in X.fns[i]
+                sh.cellid == cellid || continue
+                r1 += sh.coeff * ϕp[sh.refid].curl
+            end
+
+            r2 = zeros(T,3)
+            ϕp = curlx(p)
+            for sh in curlX.fns[i]
+                sh.cellid == cellid || continue
+                r2 += sh.coeff * ϕp[sh.refid].value
+            end
+            global err = max(err, norm(r1-r2))
+        end
+    end
+
+    @test err < sqrt(eps(T))
+end
 
 #
 # Sclar trace for Laggrange element based spaces

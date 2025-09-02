@@ -49,14 +49,13 @@ function (f::LagrangeRefSpace{T,0,3})(t, ::Type{Val{:withcurl}}) where T
     SVector(((value=i, curl=z,),))
 end
 
-
+#= Replaced by generalized curl using GWP functions
 function curl(ref::LagrangeRefSpace{T,1,3} where {T}, sh, el)
     sh1 = Shape(sh.cellid, mod1(sh.refid+1,3), -sh.coeff)
     sh2 = Shape(sh.cellid, mod1(sh.refid+2,3), +sh.coeff)
     return [sh1, sh2]
 end
 
-#=
 function curl(ref::LagrangeRefSpace{T,2,3}, sh, el) where T
 
     j = 1.0 #volume(el) * factorial(dimension(el))
@@ -210,7 +209,7 @@ function (f::LagrangeRefSpace{T,2,3})(t) where T
     )
 end
 
-
+#= Not sure if that is correct anymore
 function curl(ref::LagrangeRefSpace{T,2,3} where {T}, sh, el)
     #curl of lagc0d2 as combination of bdm functions 
     z=zero(typeof(sh.coeff))
@@ -227,6 +226,71 @@ function curl(ref::LagrangeRefSpace{T,2,3} where {T}, sh, el)
     end
     return [sh1, sh2, sh3, sh4]
 end
+=#
+
+
+function curl(localspace::LagrangeRefSpace, sh, ch)
+    fns = curl(localspace, sh.cellid, ch)
+    α = sh.coeff
+    S = typeof(sh)
+    return S[S(s.cellid, s.refid, α*s.coeff) for s in fns[sh.refid]]
+end
+
+
+function curl(localspace::LagrangeRefSpace{T,D,3,N}, cellid::Int, ch) where {T,D,N}
+    function fields(p)
+        map(localspace(p)) do x
+            x.curl
+        end
+    end
+    atol = sqrt(eps(T))
+    gwp = GWPDivRefSpace{T,D-1}()
+    coeffs = interpolate(fields, gwp, ch)
+    S = BEAST.Shape{T}
+    A = Vector{Vector{S}}(undef, size(coeffs,1))
+    for r in axes(coeffs,1)
+        A[r] = collect(S(cellid, c, coeffs[r,c]) for c in axes(coeffs,2) if abs(coeffs[r,c]) > atol)
+    end
+    return SVector{N}(A)
+end
+
+
+
+@testitem "curl - chartwise" begin
+    using LinearAlgebra
+    using CompScienceMeshes
+    const CSM = CompScienceMeshes
+
+    T = Float64
+    D = 1
+    NF = binomial(2+D, 2)
+    gwp = BEAST.GWPDivRefSpace{T,D-1}()
+    lgc = BEAST.LagrangeRefSpace{T,D,3,NF}()
+
+    ch = CSM.simplex(
+        point(1,0,0),
+        point(0,1,0),
+        point(0,0,0))
+
+    curlfns = BEAST.curl(lgc, 1, ch)
+
+    p = neighborhood(ch, (0.2341, 0.4321))
+    gwp_vals = gwp(p)
+    lgc_vals = lgc(p)
+
+    err = similar(Vector{T}, axes(gwp_vals))
+    for i in eachindex(lgc_vals)
+        val1 = lgc_vals[i].curl
+        val2 = zero(val1)
+        for sh in curlfns[i]
+            val2 += sh.coeff * gwp_vals[sh.refid].value
+        end
+        err[i] = norm(val1 - val2)
+    end
+    atol = sqrt(eps(T))
+    @test all(err .< atol)
+end
+
 
 function restrict(f::LagrangeRefSpace{T,2}, dom1, dom2) where T
 
