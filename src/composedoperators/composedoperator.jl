@@ -22,7 +22,6 @@ scalartype(op::CompDoubleInt{T}) where {T} = T
 scalartype(op::CompSingleInt{T}) where {T} = T 
 
 
-#the functionallity is pased to the basis at this point.
 struct CompDoubleKern{T,U,V,W} <: IntegralOperator
     op1::U
     kernel::W
@@ -48,7 +47,7 @@ integralop(a::CompSingleInt) = CompSingleKern(a.op1,a.kernel,a.op2)
 
 function assemble!(op::AbstractCompInt, tfs::Space, bfs::Space,
     store, threading = Threading{:multi};
-    quadstrat=defaultquadstrat(op, tfs, bfs))
+    quadstrat=defaultquadstrat)
 
     assemble!(integralop(op),op.tfunc(tfs),op.bfunc(bfs),store,threading;quadstrat)
 
@@ -145,15 +144,16 @@ function assemble!(biop::CompSingleKern, tfs::Space, bfs::Space, store,
 end
 
 function assemble_local_mixed!(biop::CompSingleKern, tfs::Space{T}, bfs::Space{T}, store;
-    quadstrat=defaultquadstrat(biop, tfs, bfs)) where {T}
-
+    quadstrat=defaultquadstrat) where {T}
     tol = sqrt(eps(T))
+
+    quadstrat = quadstrat(biop, tfs, bfs)
 
     trefs = refspace(tfs)
     brefs = refspace(bfs)
 
-    tels, tad = assemblydata(tfs)
-    bels, bad = assemblydata(bfs)
+    tels, tad, tact_to_global = assemblydata(tfs)
+    bels, bad, bact_to_global = assemblydata(bfs)
 
     tgeo = geometry(tfs)
     bgeo = geometry(bfs)
@@ -183,9 +183,11 @@ function assemble_local_mixed!(biop::CompSingleKern, tfs::Space{T}, bfs::Space{T
                 if overlap(tcell, bcell)
 
                     isct = intersection2(tcell, bcell)
-                    disp = displacement(displacementchart(geometry(tfs),p),displacementchart(geometry(bfs),q)) #number to multiply with test normal, if zero use the orientation of displacementvector
+                    disp = displacement(displacementchart(geometry(tfs),tact_to_global[p]),displacementchart(geometry(bfs),bact_to_global[q])) #number to multiply with test normal, if zero use the orientation of displacementvector
                     for (cellt,cellb) in isct
                         volume(cellb) < tol && continue
+                        # @assert sign(dot(normal(chart(geometry(tfs),p)),normal(cellt))) == 1
+                        # @assert sign(dot(normal(chart(geometry(bfs),q)),normal(cellb))) == 1
 
                         P = restrict(brefs, bcell, cellb)
                         Q = restrict(trefs, tcell, cellt)
@@ -253,7 +255,7 @@ function quadrule(op::CompSingleKern, ψ::RefSpace, ϕ::RefSpace, cellt,cellb, (
         q = qd[i]
         w, pt = q[1], neighborhood(cellt,q[2])
         pb = neighborhood(cellb,carttobary(cellb,cartesian(pt)))
-        A[i] = (w, pt, ψ(pt), ϕ(pb))
+        A[i] = (w, pb, ψ(pt), ϕ(pb))
     end
     return A
 end

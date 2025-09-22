@@ -192,7 +192,6 @@ function assemble!(operator::Operator, test_functions::Space, trial_functions::S
     quadstrat=defaultquadstrat)
 
     quadstrat = quadstrat(operator, test_functions, trial_functions)
-
     P = Threads.nthreads()
     numchunks = P
     @assert numchunks >= 1
@@ -235,16 +234,16 @@ function assemble!(op::LinearCombinationOfOperators, tfs::Space, bfs::Space,
         assemble!(A, tfs, bfs, store1, threading; quadstrat=quadstrat)
     end
 end
-function assemble!(op::LinearCombinationOfOperators, tfs::Space, bfs::Space,
-    store, threading = Threading{:multi};
-    quadstrat::Vector = defaultquadstrat)
+# function assemble!(op::LinearCombinationOfOperators, tfs::Space, bfs::Space,
+#     store, threading = Threading{:multi};
+#     quadstrat::Vector = defaultquadstrat)
 
-    for (i,(a,A)) in enumerate(zip(op.coeffs, op.ops))
-        store1(v,m,n) = store(a*v,m,n)
-        qs = quadstrat[i]
-        assemble!(A, tfs, bfs, store1, threading; quadstrat=qs)
-    end
-end
+#     for (i,(a,A)) in enumerate(zip(op.coeffs, op.ops))
+#         store1(v,m,n) = store(a*v,m,n)
+#         qs = quadstrat[i]
+#         assemble!(A, tfs, bfs, store1, threading; quadstrat=qs)
+#     end
+# end
 
 
 

@@ -36,5 +36,5 @@ function displacement(a::DisplacementChart,b::DisplacementChart)
     testdisp = a.epsilon*normal(a.chart)
     trialdisp = b.epsilon*normal(b.chart)
     
-    return sign(dot(trialdisp-testdisp,normal(a.chart)))
+    return sign(dot(trialdisp-testdisp,normal(b.chart)))
 end

@@ -44,14 +44,14 @@ function quaddata(op::LocalOperator, g::GWPDivRefSpace, f::LagrangeRefSpace{T,D2
 end
 
 defaultquadstrat(::LocalOperator, ::RTRefSpace,  ::LagrangeRefSpace{T,D2,D1}) where {T,D1,D2} = SingleNumQStrat(6)
-function quaddata(op::LocalOperator, g::RTRefSpace, f::LagrangeRefSpace{T,D2,D1} where {T,D1,D2} , tels, bels, qs::SingleNumQStrat)
+# function quaddata(op::LocalOperator, g::RTRefSpace, f::LagrangeRefSpace{T,D2,D1} where {T,D1,D2} , tels, bels, qs::SingleNumQStrat)
 
-    u, w = trgauss(qs.quad_rule)
-    qd = [(w[i],SVector(u[1,i],u[2,i])) for i in 1:length(w)]
-    A = _alloc_workspace(qd, g, f, tels, bels)
+#     u, w = trgauss(qs.quad_rule)
+#     qd = [(w[i],SVector(u[1,i],u[2,i])) for i in 1:length(w)]
+#     A = _alloc_workspace(qd, g, f, tels, bels)
 
-    return qd, A
-end
+#     return qd, A
+# end
 
 function _alloc_workspace(qd, g, f, tels, bels)
     q = qd[1]
