@@ -16,6 +16,7 @@ makedocs(;
         assets=String[],
         collapselevel=1,
         sidebar_sitename=true,
+        size_threshold=1_000_000,
     ),
     plugins=[bib],
     pages=[
@@ -61,6 +62,9 @@ makedocs(;
                 "Dipole"=>"excitations/dipole.md",
                 "Monopole"=>"excitations/monopole.md",
                 "Linear Potential"=>"excitations/linearpotential.md",
+            ],
+            "Composed Operator"=>Any[
+                "Composed Operator"=>"composedoperator/composedoperator.md"
             ],
         ],
         "Basis Functions" => Any[

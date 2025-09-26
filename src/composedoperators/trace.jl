@@ -177,13 +177,13 @@ end
 ##### from here new trace concept
 
 abstract type AbstractTraceOperator end
-struct TraceOperator <: AbstractTraceOperator
+struct TraceOperator{D} <: AbstractTraceOperator
     testfunctionmap
     interior::Bool
     principalvalue::Bool
 end
-TraceOperator(f,interior::Bool) = TraceOperator(f,interior,false)
-function (to::TraceOperator)(a::PotentialIntegralOperator{D}) where {D}
+TraceOperator{D}(f,interior::Bool) where {D} = TraceOperator{D}(f,interior,false)
+function (to::TraceOperator{2})(a::PotentialIntegralOperator{D}) where {D}
 
     t,f = _trace(a.kernel,to.interior,Val{D}())
     doubleint = CompDoubleInt(B->to.testfunctionmap(B),(x,y)->transpose(x)*y,a.kernel,a.op2,a.bfunc)
@@ -198,22 +198,32 @@ function (to::TraceOperator)(a::PotentialIntegralOperator{D}) where {D}
     end
 
 end
+function (to::TraceOperator{3})(a::PotentialIntegralOperator{D}) where {D}
+
+
+    doubleint = CompDoubleInt(B->to.testfunctionmap(B),(x,y)->transpose(x)*y,a.kernel,a.op2,a.bfunc)
+
+    return doubleint
+
+
+end
 function (t::TraceOperator)(a::LinearCombinationPotentialOperator)
     return sum(c*t(a) for (a,c) in zip(a.pots,a.coeffs))
 end
 
-const inttrace = TraceOperator(x->x,true)
-const exttrace = TraceOperator(x->x,false)
-const intntrace = TraceOperator(x->x*n,true)
-const extntrace = TraceOperator(x->x*n,false)
-const intrtrace = TraceOperator(x->x×n,true)
-const extrtrace = TraceOperator(x->x×n,false)
-const intttrace = TraceOperator(x->(n× x)×n,true)
-const extttrace = TraceOperator(x->(n× x)×n,false)
+const inttrace = TraceOperator{2}(x->x,true)
+const exttrace = TraceOperator{2}(x->x,false)
+const intntrace = TraceOperator{2}(x->x*n,true)
+const extntrace = TraceOperator{2}(x->x*n,false)
+const intrtrace = TraceOperator{2}(x->x×n,true)
+const extrtrace = TraceOperator{2}(x->x×n,false)
+const intttrace = TraceOperator{2}(x->(n× x)×n,true)
+const extttrace = TraceOperator{2}(x->(n× x)×n,false)
 
-const pvttrace = TraceOperator(x->n×(x×n),true,true)
-const pvntrace = TraceOperator(x->n*x,true,true)
-const pvtrace = TraceOperator(x->x,true,true)
+const pvttrace = TraceOperator{2}(x->n×(x×n),true,true)
+const pvntrace = TraceOperator{2}(x->n*x,true,true)
+const pvtrace = TraceOperator{2}(x->x,true,true)
+
 """
     pvrtrace(Potential,interior::Bool)
 
@@ -221,14 +231,14 @@ Compute the principal value of the rotated trace, n× Potential.
 
 This function assumes the normalvector on the mesh to point outwards. 
 """
-const pvrtrace = TraceOperator(x->x×n,true,true)
+const pvrtrace = TraceOperator{2}(x->x×n,true,true)
 
 """
     volumetrace(Potential)
 
 Mapping the potential to a volume operator.
 """
-const volumetrace = TraceOperator(x->x,true,true)
+const volumetrace = TraceOperator{3}(x->x,true,true)
 
 
 
