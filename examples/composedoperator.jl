@@ -112,7 +112,7 @@ lhs = t(p);
 using BEAST
 using CompScienceMeshes
 using StaticArrays
-using PlotlyJS
+using PlotlyBase
 using PlotlyDocumenter #hide
 
 import BEAST.BlockArrays.BlockedVector
