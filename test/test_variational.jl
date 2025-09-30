@@ -29,8 +29,8 @@ mesh1 = Mesh(
         point(0,1,0),
     ],
     [
-        index(1,2,3),
-        index(1,3,4)
+        CompScienceMeshes.SimplexGraph(1,2,3),
+        CompScienceMeshes.SimplexGraph(1,3,4)
     ]
 )
 
