@@ -296,15 +296,10 @@ function singleduallagd0(fine, F, v; interpolatory=false)
 
     T = coordtype(fine)
     fn = Shape{T}[]
-    vol = T(0.0)
-    for cellid in F
-        ptch = chart(fine, cellid)
-        vol += volume(ptch)
-    end
     for cellid in F
         # cell = cells(fine)[cellid]
         ptch = chart(fine, cellid)
-        coeff = interpolatory ? T(1.0) : 1 / vol
+        coeff = interpolatory ? T(1.0) : 1 / volume(ptch) / length(F)
         refid = 1
         push!(fn, Shape(cellid, refid, coeff))
     end

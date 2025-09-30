@@ -127,8 +127,8 @@ function quaddata(op::LocalOperator, g::LagrangeRefSpace{T,Deg,4} where {T,Deg},
      return qd, A
 end
 
-support(::LinearRefSpaceTriangle) = TriangleSupport()
-support(::LinearRefSpaceTetr) = TetraSupport()
+# support(::LinearRefSpaceTriangle) = TriangleSupport()
+# support(::LinearRefSpaceTetr) = TetraSupport()
 
 defaultquadstrat(::LocalOperator, ::GWPDivRefSpace{<:Real,D1},
     ::GWPDivRefSpace{<:Real,D2}) where {D1,D2} = SingleNumQStrat(9)

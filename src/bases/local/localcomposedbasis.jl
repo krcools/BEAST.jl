@@ -1,15 +1,15 @@
 abstract type _LocalBasisOperations{T} <: RefSpace{T} end
 numfunctions(a::_LocalBasisOperations) = coalesce(numfunctions(a.el1) , numfunctions(a.el2))
 numfunctions(a::_LocalBasisOperations,simp) = coalesce(numfunctions(a.el1,simp) , numfunctions(a.el2,simp))
-struct TriangleSupport end
-struct TetraSupport end
+# struct TriangleSupport end
+# struct TetraSupport end
 
 
-support(a::_LocalBasisOperations) = coalesce(support(a.el1),support(a.el2))
-support(a::NormalVector) = missing
-support(a::FunctionWrapper) = missing
-support(a::LagrangeRefSpace{T,N,3}) where {T,N} = TriangleSupport()
-support(a::LagrangeRefSpace{T,N,4}) where {T,N} = TetraSupport()
+# support(a::_LocalBasisOperations) = coalesce(support(a.el1),support(a.el2))
+# support(a::NormalVector) = missing
+# support(a::FunctionWrapper) = missing
+# support(a::LagrangeRefSpace{T,N,3}) where {T,N} = TriangleSupport()
+# support(a::LagrangeRefSpace{T,N,4}) where {T,N} = TetraSupport()
 restrict(a::_LocalBasisOperations,bcell,cell) = restrict(_refspace(a),bcell,cell)
 
 _refspace(a::_LocalBasisOperations) = coalesce(_refspace(a.el1) , _refspace(a.el2))

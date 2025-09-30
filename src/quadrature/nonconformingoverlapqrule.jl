@@ -1,10 +1,10 @@
 struct NonConformingOverlapQRule{S}
     conforming_qstrat::S
 end
-function tangent_rank(p::CompScienceMeshes.Simplex{U,D}) where {U,D}
-    G = [dot(p.tangents[i], p.tangents[j]) for i in 1:D, j in 1:D]
-    return rank(G) == D 
-end
+# function tangent_rank(p::CompScienceMeshes.Simplex{U,D}) where {U,D}
+#     G = [dot(p.tangents[i], p.tangents[j]) for i in 1:D, j in 1:D]
+#     return rank(G) == D 
+# end
 
 function momintegrals!(op,
     test_local_space, basis_local_space,
@@ -29,8 +29,8 @@ function momintegrals!(op,
     test_charts = [ch for ch in test_charts if volume(ch) .> 1e6 * eps(T)]
     bsis_charts = [ch for ch in bsis_charts if volume(ch) .> 1e6 * eps(T)]
 
-    test_charts = [ch for ch in test_charts if tangent_rank(ch)]
-    bsis_charts = [ch for ch in bsis_charts if tangent_rank(ch)]
+    # test_charts = [ch for ch in test_charts if tangent_rank(ch)]
+    # bsis_charts = [ch for ch in bsis_charts if tangent_rank(ch)]
 
     isempty(test_charts) && return
     isempty(bsis_charts) && return
