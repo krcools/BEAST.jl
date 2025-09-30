@@ -52,6 +52,10 @@ end
 
 function touches_predicate(mesh)
 
+    function isless(a::CompScienceMeshes.SimplexGraph{N}, b::CompScienceMeshes.SimplexGraph{N}) where {N}
+        a.indices < b.indices
+    end
+
     verts = skeleton(mesh,0)
     verts = sort(verts.faces, lt=isless)
 
@@ -62,7 +66,7 @@ function touches_predicate(mesh)
 
         num_hits = 0
         for i in 1:length(s)
-            if !isempty(searchsorted(verts, SVector(s[i]), lt=isless))
+            if !isempty(searchsorted(verts, CompScienceMeshes.SimplexGraph(s[i]), lt=isless))
                 num_hits += 1
             end
         end
