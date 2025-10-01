@@ -1,5 +1,15 @@
 # Changelog
 
+# New in 2.7.3
+- Generic way of introducing potentials added.
+- Generic Trace operators of those potentials introduced.
+- Composed user defined operators can be constructed.
+More information can be found in the documentation.
+Corrected bugs:
+- Minus sign in the normalvector cross RT and ND space.
+- Construction of the duallagrangec0d1 space.
+- Quadstrat in the LinearCombinationOfOperators.
+
 # New in 2.7.2
 
 - GMRES from Krylov.jl wrapped as a LinearMap

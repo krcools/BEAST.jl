@@ -86,6 +86,10 @@ include("test_curl_lagc0d1_lagc0d2.jl")
 include("test_gridfunction.jl")
 
 include("test_hh_lsvie.jl")
+
+include("test_composed_basis.jl")
+include("test_composed_operator.jl")
+include("test_analytic_excitation.jl")
 include("test_vie.jl")
 include("test_evie_dvie.jl")
 
