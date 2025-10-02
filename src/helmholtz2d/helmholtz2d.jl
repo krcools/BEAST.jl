@@ -5,45 +5,45 @@ module Helmholtz2D
     using LinearAlgebra
 
     function singlelayer(;
-        #alpha=nothing,
-        #gamma=nothing,
+        alpha=nothing,
+        gamma=nothing,
         wavenumber=nothing
     )
 
-        #alpha, gamma = Mod.operator_parameter_handler(alpha, gamma, wavenumber)
+        alpha, gamma = Mod.operator_parameter_handler(alpha, gamma, wavenumber)
 
-        return Mod.SingleLayer(wavenumber)
+        return Mod.HH2DSingleLayerFDBIO(alpha, gamma)
     end
 
     function doublelayer(;
-        #alpha=nothing,
-        #gamma=nothing,
+        alpha=nothing,
+        gamma=nothing,
         wavenumber=nothing
     )
 
-        #alpha, gamma = Mod.operator_parameter_handler(alpha, gamma, wavenumber)
+        alpha, gamma = Mod.operator_parameter_handler(alpha, gamma, wavenumber)
 
-        return Mod.DoubleLayer(wavenumber)
+        return Mod.HH2DDoubleLayerFDBIO(alpha, gamma)
     end
 
     function doublelayer_transposed(;
-        #alpha=nothing,
-        #gamma=nothing,
+        alpha=nothing,
+        gamma=nothing,
         wavenumber=nothing
     )
 
-        #alpha, gamma = Mod.operator_parameter_handler(alpha, gamma, wavenumber)
+        alpha, gamma = Mod.operator_parameter_handler(alpha, gamma, wavenumber)
 
-        return Mod.DoubleLayerTransposed(wavenumber)
+        return Mod.HH2DDoubleLayerTransposedFDBIO(alpha, gamma)
     end
 
     function hypersingular(;
-        #alpha=nothing,
-        #beta=nothing,
-        #gamma=nothing,
+        alpha=nothing,
+        beta=nothing,
+        gamma=nothing,
         wavenumber=nothing
     )
-        #=
+
         gamma, wavenumber = Mod.gamma_wavenumber_handler(gamma, wavenumber)
 
         if alpha === nothing
@@ -62,8 +62,35 @@ module Helmholtz2D
                 beta = one(gamma)
             end
         end
-     =#
-        return Mod.HyperSingular(wavenumber)
+
+        return Mod.HH2DHyperSingularFDBIO(alpha, beta, gamma)
+    end
+
+    function monopole(;
+        position=SVector(0.0, 0.0),
+        gamma=nothing,
+        wavenumber=nothing,
+        amplitude=1.0
+    )
+
+        gamma, wavenumber = Mod.gamma_wavenumber_handler(gamma, wavenumber)
+        Mod.isstatic(gamma) && (gamma = zero(amplitude))
+
+        return Mod.HH2DMonopole(position, gamma, amplitude)
+    end
+
+    function directedmonopole(;
+        position=SVector(0.0, 0.0),
+        direction=SVector(1.0, 0.0),
+        gamma=nothing,
+        wavenumber=nothing,
+        amplitude=1.0
+    )
+
+        gamma, wavenumber = Mod.gamma_wavenumber_handler(gamma, wavenumber)
+        Mod.isstatic(gamma) && (gamma = zero(amplitude))
+
+        return Mod.HH2DDirectedMonopole(position, direction, gamma, amplitude)
     end
 
     function planewave(;

@@ -69,6 +69,11 @@ export HH3DDoubleLayerNear
 export HH3DDoubleLayerTransposedNear
 export HH3DHyperSingularNear
 
+export HH2DSingleLayerNear
+export HH2DDoubleLayerNear
+export HH2DDoubleLayerTransposedNear
+export HH2DHyperSingularNear
+
 export NitscheHH3
 export MWSingleLayerTDIO
 export MWDoubleLayerTDIO
@@ -126,6 +131,7 @@ export PlaneWaveDirichlet
 export PlaneWaveNeumann
 
 struct NormalVector end
+struct TangentVector end
 
 using CompScienceMeshes
 using Combinatorics
@@ -279,6 +285,7 @@ include("helmholtz3d/wiltonints.jl")
 
 include("helmholtz2d/hh2dexc.jl")
 include("helmholtz2d/hh2dops.jl")
+include("helmholtz2d/hh2dnear.jl")
 include("helmholtz2d/helmholtz2d.jl")
 
 #suport for Volume Integral equation
@@ -324,6 +331,7 @@ export x̂, ŷ, ẑ
 const n = NormalVector()
 export n
 
+export TangentTrace
 #const to = TimerOutput()
 
 end # module
