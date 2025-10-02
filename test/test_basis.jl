@@ -122,8 +122,11 @@ for T in [Float64]
     p4 = point(T,1,1,1)
     c1 = index(1,2,3)
 
-    m = Mesh([p1,p2,p3,p4],[c1])
-    b = Mesh([p1,p2], [index(1,2)])
+    V = [p1,p2,p3,p4]
+    C = [CompScienceMeshes.SimplexGraph(c1)]
+
+    m = Mesh(V,C)
+    b = Mesh([p1,p2], [CompScienceMeshes.SimplexGraph(1,2)])
     X = lagrangec0d1(m, boundary(m))
     @test numfunctions(X) == 3
 
@@ -264,7 +267,7 @@ m = Mesh([
     point(0,1,0),
     point(0,0,1),
     point(0,0,0)],
-    [index(1,2,3,4)])
+    [CompScienceMeshes.SimplexGraph(1,2,3,4)])
 
 lag = lagrangec0d1(m, skeleton(m,0))
 @test numfunctions(lag) == 4
