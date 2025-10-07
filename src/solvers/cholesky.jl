@@ -32,3 +32,28 @@ function LinearAlgebra.mul!(y::AbstractVector, chol::CholeskyFactorization, b::A
     fill!(y,zero(eltype(y)))
     y[:] = chol.fac \ Vector(b)
 end
+
+@testitem "CholeskyFactorization" begin
+    using LinearAlgebra
+
+    using CompScienceMeshes, BEAST
+
+    h = 0.5
+    M = meshrectangle(1.0,1.0,h)
+    Y = BEAST.gwpdiv(M;order=1)
+
+    b = rand(numfunctions(Y))
+
+    G = assemble(BEAST.Identity(),Y,Y)
+
+    iG = BEAST.cholesky(G)
+
+    x=iG*b
+    x2 = inv(Matrix(G))*b
+
+    @test norm(x - x2) < 1e-12
+
+    x3 = iG'*b
+    #Should be the same as G is symmetric
+    @test norm(x3 - x2) < 1e-12
+end

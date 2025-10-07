@@ -254,3 +254,50 @@ function assemble(::QHProjector{DualLoops,Iterative}, X::GWPDivSpace; quadstrat=
     SP = saddlepoint(Gxx,Λp,Gxx,Gll+Cll)
     return P0Λ*SP*Px0
 end   
+
+
+@testitem "QH-Projectors" begin 
+
+    using CompScienceMeshes, BEAST
+    using LinearAlgebra
+
+    h = 0.5
+    M = meshrectangle(1.0,1.0,h)
+
+    X = raviartthomas(M)
+    Y = BEAST.gwpdiv(M;order=1)
+
+    G = assemble(BEAST.Identity(),Y,Y)
+    iG = BEAST.cholesky(G)
+
+    b = rand(numfunctions(Y))
+    d = rand(numfunctions(X))
+
+    PΣd = assemble(BEAST.PΣ(;compStrat =BEAST.Direct),X)
+    PΛd = assemble(BEAST.PΛ(;compStrat =BEAST.Direct),X)
+
+    ℙΣd = assemble(BEAST.ℙΣ(;compStrat =BEAST.Direct),X)
+    ℙΛd = assemble(BEAST.ℙΛ(;compStrat =BEAST.Direct),X)
+
+    @test norm(PΣd*PΛd*d)/norm(d) < sqrt(eps())
+    @test norm(ℙΣd*ℙΛd*d)/norm(d) < sqrt(eps())
+
+    PΣd = assemble(BEAST.PΣ(;compStrat =BEAST.Direct),Y)
+    PΛd = assemble(BEAST.PΛ(;compStrat =BEAST.Direct),Y)
+
+    ℙΣd = assemble(BEAST.ℙΣ(;compStrat =BEAST.Direct),Y)
+    ℙΛd = assemble(BEAST.ℙΛ(;compStrat =BEAST.Direct),Y)
+
+    @test norm(PΣd*iG*PΛd*b)/norm(b) <  sqrt(eps())
+    @test norm(ℙΣd*iG*ℙΛd*b)/norm(b) <  sqrt(eps())
+
+    PΣd = assemble(BEAST.PΣ(;compStrat =BEAST.Iterative),Y)
+    PΛd = assemble(BEAST.PΛ(;compStrat =BEAST.Iterative),Y)
+
+    ℙΣd = assemble(BEAST.ℙΣ(;compStrat =BEAST.Iterative),Y)
+    ℙΛd = assemble(BEAST.ℙΛ(;compStrat =BEAST.Iterative),Y)
+
+    @test norm(PΣd*iG*PΛd*b)/norm(b) <  sqrt(eps())
+    @test norm(ℙΣd*iG*ℙΛd*b)/norm(b) <  sqrt(eps())
+
+end 
