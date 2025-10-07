@@ -227,6 +227,8 @@ include("identityop.jl")
 include("integralop.jl")
 include("dyadicop.jl")
 include("interpolation.jl")
+include("operators/projectors.jl")
+include("operators/theta.jl")
 
 include("quadrature/rules/momintegrals.jl")
 include("quadrature/doublenumints.jl")
@@ -314,6 +316,8 @@ include("solvers/solver.jl")
 include("solvers/lusolver.jl")
 include("solvers/itsolver.jl")
 include("solvers/gmres.jl")
+include("solvers/lu.jl")
+include("solvers/cholesky.jl")
 
 include("utils/plotlyglue.jl")
 

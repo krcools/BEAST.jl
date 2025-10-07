@@ -70,7 +70,7 @@ end
 
 function solve(solver::GMRES, b)
     T = promote_type(eltype(solver), eltype(b))
-    x = similar(Vector{T}, size(solver)[2])
+    x = similar(Array{T}, axes(solver)[2])
     fill!(x,0)
     x, ch = solve!(x, solver, b)
     # z = similar(Array{T}, axes(solver)[2])
