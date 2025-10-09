@@ -41,7 +41,7 @@ function saddlepoint(A::SparseMatrixCSC,B::SparseMatrixCSC,P1::SparseMatrixCSC,P
     SP = [A    B
           B'  spzeros(T,nP,nP)]
     Pdiv = blockdiag(CholeskyFactorization(P1),CholeskyFactorization(P2))
-    return GMRESSolver(SP, left_preconditioner=Pdiv, maxiter=200,restart=50) 
+    return GMRES(SP, M=Pdiv, itmax=200, memory=50, restart=true, rtol=1e-8, verbose=0) 
 end
 
 function assemble(::QHProjector, X::Space; quadstrat=defaultquadstrat)
@@ -115,9 +115,9 @@ function assemble(::QHProjector{DualStars,Iterative}, X::RTBasis; quadstrat=defa
     nL = numfunctions(L)
     #assemble auxilarry matrices
     Gxx = assemble(Identity(),X,X;quadstrat)
-    Cll = assemble(CurlCurl(),L,L;quadstrat)
+    Cll = assemble(Identity(),curl(L),curl(L);quadstrat)
     Gll = assemble(Identity(),L,L;quadstrat)
-    Λp = assemble(Curl(),X,L;quadstrat)
+    Λp = assemble(Identity(),X,curl(L);quadstrat)
     Px0 = [Gxx
            spzeros(nL,nX)]
     SP = saddlepoint(Gxx,Λp,Gxx,Gll+Cll)
@@ -131,10 +131,9 @@ function assemble(::QHProjector{DualLoops,Iterative}, X::RTBasis; quadstrat=defa
     nP = numfunctions(L)
     #assemble auxilarry matrices
     Gxx = assemble(Identity(),X,X;quadstrat)
-    Cll = assemble(CurlCurl(),L,L;quadstrat)
+    Cll = assemble(Identity(),curl(L),curl(L);quadstrat)
     Gll = assemble(Identity(),L,L;quadstrat)
-    #Σp = assemble(Identity(),divergence(X),P)
-    Λp = assemble(Curl(),X,L;quadstrat)
+    Λp = assemble(Identity(),X,curl(L);quadstrat)
     Px0 = [Gxx
            spzeros(nP,nX)]
     P0Λ = [spzeros(nX,nX) Λp]
