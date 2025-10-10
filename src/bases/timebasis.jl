@@ -167,7 +167,7 @@ function timebasisshiftedlagrange(dt, numfunctions, degree, T::Type=typeof(dt))
         end
         push!(polys, f*g)
     end
-    push!(polys, 0*Base.power_by_squaring(t, degree))
+    push!(polys, Polynomial(zeros(SVector{degree+1})))
     @assert length(polys) == degree+2
     polys = SVector{degree+2,Polynomial{degree+1,T}}(polys...)
     TimeBasisFunction{T,degree+2,degree+1,degree}(dt, numfunctions, polys)
