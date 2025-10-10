@@ -130,8 +130,8 @@ end
 # support(::LinearRefSpaceTriangle) = TriangleSupport()
 # support(::LinearRefSpaceTetr) = TetraSupport()
 
-defaultquadstrat(::LocalOperator, ::GWPDivRefSpace{<:Real,D1},
-    ::GWPDivRefSpace{<:Real,D2}) where {D1,D2} = SingleNumQStrat(9)
+#defaultquadstrat(::LocalOperator, ::GWPDivRefSpace{<:Real,D1},
+#    ::GWPDivRefSpace{<:Real,D2}) where {D1,D2} = SingleNumQStrat(9)
 
 
 # function quaddata(op::LocalOperator, g::GWPDivRefSpace, f::GWPDivRefSpace,
