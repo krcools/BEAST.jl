@@ -13,7 +13,7 @@ using PlotlyDocumenter #hide
 
 # We start with the definiton of the needed physical and material properties
 c = 2.99792458e8      #speed of light
-f = 10.0^(-20)*c/2π   #frequency
+f = 10.0^(-40)*c/2π   #frequency
 μ = 4π * 1e-7         #permeability
 ϵ = 1/(c^2*μ)         #permittivity
 κ = 2π * f / c        #wavenumber
@@ -125,8 +125,9 @@ u, stats= BEAST.solve(BEAST.GMRES(A; M=M, rtol=1e-8, verbose=0), (b));
 # Low frequency scaling factors
 k = sqrt(κ)
 ik = 1/k;
-# Low-frequency stabilized preconditioner
-M = [ k*PΛ*invGmix'  -im*ik*PΣ*invGmix'  Z              Z                  
+# Low-frequency stabilized preconditioner. The additional factor of $1/\sqrt(\kappa)$ is to rescale the residual close to 1.
+M =   ik *
+    [ k*PΛ*invGmix'  -im*ik*PΣ*invGmix'  Z              Z                  
       Z               Z                  k*PΛ*invGmix' -im*ik*PΣ*invGmix'  ] *
           
     [ 𝕋sn+𝕋hn   𝕋sn  Z         Z  
