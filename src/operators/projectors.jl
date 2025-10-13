@@ -41,7 +41,7 @@ function saddlepoint(A::SparseMatrixCSC,B::SparseMatrixCSC,P1::SparseMatrixCSC,P
     SP = [A    B
           B'  spzeros(T,nP,nP)]
     Pdiv = blockdiag(CholeskyFactorization(P1),CholeskyFactorization(P2))
-    return GMRES(SP, M=Pdiv, itmax=200, memory=50, restart=true, rtol=1e-8, verbose=0) 
+    return GMRESSolver(SP, left_preconditioner=Pdiv, maxiter=200, restart=50, reltol=1e-8, verbose=false) 
 end
 
 function assemble(::QHProjector, X::Space; quadstrat=defaultquadstrat)
