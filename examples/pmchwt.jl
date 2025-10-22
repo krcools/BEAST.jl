@@ -1,6 +1,11 @@
 using CompScienceMeshes, BEAST
 using LinearAlgebra
+using LiftedMaps
+using BlockArrays
 
+T = CompScienceMeshes.tetmeshsphere(1.0,0.12)
+X = BEAST.nedelecc3d(T)
+Γ = boundary(T)
 
 function nearfield(um,uj,Xm,Xj,κ,η,points,
     Einc=(x->point(0,0,0)),
@@ -31,15 +36,13 @@ c = 1/√(ϵ0*μ0)
 Γ = boundary(Ω)
 X = raviartthomas(Γ)
 @show numfunctions(X)
+Y = BEAST.buffachristiansen2(Γ)
 
-ϵr = 2.0
-μr = 1.0
 
-κ, η = ω/c, √(μ0/ϵ0)
-κ′, η′ = κ*√(ϵr*μr), η*√(μr/ϵr)
+κ,  η  = 1.0, 1.0
+κ′, η′ = √5.0κ, η/√5.0
 
-# κ,  η  = π, 1.0
-# κ′, η′ = 2.0κ, η/2.0
+N = NCross()
 
 T  = Maxwell3D.singlelayer(wavenumber=κ)
 T′ = Maxwell3D.singlelayer(wavenumber=κ′)
@@ -63,12 +66,46 @@ pmchwt = @discretise(
 
 u = solve(pmchwt)
 
+#preconditioner
+#=
+Tyy = assemble(T,Y,Y); println("dual discretisation assembled.")
+Nxy = Matrix(assemble(N,X,Y)); println("duality form assembled.")
+
+iNxy = inv(Nxy); println("duality form inverted.")
+NTN = iNxy' * Tyy * iNxy 
+
+M = zeros(Int, 2)
+N = zeros(Int, 2)
+
+M[1] = M[2] = numfunctions(X)
+N[1] = N[2] = numfunctions(X)
+
+U = BlockArrays.blockedrange(M)
+V = BlockArrays.blockedrange(N)
+
+precond = BEAST.ZeroMap{Float32}(U, V)
+
+z1 = LiftedMap(NTN,Block(1),Block(1),U,V)
+z2 = LiftedMap(NTN,Block(2),Block(2),U,V)
+precond = precond + z1 + z2
+
+A_pmchwt_precond = precond*A_pmchwt
+
+#GMREs
+import IterativeSolvers
+cT = promote_type(eltype(A_pmchwt), eltype(rhs))
+x = BlockedVector{cT}(undef, M)
+fill!(x, 0)
+x, ch = IterativeSolvers.gmres!(x, A_pmchwt, rhs, log=true,  reltol=1e-6)
+fill!(x, 0)
+x, ch = IterativeSolvers.gmres!(x, precond*A_pmchwt, precond*rhs, log=true,  reltol=1e-6)
+=#
 Θ, Φ = range(0.0,stop=2π,length=100), 0.0
 ffpoints = [point(cos(ϕ)*sin(θ), sin(ϕ)*sin(θ), cos(θ)) for θ in Θ for ϕ in Φ]
 
 # Don't forget the far field comprises two contributions
-ffm = potential(MWFarField3D(κ*im, η), ffpoints, u[m], X)
-ffj = potential(MWFarField3D(κ*im, η), ffpoints, u[j], X)                                                                                                                                                                                                                                                          
+ffm = potential(MWFarField3D(gamma=κ*im), ffpoints, u[m], X)
+ffj = potential(MWFarField3D(gamma=κ*im), ffpoints, u[j], X)
 ff = -η*im*κ*ffj + im*κ*cross.(ffpoints, ffm)
 
 # Compare the far field and the field far
@@ -86,12 +123,13 @@ using Plots
 Plots.plot(xlabel="theta")
 Plots.plot!(Θ,norm.(ff),label="far field",title="PMCHWT")
 
+
 import Plotly
 using LinearAlgebra
 fcrj, _ = facecurrents(u[j],X)
 fcrm, _ = facecurrents(u[m],X)
-Plotly.plot(patch(Γ, norm.(fcrj)))
-Plotly.plot(patch(Γ, norm.(fcrm)))
+Plotly.plot(patch(Γ, norm.(fcrj)),Plotly.Layout(title="j PMCHWT"))
+Plotly.plot(patch(Γ, norm.(fcrm)),Plotly.Layout(title="m PMCHWT"))
 
 
 
@@ -111,8 +149,8 @@ E_in, H_in = fetch(task2)
 E_tot = E_in + E_ex
 H_tot = H_in + H_ex
 
-Plots.contour(real.(getindex.(E_tot,1)))
-Plots.contour(real.(getindex.(H_tot,2)))
+contour(real.(getindex.(E_tot,1)))
+contour(real.(getindex.(H_tot,2)))
 
 Plots.heatmap(Z, Y, clamp.(real.(getindex.(E_tot,1)),-1.5,1.5))
 Plots.heatmap(Z, Y, clamp.(imag.(getindex.(E_tot,1)),-1.5,1.5))
@@ -120,7 +158,16 @@ Plots.heatmap(Z, Y, real.(getindex.(H_tot,2)))
 Plots.heatmap(Z, Y, imag.(getindex.(H_tot,2)))
 
 Plots.plot(real.(getindex.(E_tot[:,51],1)))
-Plots.plot(real.(getindex.(H_tot[:,51],2)))
+Plots.plot!(real.(getindex.(H_tot[:,51],2)))
 
+#=
+# Compare the far field and the field far
+ffradius = 100.0
+E_far, H_far = nearfield(u[m],u[j],X,X,κ,η, ffradius .* ffpoints)
+nxE_far = cross.(ffpoints, E_far) * (4π*ffradius) / exp(-im*κ*ffradius)
+Et_far = -cross.(ffpoints, nxE_far)
 
-
+plot()
+plot!(Θ, norm.(ff),label="far field")
+scatter!(Θ, norm.(Et_far), label="field far")
+=#

@@ -95,7 +95,7 @@ using Test
     @show err_Φ_version1
     @show err_Φ_version2
 
-    @test err_Φ_version1 < 0.02
-    @test err_Φ_version2 < 0.01
+    @test err_Φ_version1 < 0.001
+    @test err_Φ_version2 < 0.002
 
 end

@@ -44,6 +44,39 @@ struct FEMFunction{T, X} <: AbstractMeshFunction
     space::X
 end
 
+function Base.getindex(u::BEAST.FEMFunction, b::BEAST.Variational.HilbertVector)
+    return BEAST.FEMFunction(u.coeffs[b], u.space[b.idx])
+end
+
+function Base.:-(u::BEAST.FEMFunction)
+    return BEAST.FEMFunction(-u.coeffs, u.space)
+end
+
+@testitem "FEMFunction getindex" begin
+    using CompScienceMeshes
+
+    Γ = CompScienceMeshes.meshrectangle(1.0, 1.0, 0.5)
+    X1 = BEAST.raviartthomas(Γ)
+
+    X = X1 × X1
+    ax = BEAST.NestedUnitRanges.nestedrange(X, 1, numfunctions)
+
+    coeffs = rand(numfunctions(X))
+    coeffs = BEAST.BlockArrays.BlockedVector(coeffs, (ax,))
+
+    u = BEAST.FEMFunction(coeffs, X)
+
+    @hilbertspace m[1:2]
+    u1 = u[m[1]]
+    u2 = u[m[2]]
+    u2 = -u1
+
+    @test u1 isa BEAST.FEMFunction
+    @test u2 isa BEAST.FEMFunction
+
+    @test u1.coeffs == -u2.coeffs
+end
+
 defaultquadstrat(field::FEMFunction) = SingleNumQStrat(7)
 returntype(f::FEMFunction{T,X}) where {T,X} = T
 

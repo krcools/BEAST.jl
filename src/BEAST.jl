@@ -15,6 +15,8 @@ using FastGaussQuadrature
 using LinearMaps
 using LiftedMaps
 
+#using TimerOutputs
+
 using AbstractTrees
 using NestedUnitRanges
 
@@ -30,7 +32,7 @@ export dot
 
 export planewave
 export RefSpace, numfunctions, coordtype, scalartype, assemblydata, geometry, refspace, valuetype
-export lagrangecxd0, lagrangec0d1, duallagrangec0d1, unitfunctioncxd0, unitfunctionc0d1
+export lagrangecxd0, lagrangec0d1, duallagrangec0d1, lagrangec0d2, unitfunctioncxd0, unitfunctionc0d1
 export duallagrangecxd0
 export lagdimension
 export restrict
@@ -85,6 +87,7 @@ export DoubleLayerRotatedMW3D, MWDoubleLayerRotatedFarField3D
 export MWSingleLayerPotential3D
 
 export VIEOperator
+export VSIEOperator
 
 export gmres
 export @hilbertspace, @varform, @discretise
@@ -138,6 +141,8 @@ include("utils/linearspace.jl")
 include("utils/zeromap.jl")
 include("utils/rank1map.jl")
 include("utils/lagpolys.jl")
+include("utils/butchertableau.jl")
+include("utils/variational.jl")
 
 include("bases/localbasis.jl")
 include("bases/local/laglocal.jl")
@@ -249,10 +254,13 @@ include("maxwell/qlmwops.jl")
 
 include("maxwell/nxdbllayer.jl")
 include("maxwell/wiltonints.jl")
+include("maxwell/sauterschwabints_bdm_rt.jl")
+#include("maxwell/sauterschwabints_rt.jl")
+#include("maxwell/sauterschwabints_bdm.jl")
 include("maxwell/nitsche.jl")
 include("maxwell/farfield.jl")
-include("maxwell/nearfield.jl")
 include("maxwell/spotential.jl")
+include("maxwell/nearfield.jl")
 include("maxwell/maxwell.jl")
 include("maxwell/sourcefield.jl")
 
@@ -275,7 +283,10 @@ include("volumeintegral/vie.jl")
 include("volumeintegral/vieexc.jl")
 include("volumeintegral/vieops.jl")
 include("volumeintegral/farfield.jl")
+include("volumeintegral/vsie.jl")
+include("volumeintegral/vsieops.jl")
 include("volumeintegral/sauterschwab_ints.jl")
+
 
 include("decoupled/dpops.jl")
 include("decoupled/potentials.jl")
@@ -288,12 +299,11 @@ include("maxwell/timedomain/mwtdops.jl")
 include("maxwell/timedomain/mwtdexc.jl")
 include("maxwell/timedomain/tdfarfield.jl")
 
-include("utils/butchertableau.jl")
-include("utils/variational.jl")
 
 include("solvers/solver.jl")
 include("solvers/lusolver.jl")
 include("solvers/itsolver.jl")
+include("solvers/gmres.jl")
 
 include("utils/plotlyglue.jl")
 
@@ -307,5 +317,7 @@ export x̂, ŷ, ẑ
 
 const n = NormalVector()
 export n
+
+#const to = TimerOutput()
 
 end # module

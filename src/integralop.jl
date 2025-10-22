@@ -105,6 +105,7 @@ end
 
 @testitem "assemble!: zero sized block" begin
     using CompScienceMeshes
+    import BEAST.BlockArrays
 
     fn = joinpath(dirname(pathof(BEAST)), "../examples/assets/sphere45.in")
     m1 = readmesh(fn)
@@ -118,15 +119,15 @@ end
     a = T[k[1],j[1]] + T[k[1],j[2]] + T[k[2],j[2]] + T[k[2],j[1]]
 
     A = assemble(a, X, X)
-    import BEAST.BlockArrays
+    M = AbstractMatrix(A)
 
     n1 = numfunctions(X[1])
     n2 = numfunctions(X[2])
 
     @test n2 == 0
 
-    @test BlockArrays.blocksize(A) == (2,2)
-    @test BlockArrays.blocksizes(A) == ([n1,n2], [n1,n2])
+    @test BlockArrays.blocksize(M) == (2,2)
+    @test BlockArrays.blocksizes(M) == [(n1,n1) (n1,n2); (n2,n1) (n2,n2)]
 end
 
 

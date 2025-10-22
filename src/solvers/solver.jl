@@ -229,11 +229,18 @@ function assemble(bf::BilForm, X::DirectProductSpace, Y::DirectProductSpace;
     T = Int32
     @assert !isempty(bf.terms)
 
-    spaceTimeBasis = isa(X.factors[1], BEAST.SpaceTimeBasis)
+    Q = X.factors[1]
+    while Q isa BEAST.DirectProductSpace
+        Q = Q.factors[1]
+    end
+    spaceTimeBasis = isa(Q, BEAST.SpaceTimeBasis)
 
     if spaceTimeBasis
-        p = [numstages(temporalbasis(ch)) for ch in X.factors]
-        # lincombv = ConvolutionOperators.LiftedConvOp[]
+        if X[1] isa DirectProductSpace
+            p = 1
+        else
+            p = [numstages(temporalbasis(ch)) for ch in X.factors]
+        end
         lincombv = ConvolutionOperators.AbstractConvOp[]
     else
         p = 1
