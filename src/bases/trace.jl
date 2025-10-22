@@ -252,7 +252,7 @@ currently not working!
 function ttrace(X::Space, γ)
 
     x = refspace(X)
-    E, ad, a2g = assemblydata(X)
+    E, ad, a2g  = assemblydata(X)
     igeo = geometry(X)
     @assert dimension(γ) == dimension(igeo)-1
 
