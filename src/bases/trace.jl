@@ -252,7 +252,7 @@ currently not working!
 function ttrace(X::Space, γ)
 
     x = refspace(X)
-    E, ad = assemblydata(X)
+    E, ad, a2g = assemblydata(X)
     igeo = geometry(X)
     @assert dimension(γ) == dimension(igeo)-1
 
@@ -271,12 +271,11 @@ function ttrace(X::Space, γ)
     fns = [Vector{S}() for i in 1:numfunctions(X)]
 
     for (p,el) in enumerate(E)
-
         for (q,fc) in enumerate(faces(el))
             on_target(fc) || continue
 
             r = 0
-            for k in nzrange(D,p)
+            for k in nzrange(D,a2g[p])
                 vals[k] == q && (r = rows[k]; break)
             end
             @assert r != 0
@@ -299,4 +298,8 @@ function ttrace(X::Space, γ)
     end
 
     ttrace(X, ogeo, fns)
+end
+
+@testitem "ttrace igeo != supports" begin
+    @test false
 end
