@@ -23,6 +23,7 @@ kernelvals(op::NCross, mp) = nothing
 integrand(op::NCross, kernel, x, g, f) = dot(g[1], normal(x) × f[1])
 scalartype(op::NCross) = Union{}
 
+#= Should be no longer be needed
 struct Curl <: LocalOperator
 end
 
@@ -31,6 +32,7 @@ function integrand(op::Curl, kernel, x, g, f)
      dot(f.curl, g.value)
  end
 scalartype(op::Curl) = Union{}
+=#
 
 
 defaultquadstrat(::LocalOperator, ::GWPDivRefSpace{<:Real,D1},::LagrangeRefSpace{T,D2,D3}) where {T,D1,D2,D3} = SingleNumQStrat(9)
@@ -145,19 +147,19 @@ end
 # end
 
 
-defaultquadstrat(::LocalOperator, ::GWPDivRefSpace{<:Real,D1},
-    ::GWPDivRefSpace{<:Real,D2}) where {D1,D2} = SingleNumQStrat(9)
+#defaultquadstrat(::LocalOperator, ::GWPDivRefSpace{<:Real,D1},
+#    ::GWPDivRefSpace{<:Real,D2}) where {D1,D2} = SingleNumQStrat(9)
 
 
-function quaddata(op::LocalOperator, g::GWPDivRefSpace, f::GWPDivRefSpace,
-    tels::Vector, bels::Vector,
-    qs::SingleNumQStrat)
+#function quaddata(op::LocalOperator, g::GWPDivRefSpace, f::GWPDivRefSpace,
+#    tels::Vector, bels::Vector,
+#    qs::SingleNumQStrat)
 
-    u, w = trgauss(qs.quad_rule)
-    qd = [(w[i],SVector(u[1,i],u[2,i])) for i in 1:length(w)]
-    A = _alloc_workspace(qd, g, f, tels, bels)
-    return qd, A
-end
+#    u, w = trgauss(qs.quad_rule)
+#    qd = [(w[i],SVector(u[1,i],u[2,i])) for i in 1:length(w)]
+#    A = _alloc_workspace(qd, g, f, tels, bels)
+#    return qd, A
+#end
 
 
 function quadrule(op::LocalOperator, ψ::RefSpace, ϕ::RefSpace, τ, (qd,A), qs::SingleNumQStrat)

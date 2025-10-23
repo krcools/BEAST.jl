@@ -17,6 +17,11 @@ end
 Base.axes(solver::GMRES) = reverse(axes(solver.A))
 Base.size(solver::GMRES) = reverse(size(solver.A))
 
+LinearAlgebra.adjoint(solver::GMRES) = GMRES(adjoint(solver.A); M=solver.N, N=solver.M, memory=solver.memory, restart=solver.restart,
+                                              atol=solver.atol, rtol=solver.rtol, itmax=solver.itmax, verbose=solver.verbose)
+LinearAlgebra.transpose(solver::GMRES) = GMRES(transpose(solver.A); M=solver.N, N=solver.M, memory=solver.memory, restart=solver.restart,
+                                              atol=solver.atol, rtol=solver.rtol, itmax=solver.itmax, verbose=solver.verbose)
+
 function LinearAlgebra.mul!(y::AbstractVecOrMat, solver::GMRES, x::AbstractVector)
     fill!(y,0)
     y, ch = solve!(y, solver, x)
@@ -31,7 +36,7 @@ function GMRES(A;
     N = LinearAlgebra.I,
     memory = 20,
     restart = false,
-    atol = sqrt(eps(real(eltype(A)))),
+    atol = zero(real(eltype(A))),
     rtol = sqrt(eps(real(eltype(A)))),
     itmax = 2 * size(A,2),
     verbose = 1)
@@ -70,7 +75,7 @@ end
 
 function solve(solver::GMRES, b)
     T = promote_type(eltype(solver), eltype(b))
-    x = similar(Vector{T}, size(solver)[2])
+    x = similar(Array{T}, axes(solver)[2])
     fill!(x,0)
     x, ch = solve!(x, solver, b)
     # z = similar(Array{T}, axes(solver)[2])

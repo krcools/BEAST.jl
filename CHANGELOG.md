@@ -1,5 +1,12 @@
 # Changelog
 
+# New in 2.7.4
+- Higher-order quasi-Helmholtz projectors.
+- Bourhis and Nedelec Theta operators.
+- Curl of Lagrange basis now based on GWP basis to support curl for any order of basis.
+- Direct solvers (Cholesky,LU) wrapped as LinearMap.
+- Better integration of GMRES from Krylov.jl
+
 # New in 2.7.3
 - Generic way of introducing potentials added.
 - Generic Trace operators of those potentials introduced.

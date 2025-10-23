@@ -62,8 +62,8 @@ X = duallagrangec0d1(m)
 
 Y = curl(X)
 @test numfunctions(X) == numfunctions(Y)
-@test isa(Y, BEAST.RTBasis)
-@test isa(refspace(Y), BEAST.BEAST.RTRefSpace)
+@test isa(Y, BEAST.GWPDivSpace)
+@test isa(refspace(Y), BEAST.BEAST.GWPDivRefSpace)
 
 # test the chain property
 Z = divergence(Y)
@@ -72,5 +72,5 @@ for fn ∈ Z.fns
     for _sh ∈ fn
         total += _sh.coeff
     end
-    @test total ≈ 0
+    @test isapprox(total,0,atol=1e-12)
 end
