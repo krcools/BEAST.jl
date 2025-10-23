@@ -21,10 +21,10 @@ end
     return [(;Uinc)]
 end
 
-@target formulation (material, excitation) -> begin
+@target formulation (material, excitation, geo) -> begin
 
     numdoms = 2
-    Γ = ∂Ω[1]
+    Γ = geo.∂Ω[1]
 
     # 𝐼 = BEAST.Identity()
     𝑆 = [Helmholtz3D.singlelayer(wavenumber=m.κ) for m in material]
