@@ -66,6 +66,10 @@ makedocs(;
             "Composed Operator"=>Any[
                 "Composed Operator"=>"composedoperator/composedoperator.md"
             ],
+            "Quasi Helmholtz Projectors"=>Any[
+                "Low Frequency Stable PMCHWT"=>"projectors/pmchwt_lf.md",
+                "Dense Grid Stable PMCHWT"=>"projectors/pmchwt_theta.md",
+            ],
         ],
         "Basis Functions" => Any[
             "Overview"=>"bases/overview.md",

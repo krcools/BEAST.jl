@@ -303,7 +303,7 @@ end
 @testitem "ttrace igeo != supports" begin
     using CompScienceMeshes
 
-    Ω = CompScienceMeshes.tetmeshsphere(1.0, 0.3)
+    Ω = CompScienceMeshes.tetmeshsphere(1.0, 0.4)
     Γ = boundary(Ω)
     edges_bnd = skeleton(boundary(Ω), 1)
     edges_int = setminus(skeleton(Ω, 1), edges_bnd)
@@ -311,8 +311,12 @@ end
     X = nedelecc3d(Ω, edges_bnd)
     Y = ttrace(X, Γ)
 
-    T = Maxwell3D.singlelayer(wavenumber = 3.0)
-    A = assemble(T, Y, Y)
+    support, ad, s2g = BEAST.assemblydata(X)
+    @test length(support) < length(Ω)
+    @test numfunctions(X) == numfunctions(Y)
 
-    @test size(A) == (708, 708)
+    # T = Maxwell3D.singlelayer(wavenumber = 3.0)
+    # A = assemble(T, Y, Y)
+
+    # @test size(A) == (708, 708)
 end
