@@ -301,5 +301,18 @@ function ttrace(X::Space, γ)
 end
 
 @testitem "ttrace igeo != supports" begin
-    @test false
+    using CompScienceMeshes
+
+    Ω = CompScienceMeshes.tetmeshsphere(1.0, 0.3)
+    Γ = boundary(Ω)
+    edges_bnd = skeleton(boundary(Ω), 1)
+    edges_int = setminus(skeleton(Ω, 1), edges_bnd)
+
+    X = nedelecc3d(Ω, edges_bnd)
+    Y = ttrace(X, Γ)
+
+    T = Maxwell3D.singlelayer(wavenumber = 3.0)
+    A = assemble(T, Y, Y)
+
+    @test size(A) == (708, 708)
 end
