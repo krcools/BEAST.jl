@@ -18,7 +18,7 @@ d = point(1/3,-1/3,0)
 # Relative weights chosen to make the two terms equally important
 𝒜 = Maxwell3D.singlelayer(wavenumber=0.0, alpha=22.0, beta=1.0)
 
-coarse = Mesh([o,x̂,ŷ], [CompScienceMeshes.index(1,2,3)])
+coarse = Mesh([o,x̂,ŷ], [CompScienceMeshes.SimplexGraph(1,2,3)])
 fine = barycentric_refinement(coarse)
 
 X = raviartthomas(coarse, skeleton(coarse,1))
