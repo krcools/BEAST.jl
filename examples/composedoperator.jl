@@ -1,9 +1,13 @@
 
 # # Green function
 # The green function or more generaly the kernel function in the double integral, depending on both the coordinates x and y, is supplied by the user as a function.
-# There are standard implementations of the Helmholtz 3D Green function and the gradient of the Helmholtz 3D Green function:\
-# $$ G(x,y) = \frac{e^{-γ|x-y|}}{4\pi|x-y|} $$\
-# $$ \nabla_x G(x,y) = -\frac{e^{-γ|x-y|}}{4\pi|x-y|^2} \left( γ + \frac{1}{|x-y|} \right) (x-y) $$\
+# There are standard implementations of the Helmholtz 3D Green function and the gradient of the Helmholtz 3D Green function:
+# ```math
+# \begin{aligned}
+# G(x,y) &= \frac{e^{-γ|x-y|}}{4\pi|x-y|} \\
+# \nabla_x G(x,y) &= -\frac{e^{-γ|x-y|}}{4\pi|x-y|^2} \left( γ + \frac{1}{|x-y|} \right) (x-y)
+# \end{aligned}
+# ```
 # Those can be called as 
 using BEAST
 using CompScienceMeshes
@@ -22,8 +26,10 @@ end
 
 # # Potential operator
 # A Potential operator maps a function defined on the mesh to a function defined in the domain. Such a map is typically defined as a single integral over your mesh as 
-# $$ u(x) = \int_{\Gamma} G(x,y) f(y) dy $$
-# where $G$ is the kernel function and $f$ is the function defined on the mesh.
+# ```math
+# u(x) = \int_{\Gamma} G(x,y) f(y) dy
+# ```
+# where ``G`` is the kernel function and ``f`` is the function defined on the mesh.
 # Potentials are used in both the definition of boundary or volume integral operators and in the postprocessing routines to evaluate the fields in the domain.
 # A potential operator can be constructed by calling
 KernelFunction = G
@@ -32,9 +38,9 @@ BasisOperation = B -> B
 D = 2
 BEAST.PotentialIntegralOperator{D}(KernelFunction, Operation, BasisOperation);
 # where `D` is the dimension of the mesh, `KernelFunction` is the kernel function, for example the green function defined before, `operation` is the operation to be used between the kernelfunction and the basis function in the integral (e.g. `*` for scalar multiplication, `×` for the cross product), and `BasisOperation` is a function that is applied on the basis only, for example gradient, divergence, curl,...
-# The double-layer potential $ u(x) = \int_{\Gamma} \nabla G(x,y) \times f(y) dy $ can for example be written as
+# The double-layer potential ``u(x) = \int_{\Gamma} \nabla G(x,y) \times f(y) dy`` can for example be written as
 K = BEAST.PotentialIntegralOperator{2}(BEAST.HH3DGradGreen(γ), ×, B -> B);
-# The hyper singular part of the single-layer potential $ u(x) = \int_{\Gamma} \nabla G(x,y) \nabla \cdot f(y) dy $ can be written as
+# The hyper singular part of the single-layer potential ``u(x) = \int_{\Gamma} \nabla G(x,y) \nabla \cdot f(y) dy`` can be written as
 L = BEAST.PotentialIntegralOperator{2}(BEAST.HH3DGradGreen(γ), *, B -> divergence(B));
 # **_NOTE:_** Be carefull when using the dot product as operation, this will take the complex conjugate of the first argument which is not always desired. Use f(x,y) -> transpose(x)*y instead.
 # ## Potential operators in the post-processing
@@ -84,10 +90,10 @@ PrincipalValue=true
 T = BEAST.TraceOperator{U}(TestFunctionMap, Interior, PrincipalValue);
 # The following standard implementations are available:
 
-# BEAST.pvttrace: $$- n\times n\times \boldsymbol{V}\left(\boldsymbol{r}\right)  $$\
-# BEAST.pvntrace: $$  n\cdot \boldsymbol{V}\left(\boldsymbol{r}\right)  $$\
-# BEAST.pvrtrace: $$ n\times \boldsymbol{V}\left(\boldsymbol{r}\right)  $$\
-# BEAST.pvtrace: $$   V\left(\boldsymbol{r}\right)  $$
+# BEAST.pvttrace: ``- n\times n\times \boldsymbol{V}\left(\boldsymbol{r}\right)  `` \
+# BEAST.pvntrace: ``  n\cdot \boldsymbol{V}\left(\boldsymbol{r}\right)  `` \
+# BEAST.pvrtrace: `` n\times \boldsymbol{V}\left(\boldsymbol{r}\right)  `` \
+# BEAST.pvtrace: ``   V\left(\boldsymbol{r}\right)  `` \
 
 
 # ## Volume Trace 
@@ -111,8 +117,7 @@ lhs = t(p);
 # ## The common part
 using BEAST
 using CompScienceMeshes
-using StaticArrays
-using PlotlyBase
+using PlotlyJS
 using PlotlyDocumenter #hide
 
 import BEAST.BlockArrays.BlockedVector
@@ -128,7 +133,7 @@ import Plots.heatmap as heatmap
 
 # Define meshes
 Γ1 = meshcuboid(2.0,2.0,2.0,0.125)
-Γ2 = translate!(meshcuboid(1.0,1.0,1.0,0.125),(@SVector [1.0,0.0,0.0]))
+Γ2 = translate!(meshcuboid(1.0,1.0,1.0,0.125),(point(1.0,0.0,0.0)))
 
 function remove_both_if_double(a)
     c = sort.(a)
@@ -139,10 +144,10 @@ end
 CompScienceMeshes.orient(Γ3)
 
 # Plot of structures
-plt = plot([wireframe(Γ3),patch(Γ2;color=:blue)])
+plt = Plot([wireframe(Γ3),patch(Γ2;color=:blue)])
 PlotlyDocumenter.to_documenter(plt) #hide
 #-
-plt = plot([wireframe(Γ1),patch(Γ2;color=:blue)])
+plt = Plot([wireframe(Γ1),patch(Γ2;color=:blue)])
 PlotlyDocumenter.to_documenter(plt) #hide
 
 # Function Spaces. The mesh Γ1 is artificailly expanded to acheave correct traces in the second example.
@@ -236,7 +241,7 @@ u1 = BlockedVector(u1, (ax,));
 using LinearAlgebra
 fcr1, geo = facecurrents(u1[j2], X2)
 fcr2, geo = facecurrents(u1[j1], X3)
-plt = plot([patch(Γ2,norm.(fcr1); cmin = 0.0,cmax=0.005), patch(Γ3,norm.(fcr2);opacity=0.5, cmin = 0.0,cmax=0.005, showscale=false)])
+plt = Plot([patch(Γ2,norm.(fcr1); cmin = 0.0,cmax=0.005), patch(Γ3,norm.(fcr2);opacity=0.5, cmin = 0.0,cmax=0.005, showscale=false)])
 PlotlyDocumenter.to_documenter(plt) #hide
 # Plot the Electric Field 
 
@@ -289,7 +294,7 @@ u2 = BlockedVector(u2, (ax,));
 using LinearAlgebra
 fcr1, geo = facecurrents(u2[j2], X2)
 fcr2, geo = facecurrents(u2[j1], X1)
-plt = plot([patch(Γ2,norm.(fcr1);cmin = 0.0,cmax=0.005), patch(Γ1,norm.(fcr2);opacity=0.5, cmin = 0.0,cmax=0.005, showscale=false)])
+plt = Plot([patch(Γ2,norm.(fcr1);cmin = 0.0,cmax=0.005), patch(Γ1,norm.(fcr2);opacity=0.5, cmin = 0.0,cmax=0.005, showscale=false)])
 PlotlyDocumenter.to_documenter(plt) #hide
 # Plot the Electric Field 
 

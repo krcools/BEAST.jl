@@ -8,8 +8,8 @@ using PlotlyDocumenter #hide
 # Then we start with defining the geometry and creating the mesh.
 h=0.5
 M = meshsphere(1.0, h; generator=:gmsh);
-# Once the geometry has been created, the basis function space $X$ can be defined on the mesh. 
-# In this example, we use basis functions of order $p=1$. Further, higher-order basis space $Y$ will be needed to build a preconditioner.
+# Once the geometry has been created, the basis function space ``X`` can be defined on the mesh. 
+# In this example, we use basis functions of order ``p=1``. Further, higher-order basis space ``Y`` will be needed to build a preconditioner.
 p=1
 X = BEAST.gwpdiv(M;order=p)
 Y = BEAST.gwpdiv(M;order=p+2);
@@ -34,10 +34,16 @@ BEAST.@defaultquadstrat (e,X) BEAST.SingleNumQStrat(10)
 BEAST.@defaultquadstrat (h,X) BEAST.SingleNumQStrat(10);
 
 # Here is the core that allows Calderon preconditioning for a higher order basis, without using dual functions.
-# The $\Theta$-operators enable mapping a lower-order solenoidal subspace into a higher-order nonsolenoidal subspace and vice-versa.
+# The ``\Theta``-operators enable mapping a lower-order solenoidal subspace into a higher-order nonsolenoidal subspace and vice-versa.
 # They are defined like this:
-# $$ \Theta_\Sigma = P_\Sigma^r N_{rp} P_\Lambda^p $$
-# $$ \Theta_\Lambda = P_\Lambda^r N_{rp} P_\Sigma^p $$
+#
+# ```math
+# \begin{aligned}
+#   \Theta_\Sigma  &= P_\Sigma^r N_{rp} P_\Lambda^p \\
+#   \Theta_\Lambda &= P_\Lambda^r N_{rp} P_\Sigma^p
+# \end{aligned}
+# ```
+#
 # where PΣ and PΛ are the quasi-Helmholtz projectors, N the mixed Gram matrix of the lower and higher order basis, and the super-/subscripts indicate the order of the basis.
 
 ΘΣ = BEAST.ThetaStars()
@@ -45,12 +51,12 @@ BEAST.@defaultquadstrat (h,X) BEAST.SingleNumQStrat(10);
 # With everthing defined and setup, the linear system can be built.
 @hilbertspace j m
 @hilbertspace r s;
-# In a first step, the standard PMCHWT system is assembled based on the basis $X$. 
+# In a first step, the standard PMCHWT system is assembled based on the basis ``X``. 
 Ah = assemble( (η*T+η′*T′)[r,j] -      (K+K′)[r,m] +
                     (K+K′)[s,j] + (α*T+α′*T′)[s,m], s∈X, r∈X, j∈X, m∈X);
-# Next, we assemble the block diagonal preconditioner using the higher order basis $Y$.
+# Next, we assemble the block diagonal preconditioner using the higher order basis ``Y``.
 Ch = assemble(T[r,j]+T[s,m],s∈Y, r∈Y, j∈Y, m∈Y);
-# The $\Theta$-Operator can be assembled like other operators. Mapping from the lowere order basis $X$ to the higher order basis $Y$. 
+# The ``\Theta``-Operator can be assembled like other operators. Mapping from the lowere order basis ``X`` to the higher order basis ``Y``. 
 Θh = assemble( ΘΣ[r,j] + ΘΛ[r,j] + ΘΣ[s,m] + ΘΛ[s,m] ,s∈Y, r∈Y, j∈X, m∈X);
 
 # And last but not least, the right hand side is assembled too.

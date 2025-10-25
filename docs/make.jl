@@ -32,7 +32,9 @@ makedocs(;
                     "EFIE"=>"manual/examplesTH/efie.md",
                     "MFIE"=>"manual/examplesTH/mfie.md",
                 ],
-                "Time-Domain"=>Any["EFIE"=>"manual/examplesTD/tdefie.md"],
+                "Time-Domain"=>Any[
+                    "EFIE"=>"manual/examplesTD/tdefie.md",
+                ],
             ],
             "System of Equations and Bilinear Forms" => "manual/bilinear.md",
         ],
@@ -81,7 +83,10 @@ makedocs(;
             ],
             "Temporal"=>Any[],
         ],
-        "Geometry Representations" => Any["Flat"=>"geometry/flat.md", "Curvilinear"=>Any[]],
+        "Geometry Representations" => Any[
+            "Flat"=>"geometry/flat.md",
+            "Curvilinear"=>Any[]
+        ],
         "____________________________________" => Any[],
         "Internals" => Any[
             "Overview"=>"internals/overview.md",
@@ -90,8 +95,8 @@ makedocs(;
             "Parametric Domain"=>Any[],
             "Multithreading"=>Any[],
         ],
-        "Contributing" => "contributing.md",
-        "References" => "references.md",
+        "Contributing" => Any["contributing.md"],
+        "References" => Any["references.md"],
         "API Reference" => "apiref.md",
     ],
 )

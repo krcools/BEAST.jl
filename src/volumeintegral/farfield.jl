@@ -2,10 +2,10 @@
 Operator to compute the far field of a current distribution. In particular, given the current distribution ``j`` this operator allows for the computation of
 
 ```math
-A j = n × ∫_Ω j e^{γ ̂x ⋅ y} dy
+A j = n × ∫_Ω j e^{γ x ⋅ y} dy
 ```
 
-where ``̂x`` is the unit vector in the direction of observation. Note that the assembly routing expects the observation directions to be normalised by the caller.
+where ``x`` is the unit vector in the direction of observation. Note that the assembly routing expects the observation directions to be normalised by the caller.
 """
 struct VIEFarField3D{K,P}
   gamma::K

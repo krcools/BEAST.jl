@@ -22,13 +22,17 @@ nothing # hide
 
 Time domain currents are approximated in the tensor product of a spatial and temporal finite element space:
 
-$j(x) \approx \sum_{i=1}^{N_T} \sum_{m=1}^{N_S} u_{i,m} T_i(t) f_m(x)$
+```math
+j(x) \approx \sum_{i=1}^{N_T} \sum_{m=1}^{N_S} u_{i,m} T_i(t) f_m(x)
+```
 
 This package only supports translation invariant temopral basis functions, i.e.
 
-$T_i(t) = T(t - i \Delta t),$
+```math
+T_i(t) = T(t - i \Delta t),
+```
 
-where $\Delta t$ is the time step used to solve the problem. This time step depends on the bandwidth of the incident field and the desired accuracy. Space-Time Galerkin solvers of the type used here are not subject to stability conditions linking spatial and temporal discretisation resolutions.
+where ``\Delta t`` is the time step used to solve the problem. This time step depends on the bandwidth of the incident field and the desired accuracy. Space-Time Galerkin solvers of the type used here are not subject to stability conditions linking spatial and temporal discretisation resolutions.
 
 We need a temporal trial space and test space. Common examples of temporal trial spaces are the shifted quadratic spline and shifted lagrange basis functions. In this example, a shifted quadratic spline `S` is used for the trial space, while a delta function `U` is used as the temporal test space to obtain a time-stepping solution.  
 
@@ -41,9 +45,11 @@ nothing # hide
 
 ### Excitation
 
-We want to solve the EFIE, i.e. we want to find the current $j$ such that
+We want to solve the EFIE, i.e. we want to find the current ``j`` such that
 
-$Tj = -e^i,$
+```math
+Tj = -e^i,
+```
 
 where the incident electric field can be any Maxwell solution in the background medium. To describe this problem in Julia we create a retarded potential operator objects and a functional representing the incident field:
 

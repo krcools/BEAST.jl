@@ -30,13 +30,13 @@ f = 10.0^(-40)*c/2π   #frequency
 h=0.25
 M = meshsphere(1.0, h; generator=:gmsh);
 
-# Once the geometry has been created, the basis function space $X$ can be defined on the mesh. 
-# In this example, we use the Raviart-Thomas basis $X$ and we will also needed a dual basis $Y$ in the form of Buffa-Christiansen functions to build a preconditioner.
+# Once the geometry has been created, the basis function space ``X`` can be defined on the mesh. 
+# In this example, we use the Raviart-Thomas basis ``X`` and we will also needed a dual basis ``Y`` in the form of Buffa-Christiansen functions to build a preconditioner.
 X = raviartthomas(M)
 Y = buffachristiansen(M);
 
 # Then comes the definition of the integral operators. We define separate operators for the weakly- and the hypersingular part of the Maxwell singlelayer operator, since they behave differently when acting on loops and stars. 
-# In partiuclar we have that $P_\Lambda T_h = 0$ and $T_h P_\Lambda$. Simimlar we have that the first term in the expansion of the Maxwell doublelayer vanishes when acted upon with loops. $K=K_0+K_L$ with $P_\Lambda K_0 P_\Lambda=0$. 
+# In partiuclar we have that ``P_\Lambda T_h = 0`` and ``T_h P_\Lambda = 0``. Simimlar we have that the first term in the expansion of the Maxwell doublelayer vanishes when acted upon with loops. ``K=K_0+K_L`` with ``P_\Lambda K_0 P_\Lambda=0``.
 Ts  = Maxwell3D.weaklysingular(wavenumber=κ)
 Ts′ = Maxwell3D.weaklysingular(wavenumber=κ′)
 Th  = Maxwell3D.hypersingular(wavenumber=κ)
@@ -69,10 +69,10 @@ invGmix = BEAST.lu(Gmix)
 
 nX =  numfunctions(X)
 Z = spzeros(nX,nX);
-   
-# Assembling of the quasi-Helmholtz projectors: Here, the quasi-Helmholtz projectors are directly computed from the star matrix $\Sigma$ and loop matrix $\Lambda$. 
-# We have the following $P\Sigma = \Sigma ( \Sigma^T \Sigma )^+ \Sigma^T$ and $P\Lambda = I - P\Sigma$ for the primal projectors, with the superscript $+$ indicating the pseudo-inverse.
-# The dual projectors are defined like this: $\mathbb{P}\Lambda =  \Lambda ( \Lambda^T \Lambda )^+ \Lambda^T$ and $\mathbb{P}\Sigma = I - \mathbb{P}\Lambda$.
+
+# Assembling of the quasi-Helmholtz projectors: Here, the quasi-Helmholtz projectors are directly computed from the star matrix ``\Sigma`` and loop matrix ``\Lambda``. 
+# We have the following ``P\Sigma = \Sigma ( \Sigma^T \Sigma )^+ \Sigma^T`` and ``P\Lambda = I - P\Sigma`` for the primal projectors, with the superscript ``+`` indicating the pseudo-inverse.
+# The dual projectors are defined like this: ``\mathbb{P}\Lambda =  \Lambda ( \Lambda^T \Lambda )^+ \Lambda^T`` and ``\mathbb{P}\Sigma = I - \mathbb{P}\Lambda``.
 PΣ = assemble(BEAST.PΣ(;compStrat = BEAST.Direct),X)
 PΛ = assemble(BEAST.PΛ(;compStrat = BEAST.Direct),X)
 ℙΣ = assemble(BEAST.ℙΣ(;compStrat = BEAST.Direct),X)
@@ -89,7 +89,7 @@ Kn′ = assemble(K′,X,X)
 KLn = assemble(KL,X,X)    
 KLn′ = assemble(KL′,X,X);   
 
-# Assemble the integral operators for preconditioner based on the dual basis $Y$.
+# Assemble the integral operators for preconditioner based on the dual basis ``Y``.
 𝕋sn = assemble(Ts,Y,Y)    
 𝕋hn = assemble(Th,Y,Y)    
 𝕋sn′ = assemble(Ts′,Y,Y)    
@@ -125,7 +125,7 @@ u, stats= BEAST.solve(BEAST.GMRES(A; M=M, rtol=1e-8, verbose=0), (b));
 # Low frequency scaling factors
 k = sqrt(κ)
 ik = 1/k;
-# Low-frequency stabilized preconditioner. The additional factor of $1/\sqrt(\kappa)$ is to rescale the residual close to 1.
+# Low-frequency stabilized preconditioner. The additional factor of ``1/\sqrt(\kappa)`` is to rescale the residual close to 1.
 M =   ik *
     [ k*PΛ*invGmix'  -im*ik*PΣ*invGmix'  Z              Z                  
       Z               Z                  k*PΛ*invGmix' -im*ik*PΣ*invGmix'  ] *
