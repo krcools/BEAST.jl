@@ -1,6 +1,7 @@
 # Changelog
 
-# New in 2.7.4
+# New in 2.8.0
+- Improved support of for the Helmholtz equation.
 - Higher-order quasi-Helmholtz projectors.
 - Bourhis and Nedelec Theta operators.
 - Curl of Lagrange basis now based on GWP basis to support curl for any order of basis.
