@@ -177,7 +177,10 @@ end
 """
     lagrangec0d1(mesh[, bnd])
 
-Construct the basis of continuous, piecewise linear basis functions subordinate to mesh `mesh`. Basis functions are constructed at vertices in the interionr of the mesh and on the closure of 'bnd'. In particular, leaving out the second argument creates a finite element space subject to homogeneous Dirichlet boundary conditions.
+Construct the basis of continuous, piecewise linear basis functions subordinate
+to mesh `mesh`. Basis functions are constructed at vertices in the interior of
+the mesh and on the closure of 'bnd'. In particular, leaving out the second argument
+creates a finite element space subject to homogeneous Dirichlet boundary conditions.
 """
 function lagrangec0d1_dirichlet(mesh)
 
@@ -198,6 +201,24 @@ function lagrangec0d1_dirichlet(mesh)
     lagrangec0d1(mesh, vertexlist, Val{dimension(mesh)+1})
 end
 
+function lagrangec0_dirichlet(mesh; order=1)
+
+    verts = skeleton(mesh, 0)
+    detached = trues(numvertices(mesh))
+    for v in cells(verts)
+        detached[v] = false
+    end
+
+    bnd = boundary(mesh)
+    bndverts = skeleton(bnd, 0)
+    notonbnd = trues(numvertices(mesh))
+    for v in cells(bndverts)
+        notonbnd[v] = false
+    end
+
+    vertexlist = findall(notonbnd .& .!detached)
+    lagrangec0(mesh, vertexlist, Val{dimension(mesh)+1}; order=order)
+end
 
 function interior_and_junction_vertices(mesh, jct)
     verts = skeleton(mesh, 0)
@@ -310,7 +331,8 @@ end
 """
     lagrangec0d1(mesh; dirichlet=[true|false]) -> basis
 
-Build lagrangec0d1 elements, including (dirichlet=false) or excluding (dirichlet=true) those attached to boundary vertices.
+Build lagrangec0d1 elements, including (dirichlet=false)
+or excluding (dirichlet=true) those attached to boundary vertices.
 """
 function lagrangec0d1(mesh; dirichlet::Bool=true)
     if dirichlet == false
@@ -318,6 +340,17 @@ function lagrangec0d1(mesh; dirichlet::Bool=true)
         return lagrangec0d1(mesh, skeleton(mesh,0))
     else
         return lagrangec0d1_dirichlet(mesh)
+    end
+end
+
+function lagrangec0(mesh; order=1, dirichlet::Bool=true)
+
+    @assert order>0
+    if dirichlet == false
+        # return lagrangec0d1(mesh, boundary(mesh))
+        return lagrangec0(mesh, skeleton(mesh,0); order=order)
+    else
+        return lagrangec0_dirichlet(mesh; order=order)
     end
 end
 
@@ -413,8 +446,65 @@ function lagrangec0d1(mesh, vertexlist, ::Type{Val{2}})
     LagrangeBasis{1,0,NF}(geometry, fns, pos)
 end
 
+function lagrangec0(mesh, vertexlist, ::Type{Val{2}}; order=1)
 
-function lagrangec0d1(mesh, nodes::CompScienceMeshes.AbstractMesh{U,1} where {U})
+    if order > 10
+        error("Maximal 1D Lagrange polynomial order supported is 10")
+    end
+
+    T = coordtype(mesh)
+    U = universedimension(mesh)
+    P = vertextype(mesh)
+    S = Shape{T}
+
+    geometry = mesh
+
+    cellids, ncells = vertextocellmap(mesh)
+
+    # create the local shapes
+    numverts = numvertices(mesh)
+
+    fns = Vector{Vector{S}}()
+    pos = Vector{P}()
+
+    sizehint!(fns, length(vertexlist))
+    sizehint!(pos, length(vertexlist))
+    for v in vertexlist
+
+        numshapes = ncells[v]
+        numshapes == 0 && continue # skip detached vertices
+
+        shapes = Vector{S}(undef,numshapes)
+        for s in 1: numshapes
+            c = cellids[v,s]
+            cell = mesh.faces[c]
+            if cell[1] == v
+                shapes[s] = Shape(c, 1, T(1.0))
+            elseif cell[2] == v
+                shapes[s] = Shape(c, 2, T(1.0))
+            else
+                error("Junctions not supported")
+            end
+        end
+
+        push!(fns, shapes)
+        push!(pos, mesh.vertices[v])
+    end
+
+    NF = order + 1
+
+    for (c,cell) in enumerate(mesh)
+        ch = chart(mesh,cell)
+        for r in 3:NF
+            push!(fns, S[S(c,r,T(1.0))])
+            push!(pos, cartesian(neighborhood(ch, (r-2)/(NF-1))))
+        end
+    end
+
+    LagrangeBasis{order,0,NF}(geometry, fns, pos)
+end
+
+function lagrangec0d1(mesh, nodes::CompScienceMeshes.AbstractMesh{<:Any,1})
 
     Conn = connectivity(nodes, mesh, abs)
     rows = rowvals(Conn)
@@ -438,9 +528,52 @@ function lagrangec0d1(mesh, nodes::CompScienceMeshes.AbstractMesh{U,1} where {U}
     end
 
     NF = dimension(mesh) + 1
+
     LagrangeBasis{1,0,NF}(mesh, fns, pos)
 end
 
+function lagrangec0(mesh, nodes::CompScienceMeshes.AbstractMesh{<:Any,1}; order=1)
+
+    if order > 10
+        error("Maximal 1D Lagrange polynomial order supported is 10")
+    end
+
+    Conn = connectivity(nodes, mesh, abs)
+    rows = rowvals(Conn)
+    vals = nonzeros(Conn)
+
+    T = coordtype(mesh)
+    P = vertextype(mesh)
+    S = Shape{T}
+
+    fns = Vector{Vector{S}}()
+    pos = Vector{P}()
+
+    u = T(1.0)
+
+    for (i,node) in enumerate(nodes)
+        fn = Vector{S}()
+        for k in nzrange(Conn,i)
+            cellid = rows[k]
+            refid  = vals[k]
+            push!(fn, Shape(cellid, refid, u))
+        end
+        push!(fns,fn)
+        push!(pos,cartesian(center(chart(nodes,node))))
+    end
+
+    NF = order + 1
+
+    for (c, cell) in enumerate(mesh)
+        ch = chart(mesh, cell)
+        for r in 3:NF
+            push!(fns, S[S(c, r, u)])
+            push!(pos, cartesian(neighborhood(ch, SVector(u - (r-2)/(NF-1)))))
+        end
+    end
+
+    LagrangeBasis{order,0,NF}(mesh, fns, pos)
+end
 
 function lagrangec0d2(mesh::CompScienceMeshes.AbstractMesh{U,3},
     nodes::CompScienceMeshes.AbstractMesh{U,1},
@@ -1027,7 +1160,39 @@ function dual0forms_body(mesh::CompScienceMeshes.AbstractMesh{<:Any,3}, refd, bn
     LagrangeBasis{1,0,3}(refd, bfs, pos)
 end
 
+function lagrangecx(mesh::CompScienceMeshes.AbstractMesh{<:Any,2}; order)
 
+    T = coordtype(mesh)
+
+    P = vertextype(mesh)
+    S = Shape{T}
+
+    fns = Vector{Vector{S}}()
+    pos = Vector{P}()
+
+    u = one(T)
+    for (c,cell) in enumerate(mesh)
+        ch = chart(mesh,cell)
+
+        push!(fns, S[S(c,1,u)])
+        push!(pos, cartesian(neighborhood(ch, T(1.0))))
+
+        push!(fns, S[S(c,2,u)])
+        push!(pos, cartesian(neighborhood(ch, T(0.0))))
+    end
+
+    NF = order + 1
+
+    for (c,cell) in enumerate(mesh)
+        ch = chart(mesh,cell)
+        for r in 3:NF
+            push!(fns, S[S(c,r,u)])
+            push!(pos, cartesian(neighborhood(ch, u - (r-2)/(NF-1))))
+        end
+    end
+
+    return LagrangeBasis{order,-1,NF}(mesh, fns, pos)
+end
 
 function lagrangecx(mesh::CompScienceMeshes.AbstractMesh{<:Any,3}; order)
 

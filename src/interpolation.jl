@@ -35,6 +35,25 @@ function DofInterpolate(basis::LagrangeBasis, field)
     return res
 end
 
+
+function DofInterpolate(basis::LagrangeBasis{D,C,M}, field) where {D,C,U,M<:CompScienceMeshes.Mesh{U,2}}
+
+    T = promote_type(scalartype(basis), scalartype(field))
+
+    num_bfs = numfunctions(basis)
+
+    res = Vector{T}(undef, num_bfs)
+
+    for  b in 1 : num_bfs
+        bfs = basis.fns[b]
+
+        res[b] = field(basis.pos[b])
+    end
+
+    return res
+end
+
+
 ### Piecewise constant elements require separate treatment
 ### TODO: Probably a rewrite is advisable to also take into account
 ### dual elements properly.
