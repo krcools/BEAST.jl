@@ -34,6 +34,7 @@ export planewave
 export RefSpace, numfunctions, coordtype, scalartype, assemblydata, geometry, refspace, valuetype
 export lagrangecxd0, lagrangec0d1, duallagrangec0d1, lagrangec0d2, unitfunctioncxd0, unitfunctionc0d1
 export duallagrangecxd0
+export lagrangec0, lagrangecx
 export lagdimension
 export restrict
 export raviartthomas, raowiltonglisson, positions
