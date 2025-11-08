@@ -102,14 +102,13 @@ struct HH2DHyperSingularFDBIO{T, K} <: HelmholtzOperator2D{T, K}
     end
 end
 
-mutable struct KernelValsHelmholtz2D
-    gamma
-    wavenumber
-    vect
-    dist
-    green
-    gradgreen
-    txty
+mutable struct KernelValsHelmholtz2D{K1,K2,F}
+    gamma::K1
+    vect::SVector{2,F}
+    dist::F
+    green::K2
+    gradgreen::SVector{2,K2}
+    txty::F
 end
 
 # Kernel values for 2D Laplace BIE operators
@@ -148,7 +147,7 @@ function kernelvals(biop::HelmholtzOperator2D{T, K}, tgeo, bgeo) where {T, K <: 
 
     txty = dot(normal(tgeo), normal(bgeo))
 
-    KernelValsHelmholtz2D(gamma, k, r, R, green, gradgreen, txty)
+    KernelValsHelmholtz2D(gamma, r, R, green, gradgreen, txty)
 end
 
 shapevals(op::HelmholtzOperator2D, ϕ, ts) = shapevals(ValDiff(), ϕ, ts)
