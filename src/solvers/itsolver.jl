@@ -91,10 +91,13 @@ end
 
 function Base.:*(A::GMRESSolver, b::AbstractVector)
 
-    T = promote_type(eltype(A), eltype(b))
-    y = BlockedVector{T}(undef, (axes(A,2),))
+    x, ch = solve(A, b)
+    return x
+    # T = promote_type(eltype(A), eltype(b))
+    # y = BlockedVector{T}(undef, (axes(A,2),))
+    # y = similar(Array{T}, axes(A,2))
 
-    mul!(y, A, b)
+    # mul!(y, A, b)
 end
 
 Base.size(solver::GMRESSolver) = reverse(size(solver.linear_operator))
@@ -137,7 +140,25 @@ end
 
 gmres(eq::DiscreteEquation; maxiter=0, restart=0, tol=0) = gmres_ch(eq; maxiter, restart, tol)[1]
 
+@testitem "GMRESSolver blocked" begin
+    using LinearAlgebra
+    using BEAST.BlockArrays
 
+    n = 3
+    J = Matrix{Float64}(I,n,n)
+    Z = zeros(Float64,n,n)
+    A = BlockedArray([Z J; -J Z], [n,n], [n,n])
+
+    Ai = BEAST.GMRESSolver(A)
+    b = collect(1:2n)
+
+    x = Ai * b
+    @test blocksize(x) == (2,)
+    @test blocksizes(x) == [(n,), (n,)]
+
+    @test x[1:n] ≈ -b[n+1:end]
+    @test x[n+1:end] ≈ b[1:n]
+end
 
 struct CGSolver{L,M,T} <: LinearMap{T}
     A::L

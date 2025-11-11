@@ -255,6 +255,11 @@ function assemble(bf::BilForm, X::DirectProductSpace, Y::DirectProductSpace;
     U = BlockArrays.blockedrange(M)
     V = BlockArrays.blockedrange(N)
 
+    if !spaceTimeBasis
+        U = NestedUnitRanges.nestedrange(X, 1, numfunctions)
+        V = NestedUnitRanges.nestedrange(Y, 1, numfunctions)
+    end
+
     for term in bf.terms
 
         x = X.factors[term.test_id]
@@ -268,7 +273,6 @@ function assemble(bf::BilForm, X::DirectProductSpace, Y::DirectProductSpace;
         end
         
         a = term.kernel
-        # qs = quadstrat(a, x, y)
         z = materialize(a, x, y; quadstrat)
 
         Smap = term.coeff * lift(z, Block(term.test_id), Block(term.trial_id), U, V)

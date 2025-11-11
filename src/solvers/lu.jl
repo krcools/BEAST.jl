@@ -1,36 +1,50 @@
-struct LUFactorization{T,M} <: LinearMap{T}
-    fac::M
+mutable struct LUFactorization{T,M<:Matrix{T},X} <: LinearMap{T}
+    A::M
+    F::Any
+    factorized::Bool
+    axes::X
 end
 
-Base.axes(A::LUFactorization) = reverse(axes(A.fac))
-Base.size(A::LUFactorization) = reverse(size(A.fac))
-
-LinearAlgebra.adjoint(A::LUFactorization) = LUFactorization(adjoint(A.fac))
-LinearAlgebra.transpose(A::LUFactorization) = LUFactorization(transpose(A.fac))
-
-function LUFactorization(A::SparseMatrixCSC) 
-    T= eltype(A)
-    fac = LinearAlgebra.lu(A)
-    LUFactorization{T,typeof(fac)}(fac)
+function LUFactorization(A)
+    M = typeof(A) 
+    T = eltype(A)
+    axs = reverse(axes(A))
+    X = typeof(axs)
+    B = Matrix(A)
+    LUFactorization{T,Matrix{T},X}(B, nothing, false, axs)
 end
 
-lu(A::SparseMatrixCSC) = LinearMap(LUFactorization(A))
+# function LUFactorization(A::SparseMatrixCSC) 
+#     T= eltype(A)
+#     fac = LinearAlgebra.lu(A)
+#     LUFactorization{T,typeof(fac)}(fac, false)
+# end
+    
 
-function LUFactorization(fac::M) where M 
-    T= eltype(fac)
-    LUFactorization{T,M}(fac)
+Base.axes(A::LUFactorization) = A.axes
+Base.size(A::LUFactorization) = reverse(size(A.A))
+
+LinearAlgebra.adjoint(A::LUFactorization) = LUFactorization(adjoint(A.A))
+LinearAlgebra.transpose(A::LUFactorization) = LUFactorization(transpose(A.A))
+
+function lu(A)
+    LUFactorization(A)
 end
 
 function Base.:*(A::LUFactorization, b::AbstractVector)
     T = promote_type(eltype(A), eltype(b))
-    y = BlockedVector{T}(undef, (axes(A,2),))
+    y = similar(Array{T}, axes(A,2))
     mul!(y, A, b)
     return y
 end
 
-function LinearAlgebra.mul!(y::AbstractVector, lu::LUFactorization, b::AbstractVector)
-    fill!(y,zero(eltype(y)))
-    y[:] = lu.fac \ Vector(b)
+function LinearAlgebra.mul!(y::AbstractVector, L::LUFactorization, b::AbstractVector)
+    fill!(y,false)
+    if L.factorized == false
+        L.F = LinearAlgebra.lu!(L.A)
+        L.factorized = true
+    end
+    y[:] = L.F \ Vector(b)
 end
 
 
@@ -54,4 +68,24 @@ end
 
     @test norm(x - x2) < 1e-12
 
+end
+
+@testitem "LUFactorization blocked" begin
+    using LinearAlgebra
+    using BEAST.BlockArrays
+
+    n = 3
+    J = Matrix{Float64}(I,n,n)
+    Z = zeros(Float64,n,n)
+    A = BlockedArray([Z J; -J Z], [n,n], [n,n])
+
+    Ai = BEAST.lu(A)
+    b = collect(1:2n)
+
+    x = Ai * b
+    @test blocksize(x) == (2,)
+    @test blocksizes(x) == [(n,), (n,)]
+
+    @test x[1:n] ≈ -b[n+1:end]
+    @test x[n+1:end] ≈ b[1:n]
 end
