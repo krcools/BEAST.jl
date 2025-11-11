@@ -125,28 +125,38 @@ end
     RUv = assemble(R, U, V)
     Auu = assemble(A, U, U)
 
-    matrices = (;Auu, RUv)
+    linmaps = (;Auu, RUv)
     vectors = (;bu)
-    return (;matrices, vectors)
+    return (;linmaps, vectors)
 end
 
 
-@target solution (discretization, spaces) -> begin
+@target matrix (discretization) -> begin
 
-    (;matrices, vectors) = discretization
-    (;Auu, RUv) = matrices
+    (;linmaps, vectors) = discretization
+    (;Auu, RUv) = linmaps
     (;bu) = vectors
-
-    (;U,V) = spaces
 
     MA = Matrix(Auu)
     MR = sparse(RUv)
 
+    ax1 = axes(RUv,2)
+    ax2 = axes(RUv,2)
+
     A = MR' * MA * MR
-    A = BEAST.BlockArrays.BlockedArray(A, (
-        BEAST.NestedUnitRanges.nestedrange(V, 1, numfunctions) ,
-        BEAST.NestedUnitRanges.nestedrange(V, 1, numfunctions) ) )
+    A = BEAST.BlockArrays.BlockedArray(A, (ax1, ax2) )
     b = RUv' * bu
+
+    return (;A, b)
+end
+
+
+@target solution (discretization, spaces, matrix) -> begin
+
+    (;linmaps, vectors) = discretization
+    (;RUv) = linmaps
+    (;A, b) = matrix
+    (;U,V) = spaces
 
     Ai = BEAST.lu(A)
     v = Ai * b
@@ -199,7 +209,8 @@ end
 
 x = range(-2.0,2.0,length=150)
 z = range(-1.5,2.5,length=100)
-nf = make(nearfield; h=0.08, κ=2.0, x=x, z=z)
+make(matrix; h=0.08, κ=2.0, x, z)
+nf = make(nearfield; h=0.08, κ=2.0, x, z)
 
 Etot = sum(nf.E)
 Htot = sum(nf.H)
@@ -218,7 +229,7 @@ PlotlyJS.add_trace!(plt, hm3, row=2, col=1);
 PlotlyJS.add_trace!(plt, hm4, row=2, col=2);
 display(plt)
 
-
+error()
 ## Debugging
 
 # ds = make(discretization; h=0.08, κ=2.0)
@@ -230,8 +241,8 @@ using BEAST.BlockArrays
 using BEAST.BlockArrays.ArrayLayouts
 using SparseArrays
 
-(;matrices, vectors) = ds
-(;Auu, RUv) = matrices
+(;linmaps, vectors) = ds
+(;Auu, RUv) = linmaps
 (;bu) = vectors
 
 MA1 = AbstractMatrix(Auu)
