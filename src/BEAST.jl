@@ -1,5 +1,8 @@
 module BEAST
 
+using GraphsColoring
+using OhMyThreads
+using ProgressMeter
 using Distributed
 using LinearAlgebra
 using SharedArrays
@@ -141,6 +144,12 @@ using SparseArrays
 
 function convolve end
 
+function progressbar(workload, verbose; color=:white, kwargs...)
+    return Progress(
+        workload; barglyphs=BarGlyphs("[=> ]"), color=color, enabled=verbose, kwargs...
+    )
+end
+
 include("utils/polynomial.jl")
 include("utils/specialfns.jl")
 include("utils/combinatorics.jl")
@@ -200,6 +209,8 @@ include("bases/tensorbasis.jl")
 
 include("bases/composedbasis.jl")
 include("bases/local/localcomposedbasis.jl")
+
+include("coloring.jl")
 
 include("operator.jl")
 
