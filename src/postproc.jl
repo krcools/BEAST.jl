@@ -137,11 +137,12 @@ Evaluate operator for a given bases and expansion coefficients at the given poin
 """
 function potential(op, points, coeffs, basis;
 	type=SVector{3,ComplexF64},
-	quadstrat=defaultquadstrat(op, basis))
+	quadstrat=defaultquadstrat(op, basis),
+    threading=Threading{:single})
 
 	ff = zeros(type, size(points))
 	store(v,m,n) = (ff[m] += v*coeffs[n])
-	potential!(store, op, points, basis; type, quadstrat)
+	potential!(store, op, points, basis; type, quadstrat, threading)
 	return ff
 end
 
@@ -171,9 +172,11 @@ function potential(op, points, coeffs, space::DirectProductSpace;
 end
 
 function potential!(store, op, points, basis;
-	type=SVector{3,ComplexF64},
-	quadstrat=defaultquadstrat(op, basis))
+	type::Type{T}=SVector{3,ComplexF64},
+	quadstrat=defaultquadstrat(op, basis),
+    threading=Threading{:single}) where {T}
 
+    threading = threading isa Scheduler ? threading : SerialScheduler()
 	z = zeros(type,length(points))
 
 	els, ad = assemblydata(basis)
@@ -181,14 +184,14 @@ function potential!(store, op, points, basis;
 
 	geo = geometry(basis)
 	nf = numfunctions(rs, domain(chart(geo, first(geo))))
-	zlocal = Array{type}(undef, nf)
-	qdata = quaddata(op,rs,els,quadstrat)
+    qdata = quaddata(op,rs,els,quadstrat)
 
-	print("dots out of 10: ")
+    pbar = progressbar(length(points), true)
 
-	todo, done, pctg = length(points), 0, 0
-
-	for (p,y) in enumerate(points)
+	@tasks for p in eachindex(points)
+        @set scheduler = threading
+        @local zlocal = Vector{T}(undef, nf)
+        y = points[p]
 		for (q,el) in enumerate(els)
 
 			fill!(zlocal,zero(type))
@@ -202,18 +205,9 @@ function potential!(store, op, points, basis;
 				end
 			end
 		end
-
-		done += 1
-		new_pctg = round(Int, done / todo * 100)
-		if new_pctg > pctg + 9
-				#println(todo," ",done," ",new_pctg)
-				print(".")
-				pctg = new_pctg
-		end
+        next!(pbar)
 	end
-
-	println("")
-
+    finish!(pbar)
 end
 
 function potential!(store, op, points, basis::SpaceTimeBasis)
@@ -285,7 +279,8 @@ function farfieldlocal!(zlocal,op,refspace,y,el,qr)
 
         krn = kernelvals(op, y, x)
         for r in 1 : length(zlocal)
-            zlocal[r] += integrand(op,krn,y,F[r],x) * dx
+            i = integrand(op,krn,y,F[r],x); i *= dx;
+            zlocal[r] += i
         end
 
     end
