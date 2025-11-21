@@ -213,6 +213,38 @@ function assemble!(operator::Operator, test_functions::Space, trial_functions::S
     assemblechunk!(operator, test_functions, trial_functions, store; quadstrat)
 end
 
+function assemble!(operator::Operator, testfunctions::Space, trialfunctions::Space,
+    store, threading::Scheduler; quadstrat=defaultquadstrat)
+
+    quadstrat = quadstrat(operator, testfunctions, trialfunctions)
+
+    testelements, testad, trialelements, trialad, qdata, _ = assembleblock_primer(
+        operator, testfunctions, trialfunctions; quadstrat=quadstrat)
+    
+    testad = (testelements, testad, 1:length(testelements))
+    trialad = (trialelements, trialad, 1:length(trialelements)) 
+
+    testelementcolors = color(testfunctions, threading; addata=testad)
+    trialelementcolors = [1:length(trialelements)]
+
+    qs = if CompScienceMeshes.refines(geometry(testfunctions), geometry(trialfunctions))
+        TestRefinesTrialQStrat(quadstrat)
+    elseif CompScienceMeshes.refines(geometry(trialfunctions), geometry(testfunctions))
+        TrialRefinesTestQStrat(quadstrat)
+    else
+        quadstrat
+    end
+
+    pbar = progressbar(length(testelements) * length(trialelements), true)
+
+    for (i, coloredtestelements) in enumerate(testelementcolors)
+        for (j, coloredtrialelements) in enumerate(trialelementcolors)            
+            assemblechunk_body_colored!(operator, testfunctions, testad, coloredtestelements,
+            trialfunctions, trialad, coloredtrialelements, qdata, store, threading; quadstrat=qs) 
+            next!(pbar; step = length(testelementcolors[i]) * length(trialelementcolors[j]))
+    end end 
+    finish!(pbar)
+end
 
 
 function assemble!(op::TransposedOperator, tfs::Space, bfs::Space, store,
