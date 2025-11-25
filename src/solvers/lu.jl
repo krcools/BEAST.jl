@@ -1,4 +1,4 @@
-mutable struct LUFactorization{T,M<:Matrix{T},X} <: LinearMap{T}
+mutable struct LUFactorization{T,M<:AbstractMatrix{T},X} <: LinearMap{T}
     A::M
     F::Any
     factorized::Bool
@@ -10,8 +10,7 @@ function LUFactorization(A)
     T = eltype(A)
     axs = reverse(axes(A))
     X = typeof(axs)
-    B = Matrix(A)
-    LUFactorization{T,Matrix{T},X}(B, nothing, false, axs)
+    LUFactorization{T,M,X}(A, nothing, false, axs)
 end
 
 # function LUFactorization(A::SparseMatrixCSC) 
@@ -41,7 +40,7 @@ end
 function LinearAlgebra.mul!(y::AbstractVector, L::LUFactorization, b::AbstractVector)
     fill!(y,false)
     if L.factorized == false
-        L.F = LinearAlgebra.lu!(L.A)
+        L.F = LinearAlgebra.lu(L.A)
         L.factorized = true
     end
     y[:] = L.F \ Vector(b)
@@ -88,4 +87,33 @@ end
 
     @test x[1:n] ≈ -b[n+1:end]
     @test x[n+1:end] ≈ b[1:n]
+end
+
+
+@testitem "LUFactorization Sparse/Dense" begin
+    using LinearAlgebra, SparseArrays
+    using CompScienceMeshes, BEAST
+
+    h = 0.5
+    M = meshsphere(1.0,h)
+    X = BEAST.gwpdiv(M;order=1)
+    
+    G = assemble(BEAST.Identity(),X,X)
+    dG = Matrix(G)
+
+    b = rand(numfunctions(X))
+
+    Gi = BEAST.lu(G)
+    dGi = BEAST.lu(dG)
+
+    #First time computing the factorization
+    @time x1 = Gi*b
+    @time x2 = dGi*b
+    #Second time only substitutions
+    @time x1 = Gi*b
+    @time x2 = dGi*b
+
+    @test typeof(Gi.F) == SparseArrays.UMFPACK.UmfpackLU{Float64, Int64}
+    @test typeof(dGi.F) ==  LinearAlgebra.LU{Float64, Matrix{Float64}, Vector{Int64}}
+
 end
