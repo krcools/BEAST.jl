@@ -1194,10 +1194,17 @@ function lagrangecx(mesh::CompScienceMeshes.AbstractMesh{<:Any,2}; order)
     return LagrangeBasis{order,-1,NF}(mesh, fns, pos)
 end
 
-function lagrangecx(mesh::CompScienceMeshes.AbstractMesh{<:Any,3}; order)
+function lagrangecx(mesh::CompScienceMeshes.AbstractMesh; order)
 
     T = coordtype(mesh)
-    NF = binomial(2+order, 2)
+
+    if dimension(mesh) == 1
+        NF = 1 + order
+    elseif dimension(mesh) == 2
+        NF = binomial(2+order, 2)
+    else
+        error("We do not yet support tetrahedron")
+    end
     P = vertextype(mesh)
     S = Shape{T}
 
@@ -1320,7 +1327,7 @@ end
 
 
 
-function lagrangec0(mesh::CompScienceMeshes.AbstractMesh{<:Any,3}; order)
+function lagrangec0(mesh::CompScienceMeshes.Mesh{<:Any,3}; order)
 
     T = coordtype(mesh)
     atol = sqrt(eps(T))
