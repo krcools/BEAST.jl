@@ -17,8 +17,8 @@ Assemble the vector of test coefficients corresponding to functional
 function assemble(field::Functional, tfs;
     quadstrat=defaultquadstrat(field, tfs))
 
-    R = scalartype(tfs)
-    b = zeros(Complex{R}, numfunctions(tfs))
+    R = scalartype(field, tfs)
+    b = zeros(R, numfunctions(tfs))
     store(v,m) = (b[m] += v)
     assemble!(field, tfs, store; quadstrat)
     return b
