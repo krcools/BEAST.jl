@@ -47,9 +47,10 @@ integralop(a::CompSingleInt) = CompSingleKern(a.op1,a.kernel,a.op2)
 
 function assemble!(op::AbstractCompInt, tfs::Space, bfs::Space,
     store, threading = Threading{:multi};
-    quadstrat=defaultquadstrat)
+    quadstrat=defaultquadstrat,
+    kwargs...)
 
-    assemble!(integralop(op),op.tfunc(tfs),op.bfunc(bfs),store,threading;quadstrat)
+    assemble!(integralop(op),op.tfunc(tfs),op.bfunc(bfs),store,threading;quadstrat, kwargs...)
 
 end
 
@@ -138,7 +139,8 @@ defaultquadstrat(op::CompSingleInt,tfs::Space,bfs::Space) = SingleNumQStrat(6)
 ##### assembling the single integral 
 function assemble!(biop::CompSingleKern, tfs::Space, bfs::Space, store,
     threading::Type{Threading{:multi}};
-    quadstrat=defaultquadstrat(biop, tfs, bfs))
+    quadstrat=defaultquadstrat(biop, tfs, bfs),
+    kwargs...)
 
     return assemble_local_mixed!(biop, tfs, bfs, store; quadstrat)
 end
