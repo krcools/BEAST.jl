@@ -35,7 +35,8 @@ end
 
 function assemble!(biop::DyadicOp, tfs::Space, bfs::Space, store,
     threading::Type{BEAST.Threading{:multi}};
-    quadstrat=defaultquadstrat(biop, tfs, bfs))
+    quadstrat=defaultquadstrat(biop, tfs, bfs),
+    kwargs...)
 
     u = assemble(biop.f, tfs)
     v = assemble(biop.g, bfs)
