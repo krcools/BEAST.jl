@@ -91,3 +91,31 @@ using OhMyThreads, GraphsColoring
         end
     end
 end
+
+
+@testitem "cellcoloring vs dofsplitting" begin
+    using CompScienceMeshes, OhMyThreads, LinearAlgebra
+
+    fn = dirname(pathof(BEAST)) * "/../test/assets/sphere45.in"
+    m = readmesh(fn)
+
+    T = Maxwell3D.singlelayer(wavenumber=3.0)
+    X = raviartthomas(m)
+    Y = buffachristiansen(m)
+
+    Txx1 = assemble(T, X, X;
+        threading=:cellcoloring,
+        scheduler=OhMyThreads.DynamicScheduler())
+    Txx2 = assemble(T, X, X;
+        threading=:dofsplitting,
+        scheduler=OhMyThreads.DynamicScheduler())
+    @test norm(Txx1 - Txx2) < 1e-12
+
+    Tyy1 = assemble(T, Y, Y;
+        threading=:cellcoloring,
+        scheduler=OhMyThreads.DynamicScheduler())
+    Tyy2 = assemble(T, Y, Y;
+        threading=:dofsplitting,
+        scheduler=OhMyThreads.DynamicScheduler())
+    @test norm(Tyy1 - Tyy2) < 1e-12
+end
