@@ -1,10 +1,10 @@
-using Test
+using Test, SparseArrays
 using CompScienceMeshes, BEAST
 using OhMyThreads, GraphsColoring
 
-@testset "Coloring tests" begin
+@testitem "Coloring tests" begin
 
-    for m in [readmesh(joinpath(dirname(pathof(BEAST)), "../examples/sphere2.in")), meshrectangle(1.0, 1.0, 0.1)]
+    for m in [readmesh(joinpath(pkgdir(BEAST), "test", "assets", "sphere2.in")), meshrectangle(1.0, 1.0, 0.1)]
 
         for X in [
             raviartthomas(m),
@@ -96,8 +96,7 @@ end
 @testitem "cellcoloring vs dofsplitting" begin
     using CompScienceMeshes, OhMyThreads, LinearAlgebra
 
-    fn = dirname(pathof(BEAST)) * "/../test/assets/sphere45.in"
-    m = readmesh(fn)
+    m = readmesh(joinpath(pkgdir(BEAST), "test", "assets", "sphere45.in"))
 
     T = Maxwell3D.singlelayer(wavenumber=3.0)
     X = raviartthomas(m)
