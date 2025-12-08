@@ -16,7 +16,7 @@ using BEAST, Test
     # operators defined as part of the BEAST framework
     e = (n × E) × n
 
-    fn = joinpath(pathof(BEAST), "../../examples/assets/sphere45.in")
+    fn = joinpath(pkgdir(BEAST), "test", "assets", "sphere45.in")
     Γ = readmesh(fn)
     # Γ = meshsphere(radius=1.0, h=0.1)
     RT = raviartthomas(Γ)
