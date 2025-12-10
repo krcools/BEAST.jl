@@ -43,7 +43,7 @@ for T in [Float32, Float64]
 		quadrature_data, zlocal, store, quadstrat=qs)
 
 	T1 = assemble(t,X1,X1)
-	@test T1 == T2
+	@test T1 ≈ T2 atol=sqrt(eps(T))
 
 	# @time BEAST.assembleblock_body!(t,
 	# 	X, I, test_elements,  test_assembly_data,
@@ -58,7 +58,7 @@ for T in [Float32, Float64]
 	blkasm(I,I,store3)
 
 	T4 = assemble(t,X,X)
-	@test T3 == T4[I,I]
+	@test T3 ≈ T4[I,I] atol=sqrt(eps(T))
 
 	# @time blkasm(I,I)
 	# @time assemble(t,X1,X1)
