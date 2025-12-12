@@ -2,6 +2,7 @@ module Variational
 
 using BlockArrays
 import BEAST
+import LinearMaps
 # import Base: start, done, next
 
 export transposecalls!
@@ -287,6 +288,11 @@ function getindex(A, v::HilbertVector, u::HilbertVector)
 end
 
 function getindex(A::AbstractMatrix, v::HilbertVector, u::HilbertVector)
+    terms = [ BilTerm(v.idx, u.idx, v.opstack, u.opstack, 1, A) ]
+    BilForm(v.space, u.space, terms)
+end
+
+function getindex(A::LinearMaps.LinearMap, v::HilbertVector, u::HilbertVector)
     terms = [ BilTerm(v.idx, u.idx, v.opstack, u.opstack, 1, A) ]
     BilForm(v.space, u.space, terms)
 end

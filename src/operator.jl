@@ -115,6 +115,11 @@ function assemble(operator::AbstractOperator, test_functions, trial_functions;
     return Z()
 end
 
+function assemble(A::LinearMap, testfns, trialfns; kwargs...)
+    @assert numfunctions(testfns) == size(A,1)
+    @assert numfunctions(trialfns) == size(A,2)
+    return A
+end
 
 function assemble(A::AbstractMatrix, testfns, trialfns; kwargs...)
     @assert numfunctions(testfns) == size(A,1)
