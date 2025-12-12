@@ -98,14 +98,16 @@ function unitfunctionc0d1_dirichlet(mesh)
     verts = skeleton(mesh, 0)
     detached = trues(numvertices(mesh))
     for v in cells(verts)
-        detached[v] = false
+        i = v.indices[1]
+        detached[i] = false
     end
 
     bnd = boundary(mesh)
     bndverts = skeleton(bnd, 0)
     notonbnd = trues(numvertices(mesh))
     for v in cells(bndverts)
-        notonbnd[v] = false
+        i = v.indices[1]
+        notonbnd[i] = false
     end
 
     vertexlist = findall(notonbnd .& .!detached)
@@ -131,7 +133,7 @@ function unitfunctionc0d1_dirichlet(mesh)
 
             cell = Cells[c]
 
-            localid = something(findfirst(isequal(v), cell),0)
+            localid = something(findfirst(isequal(v), cell.indices),0)
             @assert localid != 0
 
             shapes[s+n] = Shape(c, localid, T(1.0))
@@ -187,14 +189,14 @@ function lagrangec0d1_dirichlet(mesh)
     verts = skeleton(mesh, 0)
     detached = trues(numvertices(mesh))
     for v in cells(verts)
-        detached[v] = false
+        detached[v.indices] = false
     end
 
     bnd = boundary(mesh)
     bndverts = skeleton(bnd, 0)
     notonbnd = trues(numvertices(mesh))
     for v in cells(bndverts)
-        notonbnd[v] = false
+        notonbnd[v.indices] = false
     end
 
     vertexlist = findall(notonbnd .& .!detached)
@@ -224,24 +226,25 @@ function interior_and_junction_vertices(mesh, jct)
     verts = skeleton(mesh, 0)
     detached = trues(numvertices(mesh))
     for v in cells(verts)
-        detached[v] = false
+        detached[v.indices[1]] = false
     end
 
     bndfaces = boundary(mesh)
     bndverts = skeleton(bndfaces, 0)
     notonbnd = trues(numvertices(mesh))
     for v in cells(bndverts)
-        notonbnd[v] = false
+        notonbnd[v.indices[1]] = false
     end
 
     onjct = broadcast(!, notonbnd)
     overlap_with_junction = overlap_gpredicate(jct)
     for indices in cells(bndfaces)
-        bndface = simplex(vertices(bndfaces, indices))
+        # bndface = simplex(vertices(bndfaces, indices.indices))
+        bndface = chart(bndfaces, indices)
         if overlap_with_junction(bndface)
             continue
         else
-            for v in indices
+            for v in indices.indices
                 onjct[v] = false
             end
         end
@@ -387,7 +390,7 @@ function lagrangec0d1(mesh, vertexlist::Vector, ::Type{Val{3}})
             # cell = mesh.faces[c]
             cell = Cells[c]
 
-            localid = something(findfirst(isequal(v), cell),0)
+            localid = something(findfirst(isequal(v), cell.indices),0)
             @assert localid != 0
 
             shapes[s] = Shape(c, localid, T(1.0))
@@ -676,7 +679,7 @@ function duallagrangec0d1(mesh, refined, jct_pred, ::Type{Val{3}})
 
         n = vton[centroid_id]
         for c in vtoc[centroid_id,1:n]
-            fine_idcs = cells(refined)[c]
+            fine_idcs = cells(refined)[c].indices
             local_id = something(findfirst(isequal(centroid_id), fine_idcs), 0)
             @assert local_id != 0
             shape = Shape(c, local_id, 1.0)
@@ -688,7 +691,7 @@ function duallagrangec0d1(mesh, refined, jct_pred, ::Type{Val{3}})
             jct_pred(vertices(refined)[v]) && continue
             n = vton[v]
             for c in vtoc[v,1:n]
-                fine_idcs = cells(refined)[c]
+                fine_idcs = cells(refined)[c].indices
                 local_id = something(findfirst(isequal(v), fine_idcs),0)
                 @assert local_id != 0
                 #shape = Shape(c, local_id, 1/n/2)
@@ -703,7 +706,7 @@ function duallagrangec0d1(mesh, refined, jct_pred, ::Type{Val{3}})
             jct_pred(vertices(refined)[v]) && continue
             n = vton[v]
             for c in vtoc[v,1:n]
-                fine_idcs = cells(refined)[c]
+                fine_idcs = cells(refined)[c].indices
                 local_id = something(findfirst(isequal(v), fine_idcs),0)
                 @assert local_id != 0
                 shape = Shape(c, local_id, 1/(n/2))
@@ -751,7 +754,9 @@ function duallagrangec0d1(mesh, mesh2, pred, ::Type{Val{2}})
     # Now we will get all the smaller faces within the coarse segment
     #i.e The coose segment will have two points, and these tow points are connected to two segmesnts in the finer mesh
     # This will give us a 4 smaller faces per Dual lagrange basis, we store them first in all_faces
-    all_faces= Array{SVector{2,Int}}(undef,4)                      # faces in the original segment (4)
+    # all_faces= Array{SVector{2,Int}}(undef,4)                      # faces in the original segment (4)
+    CT = CompScienceMeshes.SimplexGraph{2}
+    all_faces = Vector{CT}(undef, 4)
     # the follwoing code get the verteciec for each coarse segment
     # then it looks for the two faces connected to each point in the finer mesh
     # if for example the segment would connect to more than two faces we will have
