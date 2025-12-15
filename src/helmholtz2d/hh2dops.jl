@@ -230,8 +230,8 @@ function quaddata(op::HelmholtzOperator2D,
 end
 
 function quadrule(op::HelmholtzOperator2D, g::LagrangeRefSpace, f::LagrangeRefSpace,
-    i, τ::CompScienceMeshes.Simplex{<:Any, 1},
-    j, σ::CompScienceMeshes.Simplex{<:Any, 1},
+    i, τ::CompScienceMeshes.AbstractSimplex{<:Any, 1},
+    j, σ::CompScienceMeshes.AbstractSimplex{<:Any, 1},
     qd, qs::DoubleNumSauterQstrat)
 
     hits = _numhits(τ, σ)
