@@ -115,6 +115,20 @@ function assemble(operator::AbstractOperator, test_functions, trial_functions;
     return Z()
 end
 
+struct InverseOperator <: AbstractOperator
+    op::AbstractOperator
+    solver
+end
+
+function InverseOperator(op::AbstractOperator; solver=BEAST.lu)
+    InverseOperator(op, solver)
+end
+
+function assemble(A::InverseOperator, testfns, trialfns; kwargs...)
+    M = assemble(A.op, testfns, trialfns; kwargs...)
+    return A.solver(M)
+end
+
 function assemble(A::LinearMap, testfns, trialfns; kwargs...)
     @assert numfunctions(testfns) == size(A,1)
     @assert numfunctions(trialfns) == size(A,2)
