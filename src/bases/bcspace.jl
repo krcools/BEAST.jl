@@ -200,7 +200,7 @@ function buildhalfbc(fine, S, v, p, onjunction, ibscaled)
     @assert length(S) >= 2
     @assert mod(length(S), 2) == 0
     @assert all(0 .< S .<= numcells(fine))
-    @assert all([v in cells(fine)[s] for s in S])
+    @assert all([v in cells(fine)[s].indices for s in S])
 
     bf = Shape{T}[]
 
@@ -209,12 +209,12 @@ function buildhalfbc(fine, S, v, p, onjunction, ibscaled)
     modn(i) = mod1(i,n)
 
     # sort the fine faces making up the domain
-    share_edge(i,j) = length(intersect(cells(fine)[i],cells(fine)[j])) == 2
+    share_edge(i,j) = length(intersect(cells(fine)[i].indices, cells(fine)[j].indices)) == 2
     S = sortneighbors(S, share_edge)
     @assert all(0 .< S .<= numcells(fine))
 
-    port_faces = findall(i -> p in cells(fine)[i], S)
-    port_edges = [something(findfirst(isequal(v), cells(fine)[S[i]]),0) for i in port_faces]
+    port_faces = findall(i -> p in cells(fine)[i].indices, S)
+    port_edges = [something(findfirst(isequal(v), cells(fine)[S[i]].indices),0) for i in port_faces]
 
     c_on_boundary = !share_edge(S[end], S[1]) || length(S) == 2
     e_on_boundary = length(port_faces) == 1
@@ -253,10 +253,10 @@ function buildhalfbc(fine, S, v, p, onjunction, ibscaled)
     bnd_edges = Int[]
     if c_on_boundary
         bnd_faces = [1,n]
-        p1 = x -> x in cells(fine)[S[2]] && x != v
-        p2 = x -> x in cells(fine)[S[n-1]] && x != v
-        e1 = findfirst(p1, cells(fine)[S[1]])
-        e2 = findfirst(p2, cells(fine)[S[n]])
+        p1 = x -> x in cells(fine)[S[2]].indices && x != v
+        p2 = x -> x in cells(fine)[S[n-1]].indices && x != v
+        e1 = findfirst(p1, cells(fine)[S[1]].indices)
+        e2 = findfirst(p2, cells(fine)[S[n]].indices)
         bnd_edges = [e1, e2]
     end
 
@@ -266,8 +266,8 @@ function buildhalfbc(fine, S, v, p, onjunction, ibscaled)
     if c_on_boundary
         for i in 1:length(bnd_faces)
             f, e = bnd_faces[i], bnd_edges[i]
-            a = vertices(fine)[cells(fine)[S[f]][mod1(e+1,3)]]
-            b = vertices(fine)[cells(fine)[S[f]][mod1(e+2,3)]]
+            a = vertices(fine)[cells(fine)[S[f]].indices[mod1(e+1,3)]]
+            b = vertices(fine)[cells(fine)[S[f]].indices[mod1(e+2,3)]]
             seg = simplex(a,b)
             if onjunction(seg)
                 push!(jct_idxes, i)
@@ -324,7 +324,7 @@ function buildhalfbc(fine, S, v, p, onjunction, ibscaled)
         # get the indices of the faces in fine.faces
         f0, f1 = S[j0], S[j1]
         # what are the local indices of the common edge?
-        e0, e1 = getcommonedge(cells(fine)[f0], cells(fine)[f1])
+        e0, e1 = getcommonedge(cells(fine)[f0].indices, cells(fine)[f1].indices)
         # add the two half Raviart-Thomas shape functions
         add!(bf, S[j0], abs(e0), +charges[j0])
         add!(bf, S[j1], abs(e1), -charges[j0])
