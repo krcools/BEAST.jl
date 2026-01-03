@@ -123,7 +123,7 @@ end
 
     bu = assemble(b, U)
     RUv = assemble(R, U, V)
-    Auu = assemble(A, U, U)
+    Auu = assemble(A, U, U; threading=:cellcoloring)
 
     linmaps = (;Auu, RUv)
     vectors = (;bu)

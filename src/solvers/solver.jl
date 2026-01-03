@@ -224,7 +224,7 @@ lift(a::ConvolutionOperators.AbstractConvOp ,I,J,U,V) =
 
 
 function assemble(bf::BilForm, X::DirectProductSpace, Y::DirectProductSpace;
-    materialize=BEAST.assemble, quadstrat=BEAST.defaultquadstrat)
+    materialize=BEAST.assemble, quadstrat=BEAST.defaultquadstrat, kwargs...)
 
     T = Int32
     @assert !isempty(bf.terms)
@@ -273,7 +273,7 @@ function assemble(bf::BilForm, X::DirectProductSpace, Y::DirectProductSpace;
         end
         
         a = term.kernel
-        z = materialize(a, x, y; quadstrat)
+        z = materialize(a, x, y; quadstrat, kwargs...)
 
         Smap = term.coeff * lift(z, Block(term.test_id), Block(term.trial_id), U, V)
         T = promote_type(T, eltype(Smap))

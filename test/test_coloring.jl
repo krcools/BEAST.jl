@@ -4,7 +4,14 @@ using OhMyThreads, GraphsColoring
 
 @testitem "Coloring tests" begin
 
-    for m in [readmesh(joinpath(pkgdir(BEAST), "test", "assets", "sphere2.in")), meshrectangle(1.0, 1.0, 0.1)]
+    using CompScienceMeshes
+    using GraphsColoring
+    using OhMyThreads
+    using SparseArrays
+
+    for m in [
+        CompScienceMeshes.readmesh(joinpath(pkgdir(BEAST), "test", "assets", "sphere2.in")),
+        CompScienceMeshes.meshrectangle(1.0, 1.0, 0.1)]
 
         for X in [
             raviartthomas(m),
@@ -96,7 +103,7 @@ end
 @testitem "cellcoloring vs dofsplitting" begin
     using CompScienceMeshes, OhMyThreads, LinearAlgebra
 
-    m = readmesh(joinpath(pkgdir(BEAST), "test", "assets", "sphere45.in"))
+    m = CompScienceMeshes.readmesh(joinpath(pkgdir(BEAST), "test", "assets", "sphere45.in"))
 
     T = Maxwell3D.singlelayer(wavenumber=3.0)
     X = raviartthomas(m)
