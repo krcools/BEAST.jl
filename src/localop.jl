@@ -57,6 +57,14 @@ function allocatestorage(op::LocalOperator, test_functions, trial_functions,
     return freeze, store
 end
 
+function assemble!(op::LocalOperator, tfs::Space, bfs::Space, store,
+        threading::Type{Threading{:cellcoloring}};
+        quadstrat=defaultquadstrat,
+        kwargs...)
+
+        assemble!(op, tfs, bfs, store, Threading{:multi}; quadstrat, kwargs...)
+end
+
 function assemble!(biop::LocalOperator, tfs::Space, bfs::Space, store,
         threading::Type{Threading{:multi}};
         quadstrat=defaultquadstrat,
