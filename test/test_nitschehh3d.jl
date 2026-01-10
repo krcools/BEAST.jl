@@ -9,8 +9,8 @@ p3 = point(0,1/3,0)
 q1 = point(0,0,0)
 q2 = point(0.125,0,0)
 
-m = Mesh([p1,p2,p3], [index(1,2,3)])
-n = Mesh([q1,q2], [index(1,2)])
+m = Mesh([p1,p2,p3], [CompScienceMeshes.SimplexGraph(1,2,3)])
+n = Mesh([q1,q2], [CompScienceMeshes.SimplexGraph(1,2)])
 translate!(n, point(0,0,20))
 
 X = lagrangec0d1(m, boundary(m))

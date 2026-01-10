@@ -14,8 +14,8 @@ function generate_refpair(;angle=180)
     ]
     
     triangles = [
-        SVector(1, 2, 3),
-        SVector(2, 4, 3)
+        CompScienceMeshes.SimplexGraph(1, 2, 3),
+        CompScienceMeshes.SimplexGraph(2, 4, 3)
     ]
     return Mesh(vertices, triangles)
 end

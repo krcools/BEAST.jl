@@ -52,8 +52,8 @@ p3 = point(0,1,0)
 q1 = point(0,0,0)
 q2 = point(1,0,0)
 
-m = Mesh([p1,p2,p3],[index(1,2,3)])
-n = Mesh([q1,q2], [index(1,2)])
+m = Mesh([p1,p2,p3],[CompScienceMeshes.SimplexGraph(1,2,3)])
+n = Mesh([q1,q2], [CompScienceMeshes.SimplexGraph(1,2)])
 translate!(n, point(0,0,20))
 
 X = lagrangecxd0(m)

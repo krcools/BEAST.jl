@@ -4,7 +4,7 @@ using BEAST
 using CompScienceMeshes
 
 o, x, y = point(0,0,0), point(1,0,0), point(0,1,0)
-G = Mesh([o,x,y,x+y],[index(1,2,3)])
+G = Mesh([o,x,y,x+y],[CompScienceMeshes.SimplexGraph(1,2,3)])
 
 @test numvertices(G) == 4
 @test numcells(G) == 1

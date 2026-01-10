@@ -5,8 +5,8 @@ using CompScienceMeshes
 function neighbortest(X)
     Γ = X.geo
     for (e,f) in enumerate(X.fns)
-        i = Γ.faces[f[1].cellid]
-        j = Γ.faces[f[2].cellid]
+        i = Γ.faces[f[1].cellid].indices
+        j = Γ.faces[f[2].cellid].indices
         ij = intersect(i,j)
         @assert length(ij) == 2
         ri = f[1].refid
@@ -29,14 +29,16 @@ for T in [Float32,Float64]
     @test numvertices(mesh) == 9
 
     idcs = mesh.faces[1]
-    @test size(idcs) == (3,)
+    # @test size(idcs) == (3,)
+    @test idcs isa CompScienceMeshes.SimplexGraph{3}
 
-    verts = vertices(mesh, idcs)
+    # verts = vertices(mesh, idcs)
+    verts = chart(mesh, idcs).vertices
     @test size(verts) == (3,)
 
     faces = skeleton(mesh, 2)
     idcs = faces.faces[1]
-    verts = vertices(mesh, idcs)
+    verts = chart(mesh, idcs).vertices
     local p = simplex(verts, Val{2})
     @test volume(p) == T(1/8)
 

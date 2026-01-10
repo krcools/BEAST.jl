@@ -36,7 +36,7 @@ function ncrossbdm(mesh, cellpairs::Array{Int,2})
         c1, c2 = cellpairs[:,i]
         cell1 = cells(mesh)[c1]
         cell2 = cells(mesh)[c2]
-        e1, e2 = getcommonedge(cell1, cell2)
+        e1, e2 = getcommonedge(cell1.indices, cell2.indices)
         @assert e1*e2 < 0
         e1, e2 = abs(e1), abs(e2)
         fns[2*(i-1)+1] = [ S(c1, 2*(e1-1)+1 ,+1.0), S(c2, 2*(e2-1)+2,-1.0)]

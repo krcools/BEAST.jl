@@ -10,9 +10,10 @@ mesh0 = meshrectangle(1.0,1.0,0.5)
 @test numvertices(mesh0) == 9
 
 idcsZ = meshZ.faces[1]
-@test size(idcsZ) == (3,)
+@test size(idcsZ.indices) == (3,)
 
-vertsZ = vertices(meshZ, idcsZ)
+# vertsZ = vertices(meshZ, idcsZ)
+vertsZ = chart(meshZ, idcsZ).vertices
 @test size(vertsZ) == (3,)
 
 Γ = meshsegment(1.0,0.5,3)
@@ -24,9 +25,10 @@ translate!(Γ,point(0.0,0.0,0.5))
 @test numvertices(γ) == 3
 
 idcsΓ = Γ.faces[1]
-@test size(idcsΓ) == (2,)
+@test size(idcsΓ.indices) == (2,)
 
-vertsΓ = vertices(Γ, idcsΓ)
+# vertsΓ = vertices(Γ, idcsΓ)
+vertsΓ = chart(Γ, idcsΓ).vertices
 @test size(vertsΓ) == (2,)
 
 sum_mesh = weld(meshZ,mesh0)

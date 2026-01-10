@@ -77,7 +77,9 @@ for T in [Float64]
     Γt = Γto
     Γs = translate(Γto, SVector(1.0, 0.0))
 
-    Γs = Mesh([SVector(0.0, 0.0), SVector(0.0, 1.0)], [SVector(1, 2)])
+    Γs = Mesh(
+        [SVector(0.0, 0.0), SVector(0.0, 1.0)],
+        [CompScienceMeshes.SimplexGraph(1, 2)])
     Xt = lagrangecxd0(Γt)
     Xs = lagrangecxd0(Γs)
 

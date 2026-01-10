@@ -99,7 +99,7 @@ for T in [Float32, Float64]
 
 
     o, x, y, z = euclidianbasis(3)
-    local m = Mesh([x,y,z,o], [@SVector[1,2,3,4]])
+    local m = Mesh([x,y,z,o], [CompScienceMeshes.SimplexGraph(1,2,3,4)])
 
     m1 = skeleton(m,1)
     local X = BEAST.nedelecc3d(m, m1)
