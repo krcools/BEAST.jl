@@ -208,14 +208,14 @@ function lagrangec0_dirichlet(mesh; order=1)
     verts = skeleton(mesh, 0)
     detached = trues(numvertices(mesh))
     for v in cells(verts)
-        detached[v] = false
+        detached[v.indices[1]] = false
     end
 
     bnd = boundary(mesh)
     bndverts = skeleton(bnd, 0)
     notonbnd = trues(numvertices(mesh))
     for v in cells(bndverts)
-        notonbnd[v] = false
+        notonbnd[v.indices[1]] = false
     end
 
     vertexlist = findall(notonbnd .& .!detached)
@@ -819,7 +819,7 @@ function lagrangec0d2(mesh)
     verts = skeleton(mesh, 0)
     detached = trues(numvertices(mesh))
     for v in cells(verts)
-        detached[v] = false
+        detached[v.indices[1]] = false
     end
 
     #identify
@@ -827,7 +827,7 @@ function lagrangec0d2(mesh)
     bndverts = skeleton(bnd, 0)
     notonbnd = trues(numvertices(mesh))
     for v in cells(bndverts)
-        notonbnd[v] = false
+        notonbnd[v.indices[1]] = false
     end
 
     vertexlist = findall(.!detached)
@@ -877,7 +877,7 @@ function lagrangec0d2(mesh, vertexlist::Vector, cellpairs::Array{Int,2}, ::Type{
             # cell = mesh.faces[c]
             cell = Cells[c]
 
-            localid = something(findfirst(isequal(v), cell),0)
+            localid = something(findfirst(isequal(v), cell.indices),0)
             @assert localid != 0
 
             shapes[s] = Shape(c, localid, 1.0)
@@ -902,17 +902,17 @@ function lagrangec0d2(mesh, vertexlist::Vector, cellpairs::Array{Int,2}, ::Type{
         if cellpairs[2,i] > 0
             c1 = cellpairs[1,i]; cell1 = Cells[c1] #mesh.faces[c1]
             c2 = cellpairs[2,i]; cell2 = Cells[c2] #mesh.faces[c2]
-            e1, e2 = getcommonedge(cell1, cell2)
+            e1, e2 = getcommonedge(cell1.indices, cell2.indices)
             functions[numvertices+i] = [
               Shape(c1, abs(e1)+3, 1.0),
               Shape(c2, abs(e2)+3, 1.0)]
-            isct = intersect(cell1, cell2)
+            isct = intersect(cell1.indices, cell2.indices)
             @assert length(isct) == 2
-            @assert !(cell1[abs(e1)] in isct)
-            @assert !(cell2[abs(e2)] in isct)
+            @assert !(cell1.indices[abs(e1)] in isct)
+            @assert !(cell2.indices[abs(e2)] in isct)
 
-            v1 = cell1[mod1(abs(e1)+1,3)]
-            v2 = cell1[mod1(abs(e1)+2,3)]
+            v1 = cell1.indices[mod1(abs(e1)+1,3)]
+            v2 = cell1.indices[mod1(abs(e1)+2,3)]
 
             edge = simplex(mesh.vertices[[v1,v2]]...)
            
@@ -924,8 +924,8 @@ function lagrangec0d2(mesh, vertexlist::Vector, cellpairs::Array{Int,2}, ::Type{
             functions[numvertices+i] = [
             Shape(c1, abs(e1)+3, +1.0)]
 
-            v1 = cell1[mod1(abs(e1)+1,3)]
-            v2 = cell1[mod1(abs(e1)+2,3)]
+            v1 = cell1.indices[mod1(abs(e1)+1,3)]
+            v2 = cell1.indices[mod1(abs(e1)+2,3)]
             edge = simplex(mesh.vertices[[v1,v2]]...)
            
             positions[numvertices+i] =  cartesian(center(edge))
