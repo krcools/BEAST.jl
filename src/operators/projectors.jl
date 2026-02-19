@@ -4,10 +4,10 @@ abstract type QHComponent end
 struct Loops <: QHComponent end
 #Stars
 struct Stars <: QHComponent end
-#Local loops
-struct DualLoops <: QHComponent end
-#Stars + global loops
+#Stars
 struct DualStars <: QHComponent end
+#Local loops + global loops
+struct DualLoops <: QHComponent end
 
 abstract type ComputeStrat end
 struct Direct <: ComputeStrat end
@@ -24,11 +24,11 @@ function PΛ(;compStrat = Iterative)
 end
 
 function ℙΣ(;compStrat = Iterative)
-    return QHProjector{DualStars,compStrat}()
+    return QHProjector{DualLoops,compStrat}()
 end
 
 function ℙΛ(;compStrat = Iterative)
-    return QHProjector{DualLoops,compStrat}()
+    return QHProjector{DualStars,compStrat}()
 end
 
 """
@@ -43,6 +43,7 @@ function saddlepoint(A::SparseMatrixCSC,B::SparseMatrixCSC,P1::SparseMatrixCSC,P
     Pdiv = blockdiag(CholeskyFactorization(P1),CholeskyFactorization(P2))
     return GMRESSolver(SP, left_preconditioner=Pdiv, maxiter=200, restart=50, reltol=1e-8, verbose=false) 
 end
+
 
 function assemble(::QHProjector, X::Space; quadstrat=defaultquadstrat)
     error("Not implemented")
@@ -61,14 +62,14 @@ function assemble(::QHProjector{Loops,Direct}, X::RTBasis; quadstrat=defaultquad
    return LinearAlgebra.I - Σ*pinv(Σ'*Σ)*Σ'
 end
 
-function assemble(::QHProjector{DualLoops,Direct}, X::RTBasis; quadstrat=defaultquadstrat)
+function assemble(::QHProjector{DualStars,Direct}, X::RTBasis; quadstrat=defaultquadstrat)
     edges = setminus(skeleton(X.geo,1), boundary(X.geo))
     verts = setminus(skeleton(X.geo,0), skeleton(boundary(X.geo),0))
     Λ = Matrix(connectivity(verts, edges, sign))
     return  Λ * pinv(Λ'*Λ) * Λ'
 end
 
-function assemble(::QHProjector{DualStars,Direct}, X::RTBasis; quadstrat=defaultquadstrat)
+function assemble(::QHProjector{DualLoops,Direct}, X::RTBasis; quadstrat=defaultquadstrat)
     edges = setminus(skeleton(X.geo,1), boundary(X.geo))
     verts = setminus(skeleton(X.geo,0), skeleton(boundary(X.geo),0))
     Λ = Matrix(connectivity(verts, edges, sign))
@@ -81,7 +82,9 @@ function assemble(::QHProjector{Stars,Iterative}, X::RTBasis; quadstrat=defaultq
     nX = numfunctions(X)
     nP = numfunctions(P)
     #assemble auxilarry matrices
-    Gxx = assemble(Identity(),X,X;quadstrat)
+    # Gxx = assemble(Identity(),X,X;quadstrat)
+    T = scalartype(X)
+    Gxx = sparse(T,I,nX,nX)
     Dxx = assemble(Identity(),divergence(X),divergence(X);quadstrat)
     Gpp = assemble(Identity(),P,P;quadstrat)
     Σp = assemble(Identity(),divergence(X),P;quadstrat)
@@ -98,7 +101,9 @@ function assemble(::QHProjector{Loops,Iterative}, X::RTBasis; quadstrat=defaultq
     nX = numfunctions(X)
     nP = numfunctions(P)
     #assemble auxilary matrices
-    Gxx = assemble(Identity(),X,X;quadstrat)
+    # Gxx = assemble(Identity(),X,X;quadstrat)
+    T = scalartype(X)
+    Gxx = sparse(T,I,nX,nX)
     Dxx = assemble(Identity(),divergence(X),divergence(X);quadstrat)
     Gpp = assemble(Identity(),P,P;quadstrat)
     Σp = assemble(Identity(),divergence(X),P;quadstrat)
@@ -108,39 +113,45 @@ function assemble(::QHProjector{Loops,Iterative}, X::RTBasis; quadstrat=defaultq
     return Px0'*SP*Px0
 end
 
-function assemble(::QHProjector{DualStars,Iterative}, X::RTBasis; quadstrat=defaultquadstrat)
+function assemble(::QHProjector{DualLoops,Iterative}, X::RTBasis; quadstrat=defaultquadstrat)
     #create auxilarry basis functions
-    L = lagrangec0d1(X.geo)
+    P = duallagrangecxd0(X.geo)
+    X = buffachristiansen(X.geo)
     nX = numfunctions(X)
-    nL = numfunctions(L)
-    #assemble auxilarry matrices
-    Gxx = assemble(Identity(),X,X;quadstrat)
-    Cll = assemble(Identity(),curl(L),curl(L);quadstrat)
-    Gll = assemble(Identity(),L,L;quadstrat)
-    Λp = assemble(Identity(),X,curl(L);quadstrat)
+    nP = numfunctions(P)
+
+    T = scalartype(X)
+    Gxx = sparse(T,I,nX,nX)
+    Dxx = assemble(Identity(),divergence(X),divergence(X);quadstrat)
+    Gpp = assemble(Identity(),P,P;quadstrat)
+    sqGpp = sqrt.(Gpp)
+    Σp = assemble(Identity(),divergence(X),P;quadstrat)*sqGpp
     Px0 = [Gxx
-           spzeros(nL,nX)]
-    SP = saddlepoint(Gxx,Λp,Gxx,Gll+Cll)
+           spzeros(nP,nX)]
+    # P0Σ = [spzeros(nX,nX) Σp]
+    SP = saddlepoint(Gxx,Σp,Gxx+Dxx,sqGpp*Gpp*sqGpp)
     return Px0'*SP*Px0
 end
 
-function assemble(::QHProjector{DualLoops,Iterative}, X::RTBasis; quadstrat=defaultquadstrat)
-    #create auxilarry basis functions
-    L = lagrangec0d1(X.geo)
+function assemble(::QHProjector{DualStars,Iterative}, X::RTBasis; quadstrat=defaultquadstrat)
+
+    P = duallagrangecxd0(X.geo)
+    X = buffachristiansen(X.geo)
     nX = numfunctions(X)
-    nP = numfunctions(L)
-    #assemble auxilarry matrices
-    Gxx = assemble(Identity(),X,X;quadstrat)
-    Cll = assemble(Identity(),curl(L),curl(L);quadstrat)
-    Gll = assemble(Identity(),L,L;quadstrat)
-    Λp = assemble(Identity(),X,curl(L);quadstrat)
+    nP = numfunctions(P)
+
+    T = scalartype(X)
+    Gxx = sparse(T,I,nX,nX)
+    Dxx = assemble(Identity(),divergence(X),divergence(X);quadstrat)
+    Gpp = assemble(Identity(),P,P;quadstrat)
+    sqGpp = sqrt.(Gpp)
+    Σp = assemble(Identity(),divergence(X),P;quadstrat)*sqGpp
     Px0 = [Gxx
            spzeros(nP,nX)]
-    P0Λ = [spzeros(nX,nX) Λp]
-    SP = saddlepoint(Gxx,Λp,Gxx,Gll+Cll)
-    return P0Λ*SP*Px0
+    P0Σ = [spzeros(nX,nX) Σp]
+    SP = saddlepoint(Gxx,Σp,Gxx+Dxx,sqGpp*Gpp*sqGpp)
+    return P0Σ*SP*Px0
 end
-
 #GWP basis
 function assemble(::QHProjector{Stars,Direct}, X::GWPDivSpace; quadstrat=defaultquadstrat)
     p = X.degree
@@ -162,7 +173,7 @@ function assemble(::QHProjector{Loops,Direct}, X::GWPDivSpace; quadstrat=default
     return Gxx - Σp * pinv(Matrix(Σp'*inv(Matrix(Gxx))*Σp)) * Σp'
 end
 
-function assemble(::QHProjector{DualStars,Direct}, X::GWPDivSpace; quadstrat=defaultquadstrat)
+function assemble(::QHProjector{DualLoops,Direct}, X::GWPDivSpace; quadstrat=defaultquadstrat)
     p = X.degree
     #create auxilarry basis functions
     L = lagrangec0(X.geo,order=p+1)
@@ -172,7 +183,7 @@ function assemble(::QHProjector{DualStars,Direct}, X::GWPDivSpace; quadstrat=def
     return Gxx - Λp * pinv(Matrix(Λp'*inv(Matrix(Gxx))*Λp)) * Λp'
 end
 
-function assemble(::QHProjector{DualLoops,Direct}, X::GWPDivSpace; quadstrat=defaultquadstrat)
+function assemble(::QHProjector{DualStars,Direct}, X::GWPDivSpace; quadstrat=defaultquadstrat)
     p = X.degree
     #create auxilarry basis functions
     L = lagrangec0(X.geo,order=p+1)
@@ -217,7 +228,7 @@ function assemble(::QHProjector{Loops,Iterative}, X::GWPDivSpace; quadstrat=defa
     return Px0'*SP*Px0
 end
 
-function assemble(::QHProjector{DualStars,Iterative}, X::GWPDivSpace; quadstrat=defaultquadstrat)
+function assemble(::QHProjector{DualLoops,Iterative}, X::GWPDivSpace; quadstrat=defaultquadstrat)
     p = X.degree
     #create auxilarry basis functions
     L = lagrangec0(X.geo,order=p+1)
@@ -235,7 +246,7 @@ function assemble(::QHProjector{DualStars,Iterative}, X::GWPDivSpace; quadstrat=
     return Px0'*SP*Px0
 end
 
-function assemble(::QHProjector{DualLoops,Iterative}, X::GWPDivSpace; quadstrat=defaultquadstrat)
+function assemble(::QHProjector{DualStars,Iterative}, X::GWPDivSpace; quadstrat=defaultquadstrat)
     p = X.degree
     #create auxilarry basis functions
     L = lagrangec0(X.geo,order=p+1)
@@ -277,6 +288,15 @@ end
 
     ℙΣd = assemble(BEAST.ℙΣ(;compStrat =BEAST.Direct),X)
     ℙΛd = assemble(BEAST.ℙΛ(;compStrat =BEAST.Direct),X)
+
+    @test norm(PΣd*PΛd*d)/norm(d) < sqrt(eps())
+    @test norm(ℙΣd*ℙΛd*d)/norm(d) < sqrt(eps())
+≈
+    PΣd = assemble(BEAST.PΣ(;compStrat =BEAST.Iterative),X)
+    PΛd = assemble(BEAST.PΛ(;compStrat =BEAST.Iterative),X)
+
+    ℙΣd = assemble(BEAST.ℙΣ(;compStrat =BEAST.Iterative),X)
+    ℙΛd = assemble(BEAST.ℙΛ(;compStrat =BEAST.Iterative),X)
 
     @test norm(PΣd*PΛd*d)/norm(d) < sqrt(eps())
     @test norm(ℙΣd*ℙΛd*d)/norm(d) < sqrt(eps())
