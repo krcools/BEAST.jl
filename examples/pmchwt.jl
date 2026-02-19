@@ -1,6 +1,6 @@
 using CompScienceMeshes, BEAST
 using LinearAlgebra
-using LiftedMaps
+# using LiftedMaps
 using BlockArrays
 
 T = CompScienceMeshes.tetmeshsphere(1.0,0.12)

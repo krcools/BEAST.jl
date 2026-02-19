@@ -51,7 +51,7 @@ export StagedTimeStep, numstages
 export subdsurface, subdBasis, assemblydata, refspace
 
 export spatialbasis, temporalbasis
-export ⊗
+export ⊗, ∏
 export timebasisc0d1
 export timebasiscxd0
 export timebasisdelta

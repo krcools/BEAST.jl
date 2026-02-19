@@ -80,6 +80,22 @@ function DirectProductSpace(factors::Vector{S}) where {S<:AbstractSpace}
     return DirectProductSpace{T,S}(factors)
 end
 
+function DirectProductSpace(space::AbstractSpace)
+    T = scalartype(space)
+    return DirectProductSpace{T,typeof(space)}([space])
+end
+
+function DirectProductSpace(gentor)
+    A = collect(gentor)
+    # @show A
+    # @show typeof(A)
+    return DirectProductSpace(A)
+end
+
+function ∏(spaces)
+    return DirectProductSpace(spaces)
+end
+
 Base.getindex(dps::DirectProductSpace, i) = dps.factors[i]
 
 defaultquadstrat(op, tfs::DirectProductSpace, bfs::DirectProductSpace) = defaultquadstrat(op, tfs.factors[1], bfs.factors[1])
