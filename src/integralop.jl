@@ -130,7 +130,6 @@ end
     @test BlockArrays.blocksizes(M) == [(n1,n1) (n1,n2); (n2,n1) (n2,n2)]
 end
 
-
 function assemblechunk_body!(biop,
         test_space, test_elements, test_assembly_data, test_cell_ptrs,
         trial_space, trial_elements, trial_assembly_data, trial_cell_ptrs,
@@ -147,20 +146,29 @@ function assemblechunk_body!(biop,
     for (p,(tcell,tptr)) in enumerate(zip(test_elements, test_cell_ptrs))
         for (q,(bcell,bptr)) in enumerate(zip(trial_elements, trial_cell_ptrs))
 
-        fill!(zlocal, 0)
-        qrule = quadrule(biop, test_shapes, trial_shapes, p, tcell, q, bcell, qd, quadstrat)
-        momintegrals!(zlocal, biop,
-            test_space,  tptr, tcell,
-            trial_space, bptr, bcell, qrule)
-        I = length(test_assembly_data[p])
-        J = length(trial_assembly_data[q])
-        for j in 1 : J, i in 1 : I
-            zij = zlocal[i,j]
-            for (n,b) in trial_assembly_data[q][j]
-                zb = zij*b
-                for (m,a) in test_assembly_data[p][i]
-                    store(a*zb, m, n)
-        end end end end
+            fill!(zlocal, 0)
+            qrule = quadrule(biop, test_shapes, trial_shapes, p, tcell, q, bcell, qd, quadstrat)
+            momintegrals!(zlocal, biop,
+                test_space,  tptr, tcell,
+                trial_space, bptr, bcell, qrule)
+            I = length(test_assembly_data[p])
+            J = length(trial_assembly_data[q])
+            for j in 1 : J
+                QQ = @view trial_assembly_data.data[:,j,q]
+                for i in 1 : I
+                    zij = zlocal[i,j]
+                    PP = @view test_assembly_data.data[:,i,p]
+                    for (n,b) in QQ
+                        n==0 && break
+                        zb = zij*b
+                        for (m,a) in PP
+                            m==0 && break
+                            store(a*zb, m, n)
+                        end
+                    end
+                end
+            end 
+        end
 
         done += 1
         new_pctg = round(Int, done / todo * 100)
@@ -198,15 +206,20 @@ function assemblechunk_body_colored!(biop,
             momintegrals!(zlocal, biop,
                 test_space,  tptr, tcell,
                 trial_space, bptr, bcell, qrule)
-            for j in 1:length(trial_assembly_data[q]), i in 1:length(test_assembly_data[p])
+            for j in 1:length(trial_assembly_data[q])
+                QQ = @view trial_assembly_data.data[:,j,q]
+                for i in 1:length(test_assembly_data[p])
                 zij = zlocal[i,j]
-                for (n,b) in trial_assembly_data[q][j]
+                PP = @view test_assembly_data.data[:,i,p]
+                for (n,b) in QQ
+                    iszero(n) && break
                     iszero(b) && continue
                     zb = zij*b
-                    for (m,a) in test_assembly_data[p][i]
+                    for (m,a) in PP
+                        iszero(m) && break
                         iszero(a) && continue
                         store(a*zb, m, n)
-end end end end end end
+end end end end end end end
 
 struct AssembleblockbodyFunctor{B,T1,T2,T3,T4,T5,T6,T7,T8,T9}
     biop::B
