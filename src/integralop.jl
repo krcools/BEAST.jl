@@ -159,10 +159,10 @@ function assemblechunk_body!(biop,
                     zij = zlocal[i,j]
                     PP = @view test_assembly_data.data[:,i,p]
                     for (n,b) in QQ
-                        n==0 && break
+                        n < 1 && break
                         zb = zij*b
                         for (m,a) in PP
-                            m==0 && break
+                            m < 1 && break
                             store(a*zb, m, n)
                         end
                     end
@@ -212,11 +212,11 @@ function assemblechunk_body_colored!(biop,
                 zij = zlocal[i,j]
                 PP = @view test_assembly_data.data[:,i,p]
                 for (n,b) in QQ
-                    iszero(n) && break
+                    n < 1 && break
                     iszero(b) && continue
                     zb = zij*b
                     for (m,a) in PP
-                        iszero(m) && break
+                        m < 1 && break
                         iszero(a) && continue
                         store(a*zb, m, n)
 end end end end end end end
