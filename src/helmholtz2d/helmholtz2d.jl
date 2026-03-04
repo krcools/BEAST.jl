@@ -74,7 +74,8 @@ module Helmholtz2D
     )
 
         gamma, wavenumber = Mod.gamma_wavenumber_handler(gamma, wavenumber)
-        Mod.isstatic(gamma) && (gamma = zero(amplitude))
+        #Mod.isstatic(gamma) && (gamma = zero(amplitude))
+        gamma = iszero(gamma) ? Val(0) : gamma # static case
 
         return Mod.HH2DMonopole(position, gamma, amplitude)
     end
@@ -88,7 +89,7 @@ module Helmholtz2D
     )
 
         gamma, wavenumber = Mod.gamma_wavenumber_handler(gamma, wavenumber)
-        Mod.isstatic(gamma) && (gamma = zero(amplitude))
+        #Mod.isstatic(gamma) && (gamma = zero(amplitude))
 
         return Mod.HH2DDirectedMonopole(position, direction, gamma, amplitude)
     end
