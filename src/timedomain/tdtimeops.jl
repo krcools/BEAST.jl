@@ -129,7 +129,8 @@ mutable struct TemporalDifferentiation <: AbstractSpaceTimeOperator
     operator
 end
 
-derive(op::AbstractOperator) = TemporalDifferentiation(op)
+derive(op::AbstractSpaceTimeOperator) = TemporalDifferentiation(op)
+integrate(op::TemporalDifferentiation) = op.operator
 scalartype(op::TemporalDifferentiation) = scalartype(op.operator)
 Base.:*(a::Number, op::TemporalDifferentiation) = TemporalDifferentiation(a * op.operator)
 
@@ -192,7 +193,7 @@ end
 
 defaultquadstrat(op::TemporalIntegration, tfs, bfs) = defaultquadstrat(op.operator, tfs, bfs)
 
-integrate(op::SpaceTimeOperator) = TemporalIntegration(op)
+integrate(op::AbstractSpaceTimeOperator) = TemporalIntegration(op)
 derive(op::TemporalIntegration) = op.operator
 scalartype(op::TemporalIntegration) = scalartype(op.operator)
 Base.:*(a::Number, op::TemporalIntegration) = TemporalIntegration(a * op.operator)
@@ -222,6 +223,6 @@ function assemble!(operator::TemporalIntegration, testfns, trialfns, store,
         integrate(trial_time_fns)
     )
 
-    assemble!(operator.operator, testfns, trialfns, store; quadstrat)
+    assemble!(operator.operator, testfns, trialfns, store, threading; quadstrat)
 
 end
