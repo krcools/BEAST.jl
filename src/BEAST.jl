@@ -161,6 +161,8 @@ include("utils/butchertableau.jl")
 include("utils/variational.jl")
 
 include("bases/localbasis.jl")
+include("bases/local/interpolate.jl")
+
 include("bases/local/laglocal.jl")
 include("bases/local/rtlocal.jl")
 include("bases/local/rt2local.jl")
