@@ -32,7 +32,7 @@ end
 
 function Base.:*(A::LUFactorization, b::AbstractVector)
     T = promote_type(eltype(A), eltype(b))
-    y = similar(Array{T}, axes(A,2))
+    y = similar(Array{T}, axes(A,1))
     mul!(y, A, b)
     return y
 end

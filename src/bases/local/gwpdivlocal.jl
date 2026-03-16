@@ -28,6 +28,11 @@ function (ϕ::GWPDivRefSpace{T,Degree})(p) where {T,Degree}
     end
 end
 
+function interpolate!(out, fields, interpolant::GWPDivRefSpace{T}, chart) where {T}
+    out1 = interpolate(fields, interpolant, chart)
+    out .+= out1
+end
+
 function interpolate(fields, interpolant::GWPDivRefSpace{T,Degree}, chart) where {T,Degree}
 
     function nxfields(p)
