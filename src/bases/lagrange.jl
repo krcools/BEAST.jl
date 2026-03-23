@@ -749,11 +749,10 @@ function duallagrangec0d1(mesh, mesh2, pred, ::Type{Val{2}})
   # We will iterate over the coarse mesh segments to assign all the functions to it.
   for segment_coarse in 1 : num_cells1
     # For the dual Lagrange there is a 6 shapes per segment
-    numshapes = (ncells1[segment_coarse]*4) -2
-    numshapes < 1 && continue   # skip detached vertices
+    numshapes = (ncells1[mesh.faces[segment_coarse].indices[1]]*4) -2
     shapes = Vector{Shape{T}}(undef,numshapes)
     # Now we will get all the smaller faces within the coarse segment
-    #i.e The coose segment will have two points, and these tow points are connected to two segmesnts in the finer mesh
+    #i.e The coose segment will have two points, and these tow points are connected to two segments in the finer mesh
     # This will give us a 4 smaller faces per Dual lagrange basis, we store them first in all_faces
     # all_faces= Array{SVector{2,Int}}(undef,4)                      # faces in the original segment (4)
     CT = CompScienceMeshes.SimplexGraph{2}
