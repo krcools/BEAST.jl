@@ -133,7 +133,7 @@ function kernelvals(biop::HelmholtzOperator2D{T, K}, tgeo, bgeo) where {T, K <: 
     if iszero(real(biop.gamma))
         k = imag(biop.gamma)
     else
-        k = -im*gamma
+        k = -im*biop.gamma
     end
     r = tgeo.cart - bgeo.cart
     R = norm(r)
@@ -147,7 +147,7 @@ function kernelvals(biop::HelmholtzOperator2D{T, K}, tgeo, bgeo) where {T, K <: 
 
     txty = dot(normal(tgeo), normal(bgeo))
 
-    KernelValsHelmholtz2D(gamma, r, R, green, gradgreen, txty)
+    KernelValsHelmholtz2D(biop.gamma, r, R, green, gradgreen, txty)
 end
 
 shapevals(op::HelmholtzOperator2D, ϕ, ts) = shapevals(ValDiff(), ϕ, ts)
