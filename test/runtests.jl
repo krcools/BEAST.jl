@@ -56,6 +56,7 @@ include("test_dipole.jl")
 
 include("test_sauterschwabints1D.jl")
 include("test_hh2d_exec.jl")
+include("test_hh2d_ops.jl")
 include("test_hh2d_mie.jl")
 include("test_hh2d_mie_higher_order.jl")
 include("test_hh2d_nearfield.jl")
