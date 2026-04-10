@@ -92,8 +92,21 @@ function DirectProductSpace(gentor)
     return DirectProductSpace(A)
 end
 
-function ∏(spaces)
+function ∏(spaces::Vector)
     return DirectProductSpace(spaces)
+end
+
+function ∏(space::AbstractSpace)
+    return DirectProductSpace([space])
+end
+
+function ∏(gentor)
+    A = collect(generator)
+    return DirectProductSpace(A)
+end
+
+function ∏(space, spaces...)
+    return DirectProductSpace([space, spaces...])
 end
 
 Base.getindex(dps::DirectProductSpace, i) = dps.factors[i]

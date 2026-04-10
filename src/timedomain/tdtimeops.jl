@@ -125,7 +125,7 @@ function assemble!(operator::TensorOperator, testfns::SpaceTimeBasis, trialfns::
 end
 
 
-mutable struct TemporalDifferentiation <: AbstractOperator
+mutable struct TemporalDifferentiation <: AbstractSpaceTimeOperator
     operator
 end
 
