@@ -372,3 +372,179 @@ function innerintegrals!(z, op::MWDoubleLayerTDIO,
     end
 
 end
+
+
+ struct VectorPotentialTDIO{T} <: RetardedPotential{T}
+    "speed of light in medium"
+    speed_of_light::T
+    "weight of the weakly singular term"
+    ws_weight::T
+    "number of temporal differentiations in the weakly singular term"
+    ws_diffs::Int
+end
+
+defaultquadstrat(::VectorPotentialTDIO, tfs, bfs) = OuterNumInnerAnalyticQStrat(3)
+
+function quaddata(op::VectorPotentialTDIO, testrefs, trialrefs, timerefs,
+        testels, trialels, timeels, quadstrat::OuterNumInnerAnalyticQStrat)
+    dmax = numfunctions(timerefs)-1
+    bn = binomial.((0:dmax),(0:dmax)')
+    V = eltype(testels[1].vertices)
+    ws = WiltonInts84.workspace(V)
+    quadpoints(testrefs, testels, (quadstrat.outer_rule,)), bn, ws
+end
+
+function quadrule(op::VectorPotentialTDIO, testrefs, trialrefs, timerefs,
+        p, testel, q, trialel, r, timeel, qd, ::OuterNumInnerAnalyticQStrat)
+    WiltonInts84Strat(qd[1][1,p],qd[2],qd[3])
+end
+
+
+function innerintegrals!(zl, op::VectorPotentialTDIO,
+        p, # test_point, test_time
+        U, V::RTRefSpace, W, # local_test_space, local_trial_space, local_temporal_space
+        τ, σ, ι, # test_element, trial_element, spherial_shell
+        qr, dx)   # inner_quadrature_rule, outer_quadrature_weight
+
+    x = cartesian(p)
+    nx = normal(τ)
+    ξ = x - ((x-σ[1]) ⋅ nx) * nx
+
+    r, R = ι[1], ι[2]
+
+    @assert r < R
+    @assert degree(W) <= 3
+
+    ∫G, ∫Gξy, = WiltonInts84.wiltonints(σ[1],σ[2],σ[3],x,r,R,Val{2},qr.workspace)
+
+	αf = 1 / volume(σ) / 2
+	αG = 1 / 4π
+	α = αG * op.ws_weight * dx
+
+	ds = op.ws_diffs
+    qss = qh(typeof(dx),ds,Val{4})
+    bn = qr.binomials
+
+    sol = op.speed_of_light
+    sol2 = sol*sol
+    sol3 = sol2*sol
+    sol4 = sol3*sol
+    sol5 = sol4*sol
+    solpowers = (one(sol), sol, sol2, sol3, sol4, sol5)
+
+    udim = numfunctions(U, domain(τ))
+    vdim = numfunctions(V, domain(σ))
+
+    gx = U(p)
+
+    for i in 1 : udim
+        a = τ[i]
+        # g = (x-a)
+        gxi = gx[i].value
+        for j in 1 : vdim
+            b = σ[j]; bξ = ξ-b
+            for k in 1 : numfunctions(W)
+				d = k-1
+				if d >= ds
+                    q = qss[k]
+                    Is = αf * tmRoRf(d-ds, ∫G, ∫Gξy, bξ, bn) # \int (-R)^(d-ds)/R (y-b)/2|σ| dy
+                    zl[i,j,k] += α * q * (gxi ⋅ Is) / solpowers[d-ds+1]
+				end
+            end
+        end
+    end
+end
+
+function innerintegrals!(zl, op::VectorPotentialTDIO,
+        p, # test_point, test_time
+        U, V::NDRefSpace, W, # local_test_space, local_trial_space, local_temporal_space
+        τ, σ, ι, # test_element, trial_element, spherial_shell
+        qr, dx)   # inner_quadrature_rule, outer_quadrature_weight
+
+    x = cartesian(p)
+    nx = normal(τ)
+    ny = normal(σ)
+    ξ = x - ((x-σ[1]) ⋅ nx) * nx
+
+    r, R = ι[1], ι[2]
+
+    @assert r < R
+    @assert degree(W) <= 3
+
+    ∫G, ∫Gξy, = WiltonInts84.wiltonints(σ[1],σ[2],σ[3],x,r,R,Val{2},qr.workspace)
+
+	αf = 1 / volume(σ) / 2
+	αG = 1 / 4π
+	α = αG * op.ws_weight * dx
+
+	ds = op.ws_diffs
+    qss = qh(typeof(dx),ds,Val{4})
+    bn = qr.binomials
+
+    sol = op.speed_of_light
+    sol2 = sol*sol
+    sol3 = sol2*sol
+    sol4 = sol3*sol
+    sol5 = sol4*sol
+    solpowers = (one(sol), sol, sol2, sol3, sol4, sol5)
+
+    udim = numfunctions(U, domain(τ))
+    vdim = numfunctions(V, domain(σ))
+
+    gx = U(p)
+
+    for i in 1 : udim
+        a = τ[i]
+        # g = (x-a)
+        gxi = gx[i].value × ny
+        for j in 1 : vdim
+            b = σ[j]; bξ = ξ-b
+            for k in 1 : numfunctions(W)
+				d = k-1
+				if d >= ds
+                    q = qss[k]
+                    Is = αf * tmRoRf(d-ds, ∫G, ∫Gξy, bξ, bn) # \int (-R)^(d-ds)/R (y-b)/2|σ| dy
+                    zl[i,j,k] += α * q * (gxi ⋅ Is) / solpowers[d-ds+1]
+				end
+            end
+        end
+    end
+end
+
+
+@testitem "VectorPotentialTDIO" begin
+    using CompScienceMeshes, LinearAlgebra
+    using BEAST.ConvolutionOperators
+
+    A = BEAST.VectorPotentialTDIO(1.0, 1.0, 0)
+    S = BEAST.MWSingleLayerTDIO(1.0, 1.0, 0.0, 0, 0)
+
+    Γ = Mesh(
+        [point(0,0,0), point(1,0,0), point(0,1,0)],
+        [CompScienceMeshes.SimplexGraph(1,2,3)]
+    )
+
+    X = raviartthomas(Γ, skeleton(Γ,1))
+    Y = BEAST.nedelec(Γ)
+
+    Δt, Nt = 0.10223, 300
+    δ = timebasisdelta(Δt, Nt)
+    T = timebasiscxd0(Δt, Nt)
+
+    A1 = assemble(A, X ⊗ δ, Y ⊗ T)
+    A2 = assemble(A, Y ⊗ δ, X ⊗ T)
+
+    T1 = assemble(S, X ⊗ δ, X ⊗ T)
+    T2 = assemble(A, Y ⊗ δ, Y ⊗ T)
+
+    @test size(A1) == size(A2)
+    for k in 1:size(A1,3)
+        A1k = ConvolutionOperators.timeslice(A1,k)
+        A2k = ConvolutionOperators.timeslice(A2,k)
+        @test norm(A1k + A2k) < 1e-8
+
+        T1k = ConvolutionOperators.timeslice(T1,k)
+        T2k = ConvolutionOperators.timeslice(T2,k)
+        @test norm(T1k - T2k) < 1e-8
+    end
+end
