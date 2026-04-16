@@ -402,7 +402,7 @@ end
 
 function innerintegrals!(zl, op::VectorPotentialTDIO,
         p, # test_point, test_time
-        U, V::RTRefSpace, W, # local_test_space, local_trial_space, local_temporal_space
+        U, V::Union{RTRefSpace, GWPDivRefSpace}, W, # local_test_space, local_trial_space, local_temporal_space
         τ, σ, ι, # test_element, trial_element, spherial_shell
         qr, dx)   # inner_quadrature_rule, outer_quadrature_weight
 
@@ -457,7 +457,7 @@ end
 
 function innerintegrals!(zl, op::VectorPotentialTDIO,
         p, # test_point, test_time
-        U, V::NDRefSpace, W, # local_test_space, local_trial_space, local_temporal_space
+        U, V::Union{NDRefSpace, GWPCurlRefSpace}, W, # local_test_space, local_trial_space, local_temporal_space
         τ, σ, ι, # test_element, trial_element, spherial_shell
         qr, dx)   # inner_quadrature_rule, outer_quadrature_weight
 

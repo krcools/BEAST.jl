@@ -46,6 +46,13 @@ function LinearAlgebra.mul!(y::AbstractVector, L::LUFactorization, b::AbstractVe
     y[:] = L.F \ Vector(b)
 end
 
+function solve(solver::LUFactorization, b)
+    T = promote_type(eltype(solver), eltype(b))
+    x = similar(Array{T}, axes(solver)[2])
+    fill!(x,0)
+    x = mul!(x, solver, b)
+    return x, nothing
+end
 
 @testitem "LUFactorization" begin
     using LinearAlgebra
