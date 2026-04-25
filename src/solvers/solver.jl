@@ -273,6 +273,9 @@ function assemble(bf::BilForm, X::DirectProductSpace, Y::DirectProductSpace;
         end
         
         a = term.kernel
+        # @show typeof(a)
+        # @show typeof(x)
+        # @show typeof(y)
         z = materialize(a, x, y; quadstrat, kwargs...)
 
         Smap = term.coeff * lift(z, Block(term.test_id), Block(term.trial_id), U, V)

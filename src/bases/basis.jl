@@ -101,7 +101,7 @@ function ∏(space::AbstractSpace)
 end
 
 function ∏(gentor)
-    A = collect(generator)
+    A = collect(gentor)
     return DirectProductSpace(A)
 end
 
