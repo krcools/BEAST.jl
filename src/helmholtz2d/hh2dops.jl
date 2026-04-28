@@ -1,4 +1,5 @@
 import SpecialFunctions: hankelh2
+import SpecialFunctions: besselk
 
 abstract type HelmholtzOperator2D{T, K} <: IntegralOperator end
 
@@ -108,99 +109,127 @@ mutable struct KernelValsHelmholtz2D{K1,K2,F}
     dist::F
     green::K2
     gradgreen::SVector{2,K2}
-    txty::F
 end
 
 # Kernel values for 2D Laplace BIE operators
-function kernelvals(biop::HelmholtzOperator2D{T, K}, tgeo, bgeo) where {T, K <: Val{0}}
+function kernelvals(biop::HelmholtzOperator2D{T, K}, x, y) where {T, K <: Val{0}}
 
-    error("We currently do not support 2D Laplace equation")
+    yc = cartesian(y)
+    xc = cartesian(x)
+    r = xc - yc
+    R = norm(r)
+
+    #Treatment: static limit (HelmholtzOperator2D ~> "LaplaceOperator2D") Δu = 0 (k, γ -> 0)
+    #Logarithmic singularity of Hankel function: Gk = -1/(2π) * log(kR) (at static case, lnk = 0)
+    green = -1/(2π) * log(R)
+    gradgreen = -1/(2π) * (1/R) * (r/R)
+
+    return KernelValsHelmholtz2D(nothing, r, R, green, gradgreen)
 end
 
 # Kernel values for 2D modified Helmholtz equation BIE operators
-function kernelvals(biop::HelmholtzOperator2D{T, K}, tgeo, bgeo) where {T, K <: Real}
+function kernelvals(biop::HelmholtzOperator2D{T, K}, x, y) where {T, K <: Real}
 
-    error("We currently do not support 2D modified Helmholtz equation")
+    γ = biop.gamma
+    yc = cartesian(y)
+    xc = cartesian(x)
+    r = xc - yc
+    R = norm(r)
+
+    # Modified Helmholtz equation assumes: Δu - k² u = Δu + γ² u = f
+    # Green's function: Gγ = 1/(2π)* K0(γ |x - y|)
+    green = 1/(2π) * besselk(0, γ * R)
+    # Jin (pg. 713, C.5.9): dK0/dn = -dK1/dn
+    gradgreen = -γ/(2π) * besselk(1, γ * R) * (r/R)
+
+    return KernelValsHelmholtz2D(γ, r, R, green, gradgreen)
 end
 
 # Kernel values for 2D Helmholtz equation BIE operators
-function kernelvals(biop::HelmholtzOperator2D{T, K}, tgeo, bgeo) where {T, K <: Complex}
+function kernelvals(biop::HelmholtzOperator2D{T, K}, x, y) where {T, K <: Complex}
 
     # Even though the evaluation of the Hankel function delivers
     # in general a complex output (sole exception if wavenumber is purely imaginary)
     # the Hankel function is evaluated much faster if the wavenumber, and thus
     # the argument of the Hankelfunction, is purely real
-    if iszero(real(biop.gamma))
-        k = imag(biop.gamma)
+    γ = biop.gamma
+    if iszero(real(γ))
+        k = imag(γ)
     else
-        k = -im*biop.gamma
+        k = -im*γ
     end
-    r = tgeo.cart - bgeo.cart
+    yc = cartesian(y)
+    xc = cartesian(x)
+    r = xc - yc
     R = norm(r)
 
-    kr = k * R
-    hankels = hankelh2.([0 1], kr)
+    hankels = hankelh2.([0 1], k * R)
     green = - im / 4 * hankels[1]
+    gradgreen = k * im / 4 * hankels[2] * (r/R)
 
-    # Gradient with respect to observation point
-    gradgreen = k * im / 4 * hankels[2] * r / R
-
-    txty = dot(normal(tgeo), normal(bgeo))
-
-    KernelValsHelmholtz2D(biop.gamma, r, R, green, gradgreen, txty)
+    return KernelValsHelmholtz2D(γ, r, R, green, gradgreen)
 end
 
-shapevals(op::HelmholtzOperator2D, ϕ, ts) = shapevals(ValDiff(), ϕ, ts)
+function integrand(op::HH2DSingleLayerFDBIO, krn, f, x, g, y)
 
-function integrand(biop::HH2DSingleLayerFDBIO, kerneldata, tvals,
-    tgeo, bvals, bgeo)
+    α = op.alpha
+    G = krn.green
+    fx = f.value
+    gy = g.value
 
-    α = biop.alpha
-
-    gx = tvals[1]
-    fy = bvals[1]
-
-    return α * gx * kerneldata.green * fy
+    return α * G * fx * gy
 end
 
-function integrand(biop::HH2DDoubleLayerFDBIO, kernel, fp, mp, fq, mq)
-    nq = normal(mq)
+function integrand(op::HH2DDoubleLayerFDBIO, krn, f, x, g, y)
 
-    α = biop.alpha
+    α = op.alpha
+    ∇G = krn.gradgreen
+    ny = normal(y)
+    fx = f.value
+    gy = g.value
+    ∂G∂n = dot(ny, -∇G)
 
-    return α * fp[1] * dot(nq, -kernel.gradgreen) * fq[1]
+    return α * ∂G∂n * fx * gy
 end
 
-function integrand(biop::HH2DDoubleLayerTransposedFDBIO, kernel, fp, mp, fq, mq)
-    np = normal(mp)
+function integrand(op::HH2DDoubleLayerTransposedFDBIO, krn, f, x, g, y)
 
-    α = biop.alpha
+    α = op.alpha
+    ∇G = krn.gradgreen
+    nx = normal(x)
+    fx = f.value
+    gy = g.value
+    ∂G∂n = dot(nx, ∇G)
 
-    return α * fp[1] * dot(np, kernel.gradgreen) * fq[1]
+    return α * ∂G∂n * fx * gy
 end
 
-function integrand(biop::HH2DHyperSingularFDBIO, kernel, tvals, tgeo,
-    bvals, bgeo)
+function integrand(op::HH2DHyperSingularFDBIO, krn, f, x, g, y)
 
-    α = biop.alpha
-    β = biop.beta
+    α = op.alpha
+    β = op.beta
+    G = krn.green
+    fx = f.value
+    dfx = f.derivative
+    gy = g.value
+    dgy = g.derivative
 
-    gx = tvals[1]
-    fy = bvals[1]
+    nxny = dot(normal(x), normal(y))
 
-    dgx = tvals[2]
-    dfy = bvals[2]
-
-    G    = kernel.green
-    txty = kernel.txty
-
-    return (α * txty * gx * fy + β * dgx * dfy) * G
+    # Based on (2.86) in Kumagai et al, “Integral equation methods for electromagnetics”
+    # The formula returns the electric field, but we like to match the behavior of the
+    # dyadic hypersingular operator and this requires an additional rotation
+    return (α * fx * gy * nxny + β * dfx * dgy) * G
 end
 
-function cellcellinteractions!(biop::HelmholtzOperator2D, tshs, bshs, tcell, bcell, z)
+function integrand(op::HH2DHyperSingularFDBIO{T, K}, krn, f, x, g, y) where {T, K <: Val{0}}
 
-    regularcellcellinteractions!(biop, tshs, bshs, tcell, bcell, z)
+    β = op.beta
+    G = krn.green
+    dfx = f.derivative
+    dgy = g.derivative
 
+    return (β * dfx * dgy) * G
 end
 
 defaultquadstrat(op::HelmholtzOperator2D, tfs, bfs) = DoubleNumSauterQstrat(30,30,0,4,25,25)

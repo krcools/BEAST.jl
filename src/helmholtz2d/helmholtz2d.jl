@@ -74,7 +74,7 @@ module Helmholtz2D
     )
 
         gamma, wavenumber = Mod.gamma_wavenumber_handler(gamma, wavenumber)
-        Mod.isstatic(gamma) && (gamma = zero(amplitude))
+        Mod.isstatic(gamma) && (gamma = Val(0))
 
         return Mod.HH2DMonopole(position, gamma, amplitude)
     end

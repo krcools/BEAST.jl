@@ -30,6 +30,13 @@ end
 
 scalartype(f::gradHH2DPlaneWave{P,K,T}) where {P,K,T} = promote_type(eltype(P), K, T)
 
+function grad(m::HH2DPlaneWave)
+    d = m.direction
+    γ = m.gamma
+    a = m.amplitude
+    return gradHH2DPlaneWave(d, γ, a)
+end
+
 struct curlHH2DPlaneWave{P,K,T} <: Functional{T}
     direction::P
     polarization::P
@@ -57,6 +64,37 @@ end
 *(a::Number, m::gradHH2DPlaneWave) = gradHH2DPlaneWave(m.direction, m.gamma, a * m.amplitude)
 *(a::Number, m::curlHH2DPlaneWave) = curlHH2DPlaneWave(m.direction, m.polarization, m.gamma, a * m.amplitude)
 
+"""
+    HH2DLinearPotential
+"""
+struct HH2DLinearPotential{P,T} <: Functional{T}
+    direction::P
+    amplitude::T
+end
+
+function (f::HH2DLinearPotential)(r)
+    d = f.direction
+    a = f.amplitude
+    return a * dot(d, r)
+end
+
+scalartype(f::HH2DLinearPotential{P,T}) where {P,T} = promote_type(eltype(P), T)
+
+struct gradHH2DLinearPotential{P,T} <: Functional{T}
+    direction::P
+    amplitude::T
+end
+
+function (f::gradHH2DLinearPotential)(r)
+    d = f.direction
+    a = f.amplitude
+
+    return a * d
+end
+
+scalartype(f::gradHH2DLinearPotential{P,T}) where {P,T} = promote_type(eltype(P), T)
+
+*(a::Number, m::HH2DLinearPotential) = HH2DLinearPotential(m.direction, a * m.amplitude)
 
 """
     HH2DMonopole
@@ -69,18 +107,48 @@ struct HH2DMonopole{P,K,T}
     amplitude::T
 end
 
+scalartype(x::HH2DMonopole{P,K,T}) where {P, K <: Val{0}, T} = promote_type(eltype(P), T)
 scalartype(x::HH2DMonopole{P,K,T}) where {P,K,T} = promote_type(eltype(P), K, T)
 
 function (f::HH2DMonopole)(r::CompScienceMeshes.MeshPointNM)
     return f(cartesian(r))
 end
 
-function (f::HH2DMonopole)(r)
+# Laplace
+function (f::HH2DMonopole{P,K,T})(r) where {P, K <: Val{0}, T}
     γ = f.gamma
     p = f.position
     a = f.amplitude
+    vecR = r - p
+    R = norm(vecR)
 
-    return a / (4 * im) * hankelh2(0, -im*γ * norm(r - p))
+    green = -a/(2π) * log(R)
+    return green
+end
+
+# Modified Helmholtz 2D
+function (f::HH2DMonopole{P,K,T})(r) where {P, K <: Real, T}
+    γ = f.gamma
+    p = f.position
+    a = f.amplitude
+    vecR = r - p
+    R = norm(vecR)
+
+    green = a/(2π) * besselk(0, γ * R)
+    return green
+end
+
+# Helmholtz 2D
+function (f::HH2DMonopole{P,K,T})(r) where {P, K <: Complex, T}
+    γ = f.gamma
+    p = f.position
+    a = f.amplitude
+    vecR = r - p
+    R = norm(vecR)
+    k = -im*γ
+
+    green = a/(4*im) * hankelh2(0, k * R)
+    return green
 end
 
 struct curlHH2DMonopole{P,K,T}
@@ -91,14 +159,44 @@ end
 
 scalartype(x::curlHH2DMonopole{P,K,T}) where {P,K,T} = promote_type(eltype(P), K, T)
 
-function (f::curlHH2DMonopole)(r)
-    a = f.amplitude
+# Laplace
+function (f::curlHH2DMonopole{P,K,T})(r) where {P, K <: Val{0}, T}
     γ = f.gamma
     p = f.position
-    vecR = r-p
+    a = f.amplitude
+    vecR = r - p
     R = norm(vecR)
 
-    return a / (4 * im) * 1/R * (-im*γ) * (-hankelh2(1,(-im*γ*R))) * (SVector(-vecR[2],vecR[1]))
+    green_deriv = -a/(2*π) * (1/R^2)
+    curl = green_deriv * (SVector(-vecR[2], vecR[1]))
+    return curl
+end
+
+# Modified Helmholtz 2D
+function (f::curlHH2DMonopole{P,K,T})(r) where {P, K <: Real, T}
+    γ = f.gamma
+    p = f.position
+    a = f.amplitude
+    vecR = r - p
+    R = norm(vecR)
+
+    green_deriv = -a/(2*π) * (γ / R) * (besselk(1, γ * R))
+    curl = green_deriv * (SVector(-vecR[2], vecR[1]))
+    return curl
+end
+
+# Helmholtz 2D
+function (f::curlHH2DMonopole{P,K,T})(r) where {P, K <: Complex, T}
+    γ = f.gamma
+    p = f.position
+    a = f.amplitude
+    vecR = r - p
+    R = norm(vecR)
+    k = -im*γ
+
+    green_deriv = -a/(4*im) * (k / R) * (hankelh2(1, k * R))
+    curl = green_deriv * (SVector(-vecR[2], vecR[1]))
+    return curl
 end
 
 function (f::curlHH2DMonopole)(mp::CompScienceMeshes.MeshPointNM)
@@ -119,14 +217,44 @@ end
 
 scalartype(x::gradHH2DMonopole{P,K,T}) where {P,K,T} = promote_type(eltype(P), K, T)
 
-function (f::gradHH2DMonopole)(r)
-    a = f.amplitude
+# Laplace
+function (f::gradHH2DMonopole{P,K,T})(r) where {P, K <: Val{0}, T}
     γ = f.gamma
     p = f.position
+    a = f.amplitude
     vecR = r - p
     R = norm(vecR)
 
-    return a / (4 * im) * -hankelh2(1, -im*γ * R) * (-im*γ) * vecR / R
+    green_deriv = -a/(2*π) * (1/R^2)
+    grad = green_deriv * vecR
+    return grad
+end
+
+# Modified Helmholtz 2D
+function (f::gradHH2DMonopole{P,K,T})(r) where {P, K <: Real, T}
+    γ = f.gamma
+    p = f.position
+    a = f.amplitude
+    vecR = r - p
+    R = norm(vecR)
+
+    green_deriv = -a/(2*π) * (γ / R) * (besselk(1, γ * R))
+    grad = green_deriv * vecR
+    return grad
+end
+
+# Helmholtz 2D
+function (f::gradHH2DMonopole{P,K,T})(r) where {P, K <: Complex, T}
+    γ = f.gamma
+    p = f.position
+    a = f.amplitude
+    vecR = r - p
+    R = norm(vecR)
+    k = -im*γ
+
+    green_deriv = -a/(4*im) * (k / R) * (hankelh2(1, k * R))
+    grad = green_deriv * vecR
+    return grad
 end
 
 function grad(m::HH2DMonopole)
