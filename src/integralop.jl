@@ -139,64 +139,59 @@ end
     @test BlockArrays.blocksizes(M) == [(n1,n1) (n1,n2); (n2,n1) (n2,n2)]
 end
 
-# function assemblechunk_body!(biop,
-#         test_space, test_elements, test_assembly_data, test_cell_ptrs,
-#         trial_space, trial_elements, trial_assembly_data, trial_cell_ptrs,
-#         qd, zlocal, store; quadstrat)
+
 function assemblechunk_body!(biop, test_space, trial_space,
     test_elements, test_element_ptrs, test_assembly_data, active_test_els,
     trial_elements, trial_element_ptrs, trial_assembly_data, active_trial_els,
     qd, zlocal, store; quadstrat)
 
-    # test_shapes = refspace(test_space)
-    # trial_shapes = refspace(trial_space)
     num_tshapes = size(test_assembly_data.data,2)
     num_bshapes = size(trial_assembly_data.data,2)
-    # error()
-    verbose = (length(test_elements) > 256)
-    myid = Threads.threadid()
-    verbose && myid == 1 && print("dots out of 10: ")
-    todo, done, pctg = length(test_elements), 0, 0
-    # for (p,(tcell,tptr)) in enumerate(zip(test_elements, test_cell_ptrs))
-    for (p,P) in enumerate(active_test_els)
+
+
+    # verbose = (length(test_elements) > 256)
+    # myid = Threads.threadid()
+    # verbose && myid == 1 && print("dots out of 10: ")
+    # todo, done, pctg = length(test_elements), 0, 0
+
+    @tasks for (p,P) in enumerate(active_test_els)
+        @set scheduler = :serial
+        @local zlocal = zeros(scalartype(biop, test_space, trial_space), num_tshapes, num_bshapes)
         tcell = test_elements[P]
         tptr = test_element_ptrs[P]
 
-        # for (q,(bcell,bptr)) in enumerate(zip(trial_elements, trial_cell_ptrs))
         for (q,Q) in enumerate(active_trial_els)
             bcell = trial_elements[Q]
             bptr = trial_element_ptrs[Q]
 
             fill!(zlocal, 0)
-            # @show (P,Q)
             qrule = quadrule(biop, refspace(test_space), refspace(trial_space),
                 P, tcell, Q, bcell,
                 qd, quadstrat)
             momintegrals!(zlocal, biop,
                 test_space,  tptr, tcell,
                 trial_space, bptr, bcell, qrule)
-            # I = length(test_assembly_data[p])
-            # J = length(trial_assembly_data[q])
             for j in 1 : num_bshapes
                 tadjq = @view trial_assembly_data.data[:,j,q]
                 for i in 1 : num_tshapes
                     zij = zlocal[i,j]
                     badip = @view test_assembly_data.data[:,i,p]
                     for (n,b) in tadjq
-                        n < 1 && continue
+                        (n < 1 || iszero(b)) && continue
                         zb = zij*b
                         for (m,a) in badip
-                            m < 1 && continue
+                            (m < 1 || iszero(a)) && continue
                             store(a*zb, m, n)
         end end end end end
 
-        done += 1
-        new_pctg = round(Int, done / todo * 100)
-        if new_pctg > pctg + 9
-            verbose && myid == 1 && print(".")
-            pctg = new_pctg
-    end end
-    verbose && myid == 1 && println("")
+        # done += 1
+        # new_pctg = round(Int, done / todo * 100)
+        # if new_pctg > pctg + 9
+        #     verbose && myid == 1 && print(".")
+        #     pctg = new_pctg
+        # end
+    end
+    # verbose && myid == 1 && println("")
 end
 
 
