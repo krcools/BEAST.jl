@@ -265,8 +265,10 @@ function assemble!(operator::Operator, testfunctions::Space, trialfunctions::Spa
 
     for (i, coloredtestelements) in enumerate(testelementcolors)
         for (j, coloredtrialelements) in enumerate(trialelementcolors)            
-            assemblechunk_body_colored!(operator, testfunctions, testad, coloredtestelements,
-            trialfunctions, trialad, coloredtrialelements, qdata, store, scheduler; quadstrat=qs) 
+            assemblechunk_body_colored!(operator,
+                testfunctions, testad, coloredtestelements,
+                trialfunctions, trialad, coloredtrialelements,
+                qdata, store, scheduler; quadstrat=qs) 
             next!(pbar; step = length(testelementcolors[i]) * length(trialelementcolors[j]))
     end end 
     finish!(pbar)

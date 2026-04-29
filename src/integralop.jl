@@ -90,8 +90,6 @@ function assemblechunk!(biop::IntegralOperator, tfs::Space, bfs::Space, store;
     qs = if CompScienceMeshes.refines(tgeo, bgeo)
         TestRefinesTrialQStrat(quadstrat)
     elseif CompScienceMeshes.refines(bgeo, tgeo)
-        # @show typeof(bgeo)
-        # @show typeof(tgeo)
         TrialRefinesTestQStrat(quadstrat)
     else
         quadstrat
@@ -100,10 +98,18 @@ function assemblechunk!(biop::IntegralOperator, tfs::Space, bfs::Space, store;
     qd = quaddata(biop, tshapes, bshapes, test_elements, bsis_elements, qs)
     zlocal = zeros(scalartype(biop, tfs, bfs), 2num_tshapes, 2num_bshapes)
     # @show "after" qs
-    assemblechunk_body!(biop,
-        tfs, test_elements, tad, tcells,
-        bfs, bsis_elements, bad, bcells,
+    # assemblechunk_body!(biop,
+    #     tfs, test_elements, tad, tcells,
+    #     bfs, bsis_elements, bad, bcells,
+    #     qd, zlocal, store; quadstrat=qs)
+
+    # @show length(qd.tpo/ints), length(qd.bpoints), maximum(tcells), maximum(bcells)
+
+    assemblechunk_body!(biop, tfs, bfs,
+        test_elements, tcells, tad, eachindex(tcells),
+        bsis_elements, bcells, bad, eachindex(bcells),
         qd, zlocal, store; quadstrat=qs)
+
 end
 
 @testitem "assemble!: zero sized block" begin
@@ -133,46 +139,56 @@ end
     @test BlockArrays.blocksizes(M) == [(n1,n1) (n1,n2); (n2,n1) (n2,n2)]
 end
 
-function assemblechunk_body!(biop,
-        test_space, test_elements, test_assembly_data, test_cell_ptrs,
-        trial_space, trial_elements, trial_assembly_data, trial_cell_ptrs,
-        qd, zlocal, store; quadstrat)
+# function assemblechunk_body!(biop,
+#         test_space, test_elements, test_assembly_data, test_cell_ptrs,
+#         trial_space, trial_elements, trial_assembly_data, trial_cell_ptrs,
+#         qd, zlocal, store; quadstrat)
+function assemblechunk_body!(biop, test_space, trial_space,
+    test_elements, test_element_ptrs, test_assembly_data, active_test_els,
+    trial_elements, trial_element_ptrs, trial_assembly_data, active_trial_els,
+    qd, zlocal, store; quadstrat)
 
-    test_shapes = refspace(test_space)
-    trial_shapes = refspace(trial_space)
-
-    # @show "inside" quadstrat
-
+    # test_shapes = refspace(test_space)
+    # trial_shapes = refspace(trial_space)
+    num_tshapes = size(test_assembly_data.data,2)
+    num_bshapes = size(trial_assembly_data.data,2)
+    # error()
     verbose = (length(test_elements) > 256)
     myid = Threads.threadid()
     verbose && myid == 1 && print("dots out of 10: ")
     todo, done, pctg = length(test_elements), 0, 0
-    for (p,(tcell,tptr)) in enumerate(zip(test_elements, test_cell_ptrs))
-        for (q,(bcell,bptr)) in enumerate(zip(trial_elements, trial_cell_ptrs))
+    # for (p,(tcell,tptr)) in enumerate(zip(test_elements, test_cell_ptrs))
+    for (p,P) in enumerate(active_test_els)
+        tcell = test_elements[P]
+        tptr = test_element_ptrs[P]
+
+        # for (q,(bcell,bptr)) in enumerate(zip(trial_elements, trial_cell_ptrs))
+        for (q,Q) in enumerate(active_trial_els)
+            bcell = trial_elements[Q]
+            bptr = trial_element_ptrs[Q]
 
             fill!(zlocal, 0)
-            qrule = quadrule(biop, test_shapes, trial_shapes, p, tcell, q, bcell, qd, quadstrat)
+            # @show (P,Q)
+            qrule = quadrule(biop, refspace(test_space), refspace(trial_space),
+                p, tcell, q, bcell,
+                qd, quadstrat)
             momintegrals!(zlocal, biop,
-                test_space,  tptr, tcell,
-                trial_space, bptr, bcell, qrule)
-            I = length(test_assembly_data[p])
-            J = length(trial_assembly_data[q])
-            for j in 1 : J
-                QQ = @view trial_assembly_data.data[:,j,q]
-                for i in 1 : I
+                test_space,  P, tcell,
+                trial_space, Q, bcell, qrule)
+            # I = length(test_assembly_data[p])
+            # J = length(trial_assembly_data[q])
+            for j in 1 : num_bshapes
+                tadjq = @view trial_assembly_data.data[:,j,q]
+                for i in 1 : num_tshapes
                     zij = zlocal[i,j]
-                    PP = @view test_assembly_data.data[:,i,p]
-                    for (n,b) in QQ
-                        n < 1 && break
+                    badip = @view test_assembly_data.data[:,i,p]
+                    for (n,b) in tadjq
+                        n < 1 && continue
                         zb = zij*b
-                        for (m,a) in PP
-                            m < 1 && break
+                        for (m,a) in badip
+                            m < 1 && continue
                             store(a*zb, m, n)
-                        end
-                    end
-                end
-            end 
-        end
+        end end end end end
 
         done += 1
         new_pctg = round(Int, done / todo * 100)
@@ -356,8 +372,17 @@ function assembleblock_body!(biop::IntegralOperator,
         bfs, trial_ids, bsis_elements, trial_assembly_data,
         quadrature_data, zlocals, store; quadstrat)
 
-    test_shapes  = refspace(tfs)
-    trial_shapes = refspace(bfs)
+    tgeo = geometry(tfs)
+    bgeo = geometry(bfs)
+
+    tdom = domain(chart(tgeo, first(tgeo)))
+    bdom = domain(chart(bgeo, first(bgeo)))
+
+    tshapes = refspace(tfs); num_tshapes = numfunctions(tshapes, tdom)
+    bshapes = refspace(bfs); num_bshapes = numfunctions(bshapes, bdom)
+
+        # test_shapes  = refspace(tfs)
+        # trial_shapes = refspace(bfs)
 
     # Enumerate all the active test elements
     active_test_el_ids  = Vector{Int}()
@@ -381,14 +406,15 @@ function assembleblock_body!(biop::IntegralOperator,
     @assert maximum(active_test_el_ids) <= length(test_elements) "$(maximum(active_test_el_ids)), $(length(test_elements))"
     @assert maximum(active_trial_el_ids) <= length(bsis_elements) "$(maximum(active_trial_el_ids)), $(length(bsis_elements))"
 
-    zlocal = take!(zlocals)
+    # zlocal = take!(zlocals)
+    zlocal = zeros(scalartype(biop, tfs, bfs), num_tshapes, num_bshapes)
     for p in active_test_el_ids
         tcell = test_elements[p]
         for q in active_trial_el_ids
             bcell = bsis_elements[q]
 
             fill!(zlocal, 0)
-            qrule = quadrule(biop, test_shapes, trial_shapes, p, tcell, q, bcell, quadrature_data, quadstrat)
+            qrule = quadrule(biop, tshapes, bshapes, p, tcell, q, bcell, quadrature_data, quadstrat)
             momintegrals!(zlocal, biop,
                 tfs, p, tcell,
                 bfs, q, bcell, qrule)
@@ -403,7 +429,7 @@ function assembleblock_body!(biop::IntegralOperator,
                             m′ == 0 && continue
                             store(a*zlocal[i,j]*b, m′, n′)
     end end end end end end 
-    put!(zlocals, zlocal)
+    # put!(zlocals, zlocal)
 end
 
 # function assembleblock_body_trial_refines_test!(biop::IntegralOperator,

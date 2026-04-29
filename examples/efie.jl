@@ -16,6 +16,7 @@ import PlotlyDocumenter # hide
 
 Γ = readmesh(joinpath(dirname(pathof(BEAST)),"../examples/sphere2.in"))
 X = raviartthomas(Γ);
+# X = BEAST.gwpdiv(Γ; order=3)
 
 # The integral equation can be wrtiten down in terms of the single layer operaotr
 # and a plane wave excitation.

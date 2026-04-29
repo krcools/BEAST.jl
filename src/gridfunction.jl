@@ -221,6 +221,7 @@ function Lp_integrate(
             active_global[i][cellindex] = true
         end
 
+        # tels = [chart(lincombgfs.gfs[j].geo,p) for p in lincombgfs.gfs[j].geo]
         tels = instantiate_charts(lincombgfs.gfs[j].geo, numcells(lincombgfs.gfs[j].geo), trues(numcells(lincombgfs.gfs[j].geo)))
         qd = quaddata(lincombgfs.gfs[j], tels, quadstrat)
         push!(qds_global, qd)
@@ -239,6 +240,7 @@ function Lp_integrate(
 
     retval = Float64(0) #returntype(first(lincombgfs.gfs))(0)
 
+    # tels = [chart(geo, p) for p in 1:numcells(geo)]
     tels = instantiate_charts(geo, numcells(geo), trues(numcells(geo)))
 
     for (t, tcell) in enumerate(tels)
