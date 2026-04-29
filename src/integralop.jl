@@ -170,11 +170,11 @@ function assemblechunk_body!(biop, test_space, trial_space,
             fill!(zlocal, 0)
             # @show (P,Q)
             qrule = quadrule(biop, refspace(test_space), refspace(trial_space),
-                p, tcell, q, bcell,
+                P, tcell, Q, bcell,
                 qd, quadstrat)
             momintegrals!(zlocal, biop,
-                test_space,  P, tcell,
-                trial_space, Q, bcell, qrule)
+                test_space,  tptr, tcell,
+                trial_space, bptr, bcell, qrule)
             # I = length(test_assembly_data[p])
             # J = length(trial_assembly_data[q])
             for j in 1 : num_bshapes
