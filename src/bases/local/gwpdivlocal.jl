@@ -1,6 +1,4 @@
-struct GWPDivRefSpace{T,Degree} <: RefSpace{T}
-    storage::Vector{@NamedTuple{value::SVector{2,T}, curl::T}}
-end
+struct GWPDivRefSpace{T,Degree} <: RefSpace{T} end
 
 function numfunctions(x::GWPDivRefSpace{<:Any,D},
     dom::CompScienceMeshes.ReferenceSimplex{2}) where {D}
@@ -11,13 +9,8 @@ function dimtype(x::GWPDivRefSpace{<:Any,D},
     Val{(D+1)*(D+3)}
 end
 
-function GWPDivRefSpace{T,Degree}() where {T,Degree}
-    NT = @NamedTuple{value::T, curl::SVector{2,T}}
-    GWPDivRefSpace{T,Degree}(Vector{NT}())
-end
-
 function (ϕ::GWPDivRefSpace{T,Degree})(p) where {T,Degree}
-    ψ = GWPCurlRefSpace{T,Degree}(ϕ.storage)
+    ψ = GWPCurlRefSpace{T,Degree}() # (ϕ.storage)
     dom = domain(chart(p))
     u = parametric(p)
     vals = ψ(dom, u)

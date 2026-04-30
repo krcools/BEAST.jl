@@ -30,18 +30,45 @@ function _lagpoly_diff(nodes, i, s, i0=1, i1=length(nodes))
     return r
 end
 
-function _sylpoly(nodes, i, s)
-    _lagpoly(nodes, i, s, 1, i)
+
+# Versions of the above functions to be used with @generated functions. These return expressions 
+# that can be evaluated at compile time, which allows for more efficient code when the number of
+# nodes is known at compile time.
+function gen_lagpoly(nodes, i, s, i0, i1, T)
+    p = :(one(T))
+    for j in i0:i1
+        j == i && continue
+        p = :(($p * ($s - $nodes[$j]) / ($nodes[$i] - $nodes[$j])))
+    end
+    return p
 end
 
-function _sylpoly_diff(nodes, i, s)
-    _lagpoly_diff(nodes, i, s, 1, i)
+function gen_lagpoly_diff(nodes, i, s, i0, i1, T)
+    dp = :(zero(T))
+    for j in i0:i1
+        j == i && continue
+        p = :(one(T))
+        for k in i0:i1
+            (k == i || k == j) && continue
+            p = :(($p * ($s - $nodes[$k]) / ($nodes[$i] - $nodes[$k])))
+        end
+        dp = :(($dp + $p / ($nodes[$i] - $nodes[$j])))
+    end
+    return dp
 end
 
-function _sylpoly_shift(nodes, i, s)
-    _lagpoly(nodes, i, s, 2, i)
+function gen_sylpoly(nodes, i, s, T)
+    gen_lagpoly(nodes, i, s, 1, i, T)
 end
 
-function _sylpoly_shift_diff(nodes, i, s)
-    _lagpoly_diff(nodes, i, s, 2, i)
+function gen_sylpoly_diff(nodes, i, s, T)
+    gen_lagpoly_diff(nodes, i, s, 1, i, T)
+end
+
+function gen_sylpoly_shift(nodes, i, s, T)
+    gen_lagpoly(nodes, i, s, 2, i, T)
+end
+
+function gen_sylpoly_shift_diff(nodes, i, s, T)
+    gen_lagpoly_diff(nodes, i, s, 2, i, T)
 end
