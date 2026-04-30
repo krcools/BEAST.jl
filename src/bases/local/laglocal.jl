@@ -211,7 +211,19 @@ function (f::LagrangeRefSpace{T,10,2})(mp) where T
 end
 
 # Evaluete linear lagrange elements on a triangle
-function (f::LagrangeRefSpace{T,1,3})(t) where T
+function (f::LagrangeRefSpace{T,1,3})(t::CompScienceMeshes.MeshPointNM{T,C,D,2}) where {T,C,D}
+    u,v,w, = barycentric(t)
+
+    j = jacobian(t)
+    p = t.patch
+    SVector(
+        (value=u, curl=(p[3]-p[2])/j),
+        (value=v, curl=(p[1]-p[3])/j),
+        (value=w, curl=(p[2]-p[1])/j))
+end
+
+# Evaluete linear lagrange elements on a triangle
+function (f::LagrangeRefSpace{T,1,3})(t::CompScienceMeshes.MeshPointNM{T,C,D,3}) where {T,C,D}
     u,v,w, = barycentric(t)
 
     j = jacobian(t)
