@@ -318,5 +318,6 @@ end
 
     @test norm(PΣd*iG*PΛd*b)/norm(b) <  sqrt(eps())
     @test norm(ℙΣd*iG*ℙΛd*b)/norm(b) <  sqrt(eps())
+    @show norm(ℙΣd*iG*ℙΛd*b)/norm(b)
 
 end 
