@@ -81,8 +81,8 @@ end
     @test valp ≈ 1
     @test crlp ≈ point(0,0,0) atol=sqrt(eps(T))
 
-    u = T(0.2); du = eps(T) * 1000
-    v = T(0.6); dv = eps(T) * 1000
+    u = T(0.2); du = sqrt(eps(T)) 
+    v = T(0.6); dv = sqrt(eps(T)) 
 
     p00 = neighborhood(s, (u,v))
     p10 = neighborhood(s, (u+du,v))
@@ -99,7 +99,7 @@ end
     for (f00, f10, f01) in zip(ϕ00, ϕ10, ϕ01)
         dfdu = (f10.value - f00.value)/du
         dfdv = (f01.value - f00.value)/dv
-        curl_num = (-dfdv * tu + dfdu * tv) / j
+        curl_num = (dfdv * tu - dfdu * tv) / j
         curl_ana = f00.curl
         @test curl_num ≈ curl_ana atol=sqrt(eps(T))*100
     end

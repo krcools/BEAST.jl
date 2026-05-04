@@ -121,7 +121,7 @@ end
     D = 4
     NF = binomial(2+D, 2)
     gwp = BEAST.GWPDivRefSpace{T,D}()
-    lgx = BEAST.LagrangeRefSpace{T,D,3,10}()
+    lgx = BEAST.LagrangeRefSpace{T,D,3,15}()
 
     ch = CSM.simplex(
         point(1,0,0),

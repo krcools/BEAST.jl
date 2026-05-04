@@ -29,7 +29,7 @@ end
 
 @test n == 2
 
-## test the scalar trace of a lgrange basis
+## test the scalar trace of a lagrange basis
 using CompScienceMeshes
 using BEAST
 using Test

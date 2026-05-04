@@ -28,35 +28,56 @@ function CompScienceMeshes._normals(tangents::StaticArrays.SVector{2,StaticArray
 end
 
 
-function permutate_vector(X, Y)
-    tol = sqrt(eps(eltype(X[1])))
 
-    permut = Vector{Int32}()  
-    temp = collect(1:length(X))
 
-    for p in Y
-        index = findfirst(isapprox(p;atol = tol), X)
-        @assert !isnothing(index)   # vertex from Y exist in X
-        @assert temp[index] != 0    # vertex from Y unique in X
 
-        temp[index] = 0
-        append!(permut, index)
+
+
+
+
+@testitem "assemble 2D langrange" begin
+
+    using CompScienceMeshes
+    using Permutations
+    using StaticArrays
+    using SparseArrays
+    # using InteractiveUtils
+
+    function CompScienceMeshes._normals(tangents::StaticArrays.SVector{2,StaticArrays.SVector{2,T}}, ::Type{Val{0}}) where {T}
+
+        t = tangents[1]
+        s = tangents[2]
+        v = abs(t[1]*s[2] - t[2]*s[1])/2
+        # n[3] = tangents[1] × tangents[2]
+        # l = norm(n)
+
+        P = StaticArrays.SVector{2,T}
+        StaticArrays.SVector{0,P}(), v
     end
 
-    for i in temp
-        if i !=0
-            push!(permut, i)
-    end end
+    function permutate_vector(X, Y)
+        tol = sqrt(eps(eltype(X[1])))
 
-    return permut
-end
+        permut = Vector{Int32}()  
+        temp = collect(1:length(X))
 
+        for p in Y
+            index = findfirst(isapprox(p;atol = tol), X)
+            @assert !isnothing(index)   # vertex from Y exist in X
+            @assert temp[index] != 0    # vertex from Y unique in X
 
+            temp[index] = 0
+            append!(permut, index)
+        end
 
+        for i in temp
+            if i !=0
+                push!(permut, i)
+        end end
 
+        return permut
+    end
 
-
-@testset "assemble 2D langrange" begin
     h = 1/5
     Ω2D = meshrectangle(1.0, 1.0, h, 2) # udim = 2
     Ω3D = meshrectangle(1.0, 1.0, h, 3) # udim = 3
@@ -64,8 +85,10 @@ end
     #permutate_mesh(Ω2D, Ω3D)
 
     # lagrange spaces
-    X2D = lagrangec0d1(Ω2D, skeleton(Ω2D,0))
-    X3D = lagrangec0d1(Ω3D, skeleton(Ω3D,0))
+    # @show @which lagrangec0d1(Ω3D, skeleton(Ω3D,0))
+    X3D = lagrangec0(Ω3D, skeleton(Ω3D,0), skeleton(Ω3D,1))
+    # @show @which lagrangec0d1(Ω2D, skeleton(Ω2D,0))
+    X2D = lagrangec0(Ω2D, skeleton(Ω2D,0), skeleton(Ω2D,1))
 
     σ =  permutate_vector(X2D.pos, map(vec -> StaticArrays.SVector(vec[1], vec[2]), X3D.pos))
 
@@ -82,7 +105,49 @@ end
 
 end
 
-@testset "assemble 2D nedelec" begin
+@testitem "assemble 2D nedelec" begin
+
+    using CompScienceMeshes
+    using Permutations
+    using StaticArrays
+    using SparseArrays
+    # using InteractiveUtils
+
+    function CompScienceMeshes._normals(tangents::StaticArrays.SVector{2,StaticArrays.SVector{2,T}}, ::Type{Val{0}}) where {T}
+
+        t = tangents[1]
+        s = tangents[2]
+        v = abs(t[1]*s[2] - t[2]*s[1])/2
+        # n[3] = tangents[1] × tangents[2]
+        # l = norm(n)
+
+        P = StaticArrays.SVector{2,T}
+        StaticArrays.SVector{0,P}(), v
+    end
+
+    function permutate_vector(X, Y)
+        tol = sqrt(eps(eltype(X[1])))
+
+        permut = Vector{Int32}()  
+        temp = collect(1:length(X))
+
+        for p in Y
+            index = findfirst(isapprox(p;atol = tol), X)
+            @assert !isnothing(index)   # vertex from Y exist in X
+            @assert temp[index] != 0    # vertex from Y unique in X
+
+            temp[index] = 0
+            append!(permut, index)
+        end
+
+        for i in temp
+            if i !=0
+                push!(permut, i)
+        end end
+
+        return permut
+    end
+
     h = 1/5
     Ω2D = meshrectangle(1.0, 1.0, h, 2) # udim = 2
     Ω3D = meshrectangle(1.0, 1.0, h, 3) # udim = 3
@@ -90,8 +155,12 @@ end
     #permutate_mesh(Ω2D, Ω3D)
 
     # lagrange spaces
-    X2D = lagrangec0d1(Ω2D, skeleton(Ω2D,0))
-    X3D = lagrangec0d1(Ω3D, skeleton(Ω3D,0))
+    # @show @which lagrangec0d1(Ω3D, skeleton(Ω3D,0))
+    X3D = lagrangec0(Ω3D, skeleton(Ω3D,0), skeleton(Ω3D,1))
+    # @show @which lagrangec0d1(Ω2D, skeleton(Ω2D,0))
+    X2D = lagrangec0(Ω2D, skeleton(Ω2D,0), skeleton(Ω2D,1))
+    # X2D = lagrangec0d1(Ω2D, skeleton(Ω2D,0))
+    # X3D = lagrangec0d1(Ω3D, skeleton(Ω3D,0))
 
     σ =  permutate_vector(X2D.pos, map(vec -> StaticArrays.SVector(vec[1], vec[2]), X3D.pos))
 
