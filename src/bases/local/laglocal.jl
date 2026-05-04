@@ -14,9 +14,7 @@ numfunctions(s::LagrangeRefSpace{T,Dg}, ch::CompScienceMeshes.ReferenceSimplex{D
 valuetype(ref::LagrangeRefSpace{T}, charttype) where {T} = T
 
 # Evaluate constant lagrange elements on anything
-(ϕ::LagrangeRefSpace{T,0})(tp) where {T} = SVector(((value=one(T), derivative=zero(T)),))
-(ϕ::LagrangeRefSpace{T,0,3})(tp) where {T} = SVector(((value=one(T), derivative=zero(T)),))
-
+(ϕ::LagrangeRefSpace{T,0,2})(tp) where {T} = SVector(((value=one(T), derivative=zero(T)),))
 
 # Evaluate linear Lagrange elements on a segment
 # The derivative denotes the tangential derivative
@@ -210,27 +208,188 @@ function (f::LagrangeRefSpace{T,10,2})(mp) where T
     )
 end
 
-# Evaluete linear lagrange elements on a triangle
-function (f::LagrangeRefSpace{T,1,3})(t) where T
-    u,v,w, = barycentric(t)
 
-    j = jacobian(t)
-    p = t.patch
-    σ = sign(dot(normal(t), cross(p[1]-p[3],p[2]-p[3])))
-    SVector(
-        (value=u, curl=σ*(p[3]-p[2])/j),
-        (value=v, curl=σ*(p[1]-p[3])/j),
-        (value=w, curl=σ*(p[2]-p[1])/j))
+
+
+# Evaluate Lagrange element on a triangle with the surface curl, for arbitrary degree
+@generated function (::LagrangeRefSpace{T,Degree,3,NF})(mp) where {T, Degree, NF}
+    
+    u = :(parametric(mp)[1])
+    v = :(parametric(mp)[2])
+    w = :(1 - $u - $v)
+
+    tu = :(tangents(mp,1))
+    tv = :(tangents(mp,2))
+    jd = :(jacobian(mp))
+
+    nodes = :()
+    for i in 0:Degree
+        nodes = :($nodes..., T($i/($Degree)))
+    end
+
+    vals = :()
+    diffs = :()
+    for k in 1:Degree+1 
+        for j in 1:Degree+1
+            for i in 1:Degree+1
+                i + j + k == Degree+3 || continue
+
+                pp = gen_lagpoly(nodes,i,u,1,i,T)
+                pq = gen_lagpoly(nodes,j,v,1,j,T)
+                pr = gen_lagpoly(nodes,k,w,1,k,T)
+                val = :($pp * $pq * $pr)
+
+                vals = :($vals..., $val)
+
+                diffu = :(zero(T))
+                diffv = :(zero(T))
+
+                pl = gen_lagpoly_diff(nodes,i,u,1,i,T)
+                diffu = :($pl*$pq*$pr)
+
+                pm = gen_lagpoly_diff(nodes,j,v,1,j,T)
+                diffv = :($pm*$pp*$pr)
+                
+                pn = gen_lagpoly_diff(nodes,k,w,1,k,T)
+                diffu = :($diffu - $pn*$pp*$pq)
+                diffv = :($diffv - $pn*$pp*$pq)
+                
+                diffs = :($diffs..., ($diffu, $diffv))
+            end 
+        end 
+    end
+    
+    ex = :(SVector{NF}(()))
+
+    for i in 1:NF
+        push!(ex.args[2].args, :(value=$vals[$i], curl=($diffs[$i][2]*$tu-$diffs[$i][1]*$tv)/$jd))
+    end
+
+    return ex
 end
+
+
+"""
+    localindices(dof, chart, i)
+
+Returns a vector of indices into the vector of local shape functions that correspond to
+global degrees of freedom supported on sub-entity `i`, where the type of entity (nodes,
+edge, face) is encoded in the type of 'dof'.
+"""
+function localindices(dof::_LagrangeGlobalNodesDoFs, chart::CompScienceMeshes.Simplex{<:Any, 2},
+    localspace, i)
+
+    d = dof.order
+    [1, d+1, div((d+1)*(d+2),2)][[i]]
+end
+
+function localindices(dof::_LagrangeGlobalEdgeDoFs, chart::CompScienceMeshes.Simplex{<:Any, 2},
+    localspace, i)
+
+    d = dof.order
+    lids, lid = Int[], 0
+    if i == 3
+        for i in 0:d for j in 0:d
+            k = d - i - j
+            k < 0 && continue
+            lid += 1
+            i != 0 && continue
+            j in (0,d) && continue
+            push!(lids, lid)
+        end end
+    elseif i == 2
+        for i in 0:d for j in 0:d
+            k = d - i - j
+            k < 0 && continue
+            lid += 1
+            i in (0,d) && continue
+            j != 0 && continue
+            push!(lids, lid)
+        end end
+    elseif i == 1
+        for i in 0:d for j in 0:d
+            k = d - i - j
+            k < 0 && continue
+            lid += 1
+            j in (0,d) && continue
+            k != 0 && continue
+            push!(lids, lid)
+        end end
+    else
+        error("wrong local edge index")
+    end
+    return lids
+end
+
+function localindices(dof::_LagrangeGlobalFaceDoFs, chart::CompScienceMeshes.Simplex{<:Any, 2},
+    localspace, i)
+
+    d = dof.order
+    lids, lid = Int[], 0
+    for i in 0:d, j in 0:d
+        k = d - i - j
+        k < 0 && continue
+        lid += 1
+        (i == 0 || j == 0 || k == 0) && continue
+        # @show (i,j,k)
+        push!(lids, lid)
+    end
+    return lids
+end
+
+
+function (ϕ::LagrangeRefSpace{T, 1, 4, 4})(lag) where T
+
+    u, v, w = parametric(lag)
+
+    tu = tangents(lag, 1)
+    tv = tangents(lag, 2)
+    tw = tangents(lag, 3)
+
+    B = [tu tv tw]
+    A = inv(transpose(B))
+
+    # gradient in u,v,w (unit tetrahedron)
+    gr1=SVector{3, T}(1.0, 0.0, 0.0)
+    gr2=SVector{3, T}(0.0, 1.0, 0.0)
+    gr3=SVector{3, T}(0.0, 0.0, 1.0)
+    gr4=SVector{3, T}(-1.0, -1.0, -1.0)
+
+    return SVector((
+        (value = u, gradient = A*gr1),
+        (value = v, gradient = A*gr2),
+        (value = w, gradient = A*gr3),
+        (value = T(1.0)-u-v-w, gradient = A*gr4)
+    ))
+end
+
+function localindices(dof::_LagrangeGlobalNodesDoFs, chart::CompScienceMeshes.Simplex{<:Any, 3},
+    localspace, i)
+    [1, 2, 3, 4][[i]]
+end
+
+
+# Evaluete linear lagrange elements on a triangle
+# function (f::LagrangeRefSpace{T,1,3})(t) where T
+#     u,v,w, = barycentric(t)
+
+#     j = jacobian(t)
+#     p = t.patch
+#     σ = sign(dot(normal(t), cross(p[1]-p[3],p[2]-p[3])))
+#     SVector(
+#         (value=u, curl=σ*(p[3]-p[2])/j),
+#         (value=v, curl=σ*(p[1]-p[3])/j),
+#         (value=w, curl=σ*(p[2]-p[1])/j))
+# end
 
 
 
 # Evaluate constant Lagrange elements on a triangle, with their curls
-function (f::LagrangeRefSpace{T,0,3})(t, ::Type{Val{:withcurl}}) where T
-    i = one(T)
-    z = zero(cartesian(t))
-    SVector(((value=i, curl=z,),))
-end
+# function (f::LagrangeRefSpace{T,0,3})(t, ::Type{Val{:withcurl}}) where T
+#     i = one(T)
+#     z = zero(cartesian(t))
+#     SVector(((value=i, curl=z,),))
+# end
 
 #= Replaced by generalized curl using GWP functions
 function curl(ref::LagrangeRefSpace{T,1,3} where {T}, sh, el)
@@ -295,6 +454,69 @@ function gradient(ref::LagrangeRefSpace{T,1,2}, sh, seg) where {T}
     @assert sh.refid == 2
     return [Shape(sh.cellid, 1, -sh.coeff/volume(seg))]
 
+end
+
+
+function curl(localspace::LagrangeRefSpace, sh, ch)
+    fns = curl(localspace, sh.cellid, ch)
+    α = sh.coeff
+    S = typeof(sh)
+    return S[S(s.cellid, s.refid, α*s.coeff) for s in fns[sh.refid]]
+end
+
+
+function curl(localspace::LagrangeRefSpace{T,D,3,N}, cellid::Int, ch) where {T,D,N}
+    function fields(p)
+        map(localspace(p)) do x
+            x.curl
+        end
+    end
+    atol = sqrt(eps(T))
+    gwp = GWPDivRefSpace{T,D-1}()
+    coeffs = interpolate(fields, gwp, ch)
+    S = BEAST.Shape{T}
+    A = Vector{Vector{S}}(undef, size(coeffs,1))
+    for r in axes(coeffs,1)
+        A[r] = collect(S(cellid, c, coeffs[r,c]) for c in axes(coeffs,2) if abs(coeffs[r,c]) > atol)
+    end
+    return SVector{N}(A)
+end
+
+
+
+@testitem "curl - chartwise" begin
+    using LinearAlgebra
+    using CompScienceMeshes
+    const CSM = CompScienceMeshes
+
+    T = Float64
+    D = 1
+    NF = binomial(2+D, 2)
+    gwp = BEAST.GWPDivRefSpace{T,D-1}()
+    lgc = BEAST.LagrangeRefSpace{T,D,3,NF}()
+
+    ch = CSM.simplex(
+        point(1,0,0),
+        point(0,1,0),
+        point(0,0,0))
+
+    curlfns = BEAST.curl(lgc, 1, ch)
+
+    p = neighborhood(ch, (0.2341, 0.4321))
+    gwp_vals = gwp(p)
+    lgc_vals = lgc(p)
+
+    err = similar(Vector{T}, axes(gwp_vals))
+    for i in eachindex(lgc_vals)
+        val1 = lgc_vals[i].curl
+        val2 = zero(val1)
+        for sh in curlfns[i]
+            val2 += sh.coeff * gwp_vals[sh.refid].value
+        end
+        err[i] = norm(val1 - val2)
+    end
+    atol = sqrt(eps(T))
+    @test all(err .< atol)
 end
 
 
@@ -372,109 +594,6 @@ function restrict(f::LagrangeRefSpace{T,1}, dom1, dom2) where T
 end
 
 
-
-## Quadratic Lagrange element on a triangle
-function (f::LagrangeRefSpace{T,2,3})(t) where T
-    u,v,w, = barycentric(t)
-
-    j = jacobian(t)
-    p = t.patch
-
-
-    σ = sign(dot(normal(t), cross(p[1]-p[3],p[2]-p[3])))
-     SVector(
-        (value=u*(2*u-1), curl=σ*(p[3]-p[2])*(4u-1)/j),
-        (value=4*u*v, curl=4*σ*(u*(p[1]-p[3])+v*(p[3]-p[2]))/j),
-        (value=v*(2*v-1), curl=σ*(p[1]-p[3])*(4v-1)/j),
-        (value=4*w*u, curl=4*σ*(w*(p[3]-p[2])+u*(p[2]-p[1]))/j),
-        (value=4*v*w, curl=4*σ*(w*(p[1]-p[3])+v*(p[2]-p[1]))/j),
-        (value=w*(2*w-1), curl=σ*(p[2]-p[1])*(4w-1)/j),
-    )
-end
-
-#= Not sure if that is correct anymore
-function curl(ref::LagrangeRefSpace{T,2,3} where {T}, sh, el)
-    #curl of lagc0d2 as combination of bdm functions 
-    z=zero(typeof(sh.coeff))
-    if sh.refid < 4
-        sh1 = Shape(sh.cellid, mod1(2*sh.refid+1,6), +sh.coeff)
-        sh2 = Shape(sh.cellid, mod1(2*sh.refid+2,6), -3*sh.coeff)
-        sh3 = Shape(sh.cellid, mod1(2*sh.refid+3,6), +3*sh.coeff)
-        sh4 = Shape(sh.cellid, mod1(2*sh.refid+4,6), -sh.coeff)
-    else
-        sh1 = Shape(sh.cellid, mod1(2*sh.refid+4,6), z*sh.coeff)
-        sh2 = Shape(sh.cellid, mod1(2*sh.refid+5,6), -4*sh.coeff)
-        sh3 = Shape(sh.cellid, mod1(2*sh.refid+6,6), +4*sh.coeff)
-        sh4 = Shape(sh.cellid, mod1(2*sh.refid+7,6), z*sh.coeff)
-    end
-    return [sh1, sh2, sh3, sh4]
-end
-=#
-
-
-function curl(localspace::LagrangeRefSpace, sh, ch)
-    fns = curl(localspace, sh.cellid, ch)
-    α = sh.coeff
-    S = typeof(sh)
-    return S[S(s.cellid, s.refid, α*s.coeff) for s in fns[sh.refid]]
-end
-
-
-function curl(localspace::LagrangeRefSpace{T,D,3,N}, cellid::Int, ch) where {T,D,N}
-    function fields(p)
-        map(localspace(p)) do x
-            x.curl
-        end
-    end
-    atol = sqrt(eps(T))
-    gwp = GWPDivRefSpace{T,D-1}()
-    coeffs = interpolate(fields, gwp, ch)
-    S = BEAST.Shape{T}
-    A = Vector{Vector{S}}(undef, size(coeffs,1))
-    for r in axes(coeffs,1)
-        A[r] = collect(S(cellid, c, coeffs[r,c]) for c in axes(coeffs,2) if abs(coeffs[r,c]) > atol)
-    end
-    return SVector{N}(A)
-end
-
-
-
-@testitem "curl - chartwise" begin
-    using LinearAlgebra
-    using CompScienceMeshes
-    const CSM = CompScienceMeshes
-
-    T = Float64
-    D = 1
-    NF = binomial(2+D, 2)
-    gwp = BEAST.GWPDivRefSpace{T,D-1}()
-    lgc = BEAST.LagrangeRefSpace{T,D,3,NF}()
-
-    ch = CSM.simplex(
-        point(1,0,0),
-        point(0,1,0),
-        point(0,0,0))
-
-    curlfns = BEAST.curl(lgc, 1, ch)
-
-    p = neighborhood(ch, (0.2341, 0.4321))
-    gwp_vals = gwp(p)
-    lgc_vals = lgc(p)
-
-    err = similar(Vector{T}, axes(gwp_vals))
-    for i in eachindex(lgc_vals)
-        val1 = lgc_vals[i].curl
-        val2 = zero(val1)
-        for sh in curlfns[i]
-            val2 += sh.coeff * gwp_vals[sh.refid].value
-        end
-        err[i] = norm(val1 - val2)
-    end
-    atol = sqrt(eps(T))
-    @test all(err .< atol)
-end
-
-
 function restrict(f::LagrangeRefSpace{T,2}, dom1, dom2) where T
 
     D = numfunctions(f)
@@ -520,177 +639,197 @@ function restrict(f::LagrangeRefSpace{T,2}, dom1, dom2) where T
 end
 
 
-const _vert_perms_lag = [
-    (1,2,3),
-    (2,3,1),
-    (3,1,2),
-    (2,1,3),
-    (1,3,2),
-    (3,2,1),
-]
 
-const _dof_perms_lag0 = [
-    (1),
-    (1),
-    (1),
-    (1),
-    (1),
-    (1),
-]
-const _dof_perms_lag1 = [
-    (1,2,3),
-    (3,1,2),
-    (2,3,1),
-    (2,1,3),
-    (1,3,2),
-    (3,2,1),
-]
+# Quadratic Lagrange element on a triangle
+# function (f::LagrangeRefSpace{T,2,3})(t) where T
+#     u,v,w, = barycentric(t)
 
-function dof_permutation(::LagrangeRefSpace{<:Any,0}, vert_permutation)
-    i = findfirst(==(tuple(vert_permutation...)), _vert_perms_lag)
-    return _dof_perms_lag0[i]
+#     j = jacobian(t)
+#     p = t.patch
+
+
+#     σ = sign(dot(normal(t), cross(p[1]-p[3],p[2]-p[3])))
+#      SVector(
+#         (value=u*(2*u-1), curl=σ*(p[3]-p[2])*(4u-1)/j),
+#         (value=4*u*v, curl=4*σ*(u*(p[1]-p[3])+v*(p[3]-p[2]))/j),
+#         (value=v*(2*v-1), curl=σ*(p[1]-p[3])*(4v-1)/j),
+#         (value=4*w*u, curl=4*σ*(w*(p[3]-p[2])+u*(p[2]-p[1]))/j),
+#         (value=4*v*w, curl=4*σ*(w*(p[1]-p[3])+v*(p[2]-p[1]))/j),
+#         (value=w*(2*w-1), curl=σ*(p[2]-p[1])*(4w-1)/j),
+#     )
+# end
+
+#= Not sure if that is correct anymore
+function curl(ref::LagrangeRefSpace{T,2,3} where {T}, sh, el)
+    #curl of lagc0d2 as combination of bdm functions 
+    z=zero(typeof(sh.coeff))
+    if sh.refid < 4
+        sh1 = Shape(sh.cellid, mod1(2*sh.refid+1,6), +sh.coeff)
+        sh2 = Shape(sh.cellid, mod1(2*sh.refid+2,6), -3*sh.coeff)
+        sh3 = Shape(sh.cellid, mod1(2*sh.refid+3,6), +3*sh.coeff)
+        sh4 = Shape(sh.cellid, mod1(2*sh.refid+4,6), -sh.coeff)
+    else
+        sh1 = Shape(sh.cellid, mod1(2*sh.refid+4,6), z*sh.coeff)
+        sh2 = Shape(sh.cellid, mod1(2*sh.refid+5,6), -4*sh.coeff)
+        sh3 = Shape(sh.cellid, mod1(2*sh.refid+6,6), +4*sh.coeff)
+        sh4 = Shape(sh.cellid, mod1(2*sh.refid+7,6), z*sh.coeff)
+    end
+    return [sh1, sh2, sh3, sh4]
 end
+=#
 
-function dof_permutation(::LagrangeRefSpace{<:Any,1}, vert_permutation)
-    i = findfirst(==(tuple(vert_permutation...)), _vert_perms_lag)
-    return _dof_perms_lag1[i]
-end
 
-function dof_perm_matrix(::LagrangeRefSpace{<:Any,0}, vert_permutation)
-    i = findfirst(==(tuple(vert_permutation...)), _vert_perms_rt)
-    @assert i != nothing
-    return _dof_lag0perm_matrix[i]
-end
 
-function dof_perm_matrix(::LagrangeRefSpace{<:Any,1}, vert_permutation)
-    i = findfirst(==(tuple(vert_permutation...)), _vert_perms_rt)
-    @assert i != nothing
-    return _dof_rtperm_matrix[i]
-end
 
-const _dof_lag0perm_matrix = [
-    @SMatrix[1],         # 1. {1,2,3}
-    @SMatrix[1],         # 2. {2,3,1}
-    @SMatrix[1],         # 3. {3,1,2}
-    @SMatrix[1],         # 4. {2,1,3}
-    @SMatrix[1],         # 5. {1,3,2}
-    @SMatrix[1]         # 6. {3,2,1}
-]
 
-function (ϕ::LagrangeRefSpace{T, 1, 4, 4})(lag) where T
 
-    u, v, w = parametric(lag)
+# const _vert_perms_lag = [
+#     (1,2,3),
+#     (2,3,1),
+#     (3,1,2),
+#     (2,1,3),
+#     (1,3,2),
+#     (3,2,1),
+# ]
 
-    tu = tangents(lag, 1)
-    tv = tangents(lag, 2)
-    tw = tangents(lag, 3)
+# const _dof_perms_lag0 = [
+#     (1),
+#     (1),
+#     (1),
+#     (1),
+#     (1),
+#     (1),
+# ]
+# const _dof_perms_lag1 = [
+#     (1,2,3),
+#     (3,1,2),
+#     (2,3,1),
+#     (2,1,3),
+#     (1,3,2),
+#     (3,2,1),
+# ]
 
-    B = [tu tv tw]
-    A = inv(transpose(B))
+# function dof_permutation(::LagrangeRefSpace{<:Any,0}, vert_permutation)
+#     i = findfirst(==(tuple(vert_permutation...)), _vert_perms_lag)
+#     return _dof_perms_lag0[i]
+# end
 
-    # gradient in u,v,w (unit tetrahedron)
-    gr1=SVector{3, T}(1.0, 0.0, 0.0)
-    gr2=SVector{3, T}(0.0, 1.0, 0.0)
-    gr3=SVector{3, T}(0.0, 0.0, 1.0)
-    gr4=SVector{3, T}(-1.0, -1.0, -1.0)
+# function dof_permutation(::LagrangeRefSpace{<:Any,1}, vert_permutation)
+#     i = findfirst(==(tuple(vert_permutation...)), _vert_perms_lag)
+#     return _dof_perms_lag1[i]
+# end
 
-    return SVector((
-        (value = u, gradient = A*gr1),
-        (value = v, gradient = A*gr2),
-        (value = w, gradient = A*gr3),
-        (value = T(1.0)-u-v-w, gradient = A*gr4)
-    ))
-end
+# function dof_perm_matrix(::LagrangeRefSpace{<:Any,0}, vert_permutation)
+#     i = findfirst(==(tuple(vert_permutation...)), _vert_perms_rt)
+#     @assert i != nothing
+#     return _dof_lag0perm_matrix[i]
+# end
+
+# function dof_perm_matrix(::LagrangeRefSpace{<:Any,1}, vert_permutation)
+#     i = findfirst(==(tuple(vert_permutation...)), _vert_perms_rt)
+#     @assert i != nothing
+#     return _dof_rtperm_matrix[i]
+# end
+
+# const _dof_lag0perm_matrix = [
+#     @SMatrix[1],         # 1. {1,2,3}
+#     @SMatrix[1],         # 2. {2,3,1}
+#     @SMatrix[1],         # 3. {3,1,2}
+#     @SMatrix[1],         # 4. {2,1,3}
+#     @SMatrix[1],         # 5. {1,3,2}
+#     @SMatrix[1]         # 6. {3,2,1}
+# ]
+
 
 
 
 # Evaluate higher order Lagrange elements on triangles
-# TODO: Optimise using code generation
-function (ϕ::LagrangeRefSpace{T,Degree,3})(p) where {T,Degree}
+# # TODO: Optimise using code generation
+# function (ϕ::LagrangeRefSpaceRef{T,Degree,3})(p) where {T,Degree}
 
-    u, v = parametric(p)
-    w = 1 - u - v
-    idx = 0
+#     u, v = parametric(p)
+#     w = 1 - u - v
+#     idx = 0
 
-    suppdim = 2
-    localdim = binomial(suppdim+Degree, suppdim)
-    vals = T[]
-    diffus = T[]
-    diffvs = T[]
+#     suppdim = 2
+#     localdim = binomial(suppdim+Degree, suppdim)
+#     vals = T[]
+#     diffus = T[]
+#     diffvs = T[]
 
-    D1 = Degree + 1
-    s = range(zero(T), one(T), length=D1)
-    for i in 0:Degree
-        ui = i/Degree
-        for j in 0:Degree
-            vj = j/Degree
-            for k in 0:Degree
-                wk = k/Degree
-                i + j + k == Degree || continue
+#     D1 = Degree + 1
+#     s = range(zero(T), one(T), length=D1)
+#     for i in 0:Degree
+#         ui = i/Degree
+#         for j in 0:Degree
+#             vj = j/Degree
+#             for k in 0:Degree
+#                 wk = k/Degree
+#                 i + j + k == Degree || continue
 
-                prod_p = one(T)
-                for p in 0:i-1
-                    up = p / Degree
-                    prod_p *= (u-up) / (ui-up)
-                end
-                prod_q = one(T)
-                for q in 0:j-1
-                    vq = q / Degree
-                    prod_q *= (v-vq) / (vj-vq)
-                end
-                prod_r = one(T)
-                for r in 0:k-1
-                    wr = r / Degree
-                    prod_r *= (w-wr) / (wk-wr)
-                end
-                push!(vals, prod_p * prod_q * prod_r)
+#                 prod_p = one(T)
+#                 for p in 0:i-1
+#                     up = p / Degree
+#                     prod_p *= (u-up) / (ui-up)
+#                 end
+#                 prod_q = one(T)
+#                 for q in 0:j-1
+#                     vq = q / Degree
+#                     prod_q *= (v-vq) / (vj-vq)
+#                 end
+#                 prod_r = one(T)
+#                 for r in 0:k-1
+#                     wr = r / Degree
+#                     prod_r *= (w-wr) / (wk-wr)
+#                 end
+#                 push!(vals, prod_p * prod_q * prod_r)
 
-                diffu = zero(T)
-                diffv = zero(T)
-                for l in 0:i-1
-                    ul = l/Degree
-                    prod_pl = one(T)
-                    for p in 0:i-1
-                        p == l && continue
-                        up = p/Degree
-                        prod_pl *= (u-up) / (ui-up)
-                    end
-                    diffu += prod_pl * prod_q * prod_r / (ui-ul)
-                end
-                for m in 0:j-1
-                    vm = m/Degree
-                    prod_qm = one(T)
-                    for q in 0:j-1
-                        q == m && continue
-                        vq = q/Degree
-                        prod_qm *= (v-vq) / (vj-vq)
-                    end
-                    diffv += prod_p * prod_qm * prod_r / (vj-vm)
-                end
-                for n in 0:k-1
-                    wn = n/Degree
-                    prod_rn = one(T)
-                    for r in 0:k-1
-                        r == n && continue
-                        wr = r/Degree
-                        prod_rn *= (w-wr) / (wk-wr)
-                    end
-                    diffu -= prod_p * prod_q * prod_rn / (wk-wn)
-                    diffv -= prod_p * prod_q * prod_rn / (wk-wn)
-                end
+#                 diffu = zero(T)
+#                 diffv = zero(T)
+#                 for l in 0:i-1
+#                     ul = l/Degree
+#                     prod_pl = one(T)
+#                     for p in 0:i-1
+#                         p == l && continue
+#                         up = p/Degree
+#                         prod_pl *= (u-up) / (ui-up)
+#                     end
+#                     diffu += prod_pl * prod_q * prod_r / (ui-ul)
+#                 end
+#                 for m in 0:j-1
+#                     vm = m/Degree
+#                     prod_qm = one(T)
+#                     for q in 0:j-1
+#                         q == m && continue
+#                         vq = q/Degree
+#                         prod_qm *= (v-vq) / (vj-vq)
+#                     end
+#                     diffv += prod_p * prod_qm * prod_r / (vj-vm)
+#                 end
+#                 for n in 0:k-1
+#                     wn = n/Degree
+#                     prod_rn = one(T)
+#                     for r in 0:k-1
+#                         r == n && continue
+#                         wr = r/Degree
+#                         prod_rn *= (w-wr) / (wk-wr)
+#                     end
+#                     diffu -= prod_p * prod_q * prod_rn / (wk-wn)
+#                     diffv -= prod_p * prod_q * prod_rn / (wk-wn)
+#                 end
 
-                push!(diffus, diffu)
-                push!(diffvs, diffv)
+#                 push!(diffus, diffu)
+#                 push!(diffvs, diffv)
 
-                idx += 1
-    end end end
+#                 idx += 1
+#     end end end
  
-    tu = tangents(p,1)
-    tv = tangents(p,2)
-    j = jacobian(p)
-    NF = length(vals)
-    SVector{NF}([(value=f, curl=(-dv*tu+du*tv)/j) for (f,du,dv) in zip(vals, diffus, diffvs)])
-end
+#     tu = tangents(p,1)
+#     tv = tangents(p,2)
+#     j = jacobian(p)
+#     NF = length(vals)
+#     SVector{NF}([(value=f, curl=(-dv*tu+du*tv)/j) for (f,du,dv) in zip(vals, diffus, diffvs)])
+# end
 
 # fields[i] ≈ sum(Q[j,i] * interpolant[j].value for j in 1:numfunctions(interpolant))
 function interpolate(fields, interpolant::LagrangeRefSpace{T,Degree,3}, chart) where {T,Degree}
@@ -701,9 +840,9 @@ function interpolate(fields, interpolant::LagrangeRefSpace{T,Degree,3}, chart) w
         I = 0:Degree
         s = range(0,1,length=Degree+1)
         Is = zip(I,s)
-        for (i,ui) in Is
+        for (k,wk) in Is
             for (j,vj) in Is
-                for (k,wk) in Is
+                for (i,ui) in Is
                     i + j + k == Degree || continue
                     @assert ui + vj + wk ≈ 1
                     p = neighborhood(chart, (ui,vj))
@@ -721,41 +860,42 @@ function interpolate(fields, interpolant::LagrangeRefSpace{T,Degree,3}, chart) w
     return Q
 end
 
-function interpolate(fields, interpolant::LagrangeRefSpace{T,1,3}, chart) where {T}
-    vals = Vector{Vector{T}}()
+# function interpolate(fields, interpolant::LagrangeRefSpace{T,1,3}, chart) where {T}
+#     vals = Vector{Vector{T}}()
 
 
-    p1 = neighborhood(chart, (1,0))
-    p2 = neighborhood(chart, (0,1))
-    p3 = neighborhood(chart, (0,0))
-    push!(vals, fields(p1))
-    push!(vals, fields(p2))
-    push!(vals, fields(p3))
+#     p1 = neighborhood(chart, (1,0))
+#     p2 = neighborhood(chart, (0,1))
+#     p3 = neighborhood(chart, (0,0))
+#     push!(vals, fields(p1))
+#     push!(vals, fields(p2))
+#     push!(vals, fields(p3))
     
    
 
-    # Q = hcat(vals...)
-    Q = Matrix{T}(undef, length(vals[1]), length(vals))
-    for i in eachindex(vals)
-        Q[:,i] .= vals[i]
-    end
-    return Q
-end
+#     # Q = hcat(vals...)
+#     Q = Matrix{T}(undef, length(vals[1]), length(vals))
+#     for i in eachindex(vals)
+#         Q[:,i] .= vals[i]
+#     end
+#     return Q
+# end
 
 
 function interpolate!(out, fields, interpolant::LagrangeRefSpace{T,Degree,3}, chart) where {T,Degree}
     Is = zip((0:Degree), range(0,1,length=Degree+1))
     idx = 0
-    for (i,ui) in Is
+    for (k,wk) in Is
         for (j,vj) in Is
-            for (k,wk) in Is
+            for (i,ui) in Is
                 i + j + k == Degree || continue; idx += 1
                 @assert ui + vj + wk ≈ 1
                 p = neighborhood(chart, (ui,vj))
                 vals = fields(p)
                 for (g, val) in zip(axes(out, 1), vals)
                     out[g,idx] = val
-end end end end end
+    end end end end 
+end
 
 function interpolate!(out, fields, interpolant::LagrangeRefSpace{T,0,3}, chart) where {T}
     p = center(chart)

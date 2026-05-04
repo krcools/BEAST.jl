@@ -14,7 +14,7 @@ int_nodes = submesh(!in(skeleton(boundary(m),0)), nodes)
 
 @test length(int_nodes) == 1
 
-L0 = BEAST.lagrangec0d1(m, int_nodes)
+L0 = BEAST.lagrangec0d1(m, dirichlet=true)
 @test numfunctions(L0) == 1
 @test length(L0.fns[1]) == 6
 @test length(m) == 8

@@ -11,13 +11,13 @@ a = U(1)
 
 # Cube between (3,3,3) and (4,4,4)
 Γ = translate(
-    CompScienceMeshes.meshcuboid(a,a,a,U(1.0); generator=:gmsh),
+    CompScienceMeshes.meshcuboid(a,a,a,U(0.5)),
     SVector(3.0,3.0,3.0))
 
 C0 = lagrangec0d1(Γ)
 
 # We interpolate the function f(x, y, z) = z
-coeffs = [v[3] for v in vertices(Γ)]
+coeffs = [v[3] for v in C0.pos]
 
 gfc0 = BEAST.FEMFunction(coeffs, C0)
 
@@ -50,7 +50,7 @@ constgfcx = BEAST.FEMFunction([2.0 for c in cells(Γ)], CX)
 
 # We interpolate the function f(x, y, z) = z
 # with piecewise constant lagrange elements
-coeffsCx = [((Γ.vertices[c[1]] + Γ.vertices[c[2]] + Γ.vertices[c[3]])/3)[3] for c in cells(Γ)]
+coeffsCx = [v[3] for v in CX.pos] #.+ [((Γ.vertices[c[1]] + Γ.vertices[c[2]] + Γ.vertices[c[3]])/3)[3] for c in cells(Γ)]
 
 gfcx = BEAST.FEMFunction(coeffsCx, CX)
 
@@ -61,7 +61,7 @@ gfcx = BEAST.FEMFunction(coeffsCx, CX)
 #difflincomb1 = BEAST.LinearCombinationOfAbstractMeshFunctions([1.0; -1.0], [gfcx, gfc0])
 difflincomb1 = gfcx - gfc0
 
-@test BEAST.Lp_integrate(difflincomb1)/BEAST.Lp_integrate(gfc0) ≈ 0.03866223365135301
+@test BEAST.Lp_integrate(difflincomb1)/BEAST.Lp_integrate(gfc0) ≈ 0.02733832759069041
 
 ## Test GlobalFunction
 f(x) = x[3]
@@ -83,7 +83,7 @@ idxfem, idxglobal = BEAST.indices_splitfemglobal(gfc0 - glbf + 0.0gfcx)
 ##
 @test BEAST.Lp_integrate(gfc0 - glbf) / BEAST.Lp_integrate(glbf) ≈ 0 atol=1e-16
 
-@test BEAST.Lp_integrate(gfcx - glbf) / BEAST.Lp_integrate(glbf) ≈ 0.038662233651353003
+@test BEAST.Lp_integrate(gfcx - glbf) / BEAST.Lp_integrate(glbf) ≈ 0.02733832759069041
 
 ## Global function on limited supported
 f(x) = x[3]

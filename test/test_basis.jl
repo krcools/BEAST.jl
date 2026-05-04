@@ -10,7 +10,7 @@ for T in [Float32, Float64]
     κ = ω = T(1.0)
 
     Γ = meshsegment(T(1.0), T(0.5))
-    X = lagrangec0d1(Γ)
+    X = lagrangec0d1(Γ;dirichlet=true)
     @test numvertices(Γ)-2 == numfunctions(X)
 
     hypersingular = Helmholtz2D.hypersingular(; wavenumber=κ)
@@ -75,7 +75,7 @@ using Test
 
 for T in [Float32, Float64]
     m = meshrectangle(T(1.0), T(1.0), T(0.5), 3)
-    X = lagrangec0d1(m)
+    X = lagrangec0d1(m,dirichlet=true)
     x = refspace(X)
     dom = domain(chart(m, first(m)))
 
@@ -127,7 +127,7 @@ for T in [Float64]
 
     m = Mesh(V,C)
     b = Mesh([p1,p2], [CompScienceMeshes.SimplexGraph(1,2)])
-    X = lagrangec0d1(m, boundary(m))
+    X = lagrangec0d1(m) 
     @test numfunctions(X) == 3
 
     Y = BEAST.strace(X, b)
@@ -161,7 +161,7 @@ for T in [Float64]
     m3 = CompScienceMeshes.rotate(m1, T(1.0π)*[1,0,0])
     m = weld(m1, m2, m3)
 
-    X = lagrangec0d1(m)
+    X = lagrangec0d1(m,dirichlet=true)
     x = refspace(X)
     @test numfunctions(X) == 1
     @test length(X.fns[1]) == 9
@@ -233,10 +233,10 @@ end
 
 ## Test gradient and curl of continuous lagrange elements
 m = meshrectangle(1.0, 1.0, 0.5, 3)
-int_nodes = submesh(!in(skeleton(boundary(m),0)), skeleton(m,0))
-@test length(int_nodes) == 1
+#int_nodes = submesh(!in(skeleton(boundary(m),0)), skeleton(m,0))
+#@test length(int_nodes) == 1
 
-lag = lagrangec0d1(m, int_nodes)
+lag = lagrangec0d1(m, dirichlet=true)
 @test numfunctions(lag) == 1
 
 rs = refspace(lag)
@@ -269,7 +269,7 @@ m = Mesh([
     point(0,0,0)],
     [CompScienceMeshes.SimplexGraph(1,2,3,4)])
 
-lag = lagrangec0d1(m, skeleton(m,0))
+lag = lagrangec0d1(m)
 @test numfunctions(lag) == 4
 
 gradlag = gradient(lag)
