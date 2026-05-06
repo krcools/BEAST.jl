@@ -15,7 +15,8 @@
 end
 
 
-@testitem "refspace: self-interpolate" begin
+
+@testitem "GWPCurlRefSpace: self-interpolate" begin
     using CompScienceMeshes
     using LinearAlgebra
 

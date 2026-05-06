@@ -40,3 +40,30 @@
     @show testval / norm1
     @test testval / norm1 < 3e-2
 end
+
+@testitem "NonConformingIntegralOpQStrat: RT vs GWP(0)" begin
+
+    using CompScienceMeshes
+    using LinearAlgebra
+
+    h1 = 0.2
+    h2 = 0.176
+    m1 = meshcuboid(1.0, 1.0, 1.0, h1; generator=:gmsh)
+    m2 = meshcuboid(1.0, 1.0, 1.0, h2; generator=:gmsh)
+
+    cstrat = BEAST.DoubleNumWiltonSauterQStrat{Int64, Int64}(2, 3, 6, 7, 5, 5, 4, 3)
+    nstrat = BEAST.NonConformingIntegralOpQStrat(cstrat)
+
+    S = Maxwell3D.singlelayer(alpha=1.0, beta=1.0, gamma=1.0)
+
+    X1 = raviartthomas(m1)
+    X2 = raviartthomas(m2)
+
+    Y1 = BEAST.gwpdiv(m1; order=0)
+    Y2 = BEAST.gwpdiv(m2; order=0)
+
+    Sxx = assemble(S, X1, X2; quadstrat=nstrat)
+    Syy = assemble(S, Y1, Y2; quadstrat=nstrat)
+
+    @test norm(Sxx - Syy) < 1e-12
+end
