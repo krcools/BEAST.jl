@@ -16,6 +16,7 @@ import PlotlyDocumenter # hide
 
 Γ = readmesh(joinpath(dirname(pathof(BEAST)),"../examples/sphere2.in"))
 X = raviartthomas(Γ);
+# X = BEAST.gwpdiv(Γ; order=3)
 
 # The integral equation can be wrtiten down in terms of the single layer operaotr
 # and a plane wave excitation.
@@ -59,6 +60,6 @@ Ein = E.(gridpoints);
 using PlotlyBase
 plt = Plot(Layout(Subplots(rows=2, cols=2, specs=[Spec() Spec(rowspan=2); Spec(kind="mesh3d") missing])))
 add_trace!(plt, scatter(x=Θ, y=norm.(ffd)), row=1, col=1)
-add_trace!(plt, heatmap(x=zs, y=ys, z=norm.(Esc-Ein)', colorscale="Viridis", zmin=0, zmax=2, showscale=false), row=1, col=2)
+add_trace!(plt, contour(x=zs, y=ys, z=norm.(Esc-Ein)', colorscale="Viridis", zmin=0, zmax=2, showscale=false), row=1, col=2)
 add_trace!(plt, patch(geo, norm.(fcr), caxis=(0, 2)), row=2, col=1)
 PlotlyDocumenter.to_documenter(plt) #hide

@@ -92,8 +92,21 @@ function DirectProductSpace(gentor)
     return DirectProductSpace(A)
 end
 
-function ∏(spaces)
+function ∏(spaces::Vector)
     return DirectProductSpace(spaces)
+end
+
+function ∏(space::AbstractSpace)
+    return DirectProductSpace([space])
+end
+
+function ∏(gentor)
+    A = collect(gentor)
+    return DirectProductSpace(A)
+end
+
+function ∏(space, spaces...)
+    return DirectProductSpace([space, spaces...])
 end
 
 Base.getindex(dps::DirectProductSpace, i) = dps.factors[i]
@@ -276,6 +289,7 @@ function assemblydata(basis::Space; onlyactives=true)
         end
     end
 
+    # elements = [chart(geo, p) for p in act_to_global]
     return elements, AssemblyData(data), act_to_global
 end
 
@@ -466,4 +480,20 @@ end
 
     X = BEAST.union([X1, X2])
     @test numfunctions(X) == 5
+end
+
+
+function reduce_assembly_data(ad, active_dofs, active_els)
+    data = ad.data
+    num_shapes = size(data, 2)
+    ad1 = data[:,:,active_els]
+    dof_mapper = Dict((m,m1) for (m1,m) in enumerate(active_dofs))
+    for i in eachindex(active_els)
+        for j in 1:num_shapes
+            for k in 1:size(ad1,1)
+                (m,a) = ad1[k,j,i]
+                m1 = get(dof_mapper, m, 0)
+                ad1[k,j,i] = (m1, a)
+    end end end
+    return AssemblyData(ad1)
 end

@@ -115,6 +115,20 @@ function assemble(operator::AbstractOperator, test_functions, trial_functions;
     return Z()
 end
 
+struct InverseOperator <: AbstractOperator
+    op::AbstractOperator
+    solver
+end
+
+function InverseOperator(op::AbstractOperator; solver=BEAST.lu)
+    InverseOperator(op, solver)
+end
+
+function assemble(A::InverseOperator, testfns, trialfns; kwargs...)
+    M = assemble(A.op, testfns, trialfns; kwargs...)
+    return A.solver(M)
+end
+
 function assemble(A::LinearMap, testfns, trialfns; kwargs...)
     @assert numfunctions(testfns) == size(A,1)
     @assert numfunctions(trialfns) == size(A,2)
@@ -233,10 +247,10 @@ function assemble!(operator::Operator, testfunctions::Space, trialfunctions::Spa
     testelements, testad, trialelements, trialad, qdata, _ = assembleblock_primer(
         operator, testfunctions, trialfunctions; quadstrat=quadstrat)
     
-    testad = (testelements, testad, 1:length(testelements))
-    trialad = (trialelements, trialad, 1:length(trialelements)) 
+    # testad = (testelements, testad, 1:length(testelements))
+    # trialad = (trialelements, trialad, 1:length(trialelements)) 
 
-    testelementcolors = color(testfunctions, scheduler; addata=testad)
+    testelementcolors = color(testfunctions, scheduler; addata=(testelements, testad, 1:length(testelements)))
     trialelementcolors = [1:length(trialelements)]
 
     qs = if CompScienceMeshes.refines(geometry(testfunctions), geometry(trialfunctions))
@@ -250,9 +264,17 @@ function assemble!(operator::Operator, testfunctions::Space, trialfunctions::Spa
     pbar = progressbar(length(testelements) * length(trialelements), true)
 
     for (i, coloredtestelements) in enumerate(testelementcolors)
+        testad1 = AssemblyData(testad.data[:,:,coloredtestelements])
         for (j, coloredtrialelements) in enumerate(trialelementcolors)            
-            assemblechunk_body_colored!(operator, testfunctions, testad, coloredtestelements,
-            trialfunctions, trialad, coloredtrialelements, qdata, store, scheduler; quadstrat=qs) 
+            # assemblechunk_body_colored!(operator,
+            #     testfunctions, testad, coloredtestelements,
+            #     trialfunctions, trialad, coloredtrialelements,
+            #     qdata, store, scheduler; quadstrat=qs)
+            # trialad1 = AssemblyData(trialad.data[:,:,coloredtrialelements])
+            assemblechunk_body!(operator, testfunctions, trialfunctions,
+                testelements, eachindex(testelements), testad1, coloredtestelements,
+                trialelements, eachindex(trialelements), trialad, coloredtrialelements,
+                qdata, nothing, store; quadstrat=qs, scheduler)
             next!(pbar; step = length(testelementcolors[i]) * length(trialelementcolors[j]))
     end end 
     finish!(pbar)

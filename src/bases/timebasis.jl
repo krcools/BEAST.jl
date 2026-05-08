@@ -61,7 +61,7 @@ function integrate(tbf::TimeBasisFunction{T,NI,D1,D}) where {T,NI,D1,D}
 end
 
 
-mutable struct TimeBasisDelta{T} <: AbstractTimeBasisFunction
+struct TimeBasisDelta{T} <: AbstractTimeBasisFunction
     timestep::T
     numfunctions::Int
 end

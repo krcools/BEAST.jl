@@ -180,14 +180,14 @@ function assemble(lform::LinForm, X::DirectProductSpace;
 
         for op in reverse(t.test_ops) x = op[end](op[1:end-1]..., x) end
         b = assemble(t.functional, x; quadstrat)
-        B[Block(m),Block(1)] = t.coeff * b
+        B[Block(m),Block(1)] += t.coeff * b
     end
 
     return B
 end
 
 function assemble(lf::LinForm, X::Space)
-    @assert length(lf.terms) == 1
+    # @assert length(lf.terms) == 1
     assemble(lf, BEAST.DirectProductSpace([X]))
 end
 
@@ -273,6 +273,9 @@ function assemble(bf::BilForm, X::DirectProductSpace, Y::DirectProductSpace;
         end
         
         a = term.kernel
+        # @show typeof(a)
+        # @show typeof(x)
+        # @show typeof(y)
         z = materialize(a, x, y; quadstrat, kwargs...)
 
         Smap = term.coeff * lift(z, Block(term.test_id), Block(term.trial_id), U, V)

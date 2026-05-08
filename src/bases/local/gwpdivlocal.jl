@@ -28,6 +28,11 @@ function (ϕ::GWPDivRefSpace{T,Degree})(p) where {T,Degree}
     end
 end
 
+function interpolate!(out, fields, interpolant::GWPDivRefSpace{T}, chart) where {T}
+    out1 = interpolate(fields, interpolant, chart)
+    out .= out1
+end
+
 function interpolate(fields, interpolant::GWPDivRefSpace{T,Degree}, chart) where {T,Degree}
 
     function nxfields(p)
@@ -147,4 +152,26 @@ end
     end
     atol = sqrt(eps(T))
     @test all(err .< atol)
+end
+
+@testitem "GPWDivRefSpace: consistency with RWG" begin
+    using CompScienceMeshes
+    const CSM = CompScienceMeshes
+
+    ch = CSM.simplex(
+        point(1,0,0),
+        point(0,1,0),
+        point(0,0,0))
+
+    rwg = BEAST.RTRefSpace{Float64}()
+    gwp = BEAST.GWPDivRefSpace{Float64, 0}()
+
+    p = neighborhood(ch, (0.2, 0.6))
+    rwg_vals = rwg(p)
+    gwp_vals = gwp(p)
+    atol = sqrt(eps(Float64))
+    for (rwg, gwp) in zip(rwg_vals, gwp_vals)
+        @test rwg.value ≈ gwp.value atol=atol
+        @test rwg.divergence ≈ gwp.divergence atol=atol
+    end
 end

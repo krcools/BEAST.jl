@@ -125,11 +125,12 @@ function assemble!(operator::TensorOperator, testfns::SpaceTimeBasis, trialfns::
 end
 
 
-mutable struct TemporalDifferentiation <: AbstractOperator
+mutable struct TemporalDifferentiation <: AbstractSpaceTimeOperator
     operator
 end
 
-derive(op::AbstractOperator) = TemporalDifferentiation(op)
+derive(op::AbstractSpaceTimeOperator) = TemporalDifferentiation(op)
+integrate(op::TemporalDifferentiation) = op.operator
 scalartype(op::TemporalDifferentiation) = scalartype(op.operator)
 Base.:*(a::Number, op::TemporalDifferentiation) = TemporalDifferentiation(a * op.operator)
 
@@ -141,9 +142,20 @@ function allocatestorage(op::TemporalDifferentiation, testfns, trialfns,
 	trial_time_fns  = temporalbasis(trialfns)
 	trial_space_fns = spatialbasis(trialfns)
 
+    test_time_fns  = temporalbasis(testfns)
+    test_space_fns = spatialbasis(testfns)
+
+    Δt = timestep(trial_time_fns)
+    Nₜ = numfunctions(trial_time_fns)
+
+    testfns = SpaceTimeBasis(
+        test_space_fns,
+        TimeBasisDelta(Δt, Nₜ)
+    )
+
 	trialfns = SpaceTimeBasis(
 		trial_space_fns,
-		derive(trial_time_fns)
+		derive(convolve(test_time_fns, trial_time_fns))
 	)
 
     return allocatestorage(op.operator, testfns, trialfns, storage_trait, longdelays_trait)
@@ -155,10 +167,21 @@ function assemble!(operator::TemporalDifferentiation, testfns, trialfns, store, 
     trial_time_fns  = temporalbasis(trialfns)
     trial_space_fns = spatialbasis(trialfns)
 
-    trialfns = SpaceTimeBasis(
-        trial_space_fns,
-        derive(trial_time_fns)
+    test_time_fns  = temporalbasis(testfns)
+    test_space_fns = spatialbasis(testfns)
+
+    Δt = timestep(trial_time_fns)
+    Nₜ = numfunctions(trial_time_fns)
+
+    testfns = SpaceTimeBasis(
+        test_space_fns,
+        TimeBasisDelta(Δt, Nₜ)
     )
+
+	trialfns = SpaceTimeBasis(
+		trial_space_fns,
+		derive(convolve(test_time_fns, trial_time_fns))
+	)
 
     assemble!(operator.operator, testfns, trialfns, store, threading; quadstrat)
 
@@ -170,7 +193,7 @@ end
 
 defaultquadstrat(op::TemporalIntegration, tfs, bfs) = defaultquadstrat(op.operator, tfs, bfs)
 
-integrate(op::SpaceTimeOperator) = TemporalIntegration(op)
+integrate(op::AbstractSpaceTimeOperator) = TemporalIntegration(op)
 derive(op::TemporalIntegration) = op.operator
 scalartype(op::TemporalIntegration) = scalartype(op.operator)
 Base.:*(a::Number, op::TemporalIntegration) = TemporalIntegration(a * op.operator)
@@ -200,6 +223,6 @@ function assemble!(operator::TemporalIntegration, testfns, trialfns, store,
         integrate(trial_time_fns)
     )
 
-    assemble!(operator.operator, testfns, trialfns, store; quadstrat)
+    assemble!(operator.operator, testfns, trialfns, store, threading; quadstrat)
 
 end

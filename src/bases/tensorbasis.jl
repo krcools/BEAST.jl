@@ -38,3 +38,6 @@ function tensordim(s, i)
     return 1
 end
 
+function gradient(s::SpaceTimeBasis) gradient(s.space) ⊗ s.time end
+function curl(s::SpaceTimeBasis) curl(s.space) ⊗ s.time end
+function divergence(s::SpaceTimeBasis) divergence(s.space) ⊗ s.time end
