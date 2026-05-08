@@ -12,8 +12,27 @@ function valuetype(ref::NDRefSpace{T}, charttype::Type) where {T}
     SVector{universedimension(charttype),T}
 end
 
+function (ϕ::NDRefSpace)(nbd::CompScienceMeshes.MeshPointNM{T,C,D,2}) where {T,C,D}
 
-function (ϕ::NDRefSpace)(nbd)
+    u, v = parametric(nbd)
+    j = jacobian(nbd)
+
+    tu = tangents(nbd,1)
+    tv = tangents(nbd,2)
+
+    d = 2/j
+
+    rotate_left(t) = StaticArrays.SVector{2, Float64}(t[2], -t[1])
+
+    return SVector((
+        (value = rotate_left(tu*(u-1) + tv*v    ) / j, curl = d),
+        (value = rotate_left(tu*u     + tv*(v-1)) / j, curl = d),
+        (value = rotate_left(tu*u     + tv*v    ) / j, curl = d)
+    ))
+
+end
+
+function (ϕ::NDRefSpace)(nbd::CompScienceMeshes.MeshPointNM{T,C,D,3}) where {T,C,D}
 
     u, v = parametric(nbd)
     n = normal(nbd)
