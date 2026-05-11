@@ -25,9 +25,9 @@ G12 = weld(G1,-G2)
 G23 = weld(G2,-G3)
 G31 = weld(G3,-G1)
 
-X12 = lagrangec0d1(G12)
-X23 = lagrangec0d1(G23)
-X31 = lagrangec0d1(G31)
+X12 = lagrangec0d1(G12; dirichlet=true)
+X23 = lagrangec0d1(G23; dirichlet=true)
+X31 = lagrangec0d1(G31; dirichlet=true)
 
 Y12 = duallagrangecxd0(G12)
 Y23 = duallagrangecxd0(G23)

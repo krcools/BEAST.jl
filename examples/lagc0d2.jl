@@ -8,7 +8,7 @@ m = meshsphere(radius=1.0, h=0.25)
 nodes = skeleton(m,0)
 edges = skeleton(m,1)
 
-X = BEAST.lagrangec0d2(m, nodes, edges)
+X = BEAST.lagrangec0d2(m) 
 Y = BEAST.lagrangecxd0(m)
 
 uⁱ = Helmholtz3D.planewave(wavenumber=1.0, direction=point(0,0,1))
