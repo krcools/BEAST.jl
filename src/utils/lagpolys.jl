@@ -35,7 +35,7 @@ end
 # that can be evaluated at compile time, which allows for more efficient code when the number of
 # nodes is known at compile time.
 function gen_lagpoly(nodes, i, s, i0, i1, T)
-    p = :(one(T))
+    p = :(one($T))
     for j in i0:i1
         j == i && continue
         p = :(($p * ($s - $nodes[$j]) / ($nodes[$i] - $nodes[$j])))
@@ -44,10 +44,10 @@ function gen_lagpoly(nodes, i, s, i0, i1, T)
 end
 
 function gen_lagpoly_diff(nodes, i, s, i0, i1, T)
-    dp = :(zero(T))
+    dp = :(zero($T))
     for j in i0:i1
         j == i && continue
-        p = :(one(T))
+        p = :(one($T))
         for k in i0:i1
             (k == i || k == j) && continue
             p = :(($p * ($s - $nodes[$k]) / ($nodes[$i] - $nodes[$k])))
