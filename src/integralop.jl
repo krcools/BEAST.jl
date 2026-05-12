@@ -151,12 +151,6 @@ function assemblechunk_body!(biop, test_space, trial_space,
     num_tshapes = size(test_assembly_data.data,2)
     num_bshapes = size(trial_assembly_data.data,2)
 
-
-    # verbose = (length(test_elements) > 256)
-    # myid = Threads.threadid()
-    # verbose && myid == 1 && print("dots out of 10: ")
-    # todo, done, pctg = length(test_elements), 0, 0
-
     @tasks for p in eachindex(active_test_els)
         @set scheduler = scheduler
         @local begin
@@ -178,7 +172,6 @@ function assemblechunk_body!(biop, test_space, trial_space,
                 test_space,  tptr, tcell, trial_space, bptr, bcell, qrule)
             for j in 1 : num_bshapes
                 tadjq .= @view trial_assembly_data.data[:,j,q]
-                # tadjq = @view trial_assembly_data.data[:,j,q]
                 for i in 1 : num_tshapes
                     zij = zlocal[i,j]
                     badip = @view test_assembly_data.data[:,i,p]
@@ -188,17 +181,7 @@ function assemblechunk_body!(biop, test_space, trial_space,
                         for (m,a) in badip
                             (m < 1 || iszero(a)) && continue
                             store(a*zb, m, n)
-        end end end end end
-
-        # done += 1
-        # new_pctg = round(Int, done / todo * 100)
-        # if new_pctg > pctg + 9
-        #     verbose && myid == 1 && print(".")
-        #     pctg = new_pctg
-        # end
-    end
-    # verbose && myid == 1 && println("")
-end
+end end end end end end end
 
 
 # function assemblechunk_body_colored!(biop,
