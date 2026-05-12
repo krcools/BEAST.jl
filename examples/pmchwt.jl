@@ -1,7 +1,7 @@
 using CompScienceMeshes, BEAST
 using LinearAlgebra
 # using LiftedMaps
-using BlockArrays
+# using BlockArrays
 
 T = CompScienceMeshes.tetmeshsphere(1.0,0.12)
 X = BEAST.nedelecc3d(T)
@@ -36,7 +36,7 @@ c = 1/√(ϵ0*μ0)
 Γ = boundary(Ω)
 X = raviartthomas(Γ)
 @show numfunctions(X)
-Y = BEAST.buffachristiansen2(Γ)
+Y = BEAST.buffachristiansen(Γ)
 
 
 κ,  η  = 1.0, 1.0

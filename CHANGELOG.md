@@ -1,5 +1,6 @@
 # Changelog
 
+- Restart for GMRES defaults to the maximum number of iterations
 - Cell coloring based lock-free multi-threaded assembly for frequency domain integral operators
 - Higher order Lagrange elements (cx and c0) on segments
 - All LinearMaps can be cast into bilinear forms. Assembly of the latter trivially returns the underlying LinearMap. This enables for example the construction inverses that explicitly exploit block diagonal structure.
