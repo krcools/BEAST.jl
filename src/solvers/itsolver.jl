@@ -54,7 +54,7 @@ function GMRESSolver(op::L;
     @assert m == n
 
     maxiter == 0 && (maxiter = n)
-    restart == 0 && (restart = n)
+    restart == 0 && (restart = min(maxiter, n))
 
     PL = typeof(Pl)
     PR = typeof(Pr)
@@ -76,16 +76,38 @@ end
 
 function solve!(x, solver::GMRESSolver, b; abstol=solver.abstol, reltol=solver.reltol)
     op = operator(solver)
-    x, ch = IterativeSolvers.gmres!(x, op, b; 
-        log=true, 
+    # x, ch = IterativeSolvers.gmres!(x, op, b; 
+    #     log=true, 
+    #     maxiter=solver.maxiter,
+    #     restart=solver.restart,
+    #     reltol=reltol,
+    #     abstol=abstol,
+    #     verbose=solver.verbose,
+    #     Pl=solver.left_preconditioner,
+    #     Pr=solver.right_preconditioner)
+    # return x, ch
+
+    # @show solver.restart
+    itr = IterativeSolvers.gmres_iterable!(x, op, b; 
+        # log=true, 
         maxiter=solver.maxiter,
         restart=solver.restart,
         reltol=reltol,
         abstol=abstol,
-        verbose=solver.verbose,
+        # verbose=solver.verbose,
         Pl=solver.left_preconditioner,
-        Pr=solver.right_preconditioner)
-    return x, ch
+        Pr=solver.right_preconditioner,
+        # Pl = IterativeSolvers.Identity(),
+        # Pr = IterativeSolvers.Identity()
+    )
+
+    iters = 0
+    for (i,residual) in enumerate(itr)
+        solver.verbose && @show (i,residual)
+        iters += 1
+    end
+
+    return x, (iters=iters, isconverged=true)
 end
 
 
