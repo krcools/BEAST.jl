@@ -72,6 +72,9 @@ makedocs(;
                 "Low Frequency Stable PMCHWT"=>"projectors/pmchwt_lf.md",
                 "Dense Grid Stable PMCHWT"=>"projectors/pmchwt_theta.md",
             ],
+            "OSRC operators"=>Any[
+                "OSRC operators"=>"operators/OSRC_efie.md",
+            ],
         ],
         "Basis Functions" => Any[
             "Overview"=>"bases/overview.md",

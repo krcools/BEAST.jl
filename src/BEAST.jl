@@ -243,6 +243,7 @@ include("dyadicop.jl")
 include("interpolation.jl")
 include("operators/projectors.jl")
 include("operators/theta.jl")
+include("operators/OSRC.jl")
 
 include("quadrature/rules/momintegrals.jl")
 include("quadrature/doublenumints.jl")
