@@ -17,9 +17,15 @@ bx = assemble(e, X)
 A = assemble(T,X,X); println("primal discretisation assembled.")
 
 Tyy = assemble(T,Y,Y); println("dual discretisation assembled.")
-Nxy = Matrix(assemble(N,X,Y)); println("duality form assembled.")
-iNxy = inv(Nxy); println("duality form inverted.")
-P = iNxy' * Tyy * iNxy
+
+Nxy = assemble(N, X, Y);
+NYX = BEAST.GMRESSolver(Nxy; restart=1_500, abstol=1e-8, reltol=1e-8, maxiter=1_500, verbose=false)
+NXY = BEAST.GMRESSolver(Nxy'; restart=1_500, abstol=1e-8, reltol=1e-8, maxiter=1_500, verbose=false)
+
+# Nxy = Matrix(assemble(N,X,Y)); println("duality form assembled.")
+# iNxy = inv(Nxy); println("duality form inverted.")
+# P = iNxy' * Tyy * iNxy
+P = NXY * Tyy * NYX
 
 iT1 = BEAST.GMRESSolver(A; restart=1_500, abstol=1e-8, reltol=1e-8, maxiter=1_500)
 iT2 = BEAST.GMRESSolver(A; restart=1_500, abstol=1e-8, reltol=1e-8, maxiter=1_500, left_preconditioner=P)
