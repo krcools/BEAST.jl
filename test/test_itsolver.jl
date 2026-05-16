@@ -38,6 +38,7 @@ end
 
 
 @testitem "GMRESSolver: left/right_preconditioner kwarg" begin
+    using LinearAlgebra
      A = [
         0.79569   0.484796  0.68263   0.741895  0.936866
         0.222479  0.215901  0.441589  0.55834   0.572374
