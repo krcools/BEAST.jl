@@ -155,7 +155,7 @@ function assemblechunk_body!(biop, test_space, trial_space,
         @set scheduler = scheduler
         @local begin
             zlocal = zeros(scalartype(biop, test_space, trial_space), num_tshapes, num_bshapes)
-            tadjq = Memory{eltype(trial_assembly_data.data)}(undef, size(trial_assembly_data.data,1))
+            tadjq = Vector{eltype(trial_assembly_data.data)}(undef, size(trial_assembly_data.data,1))
         end
         P = active_test_els[p]
         tcell = test_elements[P]
