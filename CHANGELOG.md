@@ -1,5 +1,7 @@
 # Changelog
 
+- `solve` and `solve!`  on `GMRESSolver` allow for the defaults preconditioners to be overwritten
+- `materialize` keyword to assemble for bilinear forms allows for fine-grained control over the assembly of operators (e.g. dense representations vs H-matrix representations)
 - Restart for GMRES defaults to the maximum number of iterations
 - Cell coloring based lock-free multi-threaded assembly for frequency domain integral operators
 - Higher order Lagrange elements (cx and c0) on segments
