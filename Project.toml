@@ -38,17 +38,17 @@ TestItems = "1c621080-faea-4a02-84b6-bbd5e436b8fe"
 WiltonInts84 = "a3e2863e-c0ee-5ff6-a523-307a4cdc8724"
 
 [weakdeps]
-PlotlyJS = "f0f68f2c-4968-5e81-91da-67840de0976a"
+PlotlyBase = "a03496cd-edff-5a9b-9e67-9cda94a718b5"
 
 [extensions]
-PlotlyJSExt = ["PlotlyJS"]
+PlotlyBaseExt = ["PlotlyBase"]
 
 [compat]
 AbstractTrees = "0.4.4"
 BlockArrays = "1"
 CollisionDetection = "0.1.7"
 Combinatorics = "0.7, 1"
-CompScienceMeshes = "0.11"
+CompScienceMeshes = "0.11, 0.12"
 Compat = "2, 3, 4"
 ConvolutionOperators = "0.4"
 ExtendableSparse = "1.4"
@@ -64,7 +64,7 @@ LinearMaps = "3.7 - 3.9, 3.11.2"
 NestedUnitRanges = "0.2.3"
 OhMyThreads = "0.8.3"
 ProgressMeter = "1.11.0"
-PlotlyJS = "0.18.18"
+PlotlyBase = "0.8.21"
 Requires = "1"
 SauterSchwab3D = "0.2"
 SauterSchwabQuadrature = "2.4.0"

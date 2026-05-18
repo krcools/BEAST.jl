@@ -94,38 +94,33 @@ function solve!(x, solver::GMRESSolver, b;
         BEAST.Preconditioner(right_preconditioner)
 
     op = operator(solver)
-    # x, ch = IterativeSolvers.gmres!(x, op, b; 
-    #     log=true, 
-    #     maxiter=solver.maxiter,
-    #     restart=solver.restart,
-    #     reltol=reltol,
-    #     abstol=abstol,
-    #     verbose=solver.verbose,
-    #     Pl=solver.left_preconditioner,
-    #     Pr=solver.right_preconditioner)
-    # return x, ch
-
-    # @show solver.restart
-    itr = IterativeSolvers.gmres_iterable!(x, op, b; 
-        # log=true, 
+    x, ch = IterativeSolvers.gmres!(x, op, b; 
+        log=true, 
         maxiter=solver.maxiter,
         restart=solver.restart,
         reltol=reltol,
         abstol=abstol,
-        # verbose=solver.verbose,
+        verbose=solver.verbose,
         Pl=Pl,
-        Pr=Pr,
-        # Pl = IterativeSolvers.Identity(),
-        # Pr = IterativeSolvers.Identity()
-    )
+        Pr=Pr)
 
-    iters = 0
-    for (i,residual) in enumerate(itr)
-        solver.verbose && @show (i,residual)
-        iters += 1
-    end
+    # itr = IterativeSolvers.gmres_iterable!(x, op, b; 
+    #     maxiter=solver.maxiter,
+    #     restart=solver.restart,
+    #     reltol=reltol,
+    #     abstol=abstol,
+    #     Pl=Pl,
+    #     Pr=Pr,
+    # )
 
-    return x, (iters=iters, isconverged=true)
+    # iters = 0
+    # for (i,residual) in enumerate(itr)
+    #     solver.verbose && @show (i,residual)
+    #     iters += 1
+    # end
+
+    # return x, (iters=iters, isconverged=true)
+    return x, ch
 end
 
 

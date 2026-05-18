@@ -1,11 +1,11 @@
-module PlotlyJSExt
+module PlotlyBaseExt
 
 using BEAST
-using PlotlyJS
+using PlotlyBase
 using CompScienceMeshes
 using LinearAlgebra
 
-function PlotlyJS.mesh3d(u::AbstractVector, U::BEAST.AbstractSpace; kwargs...)
+function PlotlyBaseExt.mesh3d(u::AbstractVector, U::BEAST.AbstractSpace; kwargs...)
 
     fcr, geo = BEAST.facecurrents(u, U)
 
@@ -15,7 +15,7 @@ function PlotlyJS.mesh3d(u::AbstractVector, U::BEAST.AbstractSpace; kwargs...)
     x = v[:,1];    y = v[:,2];    z = v[:,3]
     i = c[:,1].-1; j = c[:,2].-1; k = c[:,3].-1
 
-    return PlotlyJS.mesh3d(;
+    return PlotlyBaseExt.mesh3d(;
         x=x, y=y, z=z,
         i=i, j=j, k=k,
         intensitymode="cell",
@@ -24,6 +24,6 @@ function PlotlyJS.mesh3d(u::AbstractVector, U::BEAST.AbstractSpace; kwargs...)
 end
 
 
-PlotlyJS.mesh3d(u::BEAST.FEMFunction; kwargs...) = PlotlyJS.mesh3d(u.coeffs, u.space; kwargs...)
+PlotlyBaseExt.mesh3d(u::BEAST.FEMFunction; kwargs...) = PlotlyBaseExt.mesh3d(u.coeffs, u.space; kwargs...)
 
 end
