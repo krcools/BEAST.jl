@@ -220,61 +220,55 @@ function (f::LagrangeRefSpace{T,1,3})(t::CompScienceMeshes.MeshPointNM{T,C,D,2})
 end
 
 
+macro lag_shapefunction_barycentric_index(degree)
+    LUT = SVector{binomial(degree+2, 2)}([(i,j,k) for k in 1:degree+1 for j in 1:degree+1 for i in 1:degree+1 if i+j+k == degree+3])
+    esc(LUT)
+end
+
+laglocalindex(i,::Val{0}) = @lag_shapefunction_barycentric_index(0)[i]
+laglocalindex(i,::Val{1}) = @lag_shapefunction_barycentric_index(1)[i]
+laglocalindex(i,::Val{2}) = @lag_shapefunction_barycentric_index(2)[i]
+laglocalindex(i,::Val{3}) = @lag_shapefunction_barycentric_index(3)[i]
+laglocalindex(i,::Val{4}) = @lag_shapefunction_barycentric_index(4)[i]
+laglocalindex(i,::Val{5}) = @lag_shapefunction_barycentric_index(5)[i]
+laglocalindex(i,::Val{6}) = @lag_shapefunction_barycentric_index(6)[i]
+
+function lag_shapefunction(idx::Int, mp, ::Val{Degree}) where {Degree}
+
+    bary = parametric(mp)
+    tu = tangents(mp,1)
+    tv = tangents(mp,2)
+    jd = jacobian(mp)
+
+    T = eltype(bary)
+
+    u,v = bary[1], bary[2]
+    w = one(T) - u - v
+
+    nodes = SVector{Degree+1,T}([i/(Degree) for i in 0:Degree])
+
+    i, j, k = laglocalindex(idx, Val(Degree))
+
+    pp = _lagpoly(nodes,i,u,1,i)
+    pq = _lagpoly(nodes,j,v,1,j)
+    pr = _lagpoly(nodes,k,w,1,k)
+
+    val = pp * pq * pr
+
+    pl = _lagpoly_diff(nodes,i,u,1,i)
+    pm = _lagpoly_diff(nodes,j,v,1,j)
+    pn = _lagpoly_diff(nodes,k,w,1,k)
+    
+    diffu = pl*pq*pr - pn*pp*pq
+    diffv = pm*pp*pr - pn*pp*pq
+                
+    return (value=val, curl=(diffv*tu - diffu*tv)/jd)
+end
+
 # Evaluate Lagrange element on a triangle with the surface curl, for arbitrary degree
-@generated function (::LagrangeRefSpace{T,Degree,3,NF})(mp) where {T, Degree, NF}
+function (::LagrangeRefSpace{T,Degree,3,NF})(mp) where {T, Degree, NF}
     
-    u = :(parametric(mp)[1])
-    v = :(parametric(mp)[2])
-    w = :(1 - $u - $v)
-
-    tu = :(tangents(mp,1))
-    tv = :(tangents(mp,2))
-    jd = :(jacobian(mp))
-
-    nodes = :()
-    for i in 0:Degree
-        nodes = :($nodes..., T($i/($Degree)))
-    end
-
-    vals = :()
-    diffs = :()
-    for k in 1:Degree+1 
-        for j in 1:Degree+1
-            for i in 1:Degree+1
-                i + j + k == Degree+3 || continue
-
-                pp = gen_lagpoly(nodes,i,u,1,i,T)
-                pq = gen_lagpoly(nodes,j,v,1,j,T)
-                pr = gen_lagpoly(nodes,k,w,1,k,T)
-                val = :($pp * $pq * $pr)
-
-                vals = :($vals..., $val)
-
-                diffu = :(zero(T))
-                diffv = :(zero(T))
-
-                pl = gen_lagpoly_diff(nodes,i,u,1,i,T)
-                diffu = :($pl*$pq*$pr)
-
-                pm = gen_lagpoly_diff(nodes,j,v,1,j,T)
-                diffv = :($pm*$pp*$pr)
-                
-                pn = gen_lagpoly_diff(nodes,k,w,1,k,T)
-                diffu = :($diffu - $pn*$pp*$pq)
-                diffv = :($diffv - $pn*$pp*$pq)
-                
-                diffs = :($diffs..., ($diffu, $diffv))
-            end 
-        end 
-    end
-    
-    ex = :(SVector{NF}(()))
-
-    for i in 1:NF
-        push!(ex.args[2].args, :(value=$vals[$i], curl=($diffs[$i][2]*$tu-$diffs[$i][1]*$tv)/$jd))
-    end
-
-    return ex
+    return SVector{NF}(lag_shapefunction(i, mp, Val(Degree)) for i in 1:NF)
 end
 
 

@@ -34,16 +34,16 @@ macro gwp_shapefunction_barycentric_index(degree)
     esc(LUT)
 end
 
-localidx(i,::Val{0}) =  @gwp_shapefunction_barycentric_index(0)[i]
-localidx(i,::Val{1}) =  @gwp_shapefunction_barycentric_index(1)[i]
-localidx(i,::Val{2}) =  @gwp_shapefunction_barycentric_index(2)[i]
-localidx(i,::Val{3}) =  @gwp_shapefunction_barycentric_index(3)[i]
-localidx(i,::Val{4}) =  @gwp_shapefunction_barycentric_index(4)[i]
-localidx(i,::Val{5}) =  @gwp_shapefunction_barycentric_index(5)[i]
-localidx(i,::Val{6}) =  @gwp_shapefunction_barycentric_index(6)[i]
+gwplocalidx(i,::Val{0}) =  @gwp_shapefunction_barycentric_index(0)[i]
+gwplocalidx(i,::Val{1}) =  @gwp_shapefunction_barycentric_index(1)[i]
+gwplocalidx(i,::Val{2}) =  @gwp_shapefunction_barycentric_index(2)[i]
+gwplocalidx(i,::Val{3}) =  @gwp_shapefunction_barycentric_index(3)[i]
+gwplocalidx(i,::Val{4}) =  @gwp_shapefunction_barycentric_index(4)[i]
+gwplocalidx(i,::Val{5}) =  @gwp_shapefunction_barycentric_index(5)[i]
+gwplocalidx(i,::Val{6}) =  @gwp_shapefunction_barycentric_index(6)[i]
 
 
-function shapefunction(idx::Int, bary, ::Val{Degree}) where {Degree}
+function gwp_shapefunction(idx::Int, bary, ::Val{Degree}) where {Degree}
 
     T = eltype(bary)
 
@@ -56,7 +56,7 @@ function shapefunction(idx::Int, bary, ::Val{Degree}) where {Degree}
     nd2 = SVector(-v+one(T), u)
     nd3 = SVector(-v, u)
     
-    i,j,k = localidx(idx, Val(Degree))
+    i,j,k = gwplocalidx(idx, Val(Degree))
     
     Rsᵢ = BEAST._sylpoly_shift(s, i+1, u)
     Rsⱼ = BEAST._sylpoly_shift(s, j+1, v)
@@ -114,7 +114,7 @@ end
 function (::GWPCurlRefSpace{T,Degree})(dom::CompScienceMeshes.ReferenceSimplex{Dim},
     bary, ::Val{NF}) where {T,Degree,Dim,NF}
      
-    return SVector{NF}(shapefunction(i, bary, Val(Degree)) for i in 1:NF)
+    return SVector{NF}(gwp_shapefunction(i, bary, Val(Degree)) for i in 1:NF)
 end
 
 
