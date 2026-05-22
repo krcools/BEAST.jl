@@ -31,6 +31,23 @@ function _lagpoly_diff(nodes, i, s, i0=1, i1=length(nodes))
 end
 
 
+function _sylpoly(nodes, i, s)
+    _lagpoly(nodes, i, s, 1, i)
+end
+
+function _sylpoly_diff(nodes, i, s)
+    _lagpoly_diff(nodes, i, s, 1, i)
+end
+
+function _sylpoly_shift(nodes, i, s)
+    _lagpoly(nodes, i, s, 2, i)
+end
+
+function _sylpoly_shift_diff(nodes, i, s)
+    _lagpoly_diff(nodes, i, s, 2, i)
+end
+
+
 # Versions of the above functions to be used with @generated functions. These return expressions 
 # that can be evaluated at compile time, which allows for more efficient code when the number of
 # nodes is known at compile time.
