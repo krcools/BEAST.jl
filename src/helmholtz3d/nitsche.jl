@@ -4,28 +4,28 @@ mutable struct NitscheHH3{T} <: MaxwellOperator3D{T,T}
     gamma::T
 end
 
-defaultquadstrat(::NitscheHH3, ::LagrangeRefSpace, ::LagrangeRefSpace) = DoubleNumWiltonSauterQStrat(10,8,10,8,3,3,3,3)
+defaultquadstrat(::NitscheHH3, ::LagrangeRefSpace, ::LagrangeRefSpace) = DoubleNumQStrat(10,8)
 
-function quaddata(operator::NitscheHH3,
-    localtestbasis::LagrangeRefSpace,
-    localtrialbasis::LagrangeRefSpace,
-    testelements, trialelements, qs::DoubleNumWiltonSauterQStrat)
+# function quaddata(operator::NitscheHH3,
+#     localtestbasis::LagrangeRefSpace,
+#     localtrialbasis::LagrangeRefSpace,
+#     testelements, trialelements, qs::SauterQStrat)
 
-  tqd = quadpoints(localtestbasis,  testelements,  (qs.outer_rule_far,))
-  bqd = quadpoints(x -> localtrialbasis(x), trialelements, (qs.inner_rule_far,))
+# #   tqd = quadpoints(localtestbasis,  testelements,  (qs.outer_rule_far,))
+# #   bqd = quadpoints(localtrialbasis, trialelements, (qs.inner_rule_far,))
 
-  #return QuadData(tqd, bqd)
-  return (tpoints=tqd, bpoints=bqd)
-end
+#   #return QuadData(tqd, bqd)
+#   return (nestedqd = quaddata(operator, localtestbasis, localtrialbasis, testelements, trialelements, qs.nested_strat),)
+# end
 
-function quadrule(op::NitscheHH3, g::LagrangeRefSpace, f::LagrangeRefSpace, i, τ, j, σ, qd,
-        qs::DoubleNumWiltonSauterQStrat)
+# function quadrule(op::NitscheHH3, g::LagrangeRefSpace, f::LagrangeRefSpace, i, τ, j, σ, qd,
+#         qs::DoubleNumWiltonSauterQStrat)
         
-    DoubleQuadRule(
-        qd.tpoints[1,i],
-        qd.bpoints[1,j]
-    )
-end
+#     DoubleQuadRule(
+#         qd.tpoints[1,i],
+#         qd.bpoints[1,j]
+#     )
+# end
 
 
 struct KernelValsMaxwell3D{T,U,P,Q}

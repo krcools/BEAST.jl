@@ -27,6 +27,8 @@ makedocs(;
             "Setting the Quadrature Strategy" => "manual/quadstrat.md",
             "Custom Quadrature Rules" => "manual/quadrule.md",
             "Custom Operators" => "manual/customop.md",
+            "Nested Quadrature Strategies" => "manual/nestedquadstrat.md",
+            "SIMDDoubleNum Quadrature Strategy" => "manual/SIMDquadstrat.md",
             "Application Examples"=>Any[
                 "Time-Harmonic"=>Any[
                     "EFIE"=>"manual/examplesTH/efie.md",

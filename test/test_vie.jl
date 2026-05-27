@@ -14,7 +14,7 @@ This test does not include the Operators of the EVIE, DVIE and one operator of t
 
 @testset "Volume Integral Equations" begin 
 
-    qs = BEAST.SauterSchwab3DQStrat(3,3,3,3,3,3)
+    qs = BEAST.DoubleNumSauterQstrat(3,3,3,3,3,3)
 
     r = 1.0
     h = 0.4

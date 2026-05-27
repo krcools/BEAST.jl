@@ -33,6 +33,7 @@ function (ϕ::NDRefSpace)(nbd)
 end
 
 numfunctions(x::NDRefSpace, dom::CompScienceMeshes.ReferenceSimplex{2}) = 3
+numfunctions(x::Type{<:NDRefSpace}, dom::Type{<:CompScienceMeshes.ReferenceSimplex{2}}) = 3
 
 function restrict(ϕ::NDRefSpace{T}, dom1, dom2) where T
 

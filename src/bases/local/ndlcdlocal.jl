@@ -31,6 +31,7 @@ function (ϕ::NDLCDRefSpace)(ndlc)
 end
 
 numfunctions(x::NDLCDRefSpace, dom::CompScienceMeshes.ReferenceSimplex{3}) = 4
+numfunctions(x::Type{<:NDLCDRefSpace}, dom::Type{<:CompScienceMeshes.ReferenceSimplex{3}}) = 4
 
 function ntrace(x::NDLCDRefSpace, el, q, fc)
     t = zeros(scalartype(x),1,4)

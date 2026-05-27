@@ -141,7 +141,8 @@ end
     @test BlockArrays.blocksize(M) == (2,2)
     @test BlockArrays.blocksizes(M) == [(n1,n1) (n1,n2); (n2,n1) (n2,n2)]
 end
-
+# quadrule(biop, tshapes, bshapes, p, tcell, q, bcell, qd, qdcache, quadstrat) =
+#     quadrule(biop, tshapes, bshapes, p, tcell, q, bcell, qd, quadstrat)
 
 function assemblechunk_body!(biop, test_space, trial_space,
     test_elements, test_element_ptrs, test_assembly_data, active_test_els,
@@ -154,6 +155,7 @@ function assemblechunk_body!(biop, test_space, trial_space,
     @tasks for p in eachindex(active_test_els)
         @set scheduler = scheduler
         @local begin
+            qd = quadcache(biop, refspace(test_space), refspace(trial_space), test_elements, trial_elements, qd, quadstrat)
             zlocal = zeros(scalartype(biop, test_space, trial_space), num_tshapes, num_bshapes)
             tadjq = Vector{eltype(trial_assembly_data.data)}(undef, size(trial_assembly_data.data,1))
         end
@@ -167,7 +169,7 @@ function assemblechunk_body!(biop, test_space, trial_space,
 
             fill!(zlocal, 0)
             qrule = quadrule(biop, refspace(test_space), refspace(trial_space),
-                P, tcell, Q, bcell, qd, quadstrat)
+                P, tcell, Q, bcell, qd,quadstrat)
             momintegrals!(zlocal, biop,
                 test_space,  tptr, tcell, trial_space, bptr, bcell, qrule)
             for j in 1 : num_bshapes

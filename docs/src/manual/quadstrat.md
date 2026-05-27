@@ -118,4 +118,6 @@ Z3 = assemble(𝑇, RT, RT; quadstrat=myquadstrat2)
 
 Best practice is too return `BEAST.defaultquadstrat(op, testnfs, trialfns)` by default to ensure that all operators are supported, also those for which no explicit overwrite is specified.
 
+# Quadrature cache
 
+The `quadcache` function is called for each thread seperately and ats writable working memory to the quadrature data.

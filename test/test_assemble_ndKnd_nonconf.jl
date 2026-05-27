@@ -13,7 +13,7 @@
     # RT = -n x Nd
     nxY = n × Y
 
-    qs = BEAST.DoubleNumSauterQstrat{Int64, Int64}(2, 3, 4, 4, 4, 4)
+    qs = BEAST.DoubleNumSauterQstrat(2, 3, 4, 4, 4, 4)
     A = assemble(K, Y, X; quadstrat=qs)
     B = assemble(nxK, nxY, X; quadstrat=qs)
 

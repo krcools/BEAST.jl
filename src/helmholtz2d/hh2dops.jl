@@ -236,12 +236,12 @@ defaultquadstrat(op::HelmholtzOperator2D, tfs, bfs) = DoubleNumSauterQstrat(30,3
 
 function quaddata(op::HelmholtzOperator2D,
     test_local_space::RefSpace, trial_local_space::RefSpace,
-    test_charts, trial_charts, qs::DoubleNumSauterQstrat)
+    test_charts, trial_charts, qs::SauterQStrat)
 
     T = coordtype(test_charts[1])
 
-    tqd = quadpoints(test_local_space,  test_charts,  (qs.outer_rule,))
-    bqd = quadpoints(trial_local_space, trial_charts, (qs.inner_rule,))
+    # tqd = quadpoints(test_local_space,  test_charts,  (qs.outer_rule,))
+    # bqd = quadpoints(trial_local_space, trial_charts, (qs.inner_rule,))
 
     leg = (
       convert.(NTuple{2,T},_legendre(qs.sauter_schwab_common_vert,0,1)),
@@ -255,13 +255,14 @@ function quaddata(op::HelmholtzOperator2D,
      convert.(NTuple{2,T},BEAST.SauterSchwabQuadrature1D._MRWrules(qs.sauter_schwab_common_face,0,1)),
     )
 
-    return (tpoints=tqd, bpoints=bqd, gausslegendre=leg, marokhlinwandura=mrw)
+    return (gausslegendre=leg, marokhlinwandura=mrw,
+    nestedqd = quaddata(op, test_local_space, trial_local_space, test_charts, trial_charts, qs.nested_strat))
 end
 
 function quadrule(op::HelmholtzOperator2D, g::LagrangeRefSpace, f::LagrangeRefSpace,
     i, τ::CompScienceMeshes.Simplex{<:Any, 1},
     j, σ::CompScienceMeshes.Simplex{<:Any, 1},
-    qd, qs::DoubleNumSauterQstrat)
+    qd, qs::SauterQStrat)
 
     hits = _numhits(τ, σ)
     @assert hits <= 2
@@ -269,8 +270,5 @@ function quadrule(op::HelmholtzOperator2D, g::LagrangeRefSpace, f::LagrangeRefSp
     hits == 2 && return BEAST.SauterSchwabQuadrature1D.CommonEdge(qd.marokhlinwandura[2], qd.gausslegendre[2])
     hits == 1 && return BEAST.SauterSchwabQuadrature1D.CommonVertex(qd.marokhlinwandura[1], qd.gausslegendre[1])
 
-    return DoubleQuadRule(
-        qd.tpoints[1,i],
-        qd.bpoints[1,j],
-    )
+    return quadrule(op, g, f, i, τ, j, σ, qd.nestedqd, qs.nested_strat)
 end

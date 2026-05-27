@@ -1,6 +1,8 @@
 abstract type _LocalBasisOperations{T} <: RefSpace{T} end
 numfunctions(a::_LocalBasisOperations) = coalesce(numfunctions(a.el1) , numfunctions(a.el2))
 numfunctions(a::_LocalBasisOperations,simp) = coalesce(numfunctions(a.el1,simp) , numfunctions(a.el2,simp))
+numfunctions(a::Type{<:_LocalBasisOperations}) = coalesce(numfunctions(a.el1) , numfunctions(a.el2))
+numfunctions(a::Type{<:_LocalBasisOperations},simp) = coalesce(numfunctions(a.el1,simp) , numfunctions(a.el2,simp))
 # struct TriangleSupport end
 # struct TetraSupport end
 

@@ -23,6 +23,7 @@ function (ϕ::RTQuadRefSpace{T})(p) where {T}
 end
 
 function numfunctions(ϕ::RTQuadRefSpace, dom::CompScienceMeshes.RefQuadrilateral) 4 end
+function numfunctions(ϕ::Type{<:RTQuadRefSpace}, dom::Type{<:CompScienceMeshes.RefQuadrilateral}) 4 end
 
 function interpolate(fields, interpolant::RTQuadRefSpace{T}, chart) where {T}
 

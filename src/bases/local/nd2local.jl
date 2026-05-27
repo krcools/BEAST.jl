@@ -28,3 +28,4 @@ function (ϕ::ND2RefSpace)(nbd)
 end
 
 numfunctions(x::ND2RefSpace, dom::CompScienceMeshes.ReferenceSimplex{2}) = 8
+numfunctions(x::Type{<:ND2RefSpace}, dom::Type{<:CompScienceMeshes.ReferenceSimplex{2}}) = 8

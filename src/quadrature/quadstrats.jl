@@ -5,14 +5,14 @@ using InteractiveUtils
 
 
 
-struct SauterSchwab3DQStrat{R,S} <: AbstractQuadStrat
-    outer_rule::R
-    inner_rule::R
-    sauter_schwab_1D::S
-    sauter_schwab_2D::S
-    sauter_schwab_3D::S
-    sauter_schwab_4D::S
-end
+# struct SauterSchwab3DQStrat{R,S} <: AbstractQuadStrat
+#     outer_rule::R
+#     inner_rule::R
+#     sauter_schwab_1D::S
+#     sauter_schwab_2D::S
+#     sauter_schwab_3D::S
+#     sauter_schwab_4D::S
+# end
 
 struct OuterNumInnerAnalyticQStrat{R} <: AbstractQuadStrat
     outer_rule::R
@@ -102,3 +102,29 @@ The type of the returned quadrature rule will help in deciding which method of
 `momintegrals` to dispatch to.
 """
 function quadrule end
+
+"""
+    quadcache(operator, test_refspace, trial_refspace, test_elements, trial_elements, quad_data, quadstrat)
+
+This function is called for each thread separately and adds temporary writable memory 
+to the quaddata named tuple if necessary. If not, it leaves the quaddata as is.
+"""
+function quadcache(biop, test_shapes, trial_shapes, test_elements, trial_elements, qd, quadstrat)
+    return qd
+end
+
+@generated function quadcache(biop, test_shapes, trial_shapes, test_elements, trial_elements, qd::NamedTuple{Keys}, quadstrat::NestedQuadStrat) where {Keys}
+    newvalsexp = []
+    for key in Keys
+        if key == :nestedqd
+            push!(newvalsexp,:(quadcache(biop, test_shapes, trial_shapes, test_elements, trial_elements, qd.nestedqd, quadstrat.nested_strat)))
+        else
+            push!(newvalsexp,:(qd.$key))
+        end
+    end
+    ex = quote
+        return NamedTuple{($(Keys...,))}(($(newvalsexp...),))
+    end
+    return ex
+end
+

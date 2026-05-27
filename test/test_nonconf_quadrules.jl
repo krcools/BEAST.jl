@@ -10,7 +10,7 @@
     E = Maxwell3D.planewave(;direction=point(0,0,1), polarization=point(1,0,0), wavenumber=0.0)
     e = n × E
 
-    cstrat = BEAST.DoubleNumWiltonSauterQStrat{Int64, Int64}(2, 3, 6, 7, 5, 5, 4, 3)
+    cstrat = BEAST.DoubleNumWiltonSauterQStrat(2, 3, 6, 7, 5, 5, 4, 3)
     # cstrat = BEAST.DoubleNumWiltonSauterQStrat{Int64, Int64}(12, 13, 12, 13, 7, 7, 7, 7)
     nstrat = BEAST.NonConformingIntegralOpQStrat(cstrat)
 
@@ -51,7 +51,7 @@ end
     m1 = meshcuboid(1.0, 1.0, 1.0, h1; generator=:gmsh)
     m2 = meshcuboid(1.0, 1.0, 1.0, h2; generator=:gmsh)
 
-    cstrat = BEAST.DoubleNumWiltonSauterQStrat{Int64, Int64}(2, 3, 6, 7, 5, 5, 4, 3)
+    cstrat = BEAST.DoubleNumWiltonSauterQStrat(2, 3, 6, 7, 5, 5, 4, 3)
     nstrat = BEAST.NonConformingIntegralOpQStrat(cstrat)
 
     S = Maxwell3D.singlelayer(alpha=1.0, beta=1.0, gamma=1.0)

@@ -26,6 +26,7 @@ end
 divergence(ref::BDMRefSpace, sh, el) = [Shape(sh.cellid, 1, sh.coeff/(2*volume(el)))]
 
 numfunctions(x::BDMRefSpace, dom::CompScienceMeshes.ReferenceSimplex{2}) = 6
+numfunctions(x::Type{<:BDMRefSpace}, dom::Type{<:CompScienceMeshes.ReferenceSimplex{2}}) = 6
 
 const _vert_perms_bdm = [
     (1,2,3),

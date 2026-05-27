@@ -34,6 +34,7 @@ function (f::RT2RefSpace)(p)
 end
 
 numfunctions(x::RT2RefSpace, dom::CompScienceMeshes.ReferenceSimplex{2}) = 8
+numfunctions(x::Type{<:RT2RefSpace}, dom::Type{<:CompScienceMeshes.ReferenceSimplex{2}}) = 8
 
 function interpolate(fields, interpolant::BEAST.RT2RefSpace, chart)
 

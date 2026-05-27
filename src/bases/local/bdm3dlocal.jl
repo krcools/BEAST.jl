@@ -1,6 +1,7 @@
 struct BDM3DRefSpace{T} <: RefSpace{T} end
 
 numfunctions(f::BDM3DRefSpace, ch::CompScienceMeshes.ReferenceSimplex{3}) = 12
+numfunctions(f::Type{<:BDM3DRefSpace}, ch::Type{<:CompScienceMeshes.ReferenceSimplex{3}}) = 12
 
 function (f::BDM3DRefSpace)(p)
 

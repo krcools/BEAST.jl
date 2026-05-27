@@ -27,6 +27,7 @@ function (ϕ::RTRefSpace)(mp)
 end
 
 numfunctions(x::RTRefSpace, dom::CompScienceMeshes.ReferenceSimplex{2}) = 3
+numfunctions(x::Type{<:RTRefSpace}, dom::Type{<:CompScienceMeshes.ReferenceSimplex{2}}) = 3
 
 divergence(ref::RTRefSpace, sh, el) = [Shape(sh.cellid, 1, sh.coeff/volume(el))]
 

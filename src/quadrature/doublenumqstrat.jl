@@ -13,7 +13,7 @@ function quaddata(operator::IntegralOperator,
     test_quad_data  = quadpoints(local_test_basis,  test_elements,  (qs.outer_rule,))
     trial_quad_data = quadpoints(local_trial_basis, trial_elements, (qs.inner_rule,))
 
-    return test_quad_data, trial_quad_data
+    return (tpoints = test_quad_data, bpoints = trial_quad_data)
 end
 
 
@@ -22,8 +22,8 @@ function quadrule(operator::IntegralOperator,
     test_id, test_element, trial_id, trial_element,
     quad_data, qs::DoubleNumQStrat)
 
-    test_quad_rules  = quad_data[1]
-    trial_quad_rules = quad_data[2]
+    test_quad_rules  = quad_data.tpoints
+    trial_quad_rules = quad_data.bpoints
 
     DoubleQuadRule(
         test_quad_rules[1,test_id],

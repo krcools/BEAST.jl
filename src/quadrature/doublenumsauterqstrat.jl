@@ -1,21 +1,44 @@
-struct DoubleNumSauterQstrat{R,S} <: AbstractQuadStrat
-    outer_rule::R
-    inner_rule::R
+# struct DoubleNumSauterQstrat{R,S} <: AbstractQuadStrat
+#     outer_rule::R
+#     inner_rule::R
+#     sauter_schwab_common_tetr::S
+#     sauter_schwab_common_face::S
+#     sauter_schwab_common_edge::S
+#     sauter_schwab_common_vert::S
+# end
+struct SauterQStrat{NestedStrat,S} <: NestedQuadStrat
+    nested_strat::NestedStrat
     sauter_schwab_common_tetr::S
     sauter_schwab_common_face::S
     sauter_schwab_common_edge::S
     sauter_schwab_common_vert::S
 end
+DoubleNumSauterQstrat(a,b,c,d,e,f) = SauterQStrat(DoubleNumQStrat(a,b),c,d,e,f)
+DoubleNumSauterQStrat(a,b,c,d,e,f) = SauterQStrat(DoubleNumQStrat(a,b),c,d,e,f)
+# function quaddata(op::IntegralOperator,
+#     test_local_space::RefSpace, trial_local_space::RefSpace,
+#     test_charts, trial_charts, qs::DoubleNumSauterQstrat)
 
+#     T = coordtype(test_charts[1])
+
+#     tqd = quadpoints(test_local_space,  test_charts,  (qs.outer_rule,))
+#     bqd = quadpoints(trial_local_space, trial_charts, (qs.inner_rule,))
+     
+#     leg = (
+#       convert.(NTuple{2,T},_legendre(qs.sauter_schwab_common_vert,0,1)),
+#       convert.(NTuple{2,T},_legendre(qs.sauter_schwab_common_edge,0,1)),
+#       convert.(NTuple{2,T},_legendre(qs.sauter_schwab_common_face,0,1)),
+#       convert.(NTuple{2,T},_legendre(qs.sauter_schwab_common_tetr,0,1)),
+#       )
+
+#     return (tpoints=tqd, bpoints=bqd, gausslegendre=leg)
+# end
 function quaddata(op::IntegralOperator,
     test_local_space::RefSpace, trial_local_space::RefSpace,
-    test_charts, trial_charts, qs::DoubleNumSauterQstrat)
+    test_charts, trial_charts, qs::SauterQStrat)
 
     T = coordtype(test_charts[1])
 
-    tqd = quadpoints(test_local_space,  test_charts,  (qs.outer_rule,))
-    bqd = quadpoints(trial_local_space, trial_charts, (qs.inner_rule,))
-     
     leg = (
       convert.(NTuple{2,T},_legendre(qs.sauter_schwab_common_vert,0,1)),
       convert.(NTuple{2,T},_legendre(qs.sauter_schwab_common_edge,0,1)),
@@ -23,66 +46,83 @@ function quaddata(op::IntegralOperator,
       convert.(NTuple{2,T},_legendre(qs.sauter_schwab_common_tetr,0,1)),
       )
 
-    return (tpoints=tqd, bpoints=bqd, gausslegendre=leg)
+    return (gausslegendre=leg, 
+    nestedqd = quaddata(op, test_local_space, trial_local_space, test_charts, trial_charts, qs.nested_strat))
 end
+# function quaddata(op::IntegralOperator,
+#     test_local_space::RefSpace, trial_local_space::RefSpace,
+#     test_charts::Vector{<:CompScienceMeshes.Simplex{<:Any, 3}}, trial_charts::Vector{<:CompScienceMeshes.Simplex{<:Any, 3}}, qs::DoubleNumSauterQstrat)
+
+#     #The combinations of rules (6,7) and (5,7 are) BAAAADDDD
+#     # they result in many near singularity evaluations with any
+#     # resemblence of accuracy going down the drain! Simply don't!
+#     # (same for (5,7) btw...).
+#     t_qp = quadpoints(test_local_space,  test_charts,  (qs.outer_rule,))
+#     b_qp = quadpoints(trial_local_space, trial_charts, (qs.inner_rule,))
+
+#     sing_qp = (SauterSchwab3D._legendre(qs.sauter_schwab_common_vert,0,1), 
+#                SauterSchwab3D._shunnham2D(qs.sauter_schwab_common_edge),
+#                SauterSchwab3D._shunnham3D(qs.sauter_schwab_common_face),
+#                SauterSchwab3D._shunnham4D(qs.sauter_schwab_common_tetr),)
+#     return (tpoints=t_qp, bpoints=b_qp, sing_qp=sing_qp)
+# end
 function quaddata(op::IntegralOperator,
     test_local_space::RefSpace, trial_local_space::RefSpace,
-    test_charts::Vector{<:CompScienceMeshes.Simplex{<:Any, 3}}, trial_charts::Vector{<:CompScienceMeshes.Simplex{<:Any, 3}}, qs::DoubleNumSauterQstrat)
+    test_charts::Vector{<:CompScienceMeshes.Simplex{<:Any, 3}}, trial_charts::Vector{<:CompScienceMeshes.Simplex{<:Any, 3}}, qs::SauterQStrat)
 
     #The combinations of rules (6,7) and (5,7 are) BAAAADDDD
     # they result in many near singularity evaluations with any
     # resemblence of accuracy going down the drain! Simply don't!
     # (same for (5,7) btw...).
-    t_qp = quadpoints(test_local_space,  test_charts,  (qs.outer_rule,))
-    b_qp = quadpoints(trial_local_space, trial_charts, (qs.inner_rule,))
+    # t_qp = quadpoints(test_local_space,  test_charts,  (qs.outer_rule,))
+    # b_qp = quadpoints(trial_local_space, trial_charts, (qs.inner_rule,))
 
     sing_qp = (SauterSchwab3D._legendre(qs.sauter_schwab_common_vert,0,1), 
                SauterSchwab3D._shunnham2D(qs.sauter_schwab_common_edge),
                SauterSchwab3D._shunnham3D(qs.sauter_schwab_common_face),
                SauterSchwab3D._shunnham4D(qs.sauter_schwab_common_tetr),)
-    return (tpoints=t_qp, bpoints=b_qp, sing_qp=sing_qp)
+    return (sing_qp=sing_qp, 
+    nestedqd = quaddata(op, test_local_space, trial_local_space, test_charts, trial_charts, qs.nested_strat))
 end
 function quaddata(op::IntegralOperator,
     test_local_space::RefSpace, trial_local_space::RefSpace,
-    test_charts::Vector{<:CompScienceMeshes.Simplex{<:Any, 2}}, trial_charts::Vector{<:CompScienceMeshes.Simplex{<:Any, 3}}, qs::DoubleNumSauterQstrat)
+    test_charts::Vector{<:CompScienceMeshes.Simplex{<:Any, 2}}, trial_charts::Vector{<:CompScienceMeshes.Simplex{<:Any, 3}}, qs::SauterQStrat)
 
     #The combinations of rules (6,7) and (5,7 are) BAAAADDDD
     # they result in many near singularity evaluations with any
     # resemblence of accuracy going down the drain! Simply don't!
     # (same for (5,7) btw...).
-    t_qp = quadpoints(test_local_space,  test_charts,  (qs.outer_rule,))
-    b_qp = quadpoints(trial_local_space, trial_charts, (qs.inner_rule,))
+
 
     sing_qp = (SauterSchwab3D._legendre(qs.sauter_schwab_common_vert,0,1), 
                SauterSchwab3D._shunnham2D(qs.sauter_schwab_common_edge),
                SauterSchwab3D._shunnham3D(qs.sauter_schwab_common_face),
                SauterSchwab3D._shunnham4D(qs.sauter_schwab_common_tetr),)
-    return (tpoints=t_qp, bpoints=b_qp, sing_qp=sing_qp)
+    return (sing_qp=sing_qp,
+    nestedqd = quaddata(op, test_local_space, trial_local_space, test_charts, trial_charts, qs.nested_strat))
 end
 
 function quaddata(op::IntegralOperator,
     test_local_space::RefSpace, trial_local_space::RefSpace,
-    test_charts::Vector{<:CompScienceMeshes.Simplex{<:Any, 3}}, trial_charts::Vector{<:CompScienceMeshes.Simplex{<:Any, 2}}, qs::DoubleNumSauterQstrat)
+    test_charts::Vector{<:CompScienceMeshes.Simplex{<:Any, 3}}, trial_charts::Vector{<:CompScienceMeshes.Simplex{<:Any, 2}}, qs::SauterQStrat)
 
     #The combinations of rules (6,7) and (5,7 are) BAAAADDDD
     # they result in many near singularity evaluations with any
     # resemblence of accuracy going down the drain! Simply don't!
     # (same for (5,7) btw...).
-    t_qp = quadpoints(test_local_space,  test_charts,  (qs.outer_rule,))
-    b_qp = quadpoints(trial_local_space, trial_charts, (qs.inner_rule,))
-
     sing_qp = (SauterSchwab3D._legendre(qs.sauter_schwab_common_vert,0,1), 
                SauterSchwab3D._shunnham2D(qs.sauter_schwab_common_edge),
                SauterSchwab3D._shunnham3D(qs.sauter_schwab_common_face),
                SauterSchwab3D._shunnham4D(qs.sauter_schwab_common_tetr),)
-    return (tpoints=t_qp, bpoints=b_qp, sing_qp=sing_qp)
+    return (sing_qp=sing_qp,
+            nestedqd = quaddata(op, test_local_space, trial_local_space, test_charts, trial_charts, qs.nested_strat))
 end
 
 
 function quadrule(op::IntegralOperator, g::RefSpace, f::RefSpace,
     i, τ::CompScienceMeshes.Simplex{<:Any, 2},
     j, σ::CompScienceMeshes.Simplex{<:Any, 2},
-    qd, qs::DoubleNumSauterQstrat)
+    qd, qs::SauterQStrat)
 
     hits = _numhits(τ, σ)
     @assert hits <= 3
@@ -91,9 +131,7 @@ function quadrule(op::IntegralOperator, g::RefSpace, f::RefSpace,
     hits == 2 && return SauterSchwabQuadrature.CommonEdge(qd.gausslegendre[2])
     hits == 1 && return SauterSchwabQuadrature.CommonVertex(qd.gausslegendre[1])
 
-    return DoubleQuadRule(
-        qd.tpoints[1,i],
-        qd.bpoints[1,j],)
+    return quadrule(op, g, f, i, τ, j, σ, qd.nestedqd, qs.nested_strat)
 end
 
 struct _TransposedStrat{A}
@@ -102,21 +140,21 @@ end
 
 function quadrule(op::IntegralOperator, g::RefSpace, f::RefSpace, 
     i, τ::CompScienceMeshes.Simplex{<:Any, 3},
-    j, σ::CompScienceMeshes.Simplex{<:Any, 3}, 
-    qd, qs::DoubleNumSauterQstrat) 
+    j, σ::CompScienceMeshes.Simplex{<:Any, 3},
+    qd, qs::SauterQStrat)
     qr_volume(op, g, f, i, τ, j, σ, qd, qs)
 end
 function quadrule(op::IntegralOperator, g::RefSpace, f::RefSpace, 
     i, τ::CompScienceMeshes.Simplex{<:Any, 3},
     j, σ::CompScienceMeshes.Simplex{<:Any, 2}, 
-    qd, qs::DoubleNumSauterQstrat) 
+    qd, qs::SauterQStrat) 
     qr_boundary(op, g, f, i, τ, j, σ, qd, qs)
 end
 
 function quadrule(op::IntegralOperator, g::RefSpace, f::RefSpace, 
     i, τ::CompScienceMeshes.Simplex{<:Any, 2},
     j, σ::CompScienceMeshes.Simplex{<:Any, 3}, 
-    qd, qs::DoubleNumSauterQstrat) 
+    qd, qs::SauterQStrat) 
     _TransposedStrat(qr_boundary(op, g, f, i, τ, j, σ, qd, qs))
 end
 
@@ -156,9 +194,7 @@ function qr_volume(op::IntegralOperator, g::RefSpace, f::RefSpace, i, τ, j, σ,
 
 
 
-    return DoubleQuadRule(
-        qd[1][1,i],
-        qd[2][1,j])
+    return quadrule(op, g, f, i, τ, j, σ, qd.nestedqd, qs.nested_strat)
 
 end
 
@@ -198,16 +234,14 @@ function qr_boundary(op::IntegralOperator, g::RefSpace, f::RefSpace, i, τ, j,  
     hits == 1 && return SauterSchwab3D.CommonVertex5D_S(SauterSchwab3D.Singularity5DPoint(idx_t,idx_s),(qd.sing_qp[3],qd.sing_qp[2]))
 
 
-    return DoubleQuadRule(
-        qd[1][1,i],
-        qd[2][1,j])
+    return quadrule(op, g, f, i, τ, j, σ, qd.nestedqd, qs.nested_strat)
 
 end
 
 function quadrule(op::IntegralOperator, g::RefSpace, f::RefSpace,
     i, τ::CompScienceMeshes.Quadrilateral,
     j, σ::CompScienceMeshes.Quadrilateral,
-    qd, qs::DoubleNumSauterQstrat)
+    qd, qs::SauterQStrat)
 
     hits = _numhits(τ, σ)
     @assert hits != 3
@@ -217,9 +251,7 @@ function quadrule(op::IntegralOperator, g::RefSpace, f::RefSpace,
     hits == 2 && return SauterSchwabQuadrature.CommonEdgeQuad(qd.gausslegendre[2])
     hits == 1 && return SauterSchwabQuadrature.CommonVertexQuad(qd.gausslegendre[1])
 
-    return DoubleQuadRule(
-        qd.tpoints[1,i],
-        qd.bpoints[1,j],)
+    return quadrule(op, g, f, i, τ, j, σ, qd.nestedqd, qs.nested_strat)
 end
 
 

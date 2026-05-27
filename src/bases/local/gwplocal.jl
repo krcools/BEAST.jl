@@ -6,6 +6,10 @@ function numfunctions(x::GWPCurlRefSpace{<:Any,D},
         dom::CompScienceMeshes.ReferenceSimplex{2}) where {D}
         (D+1)*(D+3)
 end
+function numfunctions(x::Type{GWPCurlRefSpace{<:Any,D}},
+        dom::Type{<:CompScienceMeshes.ReferenceSimplex{2}}) where {D}
+        (D+1)*(D+3)
+end
 function dimtype(x::GWPCurlRefSpace{<:Any,D},
     dom::CompScienceMeshes.ReferenceSimplex{2}) where {D}
     Val{(D+1)*(D+3)}

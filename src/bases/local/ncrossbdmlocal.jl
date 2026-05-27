@@ -20,3 +20,4 @@ function (f::NCrossBDMRefSpace{T})(p) where T
 end
 
 numfunctions(x::NCrossBDMRefSpace, dom::CompScienceMeshes.ReferenceSimplex{2}) = 6
+numfunctions(x::Type{<:NCrossBDMRefSpace}, dom::Type{<:CompScienceMeshes.ReferenceSimplex{2}}) = 6
