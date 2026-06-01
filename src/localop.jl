@@ -300,8 +300,11 @@ function assemble_local_mixed!(biop::LocalOperator, tfs::Space{T}, bfs::Space{T}
     num_trefs = numfunctions(trefs, tdom)
     num_brefs = numfunctions(brefs, bdom)
 
-    tels, tad = assemblydata(tfs)
-    bels, bad = assemblydata(bfs)
+    tr = assemblydata(tfs); tr == nothing && return
+    br = assemblydata(bfs); br == nothing && return
+
+    tels, tad = tr
+    bels, bad = br
 
     qd = quaddata(biop, trefs, brefs, tels, bels, quadstrat)
 

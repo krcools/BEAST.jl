@@ -39,7 +39,9 @@ function assemble!(field::Functional, tfs::Space, store;
     quadstrat=defaultquadstrat(field, tfs))
 
     qs = quadstrat(field, tfs)
-    tels, tad = assemblydata(tfs)
+    
+    tr = assemblydata(tfs); tr == nothing && return
+    tels, tad = tr
 
     trefs = refspace(tfs)
     qd = quaddata(field, trefs, tels, qs)
