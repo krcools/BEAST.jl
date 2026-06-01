@@ -48,6 +48,11 @@ function curl(x::Space)
     curl(x, geo, crl)
 end
 
+function gradient(X::DirectProductSpace{T}) where T
+    x = Space{T}[gradient(s) for s in X.factors]
+    DirectProductSpace(x)
+end
+
 
 function gradient(x::Space)
     ref = refspace(x)
