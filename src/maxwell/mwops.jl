@@ -14,6 +14,15 @@ struct MWSingleLayer3D{T,U} <: MaxwellOperator3D{T,U}
   β::U
 end
 
+struct MWMuellerHyperSingular{T,U} <: MaxwellOperator3D{T,U}
+  gamma::T
+  β::U
+end
+
+MWMuellerHyperSingular(gamma) = MWMuellerHyperSingular(gamma, -1/(gamma))
+
+defaultquadstrat(op::MWMuellerHyperSingular, tfs::RTRefSpace, bfs::RTRefSpace) = DoubleNumSauterQstrat(6,7,5,5,4,3)
+
 gamma(op::MWSingleLayer3D{Val{0}, U}) where {U} = zero(U)
 
 scalartype(op::MWSingleLayer3D{T,U}) where {T,U} = promote_type(T,U)
@@ -134,6 +143,23 @@ function (igd::Integrand{<:MWSingleLayer3DReg})(x,y,f,g)
 
     _integrands(f,g) do fi,gj
         αG * dot(fi.value, gj.value) + βG * dot(fi.divergence, gj.divergence)
+    end
+end
+
+function (igd::Integrand{<:MWMuellerHyperSingular})(x,y,f,g)
+    β = igd.operator.β
+    γ = igd.operator.gamma
+
+    r = cartesian(x) - cartesian(y)
+    R = norm(r)
+    γR = γ*R
+
+    green = (expm1(-γR) + γR) / (4pi*R)
+
+    βG = β * green
+
+    _integrands(f,g) do fi,gj
+        βG * dot(fi.divergence, gj.divergence)
     end
 end
 
