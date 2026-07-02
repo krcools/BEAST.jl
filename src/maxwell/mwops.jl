@@ -181,7 +181,7 @@ function (igd::Integrand{<:MWMuellerHyperSingular, <:RefSpace, <:RTRefSpace})(x,
     βgG = -β * gradgreen
 
     _integrands(f,g) do fi,gj
-        dot(dot(fi.value, βgG), gj.divergence)
+        dot(fi.value, βgG*gj.divergence)
     end
 end
 
