@@ -19,6 +19,7 @@ struct MWMuellerHyperSingular{T,U} <: MaxwellOperator3D{T,U}
   β::U
 end
 
+# Maxwell hypersingular operator, with its hypersingularity removed, can be assembled using basis functions other than div-conforming ones
 MWMuellerHyperSingular(gamma) = MWMuellerHyperSingular(gamma, -1/(gamma))
 
 defaultquadstrat(op::MWMuellerHyperSingular, tfs::RTRefSpace, bfs::RTRefSpace) = DoubleNumSauterQstrat(6,7,5,5,4,3)
@@ -146,20 +147,41 @@ function (igd::Integrand{<:MWSingleLayer3DReg})(x,y,f,g)
     end
 end
 
-function (igd::Integrand{<:MWMuellerHyperSingular})(x,y,f,g)
+# MWMuellerHyperSingular operator, discretized and tested by RT. Integration-by-parts is performed
+function (igd::Integrand{<:MWMuellerHyperSingular, <:RTRefSpace, <:RTRefSpace})(x,y,f,g)
     β = igd.operator.β
     γ = igd.operator.gamma
 
     r = cartesian(x) - cartesian(y)
     R = norm(r)
+    iR = 1/R
     γR = γ*R
 
-    green = (expm1(-γR) + γR) / (4pi*R)
-
+    green = expm1(-γR) * (i4pi * iR) + γ * i4pi
     βG = β * green
 
     _integrands(f,g) do fi,gj
         βG * dot(fi.divergence, gj.divergence)
+    end
+end
+
+# MWMuellerHyperSingular operator, discretized by RT and tested by other functions. Integration-by-parts is not performed. Instead, grad of regularized Green's function is used
+function (igd::Integrand{<:MWMuellerHyperSingular, <:RefSpace, <:RTRefSpace})(x,y,f,g)
+    β = igd.operator.β
+    γ = igd.operator.gamma
+
+    r = cartesian(x) - cartesian(y)
+    R = norm(r)
+    iR = 1/R
+    γR = γ*R
+
+    gradgreen = -(γ * exp(-γR) * iR + expm1(-γR) * iR^2) * (i4pi * iR) * r
+
+    # Minus sign is because integration-by-part is not performed
+    βgG = -β * gradgreen
+
+    _integrands(f,g) do fi,gj
+        dot(dot(fi.value, βgG), gj.divergence)
     end
 end
 
