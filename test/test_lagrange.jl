@@ -1,8 +1,8 @@
-using Test
-using BEAST
-using CompScienceMeshes
+@testitem "Higher order 1D Lagrange Elements" begin
+    using Test
+    using BEAST
+    using CompScienceMeshes
 
-@testset "Higher order 1D Lagrange Elements" begin
     line = meshsegment(2.0, 0.5)
     numsegments = CompScienceMeshes.numcells(line)
     g = BEAST.ScalarTrace{Float64}(x -> x[1]^5)

@@ -1,13 +1,11 @@
-using SphericalScattering
-using BEAST, CompScienceMeshes
-using StaticArrays
-using LinearAlgebra
+@testitem "EVIE and DVIE - Scattering of plane waves on a sphere" begin
+    using SphericalScattering
+    using BEAST, CompScienceMeshes
+    using StaticArrays
+    using LinearAlgebra
 
 
-using Test
-
-
-@testset "EVIE and DVIE - Scattering of plane waves on a sphere" begin 
+    using Test
 
     ϵ0 = 1.0
     ϵ1 = 5.0

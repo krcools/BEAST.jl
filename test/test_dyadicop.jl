@@ -1,10 +1,8 @@
-using Test
-
-using LinearAlgebra
-using CompScienceMeshes
-using BEAST
-
-@testset begin
+@testitem "dyadic operator" begin
+    using Test
+    using LinearAlgebra
+    using CompScienceMeshes
+    using BEAST
     m = meshsphere(radius=1.0, h=0.35)
     X = lagrangec0d1(m)
 

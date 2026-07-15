@@ -1,14 +1,14 @@
-using BEAST
-using CompScienceMeshes
-using StaticArrays
-using LinearAlgebra
-using SphericalScattering
-using Test
-
 
 # Homogeneous Dielectic Sphere Unit Test
 
-@testset "Lippmann Schwinger Volume Integral Equation" begin
+@testitem "Lippmann Schwinger Volume Integral Equation" begin
+    using BEAST
+    using CompScienceMeshes
+    using StaticArrays
+    using LinearAlgebra
+    using SphericalScattering
+    using Test
+
 
     # Environment
     ε1 = 1.0*SphericalScattering.ε0

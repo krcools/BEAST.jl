@@ -1,10 +1,11 @@
-using BEAST
-using CompScienceMeshes
-using StaticArrays
-using LinearAlgebra
-using Test
 
-@testset "Helmholtz potential operators" begin
+@testitem "Helmholtz potential operators" begin
+    using BEAST
+    using CompScienceMeshes
+    using StaticArrays
+    using LinearAlgebra
+    using Test
+
     # r = 10.0
     # λ = 20 * r
     # k = 2 * π / λ
@@ -161,7 +162,13 @@ using Test
 end
 
 ## Test here some of the mixed discretizatinos
-#@testset "Helmholtz potential operators: mixed discretizations with duallagrangecxd0" begin
+@testitem "Helmholtz potential operators: mixed discretizations with duallagrangecxd0" begin
+    using BEAST
+    using CompScienceMeshes
+    using StaticArrays
+    using LinearAlgebra
+    using Test
+
     # r = 10.0
     # sphere = meshsphere(r, 0.2 * r)
     # λ = 20 * r
@@ -235,10 +242,16 @@ end
 
     @test err_IDPDL_field < 0.0095
     @test err_INPSL_field < 0.002
-#end
+end
 
 ## Test here some of the mixed discretizatinos
-#@testset "Helmholtz potential operators: mixed discretizations with duallagrangec0d1" begin
+@testitem "Helmholtz potential operators: mixed discretizations with duallagrangec0d1" begin
+    using BEAST
+    using CompScienceMeshes
+    using StaticArrays
+    using LinearAlgebra
+    using Test
+
     # r = 10.0
     # λ = 20 * r
     # k = 2 * π / λ
@@ -311,4 +324,4 @@ end
 
     @test err_IDPDL_field < 0.02
     @test err_INPSL_field < 0.025
-#end
+end

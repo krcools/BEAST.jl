@@ -1,6 +1,7 @@
 @testitem "restrict for 3D Nedelec-curl" begin
     using CompScienceMeshes
     using LinearAlgebra
+    using BEAST
 
     for T in [Float32, Float64]
         o, x, y, z = CompScienceMeshes.euclidianbasis(3,T)

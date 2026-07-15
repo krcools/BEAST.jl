@@ -1,138 +1,139 @@
-using Test
+@testitem "dipole fields" begin
+    using Test
+    using CompScienceMeshes
+    using BEAST
+    using StaticArrays
+    using LinearAlgebra
+    using BlockArrays
 
-using CompScienceMeshes
-using BEAST
-using StaticArrays
-using LinearAlgebra
-using BlockArrays
+    # U = Float32
+    for U in [Float32,Float64]
+        @show U
 
-# U = Float32
-for U in [Float32,Float64]
-    @show U
+        c = U(3e8)
+        μ0 = U(4*π*1e-7)
+        μr = U(1.0)
+        μ = μ0*μr
+        ε0 = U(8.854187812e-12)
+        εr = U(5)
+        ε = ε0*εr
+        c = U(1)/sqrt(ε*μ)
+        local f = U(5e7)
+        λ = c/f
+        k = U(2*π/λ)
+        local ω = k*c
+        η = sqrt(μ/ε)
 
-    c = U(3e8)
-    μ0 = U(4*π*1e-7)
-    μr = U(1.0)
-    μ = μ0*μr
-    ε0 = U(8.854187812e-12)
-    εr = U(5)
-    ε = ε0*εr
-    c = U(1)/sqrt(ε*μ)
-    local f = U(5e7)
-    λ = c/f
-    k = U(2*π/λ)
-    local ω = k*c
-    η = sqrt(μ/ε)
+        a = U(1)
+        Γ_orig = CompScienceMeshes.meshcuboid(a,a,a,U(0.1); generator=:compsciencemeshes)
+        local Γ = translate(Γ_orig,SVector(U(-a/2),U(-a/2),U(-a/2)))
 
-    a = U(1)
-    Γ_orig = CompScienceMeshes.meshcuboid(a,a,a,U(0.1); generator=:compsciencemeshes)
-    local Γ = translate(Γ_orig,SVector(U(-a/2),U(-a/2),U(-a/2)))
+        Φ, Θ = U.([0.0]), range(U(0),stop=U(π),length=100)
+        pts = [point(U,cos(ϕ)*sin(θ), sin(ϕ)*sin(θ), cos(θ)) for ϕ in Φ for θ in Θ]
 
-    Φ, Θ = U.([0.0]), range(U(0),stop=U(π),length=100)
-    pts = [point(U,cos(ϕ)*sin(θ), sin(ϕ)*sin(θ), cos(θ)) for ϕ in Φ for θ in Θ]
+        # This is an electric dipole
+        # The pre-factor (1/ε) is used to resemble
+        # (9.18) in Jackson's Classical Electrodynamics
+        local E = U(1/ε) * dipolemw3d(location=SVector(U(0.4),U(0.2),U(0)),
+                            orientation=U(1e-9).*SVector(U(0.5),U(0.5),U(0)),
+                            wavenumber=k)
 
-    # This is an electric dipole
-    # The pre-factor (1/ε) is used to resemble
-    # (9.18) in Jackson's Classical Electrodynamics
-    local E = U(1/ε) * dipolemw3d(location=SVector(U(0.4),U(0.2),U(0)),
-                        orientation=U(1e-9).*SVector(U(0.5),U(0.5),U(0)),
-                        wavenumber=k)
+        local n = BEAST.NormalVector()
 
-    local n = BEAST.NormalVector()
+        𝒆 = (n × E) × n
+        local H = (-1/(im*μ*ω))*curl(E)
+        𝒉 = (n × H) × n
 
-    𝒆 = (n × E) × n
-    local H = (-1/(im*μ*ω))*curl(E)
-    𝒉 = (n × H) × n
+        𝓣 = Maxwell3D.singlelayer(wavenumber=k, alpha=-im*ω*μ, beta=-1/(im*ω*ε))
+        𝓝 = BEAST.NCross()
+        𝓚 = Maxwell3D.doublelayer(wavenumber=k)
 
-    𝓣 = Maxwell3D.singlelayer(wavenumber=k, alpha=-im*ω*μ, beta=-1/(im*ω*ε))
-    𝓝 = BEAST.NCross()
-    𝓚 = Maxwell3D.doublelayer(wavenumber=k)
+        local X = raviartthomas(Γ)
+        local Y = buffachristiansen(Γ)
 
-    local X = raviartthomas(Γ)
-    local Y = buffachristiansen(Γ)
+        local T = Matrix(assemble(𝓣,X,X))
+        e = Vector(assemble(𝒆,X))
+        j_EFIE = T\e
 
-    local T = Matrix(assemble(𝓣,X,X))
-    e = Vector(assemble(𝒆,X))
-    j_EFIE = T\e
-
-    nf_E_EFIE = potential(MWSingleLayerField3D(𝓣), pts, j_EFIE, X)
-    nf_H_EFIE = potential(BEAST.MWDoubleLayerField3D(𝓚), pts, j_EFIE, X)
-    ff_E_EFIE = potential(MWFarField3D(𝓣), pts, j_EFIE, X)
-    ff_H_EFIE = potential(BEAST.MWDoubleLayerFarField3D(𝓚), pts, j_EFIE, X)
-    ff_H_EFIE_rotated = -potential(n × BEAST.MWDoubleLayerFarField3D(𝓚), pts, -j_EFIE, n × X)
-    ff_H_EFIE_doublerotated = potential(n × BEAST.MWDoubleLayerRotatedFarField3D(n × 𝓚), pts, -j_EFIE, X)
-
-
-    @test norm(nf_E_EFIE - E.(pts))/norm(E.(pts)) ≈ 0 atol=0.01
-    @test norm(nf_H_EFIE - H.(pts))/norm(H.(pts)) ≈ 0 atol=0.01
-    @test norm(ff_E_EFIE - E.(pts, isfarfield=true))/norm(E.(pts, isfarfield=true)) ≈ 0 atol=0.001
-    @test norm(ff_H_EFIE - H.(pts, isfarfield=true))/norm(H.(pts, isfarfield=true)) ≈ 0 atol=0.001
-    @test norm(ff_H_EFIE_rotated - H.(pts, isfarfield=true))/norm(H.(pts, isfarfield=true)) ≈ 0 atol=0.001
-    @test norm(ff_H_EFIE_doublerotated - H.(pts, isfarfield=true))/norm(H.(pts, isfarfield=true)) ≈ 0 atol=0.001
-    @test ff_H_EFIE ≈ ff_H_EFIE_rotated rtol=1e-7
-    @test ff_H_EFIE_rotated ≈ ff_H_EFIE_doublerotated rtol=1e-7
+        nf_E_EFIE = potential(MWSingleLayerField3D(𝓣), pts, j_EFIE, X)
+        nf_H_EFIE = potential(BEAST.MWDoubleLayerField3D(𝓚), pts, j_EFIE, X)
+        ff_E_EFIE = potential(MWFarField3D(𝓣), pts, j_EFIE, X)
+        ff_H_EFIE = potential(BEAST.MWDoubleLayerFarField3D(𝓚), pts, j_EFIE, X)
+        ff_H_EFIE_rotated = -potential(n × BEAST.MWDoubleLayerFarField3D(𝓚), pts, -j_EFIE, n × X)
+        ff_H_EFIE_doublerotated = potential(n × BEAST.MWDoubleLayerRotatedFarField3D(n × 𝓚), pts, -j_EFIE, X)
 
 
-    K_bc = Matrix(assemble(𝓚,Y,X))
-    G_nxbc_rt = Matrix(assemble(𝓝,Y,X))
-    h_bc = Vector(assemble(𝒉,Y))
-    M_bc = -U(0.5)*G_nxbc_rt + K_bc
-    j_BCMFIE = M_bc\h_bc
+        @test norm(nf_E_EFIE - E.(pts))/norm(E.(pts)) ≈ 0 atol=0.01
+        @test norm(nf_H_EFIE - H.(pts))/norm(H.(pts)) ≈ 0 atol=0.01
+        @test norm(ff_E_EFIE - E.(pts, isfarfield=true))/norm(E.(pts, isfarfield=true)) ≈ 0 atol=0.001
+        @test norm(ff_H_EFIE - H.(pts, isfarfield=true))/norm(H.(pts, isfarfield=true)) ≈ 0 atol=0.001
+        @test norm(ff_H_EFIE_rotated - H.(pts, isfarfield=true))/norm(H.(pts, isfarfield=true)) ≈ 0 atol=0.001
+        @test norm(ff_H_EFIE_doublerotated - H.(pts, isfarfield=true))/norm(H.(pts, isfarfield=true)) ≈ 0 atol=0.001
+        @test ff_H_EFIE ≈ ff_H_EFIE_rotated rtol=1e-7
+        @test ff_H_EFIE_rotated ≈ ff_H_EFIE_doublerotated rtol=1e-7
 
-    nf_E_BCMFIE = potential(MWSingleLayerField3D(𝓣), pts, j_BCMFIE, X)
-    nf_H_BCMFIE = potential(BEAST.MWDoubleLayerField3D(𝓚), pts, j_BCMFIE, X)
-    ff_E_BCMFIE = potential(MWFarField3D(𝓣), pts, j_BCMFIE, X)
 
-    # @show length(pts)
-    # @show norm.(nf_E_BCMFIE - E.(pts)) ./ norm.(E.(pts))
+        K_bc = Matrix(assemble(𝓚,Y,X))
+        G_nxbc_rt = Matrix(assemble(𝓝,Y,X))
+        h_bc = Vector(assemble(𝒉,Y))
+        M_bc = -U(0.5)*G_nxbc_rt + K_bc
+        j_BCMFIE = M_bc\h_bc
 
-    @test norm(nf_E_BCMFIE - E.(pts))/norm(E.(pts)) ≈ 0 atol=0.01
-    @test norm(nf_H_BCMFIE - H.(pts))/norm(H.(pts)) ≈ 0 atol=0.01
-    @test norm(ff_E_BCMFIE - E.(pts, isfarfield=true))/norm(E.(pts, isfarfield=true)) ≈ 0 atol=0.01
+        nf_E_BCMFIE = potential(MWSingleLayerField3D(𝓣), pts, j_BCMFIE, X)
+        nf_H_BCMFIE = potential(BEAST.MWDoubleLayerField3D(𝓚), pts, j_BCMFIE, X)
+        ff_E_BCMFIE = potential(MWFarField3D(𝓣), pts, j_BCMFIE, X)
 
-    H = dipolemw3d(location=SVector(U(0.0),U(0.0),U(0.3)),
-                orientation=U(1e-9).*SVector(U(0.5),U(0.5),U(0)),
-                wavenumber=k)
+        # @show length(pts)
+        # @show norm.(nf_E_BCMFIE - E.(pts)) ./ norm.(E.(pts))
 
-    # This time, we do not specify alpha and beta
-    # We include η in the magnetic RHS
-    𝓣 = Maxwell3D.singlelayer(wavenumber=k)
+        @test norm(nf_E_BCMFIE - E.(pts))/norm(E.(pts)) ≈ 0 atol=0.01
+        @test norm(nf_H_BCMFIE - H.(pts))/norm(H.(pts)) ≈ 0 atol=0.01
+        @test norm(ff_E_BCMFIE - E.(pts, isfarfield=true))/norm(E.(pts, isfarfield=true)) ≈ 0 atol=0.01
 
-    𝒉 = (n × H) × n
-    E = (1/(im*ε*ω))*curl(H)
-    𝒆 = (n × E) × n
+        H = dipolemw3d(location=SVector(U(0.0),U(0.0),U(0.3)),
+                    orientation=U(1e-9).*SVector(U(0.5),U(0.5),U(0)),
+                    wavenumber=k)
 
-    X = raviartthomas(Γ)
-    Y = buffachristiansen(Γ)
+        # This time, we do not specify alpha and beta
+        # We include η in the magnetic RHS
+        𝓣 = Maxwell3D.singlelayer(wavenumber=k)
 
-    T = Matrix(assemble(𝓣,X,X))
-    e = Vector(assemble(𝒆,X))
-    j_EFIE = T\e
+        𝒉 = (n × H) × n
+        E = (1/(im*ε*ω))*curl(H)
+        𝒆 = (n × E) × n
 
-    nf_E_EFIE = potential(MWSingleLayerField3D(wavenumber=k), pts, j_EFIE, X)
-    nf_H_EFIE = potential(BEAST.MWDoubleLayerField3D(wavenumber=k), pts, j_EFIE, X) ./ η
-    ff_E_EFIE = potential(MWFarField3D(wavenumber=k), pts, j_EFIE, X)
+        X = raviartthomas(Γ)
+        Y = buffachristiansen(Γ)
 
-    @test norm(nf_E_EFIE - E.(pts))/norm(E.(pts)) ≈ 0 atol=0.01
-    @test norm(nf_H_EFIE - H.(pts))/norm(H.(pts)) ≈ 0 atol=0.01
-    @test norm(ff_E_EFIE - E.(pts, isfarfield=true))/norm(E.(pts, isfarfield=true)) ≈ 0 atol=0.01
+        T = Matrix(assemble(𝓣,X,X))
+        e = Vector(assemble(𝒆,X))
+        j_EFIE = T\e
 
-    @hilbertspace s
-    @hilbertspace t
+        nf_E_EFIE = potential(MWSingleLayerField3D(wavenumber=k), pts, j_EFIE, X)
+        nf_H_EFIE = potential(BEAST.MWDoubleLayerField3D(wavenumber=k), pts, j_EFIE, X) ./ η
+        ff_E_EFIE = potential(MWFarField3D(wavenumber=k), pts, j_EFIE, X)
 
-    MFIE_discretebilform = @discretise(
-        -U(0.5)*𝓝[t, s] + 𝓚[t, s] == η*𝒉[t],
-        s∈X, t∈Y
-    )
+        @test norm(nf_E_EFIE - E.(pts))/norm(E.(pts)) ≈ 0 atol=0.01
+        @test norm(nf_H_EFIE - H.(pts))/norm(H.(pts)) ≈ 0 atol=0.01
+        @test norm(ff_E_EFIE - E.(pts, isfarfield=true))/norm(E.(pts, isfarfield=true)) ≈ 0 atol=0.01
 
-    j_BCMFIE = solve(MFIE_discretebilform)[Block(1)]
+        @hilbertspace s
+        @hilbertspace t
 
-    nf_E_BCMFIE = potential(MWSingleLayerField3D(wavenumber=k), pts, j_BCMFIE, X)
-    nf_H_BCMFIE = potential(BEAST.MWDoubleLayerField3D(wavenumber=k), pts, j_BCMFIE, X) ./ η
-    ff_E_BCMFIE = potential(MWFarField3D(wavenumber=k), pts, j_BCMFIE, X)
+        MFIE_discretebilform = @discretise(
+            -U(0.5)*𝓝[t, s] + 𝓚[t, s] == η*𝒉[t],
+            s∈X, t∈Y
+        )
 
-    @test norm(j_BCMFIE - j_EFIE)/norm(j_EFIE) ≈ 0 atol=0.02
-    @test norm(nf_E_BCMFIE - E.(pts))/norm(E.(pts)) ≈ 0 atol=0.01
-    @test norm(nf_H_BCMFIE - H.(pts))/norm(H.(pts)) ≈ 0 atol=0.01
-    @test norm(ff_E_BCMFIE - E.(pts, isfarfield=true))/norm(E.(pts, isfarfield=true)) ≈ 0 atol=0.01
+        j_BCMFIE = solve(MFIE_discretebilform)[Block(1)]
+
+        nf_E_BCMFIE = potential(MWSingleLayerField3D(wavenumber=k), pts, j_BCMFIE, X)
+        nf_H_BCMFIE = potential(BEAST.MWDoubleLayerField3D(wavenumber=k), pts, j_BCMFIE, X) ./ η
+        ff_E_BCMFIE = potential(MWFarField3D(wavenumber=k), pts, j_BCMFIE, X)
+
+        @test norm(j_BCMFIE - j_EFIE)/norm(j_EFIE) ≈ 0 atol=0.02
+        @test norm(nf_E_BCMFIE - E.(pts))/norm(E.(pts)) ≈ 0 atol=0.01
+        @test norm(nf_H_BCMFIE - H.(pts))/norm(H.(pts)) ≈ 0 atol=0.01
+        @test norm(ff_E_BCMFIE - E.(pts, isfarfield=true))/norm(E.(pts, isfarfield=true)) ≈ 0 atol=0.01
+    end
 end

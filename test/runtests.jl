@@ -23,17 +23,17 @@ include("test_directproduct.jl")
 include("test_raviartthomas.jl")
 include("test_rt.jl")
 include("test_rtx.jl")
-include("test_subd_basis.jl")
+include("test_subd_basis.jl") #BIBL UPDATE!!!!
 include("test_rt2.jl")
 include("test_nd2.jl")
 
 include("test_dvg.jl")
-include("test_bcspace.jl")
+include("test_bcspace.jl") # interior
 include("test_trace.jl")
 include("test_ttrace.jl")
 include("test_timebasis.jl")
 include("test_rtports.jl")
-include("test_ndjunction.jl")
+include("test_ndjunction.jl") #Interior 
 include("test_ndspace.jl")
 include("test_restrict.jl")
 include("test_ndlcd_restrict.jl")
@@ -44,7 +44,7 @@ include("test_mult.jl")
 
 include("test_gram.jl")
 include("test_vector_gram.jl")
-include("test_local_storage.jl")
+include("test_local_storage.jl") # HIER
 include("test_embedding.jl")
 
 include("test_assemblerow.jl")
@@ -58,7 +58,7 @@ include("test_sauterschwabints1D.jl")
 include("test_hh2d_exec.jl")
 include("test_hh2d_ops.jl")
 include("test_hh2d_mie.jl")
-include("test_hh2d_mie_higher_order.jl")
+include("test_hh2d_mie_higher_order.jl") #Z
 include("test_hh2d_nearfield.jl")
 
 include("test_wiltonints.jl")

@@ -1,6 +1,7 @@
 @testitem "restrict" begin
     using LinearAlgebra
     using CompScienceMeshes
+    using BEAST
 
     const e0 = point(0.0,0.0,0.0)
     const e1 = point(1.0,0.0,0.0)

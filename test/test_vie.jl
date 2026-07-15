@@ -1,18 +1,16 @@
-using BEAST
-using CompScienceMeshes
-using LinearAlgebra
+@testitem "Volume Integral Equations" begin
+    using BEAST
+    using CompScienceMeshes
+    using LinearAlgebra
 
-using Test
-
-
-"""
-Tests the structure of the VIE implementation (function spaces, numerical integration, traces, ...) 
-by using the divergence theorem: ∫∫∫_Ω ∫∫∫_Ω ... = ∫∫∫_Ω ∫∫∫_Ω ... + ∫∫_Γ ∫∫∫_Ω ...
-This test does not include the Operators of the EVIE, DVIE and one operator of the LSVIE.
-"""
+    using Test
 
 
-@testset "Volume Integral Equations" begin 
+    """
+    Tests the structure of the VIE implementation (function spaces, numerical integration, traces, ...) 
+    by using the divergence theorem: ∫∫∫_Ω ∫∫∫_Ω ... = ∫∫∫_Ω ∫∫∫_Ω ... + ∫∫_Γ ∫∫∫_Ω ...
+    This test does not include the Operators of the EVIE, DVIE and one operator of the LSVIE.
+    """
 
     qs = BEAST.SauterSchwab3DQStrat(3,3,3,3,3,3)
 

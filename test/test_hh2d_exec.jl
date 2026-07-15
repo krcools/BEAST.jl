@@ -1,9 +1,8 @@
-using BEAST
-using CompScienceMeshes
-using StaticArrays
-using Test
-
-let
+@testitem "Helmholtz 2D trace execution" begin
+    using BEAST
+    using CompScienceMeshes
+    using StaticArrays
+    using Test
     ε0 = 8.854187821e-12
     μ0 = 4π*1e-7
     c0 = 1/sqrt(ε0*μ0)

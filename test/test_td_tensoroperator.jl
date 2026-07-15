@@ -1,9 +1,8 @@
-using CompScienceMeshes
-using BEAST
+@testitem "Assembly of TensorOperator wrt SpaceTimeBasis" begin
+    using CompScienceMeshes
+    using BEAST
 
-using Test
-
-@testset "Assembly of TensorOperator wrt SpaceTimeBasis" begin
+    using Test
     m = Mesh(
         [
             point(0,0,0),

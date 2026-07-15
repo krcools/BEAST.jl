@@ -1,60 +1,83 @@
-using Test
+@testitem "Lagrange Gram matrix" begin
+    using Test
 
-using CompScienceMeshes
-using BEAST
-using StaticArrays
-using LinearAlgebra
+    using CompScienceMeshes
+    using BEAST
+    using StaticArrays
+    using LinearAlgebra
 
-ω = 1.0
 
-l1 = meshsegment(1.0,1/2)
-l2 = meshsegment(1.0,1/4)
+    ω = 1.0
 
-idcs = BEAST.interior_and_junction_vertices(l1, boundary(l1))
-@test length(idcs) == 3
+    l1 = meshsegment(1.0,1/2)
+    l2 = meshsegment(1.0,1/4)
 
-# lag1 = lagrangec0d1(l1, boundary(l1))
-lag1 = lagrangec0d1(l1, skeleton(l1,0))
-lag2 = lagrangecxd0(l2)
+    idcs = BEAST.interior_and_junction_vertices(l1, boundary(l1))
+    @test length(idcs) == 3
 
-# @show numfunctions(lag1)
-@test numfunctions(lag1) == 3
-@test numfunctions(lag2) == 4
+    # lag1 = lagrangec0d1(l1, boundary(l1))
+    lag1 = lagrangec0d1(l1, skeleton(l1,0))
+    lag2 = lagrangecxd0(l2)
 
-id = Identity()
-G = assemble(id, lag1, lag2)
-H = assemble(id, lag2, lag1)
+    # @show numfunctions(lag1)
+    @test numfunctions(lag1) == 3
+    @test numfunctions(lag2) == 4
 
-Gt = [
-    3 1 0 0
-    1 3 3 1
-    0 0 1 3] // 16
+    id = Identity()
+    G = assemble(id, lag1, lag2)
+    H = assemble(id, lag2, lag1)
 
-@test norm(G-H') ≈ 0.0  atol = sqrt(eps()) #G == H'
-@test norm(G-Gt) ≈ 0.0  atol = sqrt(eps())
+    Gt = [
+        3 1 0 0
+        1 3 3 1
+        0 0 1 3] // 16
+
+    @test norm(G-H') ≈ 0.0  atol = sqrt(eps()) #G == H'
+    @test norm(G-Gt) ≈ 0.0  atol = sqrt(eps())
+end
 
 # Test whether localoperator and localoperator 2 give the same result
 # for test and basis functions defined on the same mesh.
-id = Identity()
-nc = NCross()
+@testitem "Local assembly comparison" begin
+    using Test
 
-#fn = Pkg.dir("BEAST","test","sphere2.in")
-fn = joinpath(dirname(@__FILE__),"assets","sphere316.in")
-m = readmesh(fn)
-rt = raviartthomas(m)
+    using CompScienceMeshes
+    using BEAST
+    using StaticArrays
+    using LinearAlgebra
 
-G1 = zeros(ComplexF64, numfunctions(rt), numfunctions(rt))
-BEAST.assemble_local_matched!(id, rt, rt, (v,m,n)->(G1[m,n]+=v))
 
-G2 = zeros(ComplexF64, numfunctions(rt), numfunctions(rt))
-BEAST.assemble_local_mixed!(id, rt, rt, (v,m,n)->(G2[m,n]+=v))
+    id = Identity()
+    nc = NCross()
 
-# Test wether the gram matrix assembled works for
-# different but overlapping meshes
-m1 = meshrectangle(1.0,1.0,1.0)
-m2 = translate(m1, point(0.5,0.5,0.0))
-Id = Identity()
-x1 = lagrangecxd0(m1)
-x2 = lagrangecxd0(m2)
-G = assemble(Id,x1,x2)
-@test sum(G) ≈ 1/4
+    #fn = Pkg.dir("BEAST","test","sphere2.in")
+    fn = joinpath(dirname(@__FILE__),"assets","sphere316.in")
+    m = readmesh(fn)
+    rt = raviartthomas(m)
+
+    G1 = zeros(ComplexF64, numfunctions(rt), numfunctions(rt))
+    BEAST.assemble_local_matched!(id, rt, rt, (v,m,n)->(G1[m,n]+=v))
+
+    G2 = zeros(ComplexF64, numfunctions(rt), numfunctions(rt))
+    BEAST.assemble_local_mixed!(id, rt, rt, (v,m,n)->(G2[m,n]+=v))
+end
+
+@testitem "Overlapping mesh Gram matrix" begin
+    using Test
+
+    using CompScienceMeshes
+    using BEAST
+    using StaticArrays
+    using LinearAlgebra
+
+
+    # Test wether the gram matrix assembled works for
+    # different but overlapping meshes
+    m1 = meshrectangle(1.0,1.0,1.0)
+    m2 = translate(m1, point(0.5,0.5,0.0))
+    Id = Identity()
+    x1 = lagrangecxd0(m1)
+    x2 = lagrangecxd0(m2)
+    G = assemble(Id,x1,x2)
+    @test sum(G) ≈ 1/4
+end

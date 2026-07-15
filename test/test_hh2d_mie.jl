@@ -1,16 +1,14 @@
-using BEAST
-using CompScienceMeshes
-using StaticArrays
-using LinearAlgebra
-using Test
-using SpecialFunctions
-
-
-# This unit tests partially repeats hh2d_nearfield, but it
-# tests the excitation part more in detail.
-# Overall, it is rather an integration test and maybe should
-# be part of an example file.
-let
+@testitem "hh2d mie scattering" begin
+    # This unit tests partially repeats hh2d_nearfield, but it
+    # tests the excitation part more in detail.
+    # Overall, it is rather an integration test and maybe should
+    # be part of an example file.
+    using BEAST
+    using CompScienceMeshes
+    using StaticArrays
+    using LinearAlgebra
+    using Test
+    using SpecialFunctions
     ε0 = 8.854187821e-12
     μ0 = 4π*1e-7
     c0 = 1/sqrt(ε0*μ0)
@@ -327,7 +325,7 @@ let
         Ht_pw_sca_num = -potential(HH2DDoubleLayerTransposedNear(𝒟ᵀ), pts, j_TMEFIE_pw, X0; type=SVector{2,ComplexF64})
         Ht_pw_sca_ana = TM_pec_planewave_H(E0, k, a, pts)
 
-        @test norm(Ref(ẑ) .× Ht_pw_sca_num - Ht_pw_sca_ana) ./ norm(Ht_pw_sca_ana) < 0.002
+        @test norm(Ref(ẑ) .× Ht_pw_sca_num - Ht_pw_sca_ana) ./ norm(Ht_pw_sca_ana) < 0.002
 
         # TM-MFIE
         Ht_pw_inc =  - 1.0 / (im * ω * μ0) * curl(Ez_pw_inc)
@@ -358,7 +356,7 @@ let
         # ii) Hx, Hy Fields
         Ht_lc_sca_num = -potential(HH2DDoubleLayerTransposedNear(𝒟ᵀ), pts, j_TMEFIE_lc, X0; type=SVector{2, ComplexF64})
         Ht_lc_sca_ana = TM_pec_line_curr_H(I, k, a, pts, SVector(ρp,φp))
-        @test norm(Ref(ẑ) .× Ht_lc_sca_num - Ht_lc_sca_ana) ./ norm(Ht_lc_sca_ana) < 0.003
+        @test norm(Ref(ẑ) .× Ht_lc_sca_num - Ht_lc_sca_ana) ./ norm(Ht_lc_sca_ana) < 0.003
 
         # usage of the TMMFIE current results in a loss of accuracy
         Ht_lc_inc = -1.0 / (im * ω * μ0) * curl(Ez_lc_Einc)
@@ -366,7 +364,7 @@ let
         𝗷_TMMFIE_lc = M_TMMFIE \ 𝗵t_lc
 
         Ht_lc_sca_num = -potential(HH2DDoubleLayerTransposedNear(𝒟ᵀ), pts, 𝗷_TMMFIE_lc, X0; type=SVector{2, ComplexF64})
-        norm(Ref(ẑ) .× Ht_lc_sca_num - Ht_lc_sca_ana) ./ norm(Ht_lc_sca_ana)
+        norm(Ref(ẑ) .× Ht_lc_sca_num - Ht_lc_sca_ana) ./ norm(Ht_lc_sca_ana)
 
         # Additional Observation: error increases as the distance between r' and r reduces, i.e., when we make rc smaller.
 
@@ -460,7 +458,7 @@ let
         Et_pw_sca_ana = TE_pec_planewave_E(H0, k, a, pts)
 
         # We compute the scattered Ez component (scalar)
-        @test norm(Ref(ẑ) .× Et_pw_sca_num - Et_pw_sca_ana) / norm(Et_pw_sca_ana) < 0.003
+        @test norm(Ref(ẑ) .× Et_pw_sca_num - Et_pw_sca_ana) / norm(Et_pw_sca_ana) < 0.003
 
         # 2. Excitation: Infinite line current
         # i) Hz field
@@ -475,7 +473,7 @@ let
         # ii) Ex, Ey fields
         # a. RHS with j_TEMFIE_lc
         Et_lc_sca_num = potential(HH2DHyperSingularNear(𝒩), pts, j_TEMFIE_lc, X1; type=SVector{2, ComplexF64})
-        Et_lc_sca_num_curl = Ref(ẑ) .× Et_lc_sca_num
+        Et_lc_sca_num_curl = Ref(ẑ) .× Et_lc_sca_num
 
         Et_lc_sca_ana = TE_pec_line_curr_E(I, k, a, pts, SVector(ρp, φp))
 
@@ -489,6 +487,6 @@ let
         @test norm(j_TEEFIE_lc - j_TEMFIE_lc) ./ norm(j_TEMFIE_lc) <= 0.01
 
         Et_lc_sca_num_2 = potential(HH2DHyperSingularNear(𝒩), pts, j_TEEFIE_lc, X1; type=SVector{2, ComplexF64})
-        Et_lc_sca_num_2_curl = Ref(ẑ) .× Et_lc_sca_num_2
+        Et_lc_sca_num_2_curl = Ref(ẑ) .× Et_lc_sca_num_2
         @test norm(Et_lc_sca_num_2_curl - Et_lc_sca_ana) ./ norm(Et_lc_sca_ana) <= 0.003
 end

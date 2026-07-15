@@ -1,9 +1,8 @@
-using Test
-using CompScienceMeshes
-using BEAST
-using StaticArrays
-
-@testset "HelmholtzOperator2D" begin
+@testitem "HelmholtzOperator2D" begin
+    using Test
+    using CompScienceMeshes
+    using BEAST
+    using StaticArrays
 
     v1 = SVector(1.0, 0.0)
     v2 = SVector(0.0, 0.0)
@@ -43,7 +42,7 @@ using StaticArrays
         @test op.alpha == α
         @test op.gamma == γ
 
-        kv = kernelvals(op, mp1, mp2)
+        kv = BEAST.kernelvals(op, mp1, mp2)
 
         @test kv.gamma == γ
     end
@@ -52,7 +51,7 @@ using StaticArrays
         α = 1.0
         γ = 1.0 + 1.0im
         op = BEAST.HH2DSingleLayerFDBIO(α, γ)
-        st = scalartype(op)
+        st = BEAST.scalartype(op)
         @test st == promote_type(typeof(α), typeof(γ))
     end
     
