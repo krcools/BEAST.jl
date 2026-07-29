@@ -1,4 +1,6 @@
-@testitem "norm of constant field" begin
+using Test
+using BEAST
+@testset "norm of constant field" begin
     using CompScienceMeshes
     using LinearAlgebra
 
@@ -41,7 +43,7 @@
     @test testval / norm1 < 3e-2
 end
 
-@testitem "NonConformingIntegralOpQStrat: RT vs GWP(0)" begin
+@testset "NonConformingIntegralOpQStrat: RT vs GWP(0)" begin
 
     using CompScienceMeshes
     using LinearAlgebra

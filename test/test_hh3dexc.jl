@@ -1,7 +1,7 @@
-@testitem "excitation: HH3D" begin
+
 using CompScienceMeshes
-# using BEAST
-# using Test
+using BEAST
+using Test
 
 for T in [Float32, Float64]
     # sphere = readmesh(joinpath(dirname(@__FILE__),"assets","sphere5.in"), T=T)
@@ -49,6 +49,4 @@ for T in [Float32, Float64]
     Nxx = assemble(N, X, X)
 
     @test size(Nxx) == (numfunctions(X), numfunctions(X))
-end
-
 end

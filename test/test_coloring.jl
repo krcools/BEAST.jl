@@ -2,7 +2,7 @@ using Test, SparseArrays
 using CompScienceMeshes, BEAST
 using OhMyThreads, GraphsColoring
 
-@testitem "Coloring tests" begin
+@testset "Coloring tests" begin
 
     using CompScienceMeshes
     using GraphsColoring
@@ -100,7 +100,7 @@ using OhMyThreads, GraphsColoring
 end
 
 
-@testitem "cellcoloring vs dofsplitting" begin
+@testset "cellcoloring vs dofsplitting" begin
     using CompScienceMeshes, OhMyThreads, LinearAlgebra
 
     m = CompScienceMeshes.readmesh(joinpath(pkgdir(BEAST), "test", "assets", "sphere45.in"))

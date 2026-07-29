@@ -1,7 +1,7 @@
-@testitem "loops have div zero" begin
-    using CompScienceMeshes
-    using LinearAlgebra
-
+using Test
+using CompScienceMeshes
+using LinearAlgebra
+@testset "loops have div zero" begin
     for T in [Float32, Float64]
         faces = meshrectangle(T(1.0), T(1.0), T(0.5), 3)
 

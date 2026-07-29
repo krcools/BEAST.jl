@@ -1,7 +1,7 @@
 using Test
 using CompScienceMeshes
 using BEAST
-
+using LinearAlgebra
 # G0 is the interior of the metal (no simulation required here)
 # G1 is the unbounded exterior
 # G2 is the bounded interior

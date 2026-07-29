@@ -1,7 +1,7 @@
-@testitem "excitation: TD Helmholtz 3D" begin
-    # using BEAST
-    using CompScienceMeshes
-    # using Test
+using Test
+using BEAST
+using CompScienceMeshes
+    
     for T in [Float32, Float64]
         dir = point(T,0,0,1)
         width = T(1.0)
@@ -34,4 +34,3 @@
         val = trc(ctr,t)
         @test val ≈ -dsig(t-dot(dir,x))
     end
-end

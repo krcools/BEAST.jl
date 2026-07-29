@@ -1,4 +1,6 @@
-@testitem "lagrangecx order=3 - global" begin
+using Test
+import BEAST
+@testset "lagrangecx order=3 - global" begin
     using CompScienceMeshes
 
     projectdir = joinpath(dirname(pathof(BEAST)),"..")
@@ -9,7 +11,7 @@
     @test refspace(lagspace3) == BEAST.LagrangeRefSpace{Float64,3,3,10}()
 end
 
-@testitem "lagrangecxd2: local, ref" begin
+@testset "lagrangecxd2: local, ref" begin
     using CompScienceMeshes
 
     T = Float64
@@ -58,7 +60,7 @@ end
     end
 end
 
-@testitem "lagrangecxd3: local, ref" begin
+@testset "lagrangecxd3: local, ref" begin
     using CompScienceMeshes
 
     T = Float64
@@ -106,7 +108,7 @@ end
 end
 
 
-@testitem "lagrangecxd3: local, generic simplex" begin
+@testset "lagrangecxd3: local, generic simplex" begin
     using CompScienceMeshes
 
     s = simplex(
@@ -127,7 +129,7 @@ end
     @test valp ≈ 1
 end
 
-@testitem "lagrangecxd3: self-interpolate" begin
+@testset "lagrangecxd3: self-interpolate" begin
     using CompScienceMeshes
     using LinearAlgebra
 
@@ -148,7 +150,7 @@ end
 end
 
 
-@testitem "lagrnacexcd3: interpolate generic poly" begin
+@testset "lagrnacexcd3: interpolate generic poly" begin
 
     using CompScienceMeshes
     using LinearAlgebra
@@ -192,7 +194,7 @@ end
 end
 
 
-@testitem "lagc0d2: support size" begin
+@testset "lagc0d2: support size" begin
     using CompScienceMeshes
     using SparseArrays
 
@@ -224,7 +226,7 @@ end
 end
 
 
-@testitem "lagc0d3: support size" begin
+@testset "lagc0d3: support size" begin
     using CompScienceMeshes
     using SparseArrays
     order = 3

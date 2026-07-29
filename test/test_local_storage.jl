@@ -1,6 +1,7 @@
-@testitem "storage: local operators" begin
-    using CompScienceMeshes
-    using SparseArrays
+using Test
+using CompScienceMeshes
+using SparseArrays
+@testset "storage: local operators" begin
     for T in [Float32, Float64]
         fn = joinpath(@__DIR__, "assets/sphere5.in")
         m = readmesh(fn, T=T)

@@ -46,12 +46,12 @@ BEAST.assemble_local_mixed!(Id, BC, RT, st2)
 Q2 = fr2()
 @test isapprox(Q1, Q2, atol=1e-8)
 
+using LinearAlgebra
+using LinearMaps
+using SparseArrays
 
-@testitem "localop assembly returns sparse" begin
-    using CompScienceMeshes
-    using LinearAlgebra
-    using LinearMaps
-    using SparseArrays
+@testset "localop assembly returns sparse" begin
+
 
     Γ = meshsphere(radius=1.0, h=0.35)
     X = raviartthomas(Γ)
