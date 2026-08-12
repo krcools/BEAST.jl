@@ -1,5 +1,6 @@
-@testitem "local basis: nxBDM and BDM consistency" begin
-    using CompScienceMeshes
+using CompScienceMeshes
+using BEAST
+using Test
     #testing local value in the center of a triangle 
     for T in [Float64]
         for j in [1,2,3,4,5,6]
@@ -36,5 +37,4 @@
     Gzz= assemble(Id,Z,Z,quadstrat=qs)
     Gnznz= assemble(Id,NZ,NZ,quadstrat=qs)
     @test Gzz ≈ Gnznz
-end
 

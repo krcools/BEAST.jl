@@ -14,95 +14,287 @@ using Pkg
 
 import BEAST
 
-include("test_fourier.jl")
-include("test_specials.jl")
+@testitem "fourier" begin
+    include("test_fourier.jl")
+end
 
-include("test_basis.jl")
-include("test_lagrange.jl")
-include("test_directproduct.jl")
-include("test_raviartthomas.jl")
-include("test_rt.jl")
-include("test_rtx.jl")
-include("test_subd_basis.jl")
-include("test_rt2.jl")
-include("test_nd2.jl")
+@testitem "specials" begin
+    include("test_specials.jl")
+end
 
-include("test_dvg.jl")
-include("test_bcspace.jl")
-include("test_trace.jl")
-include("test_ttrace.jl")
-include("test_timebasis.jl")
-include("test_rtports.jl")
-include("test_ndjunction.jl")
-include("test_ndspace.jl")
-include("test_restrict.jl")
-include("test_ndlcd_restrict.jl")
-include("test_interpolate_and_restrict.jl")
-include("test_rt3d.jl")
-include("test_gradient.jl")
-include("test_mult.jl")
+@testitem "basis" begin
+    include("test_basis.jl")
+end
 
-include("test_gram.jl")
-include("test_vector_gram.jl")
-include("test_local_storage.jl")
-include("test_embedding.jl")
+@testitem "lagrange" begin
+    include("test_lagrange.jl")
+end
 
-include("test_assemblerow.jl")
+@testitem "directproduct" begin
+    include("test_directproduct.jl")
+end
+
+@testitem "raviartthomas" begin
+    include("test_raviartthomas.jl")
+end
+
+@testitem "rt" begin
+    include("test_rt.jl")
+end
+
+@testitem "rtx" begin
+    include("test_rtx.jl")
+end
+
+@testitem "subd_basis" begin
+    include("test_subd_basis.jl")
+end
+
+@testitem "rt2" begin
+    include("test_rt2.jl")
+end
+
+@testitem "nd2" begin
+    include("test_nd2.jl")
+end
+
+@testitem "dvg" begin
+    include("test_dvg.jl")
+end
+
+@testitem "bcspace" begin
+    include("test_bcspace.jl")
+end
+
+@testitem "trace" begin
+    include("test_trace.jl")
+end
+
+@testitem "ttrace" begin
+    include("test_ttrace.jl")
+end
+
+@testitem "timebasis" begin
+    include("test_timebasis.jl")
+end
+
+@testitem "rtports" begin
+    include("test_rtports.jl")
+end
+
+@testitem "ndjunction" begin
+    include("test_ndjunction.jl")
+end
+
+@testitem "ndspace" begin
+    include("test_ndspace.jl")
+end
+
+@testitem "restrict" begin
+    include("test_restrict.jl")
+end
+
+@testitem "ndlcd_restrict" begin
+    include("test_ndlcd_restrict.jl")
+end
+
+@testitem "interpolate_and_restrict" begin
+    include("test_interpolate_and_restrict.jl")
+end
+
+@testitem "rt3d" begin
+    include("test_rt3d.jl")
+end
+
+@testitem "gradient" begin
+    include("test_gradient.jl")
+end
+
+@testitem "mult" begin
+    include("test_mult.jl")
+end
+
+@testitem "gram" begin
+    include("test_gram.jl")
+end
+
+@testitem "vector_gram" begin
+    include("test_vector_gram.jl")
+end
+
+@testitem "local_storage" begin
+    include("test_local_storage.jl")
+end
+
+@testitem "embedding" begin
+    include("test_embedding.jl")
+end
+
+@testitem "assemblerow" begin
+    include("test_assemblerow.jl")
+end
+
 # include("test_mixed_blkassm.jl")
-include("test_local_assembly.jl")
-include("test_assemble_refinements.jl")
+@testitem "local_assembly" begin
+    include("test_local_assembly.jl")
+end
 
-include("test_dipole.jl")
+@testitem "assemble_refinements" begin
+    include("test_assemble_refinements.jl")
+end
 
-include("test_sauterschwabints1D.jl")
-include("test_telles.jl")
-include("test_hh2d_exec.jl")
-include("test_hh2d_ops.jl")
-include("test_hh2d_mie.jl")
-include("test_hh2d_mie_higher_order.jl")
-include("test_hh2d_nearfield.jl")
+@testitem "dipole" begin
+    include("test_dipole.jl")
+end
 
-include("test_wiltonints.jl")
-include("test_sauterschwabints.jl")
-include("test_hh3dints.jl")
-include("test_ss_nested_meshes.jl")
-include("test_nitsche.jl")
-include("test_nitschehh3d.jl")
+@testitem "sauterschwabints1D" begin
+    include("test_sauterschwabints1D.jl")
+end
 
-include("test_curlcurlgreen.jl")
-include("test_hh3dtd_exc.jl")
+@testitem "telles" begin
+    include("test_telles.jl")
+end
+
+@testitem "hh2d_exec" begin
+    include("test_hh2d_exec.jl")
+end
+
+@testitem "hh2d_ops" begin
+    include("test_hh2d_ops.jl")
+end
+
+@testitem "hh2d_mie" begin
+    include("test_hh2d_mie.jl")
+end
+
+@testitem "hh2d_mie_higher_order" begin
+    include("test_hh2d_mie_higher_order.jl")
+end
+
+@testitem "hh2d_nearfield" begin
+    include("test_hh2d_nearfield.jl")
+end
+
+@testitem "wiltonints" begin
+    include("test_wiltonints.jl")
+end
+
+@testitem "sauterschwabints" begin
+    include("test_sauterschwabints.jl")
+end
+
+@testitem "hh3dints" begin
+    include("test_hh3dints.jl")
+end
+
+@testitem "ss_nested_meshes" begin
+    include("test_ss_nested_meshes.jl")
+end
+
+@testitem "nitsche" begin
+    include("test_nitsche.jl")
+end
+
+@testitem "nitschehh3d" begin
+    include("test_nitschehh3d.jl")
+end
+
+@testitem "curlcurlgreen" begin
+    include("test_curlcurlgreen.jl")
+end
+
+@testitem "hh3dtd_exc" begin
+    include("test_hh3dtd_exc.jl")
+end
+
 # include("test_hh3dexc.jl")
-include("test_hh3d_nearfield.jl")
-include("test_tdassembly.jl")
-include("test_tdhhdbl.jl")
-include("test_tdmwdbl.jl")
-include("test_compressed_storage.jl")
-include("test_tdefie_irk.jl")
-include("test_dyadicop.jl")
-# include("test_matrixconv.jl")
+@testitem "hh3d_nearfield" begin
+    include("test_hh3d_nearfield.jl")
+end
 
-include("test_tdop_scaling.jl")
-include("test_tdrhs_scaling.jl")
-include("test_td_tensoroperator.jl")
+@testitem "tdassembly" begin
+    include("test_tdassembly.jl")
+end
 
-include("test_variational.jl")
+@testitem "tdhhdbl" begin
+    include("test_tdhhdbl.jl")
+end
 
-include("test_handlers.jl")
-include("test_ncrossbdm.jl")
-#include("test_curl_lagc0d1_lagc0d2.jl")
-include("test_gridfunction.jl")
+@testitem "tdmwdbl" begin
+    include("test_tdmwdbl.jl")
+end
 
-include("test_itsolver.jl")
+@testitem "compressed_storage" begin
+    include("test_compressed_storage.jl")
+end
 
-include("test_hh_lsvie.jl")
+@testitem "tdefie_irk" begin
+    include("test_tdefie_irk.jl")
+end
 
-include("test_composed_basis.jl")
-include("test_composed_operator.jl")
-include("test_analytic_excitation.jl")
-include("test_vie.jl")
-include("test_evie_dvie.jl")
+@testitem "dyadicop" begin
+    include("test_dyadicop.jl")
+end
 
-include("test_coloring.jl")
+@testitem "tdop_scaling" begin
+    include("test_tdop_scaling.jl")
+end
+
+@testitem "tdrhs_scaling" begin
+    include("test_tdrhs_scaling.jl")
+end
+
+@testitem "td_tensoroperator" begin
+    include("test_td_tensoroperator.jl")
+end
+
+@testitem "variational" begin
+    include("test_variational.jl")
+end
+
+@testitem "handlers" begin
+    include("test_handlers.jl")
+end
+
+@testitem "ncrossbdm" begin
+    include("test_ncrossbdm.jl")
+end
+
+@testitem "gridfunction" begin
+    include("test_gridfunction.jl")
+end
+
+@testitem "itsolver" begin
+    include("test_itsolver.jl")
+end
+
+@testitem "hh_lsvie" begin
+    include("test_hh_lsvie.jl")
+end
+
+@testitem "composed_basis" begin
+    include("test_composed_basis.jl")
+end
+
+@testitem "composed_operator" begin
+    include("test_composed_operator.jl")
+end
+
+@testitem "analytic_excitation" begin
+    include("test_analytic_excitation.jl")
+end
+
+@testitem "vie" begin
+    include("test_vie.jl")
+end
+
+@testitem "evie_dvie" begin
+    include("test_evie_dvie.jl")
+end
+
+@testitem "coloring" begin
+    include("test_coloring.jl")
+end
 
 @run_package_tests filter = ti -> begin
     # @show ti.tags

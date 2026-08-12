@@ -2,7 +2,7 @@ using BEAST
 using CompScienceMeshes
 using StaticArrays
 using Test
-
+using LinearAlgebra
 let
     ε0 = 8.854187821e-12
     μ0 = 4π*1e-7

@@ -1,7 +1,7 @@
 using CompScienceMeshes
 using BEAST
 using Test
-
+using LinearAlgebra
 p1 = point(0,0,0)
 p2 = point(1/3,0,0)
 p3 = point(0,1/3,0)

@@ -37,7 +37,7 @@ for rtol in [1e-6,1e-8,1e-10]
 end
 
 
-@testitem "GMRESSolver: left/right_preconditioner kwarg" begin
+#@testitem "GMRESSolver: left/right_preconditioner kwarg" begin
     using LinearAlgebra
      A = [
         0.79569   0.484796  0.68263   0.741895  0.936866
@@ -67,4 +67,4 @@ end
 
     @test ch2.iters == 1
 
-end
+#end

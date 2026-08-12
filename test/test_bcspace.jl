@@ -4,7 +4,7 @@ using SparseArrays
 using CompScienceMeshes
 using BEAST
 using StaticArrays
-
+using LinearAlgebra
 """
     isdivconforming(space)
 
@@ -169,9 +169,9 @@ G = CompScienceMeshes.weld(G1,G2)
 @test_throws AssertionError buffachristiansen(G)
 # G3 = CompScienceMeshes.rotate(G1, 1.0π * x̂)
 
-@testitem "Neumann BC" begin
-    using CompScienceMeshes
-    using LinearAlgebra
+@testset"Neumann BC" begin
+
+    
 
     Γ = meshrectangle(1.0, 1.0, 0.1, 3)
     all_edges = skeleton(Γ, 1)

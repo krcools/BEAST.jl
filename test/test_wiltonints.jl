@@ -2,7 +2,7 @@ import BEAST; BE = BEAST;
 using CompScienceMeshes
 using StaticArrays
 using Test
-
+using LinearAlgebra
 T = Float64
 P = SVector{3,T}
 tol = eps(T)*10^3
@@ -223,10 +223,10 @@ function wiltonints(domain::IntegrationDomain{T,Q}, tol=eps(T)*10^3) where {T,Q}
 
     # build gradients
     g = Vector{Q}(undef,4)
-    g[1] = -1( v[1] - s[1] * n )
-    g[2] = +1( v[2] - d*s[2]*n )
-    g[3] = +2( v[3] - d*s[3]*n )
-    g[4] = +3( v[4] - d*s[4]*n )
+    g[1] = -1*( v[1] - s[1] * n )
+    g[2] = +1*( v[2] - d*s[2]*n )
+    g[3] = +2*( v[3] - d*s[3]*n )
+    g[4] = +3*( v[4] - d*s[4]*n )
     return s, v, g
 
 end
@@ -280,10 +280,10 @@ function withquadrules(triangle, r, n)
         vector[5] += (s - ρ) * R^2 * dq
     end
 
-    gradgr[1] = -1( vector[1] - scalar[1] * n )
-    gradgr[2] = +1( vector[2] - d*scalar[2]*n )
-    gradgr[3] = +2( vector[3] - d*scalar[3]*n )
-    gradgr[4] = +3( vector[4] - d*scalar[4]*n )
+    gradgr[1] = -1*( vector[1] - scalar[1] * n )
+    gradgr[2] = +1*( vector[2] - d*scalar[2]*n )
+    gradgr[3] = +2*( vector[3] - d*scalar[3]*n )
+    gradgr[4] = +3*( vector[4] - d*scalar[4]*n )
 
     return scalar, vector, gradgr
 end
@@ -306,11 +306,11 @@ for _p in pts
     s1, v1, g1 = wiltonints(tr[1],tr[2],tr[3],_p)
     s2, v2, g2 = withquadrules(tr,_p,13)
 
-    for i in length(s1)
+    for i in 1:length(s1) 
         @test norm(s1[i]-s2[i]) < 1.0e-5
     end
 
-    for i in length(v1)
+    for i in 1:length(v1)
         @test norm(v1[i]-v2[i]) < 1.0e-5
     end
 

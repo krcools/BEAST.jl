@@ -1,6 +1,7 @@
-@testitem "conformity" begin
-
+using Test
+using BEAST
 using CompScienceMeshes
+@testset "conformity" begin
     τ = simplex(
         point(0.0624999999994547, 0.6856034446626162, 0.0),
         point(0.06944444444542179, 0.6735753140519203, 0.0),

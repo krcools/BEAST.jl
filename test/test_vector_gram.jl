@@ -3,7 +3,7 @@ using Test
 using CompScienceMeshes
 using BEAST
 using StaticArrays
-
+using LinearAlgebra
 T = Float64
 P = SVector{3,T}
 

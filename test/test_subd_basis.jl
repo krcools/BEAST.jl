@@ -19,20 +19,20 @@ function CompScienceMeshes.chart(Smesh::CompScienceMeshes.subdMesh,E)
 end
 
 for T in [Float32, Float64]
-G = readmesh(joinpath(dirname(@__FILE__),"assets","sphere872.in"),T=T)
- # G0 = readmesh(fn)
-# G0 = meshsphere(1.0, 0.5)
-#G = readmesh("/Users/Benjamin/Documents/sphere.in")
-# G = Loop_subdivision(G0)
-local X = subdsurface(G)
+    G = readmesh(joinpath(dirname(@__FILE__),"assets","sphere872.in"),T=T)
+    # G0 = readmesh(fn)
+    # G0 = meshsphere(1.0, 0.5)
+    #G = readmesh("/Users/Benjamin/Documents/sphere.in")
+    # G = Loop_subdivision(G0)
+    local X = subdsurface(G)
 
-#els, ad = BEAST.assemblydata(X)
+    #els, ad = BEAST.assemblydata(X)
 
-identityop  = Identity()
-singlelayer = Helmholtz3D.singlelayer(gamma=T(1.0))
-I = assemble(identityop, X, X)
-#S = assemble(singlelayer, X, X)
-ncd = cond(Matrix(I))
+    identityop  = Identity()
+    singlelayer = Helmholtz3D.singlelayer(gamma=T(1.0))
+    I = assemble(identityop, X, X)
+    #S = assemble(singlelayer, X, X)
+    ncd = cond(Matrix(I))
 
-@test ncd ≈ T(64.50401358713235) rtol=sqrt(eps(T))
+    @test ncd ≈ T(64.50401358713235) rtol=sqrt(eps(T))
 end

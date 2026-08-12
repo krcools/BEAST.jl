@@ -1,4 +1,6 @@
-@testitem "quadstrat as function" begin
+using Test
+using BEAST
+@testset "quadstrat as function" begin
     using CompScienceMeshes
     using LinearAlgebra
 
@@ -24,7 +26,7 @@
     @test all(Z .≈ W)
 end
 
-@testitem "quadstrat for linear combinations" begin
+@testset "quadstrat for linear combinations" begin
     using CompScienceMeshes
     using LinearAlgebra
 
