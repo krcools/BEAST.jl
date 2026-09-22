@@ -9,7 +9,7 @@ end
 function integrate!(a, 𝒳, 𝒴, i, τ, j, σ, qd,
     qs::NonConformingIntegralOpQStrat,
     out=nothing, test_space=nothing, tptr=nothing, trial_space=nothing, bptr=nothing;
-    action::QuadRuleAction=ApplyIntegrate())
+    action::QuadRuleAction)
 
     if CompScienceMeshes.overlap(τ, σ)
         qrule = NonConformingOverlapQRule(qs.conforming_qstrat)

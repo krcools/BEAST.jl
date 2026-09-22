@@ -12,6 +12,12 @@ struct SingleNumTellesQStrat{R,T} <: AbstractQuadStrat
     telles_rule::T
 end
 
+function quadraturebuffer(
+    ::DoubleNumSauterTellesQstrat, test_space, trial_space
+)
+    return _sauterschwab_buffer(2)
+end
+
 """
 extending the integrate! function for the Telles quadrature strategy. This is used for
 near-singular integrals in 2D, where the singularity is not on the edge but close to it.

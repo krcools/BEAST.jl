@@ -2,10 +2,24 @@ struct TestRefinesTrialQRule{S}
     conforming_qstrat::S
 end
 
+quadraturebuffer(qr::TestRefinesTrialQRule, test_space, trial_space) =
+    quadraturebuffer(qr.conforming_qstrat, test_space, trial_space)
+
 function integrate!(out, op,
     test_functions::Space, test_cell, test_chart,
     trial_functions::Space, trial_cell, trial_chart,
     qr::TestRefinesTrialQRule)
+
+    return integrate!(
+        out, op, test_functions, test_cell, test_chart,
+        trial_functions, trial_cell, trial_chart,
+        qr, quadraturebuffer(qr, test_functions, trial_functions))
+end
+
+function integrate!(out, op,
+    test_functions::Space, test_cell, test_chart,
+    trial_functions::Space, trial_cell, trial_chart,
+    qr::TestRefinesTrialQRule, qbuffer)
 
     test_local_space = refspace(test_functions)
     trial_local_space = refspace(trial_functions)
@@ -35,13 +49,15 @@ function integrate!(out, op,
 
     zlocal = zero(out)
     Q = zeros(coordtype(trial_chart), num_bshapes, num_bshapes)
+    qaction = ApplyIntegrate(qbuffer)
     for (q,chart) in enumerate(trial_charts)
         restrict!(Q, trial_local_space, trial_chart, chart, trial_overlaps[q])
 
         fill!(zlocal, 0)
         integrate!(op, test_local_space, trial_local_space,
             1, test_chart, q, chart, qd, quadstrat,
-            zlocal, test_functions, nothing, trial_functions, nothing; action=ApplyIntegrate())
+            zlocal, test_functions, nothing, trial_functions, nothing;
+            action=qaction)
 
         for j in 1:num_bshapes
             for i in 1:num_tshapes

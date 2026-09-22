@@ -11,6 +11,19 @@ function integrate!(op,
     test_chart::CompScienceMeshes.Simplex, basis_chart::CompScienceMeshes.Simplex,
     out, qrule::NonConformingOverlapQRule)
 
+    return integrate!(
+        op, test_local_space, basis_local_space, test_chart, basis_chart,
+        out, qrule, quadraturebuffer(qrule, test_local_space, basis_local_space))
+end
+
+quadraturebuffer(qrule::NonConformingOverlapQRule, test_space, trial_space) =
+    quadraturebuffer(qrule.conforming_qstrat, test_space, trial_space)
+
+function integrate!(op,
+    test_local_space, basis_local_space,
+    test_chart::CompScienceMeshes.Simplex, basis_chart::CompScienceMeshes.Simplex,
+    out, qrule::NonConformingOverlapQRule, qbuffer)
+
     num_tshapes = numfunctions(test_local_space, domain(test_chart))
     num_bshapes = numfunctions(basis_local_space, domain(basis_chart))
 
@@ -56,6 +69,7 @@ function integrate!(op,
     zlocal = zero(out)
     P = zeros(T, num_tshapes, num_tshapes)
     Q = zeros(T, num_bshapes, num_bshapes)
+    qaction = ApplyIntegrateNonConforming(qbuffer)
     for (p,tchart) in enumerate(test_charts)
         restrict!(P, test_local_space, test_chart, tchart, test_overlaps[p])
         for (q,bchart) in enumerate(bsis_charts)
@@ -64,7 +78,8 @@ function integrate!(op,
             fill!(zlocal, 0)
             integrate!(op, test_local_space, basis_local_space,
                 p, tchart, q, bchart, qdata, qstrat,
-                zlocal, test_local_space, nothing, basis_local_space, nothing; action=ApplyIntegrateNonConforming())
+                zlocal, test_local_space, nothing, basis_local_space, nothing;
+                action=qaction)
 
             for i in axes(P,1)
                 for j in axes(Q,1)

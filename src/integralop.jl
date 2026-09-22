@@ -52,7 +52,7 @@ function blockassembler end
 """
     integrate!(operator, test_refspace, trial_refspace, test_index, test_chart,
         trial_index, trial_chart, quad_data, quadstrat,
-        out, test_space, test_ptr, trial_space, trial_ptr; action::QuadRuleAction=ApplyIntegrate())
+        out, test_space, test_ptr, trial_space, trial_ptr; action::QuadRuleAction)
     integrate!(out, operator, test_space, test_ptr, test_chart,
         trial_space, trial_ptr, trial_chart, qrule)
 
@@ -78,8 +78,11 @@ function integrate! end
 # of them has built a concrete `qrule`, from within the same branch/method that
 # constructed it, so the type of `qrule` is still known to the compiler and this
 # dispatch resolves statically instead of at runtime.
-integrate!(::ApplyIntegrate, out, op, test_space, tptr, tcell, trial_space, bptr, bcell, qrule) =
-    integrate!(out, op, test_space, tptr, tcell, trial_space, bptr, bcell, qrule)
+function integrate!(action::ApplyIntegrate, out, op, test_space, tptr, tcell, trial_space, bptr, bcell, qrule)
+    return integrate!(
+        out, op, test_space, tptr, tcell, trial_space, bptr, bcell, qrule, action.qbuffer
+    )
+end
 
 integrate!(::ReturnQRule, out, op, test_space, tptr, tcell, trial_space, bptr, bcell, qrule) = qrule
 
@@ -88,8 +91,15 @@ integrate!(::ReturnQRule, out, op, test_space, tptr, tcell, trial_space, bptr, b
 # is reached only after the generic dispatcher in momintegrals.jl has already
 # stripped Space down to refspace. Skips straight to the refspace-level `integrate!`
 # instead of trying to re-derive a Space that isn't there to begin with.
-integrate!(::ApplyIntegrateNonConforming, out, op, test_space, tptr, tcell, trial_space, bptr, bcell, qrule) =
-    integrate!(op, test_space, trial_space, tcell, bcell, out, qrule)
+function integrate!(action::ApplyIntegrateNonConforming, out, op, test_space, tptr, tcell, trial_space, bptr, bcell, qrule)
+    return integrate!(
+        op, test_space, trial_space, tcell, bcell, out, qrule, action.qbuffer
+    )
+end
+
+function integrate!(op, test_local_space, trial_local_space, test_chart, trial_chart, out, qrule, qbuffer)
+    return integrate!(op, test_local_space, trial_local_space, test_chart, trial_chart, out, qrule)
+end
 
 
 """
@@ -198,7 +208,9 @@ function assemblechunk_body!(biop, test_space, trial_space,
         @local begin
             zlocal = zeros(scalartype(biop, test_space, trial_space), num_tshapes, num_bshapes)
             tadjq = Vector{eltype(trial_assembly_data.data)}(undef, size(trial_assembly_data.data,1))
+            qbuffer = quadraturebuffer(quadstrat, test_space, trial_space)
         end
+        qaction = ApplyIntegrate(qbuffer)
         P = active_test_els[p]
         tcell = test_elements[P]
         tptr = test_element_ptrs[P]
@@ -211,7 +223,7 @@ function assemblechunk_body!(biop, test_space, trial_space,
 
             integrate!(biop, refspace(test_space), refspace(trial_space),
                 P, tcell, Q, bcell, qd, quadstrat,
-                zlocal, test_space, tptr, trial_space, bptr; action=ApplyIntegrate())
+                zlocal, test_space, tptr, trial_space, bptr; action=qaction)
             for j in 1 : num_bshapes
                 tadjq .= @view trial_assembly_data.data[:,j,q]
                 for i in 1 : num_tshapes
@@ -671,6 +683,8 @@ function assemblerow_body!(biop,
     zlocal, quadrature_data, store; quadstrat)
 
     test_function = test_functions.fns[1]
+    qbuffer = quadraturebuffer(quadstrat, test_functions, trial_functions)
+    qaction = ApplyIntegrate(qbuffer)
     for shape in test_function
         p = shape.cellid
         i = shape.refid
@@ -680,7 +694,7 @@ function assemblerow_body!(biop,
 
             fill!(zlocal, 0)
             integrate!(biop, test_shapes, trial_shapes, p, tcell, q, bcell, quadrature_data, quadstrat,
-                zlocal, test_functions, nothing, trial_functions, nothing; action=ApplyIntegrate())
+                zlocal, test_functions, nothing, trial_functions, nothing; action=qaction)
 
             for j in 1:size(zlocal,2)
                 for (n,b) in trial_assembly_data[q,j]
@@ -721,6 +735,8 @@ function assemblecol_body!(biop,
     zlocal, quadrature_data, store; quadstrat)
 
     trial_function = trial_functions.fns[1]
+    qbuffer = quadraturebuffer(quadstrat, test_functions, trial_functions)
+    qaction = ApplyIntegrate(qbuffer)
     for shape in trial_function
         q = shape.cellid
         j = shape.refid
@@ -731,7 +747,7 @@ function assemblecol_body!(biop,
 
             fill!(zlocal, 0)
             integrate!(biop, test_shapes, trial_shapes, p, tcell, q, bcell, quadrature_data, quadstrat,
-                zlocal, test_functions, nothing, trial_functions, nothing; action=ApplyIntegrate())
+                zlocal, test_functions, nothing, trial_functions, nothing; action=qaction)
 
             for i in 1:size(zlocal,1)
                 for (m,a) in test_assembly_data[p,i]

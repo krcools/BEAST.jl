@@ -9,7 +9,7 @@ end
 function BEAST.integrate!(a, 𝒳, 𝒴, i, τ, j, σ, qd,
     quadstrat::NonConfTestBaryRefOfTrialQStrat,
     out=nothing, test_space=nothing, tptr=nothing, trial_space=nothing, bptr=nothing;
-    action::BEAST.QuadRuleAction=BEAST.ApplyIntegrate())
+    action::BEAST.QuadRuleAction)
 
     # return TestInBaryRefOfTrialQRule(quadstrat.conforming_qstrat)
     nh = BEAST._numhits(τ, σ)

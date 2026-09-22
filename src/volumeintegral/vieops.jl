@@ -511,7 +511,7 @@ function integrate!(op::VolumeOperator, g::RefSpace, f::RefSpace,
     j, σ::CompScienceMeshes.Simplex{<:Any, 3, <:Any, 4},
     qd, qs::SauterSchwab3DQStrat,
     out=nothing, test_space=nothing, tptr=nothing, trial_space=nothing, bptr=nothing;
-    action::QuadRuleAction=ApplyIntegrate())
+    action::QuadRuleAction)
 
     hits, idx_t, idx_s = _hits(τ, σ)
 
@@ -554,7 +554,7 @@ function integrate!(op::BoundaryOperator, g::RefSpace, f::RefSpace,
     j, σ::CompScienceMeshes.Simplex{<:Any, 3, <:Any, 4},
     qd, qs::SauterSchwab3DQStrat,
     out=nothing, test_space=nothing, tptr=nothing, trial_space=nothing, bptr=nothing;
-    action::QuadRuleAction=ApplyIntegrate())
+    action::QuadRuleAction)
 
     hits, idx_t, idx_s = _hits(τ, σ)
 
@@ -592,7 +592,7 @@ function integrate!(op::BoundaryOperator, g::RefSpace, f::RefSpace,
     j, σ::CompScienceMeshes.Simplex{<:Any, 2, <:Any, 3},
     qd, qs::SauterSchwab3DQStrat,
     out=nothing, test_space=nothing, tptr=nothing, trial_space=nothing, bptr=nothing;
-    action::QuadRuleAction=ApplyIntegrate())
+    action::QuadRuleAction)
 
     hits, idx_t, idx_s = _hits(τ, σ)
 
@@ -620,5 +620,4 @@ function integrate!(op::BoundaryOperator, g::RefSpace, f::RefSpace,
     qrule = DoubleQuadRule(qd[1][1,i], qd[2][1,j])
     return integrate!(action, out, op, test_space, tptr, τ, trial_space, bptr, σ, qrule)
 end
-
 

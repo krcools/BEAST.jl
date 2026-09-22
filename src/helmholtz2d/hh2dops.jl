@@ -263,7 +263,7 @@ function integrate!(op::HelmholtzOperator2D, g::LagrangeRefSpace, f::LagrangeRef
     j, σ::CompScienceMeshes.Simplex{<:Any,1},
     qd, qs::DoubleNumSauterQstrat,
     out=nothing, test_space=nothing, tptr=nothing, trial_space=nothing, bptr=nothing;
-    action::QuadRuleAction=ApplyIntegrate())
+    action::QuadRuleAction)
 
     hits = _numhits(τ, σ)
     @assert hits <= 2
@@ -320,7 +320,7 @@ function integrate!(op::HelmholtzOperator2D, g::LagrangeRefSpace, f::LagrangeRef
     j, σ::CompScienceMeshes.Simplex{<:Any,1},
     qd, qs::DoubleNumSauterTellesQstrat,
     out=nothing, test_space=nothing, tptr=nothing, trial_space=nothing, bptr=nothing;
-    action::QuadRuleAction=ApplyIntegrate())
+    action::QuadRuleAction)
     #Telles was found to be more accurate for angles ϕ<10°
     max_angle_deg = 10
     hits = _numhits(τ, σ)
