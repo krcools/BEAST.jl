@@ -20,7 +20,7 @@ end
 function integrate!(op::IntegralOperator, g::RTRefSpace, f::RTRefSpace, i, τ, j, σ, qd,
     qs::DoubleNumWiltonBogaertQStrat,
     out=nothing, test_space=nothing, tptr=nothing, trial_space=nothing, bptr=nothing;
-    action::QuadRuleAction=ApplyIntegrate())
+    action::QuadRuleAction)
 
     dtol = 1.0e3 * eps(eltype(eltype(τ.vertices)))
     xtol = 0.2

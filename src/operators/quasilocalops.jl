@@ -70,6 +70,8 @@ function assemblechunk!(op::QuasiLocalOperator, tfs::Space, bfs::Space, store321
 
     qd = quaddata(op, trefs, brefs, tels, bels, quadstrat)
     zlocal = zeros(T, num_trefs, num_brefs)
+    qbuffer = quadraturebuffer(quadstrat, tfs, bfs)
+    qaction = ApplyIntegrate(qbuffer)
     tree = elementstree(bels, 1.1)
 
     δ = oprange(op)
@@ -94,7 +96,7 @@ function assemblechunk!(op::QuasiLocalOperator, tfs::Space, bfs::Space, store321
 
                 fill!(zlocal, 0)
                 integrate!(op, trefs, brefs, p, tcell, q, bcell, qd, quadstrat,
-                    zlocal, tfs, tptr, bfs, bptr; action=ApplyIntegrate())
+                    zlocal, tfs, tptr, bfs, bptr; action=qaction)
 
                 for j in 1 : length(bad[q])
                     for i in 1 : length(tad[p])

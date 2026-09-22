@@ -60,9 +60,24 @@ end
 
 function integrate!(op::MWDoubleLayer3D,
     test_local_space::BDMRefSpace, trial_local_space::RTRefSpace,
-    test_triangular_element, trial_triangular_element, out, strat::SauterSchwabStrategy)
+    test_triangular_element, trial_triangular_element, out,
+    strat::SauterSchwabStrategy)
 
-    I, J, K, L = SauterSchwabQuadrature.reorder(
+    return integrate!(
+        op, test_local_space, trial_local_space,
+        test_triangular_element, trial_triangular_element,
+        out, strat, quadraturebuffer(strat, test_local_space, trial_local_space))
+end
+
+function integrate!(op::MWDoubleLayer3D,
+    test_local_space::BDMRefSpace, trial_local_space::RTRefSpace,
+    test_triangular_element, trial_triangular_element, out,
+    strat::SauterSchwabStrategy, qbuffer)
+
+    sbuffer = sauterschwab_buffer(qbuffer, strat)
+    I, J, K, L = sbuffer.I, sbuffer.J, sbuffer.K, sbuffer.L
+    SauterSchwabQuadrature.reorder!(
+        I, J, K, L,
         test_triangular_element.vertices,
         trial_triangular_element.vertices, strat)
 

@@ -24,7 +24,7 @@ end
 function integrate!(op::IntegralOperator, g::RefSpace, f::RefSpace,  i, τ, j, σ, qd,
     qs::SelfSauterOtherwiseDNumQStrat,
     out=nothing, test_space=nothing, tptr=nothing, trial_space=nothing, bptr=nothing;
-    action::QuadRuleAction=ApplyIntegrate())
+    action::QuadRuleAction)
 
     T = eltype(eltype(τ.vertices))
     hits = 0

@@ -22,7 +22,22 @@ function integrate!(out, op::CurlSingleLayerDP3D,
     trial_local_space::LagrangeRefSpace, bptr, trial_triangular_element,
     qrule::SauterSchwabStrategy)
 
-    I, J, K, L = SauterSchwabQuadrature.reorder(
+    return integrate!(
+        out, op,
+        test_local_space, tptr, test_triangular_element,
+        trial_local_space, bptr, trial_triangular_element,
+        qrule, quadraturebuffer(qrule, test_local_space, trial_local_space))
+end
+
+function integrate!(out, op::CurlSingleLayerDP3D,
+    test_local_space::RTRefSpace, tptr, test_triangular_element,
+    trial_local_space::LagrangeRefSpace, bptr, trial_triangular_element,
+    qrule::SauterSchwabStrategy, qbuffer)
+
+    sbuffer = sauterschwab_buffer(qbuffer, qrule)
+    I, J, K, L = sbuffer.I, sbuffer.J, sbuffer.K, sbuffer.L
+    SauterSchwabQuadrature.reorder!(
+        I, J, K, L,
         test_triangular_element.vertices,
         trial_triangular_element.vertices, qrule)
 

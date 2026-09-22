@@ -141,24 +141,64 @@ function sauterschwab_parameterized(igdp, rule::SauterSchwabQuadrature1D.SauterS
     return SauterSchwabQuadrature1D.sauterschwab_parameterized1D(igdp, rule)
 end
 
-function sauterschwab_reorder(test_vertices, trial_vertices, rule::SauterSchwabStrategy)
-    I, J, _, _ = SauterSchwabQuadrature.reorder(test_vertices, trial_vertices, rule)
+function quadraturebuffer(
+    ::SauterSchwabQuadrature1D.SauterSchwabStrategy1D, test_space, trial_space
+)
+    return _sauterschwab_buffer(2)
+end
+
+function sauterschwab_reorder!(I, J, K, L, test_vertices, trial_vertices, rule::SauterSchwabStrategy)
+    SauterSchwabQuadrature.reorder!(I, J, K, L, test_vertices, trial_vertices, rule)
 
     return I, J
 end
 
-function sauterschwab_reorder(test_vertices, trial_vertices, rule::SauterSchwabQuadrature1D.SauterSchwabStrategy1D)
-    I, J, _, _ = SauterSchwabQuadrature1D.reorder(test_vertices, trial_vertices, rule)
+function sauterschwab_reorder!(I, J, K, L, test_vertices, trial_vertices, rule::SauterSchwabQuadrature1D.SauterSchwabStrategy1D)
+    SauterSchwabQuadrature1D.reorder!(I, J, K, L, test_vertices, trial_vertices, rule)
 
     return I, J
+end
+
+sauterschwab_buffer(qbuffer, rule) = qbuffer
+sauterschwab_buffer(qbuffer::SauterSchwabBuffer, rule::Union{
+    SauterSchwabStrategy,
+    SauterSchwabQuadrature1D.SauterSchwabStrategy1D,
+}) = qbuffer
+sauterschwab_buffer(qbuffer::SauterSchwabBufferSet, rule::SauterSchwabQuadrature1D.SauterSchwabStrategy1D) =
+    qbuffer.edge
+sauterschwab_buffer(qbuffer::SauterSchwabBufferSet, rule::Union{
+    SauterSchwabQuadrature.CommonVertex,
+    SauterSchwabQuadrature.CommonEdge,
+    SauterSchwabQuadrature.CommonFace,
+}) = qbuffer.triangle
+sauterschwab_buffer(qbuffer::SauterSchwabBufferSet, rule::Union{
+    SauterSchwabQuadrature.CommonVertexQuad,
+    SauterSchwabQuadrature.CommonEdgeQuad,
+    SauterSchwabQuadrature.CommonFaceQuad,
+}) = qbuffer.quadrilateral
+function sauterschwab_buffer(qbuffer::SauterSchwabBufferSet, rule::SauterSchwabStrategy)
+    throw(ArgumentError("no Sauter-Schwab buffer slot is defined for $(typeof(rule))"))
 end
 
 function integrate!(op::Operator,
     test_local_space, trial_local_space,
-    test_chart, trial_chart,
-    out, rule::Union{SauterSchwabStrategy,SauterSchwabQuadrature1D.SauterSchwabStrategy1D})
+    test_chart, trial_chart, out,
+    rule::Union{SauterSchwabStrategy,SauterSchwabQuadrature1D.SauterSchwabStrategy1D})
 
-    I, J = sauterschwab_reorder(
+    return integrate!(
+        op, test_local_space, trial_local_space, test_chart, trial_chart,
+        out, rule, quadraturebuffer(rule, test_local_space, trial_local_space))
+end
+
+function integrate!(op::Operator,
+    test_local_space, trial_local_space,
+    test_chart, trial_chart, out,
+    rule::Union{SauterSchwabStrategy,SauterSchwabQuadrature1D.SauterSchwabStrategy1D},
+    qbuffer)
+
+    sbuffer = sauterschwab_buffer(qbuffer, rule)
+    I, J = sauterschwab_reorder!(
+        sbuffer.I, sbuffer.J, sbuffer.K, sbuffer.L,
         vertices(test_chart),
         vertices(trial_chart),
         rule

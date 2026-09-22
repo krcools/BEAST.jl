@@ -2,7 +2,8 @@ using Test
 using LinearAlgebra
 using CompScienceMeshes, BEAST
 
-@testitem "integrate!: fusing quadrule avoids allocating a boxed quadrature rule" begin
+@testitem "integrate!: reusable quadrature buffer preserves fused integration" begin
+    using BEAST
     using CompScienceMeshes
     using LinearAlgebra
 
@@ -22,48 +23,74 @@ using CompScienceMeshes, BEAST
     bels, bad = assemblydata(X)
     trefs = brefs = refspace(X)
     qd = BEAST.quaddata(op, trefs, brefs, tels, bels, qs)
+    qbuffer = BEAST.quadraturebuffer(qs, X, X)
+    qaction = BEAST.ApplyIntegrate(qbuffer)
 
     zlocal = zeros(scalartype(op, X, X),
         numfunctions(trefs, CompScienceMeshes.domain(tels[1])),
         numfunctions(brefs, CompScienceMeshes.domain(bels[1])))
 
-    fused!(p, q) = begin
+    buffered!(p, q) = begin
         tcell, bcell = tels[p], bels[q]
         fill!(zlocal, 0)
         BEAST.integrate!(op, trefs, brefs, p, tcell, q, bcell, qd, qs,
-            zlocal, X, p, X, q; action=BEAST.ApplyIntegrate())
+            zlocal, X, p, X, q; action=qaction)
     end
 
-    # Reproduces the pre-2.10 two-step call: build the rule, return it to the
-    # caller, and only then dispatch on its (now boxed) runtime type to apply it.
-    unfused!(p, q) = begin
-        tcell, bcell = tels[p], bels[q]
-        fill!(zlocal, 0)
-        qrule = BEAST.integrate!(op, trefs, brefs, p, tcell, q, bcell, qd, qs;
-            action=BEAST.ReturnQRule())
-        BEAST.integrate!(zlocal, op, X, p, tcell, X, q, bcell, qrule)
-    end
-
-    # Exercise several branches (well-separated, and the closest few triangles,
-    # which will hit the near/touching branches) rather than relying on any one
-    # of them individually: the exact byte count of a given branch can include
-    # allocations unrelated to this fix (e.g. from SauterSchwabQuadrature's own
-    # internals), but fusing should never allocate *more* than the two-step
-    # call it replaces, and for the union-boxing this test targets, strictly less.
+    # Exercise several branches rather than relying on a single quadrature rule.
+    # This smoke check keeps the fused path bounded; the assembly test below is
+    # the regression guard for worker-local buffer reuse.
     center(el) = sum(el.vertices) / length(el.vertices)
     p = 1
     distances = sortperm([norm(center(tels[p]) - center(bels[q])) for q in eachindex(bels)])
     test_qs = unique([distances[1], distances[2], distances[end]])
 
     for q in test_qs
-        fused!(p, q);
-        unfused!(p, q) # compile before measuring
+        buffered!(p, q)
     end
 
-    fused_bytes = sum(q -> @allocated(fused!(p, q)), test_qs)
-    unfused_bytes = sum(q -> @allocated(unfused!(p, q)), test_qs)
+    q = first(test_qs)
+    @test_throws UndefKeywordError BEAST.integrate!(
+        op,
+        trefs,
+        brefs,
+        p,
+        tels[p],
+        q,
+        bels[q],
+        qd,
+        qs,
+        zlocal,
+        X,
+        p,
+        X,
+        q,
+    )
 
-    @show fused_bytes, unfused_bytes
+    buffered_bytes = sum(q -> @allocated(buffered!(p, q)), test_qs)
 
-    @test fused_bytes < unfused_bytes
+    @test buffered_bytes < 10_000
+    @test_throws MethodError BEAST.ApplyIntegrate()
+    @test_throws MethodError BEAST.ApplyIntegrateNonConforming()
+end
+
+@testitem "assemblechunk_body! reuses Sauter-Schwab quadrature buffers" begin
+    using BEAST
+    using CompScienceMeshes
+    using LinearAlgebra
+
+    fn = joinpath(dirname(pathof(BEAST)), "../examples/assets/sphere45.in")
+    m = BEAST.readmesh(fn)
+    X = raviartthomas(m)
+    op = Maxwell3D.singlelayer(gamma=1.0)
+    qs = BEAST.DoubleNumWiltonSauterQStrat(2, 3, 6, 7, 5, 5, 4, 3)
+    assembler = BEAST.blockassembler(op, X, X; quadstrat=qs)
+
+    ids = collect(1:24)
+    store(v, m, n) = nothing
+
+    assembler(ids, ids, store)
+    bytes = @allocated assembler(ids, ids, store)
+
+    @test bytes < 3_000_000
 end

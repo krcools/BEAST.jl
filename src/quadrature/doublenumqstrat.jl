@@ -22,7 +22,7 @@ function integrate!(operator::IntegralOperator,
     test_id, test_element, trial_id, trial_element,
     quad_data, qs::DoubleNumQStrat,
     out=nothing, test_space=nothing, tptr=nothing, trial_space=nothing, bptr=nothing;
-    action::QuadRuleAction=ApplyIntegrate())
+    action::QuadRuleAction)
 
     test_quad_rules  = quad_data[1]
     trial_quad_rules = quad_data[2]

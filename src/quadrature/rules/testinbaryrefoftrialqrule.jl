@@ -2,10 +2,24 @@ struct TestInBaryRefOfTrialQRule{S}
     conforming_qstrat::S
 end
 
+BEAST.quadraturebuffer(qr::TestInBaryRefOfTrialQRule, test_space, trial_space) =
+    BEAST.quadraturebuffer(qr.conforming_qstrat, test_space, trial_space)
+
 function BEAST.integrate!(out, op,
     test_functions, test_cell, test_chart,
     trial_functions, trial_cell, trial_chart,
     qr::TestInBaryRefOfTrialQRule)
+
+    return BEAST.integrate!(
+        out, op, test_functions, test_cell, test_chart,
+        trial_functions, trial_cell, trial_chart,
+        qr, BEAST.quadraturebuffer(qr, test_functions, trial_functions))
+end
+
+function BEAST.integrate!(out, op,
+    test_functions, test_cell, test_chart,
+    trial_functions, trial_cell, trial_chart,
+    qr::TestInBaryRefOfTrialQRule, qbuffer)
 
     test_local_space = refspace(test_functions)
     trial_local_space = refspace(trial_functions)
@@ -58,13 +72,15 @@ function BEAST.integrate!(out, op,
 
     Q = zeros(T, num_tshapes, num_tshapes)
     out1 = zero(out)
+    qaction = BEAST.ApplyIntegrate(qbuffer)
     for (q,chart) in enumerate(trial_charts)
         BEAST.restrict!(Q, trial_local_space, trial_chart, chart, X[q])
 
         fill!(out1, 0)
         BEAST.integrate!(op, test_local_space, trial_local_space,
             1, test_chart, q, chart, qd, quadstrat,
-            out1, test_functions, nothing, trial_functions, nothing; action=BEAST.ApplyIntegrate())
+            out1, test_functions, nothing, trial_functions, nothing;
+            action=qaction)
 
         for j in 1:num_bshapes
             for i in 1:num_tshapes

@@ -9,6 +9,19 @@ function integrate!(op,
     τ::CompScienceMeshes.Simplex, σ::CompScienceMeshes.Simplex,
     out, qrule::NonConformingTouchQRule)
 
+    return integrate!(
+        op, test_locspace, bsis_locspace, τ, σ,
+        out, qrule, quadraturebuffer(qrule, test_locspace, bsis_locspace))
+end
+
+quadraturebuffer(qrule::NonConformingTouchQRule, test_space, trial_space) =
+    quadraturebuffer(qrule.conforming_qstrat, test_space, trial_space)
+
+function integrate!(op,
+    test_locspace, bsis_locspace,
+    τ::CompScienceMeshes.Simplex, σ::CompScienceMeshes.Simplex,
+    out, qrule::NonConformingTouchQRule, qbuffer)
+
     num_tshapes = numfunctions(test_locspace, domain(τ))
     num_bshapes = numfunctions(bsis_locspace, domain(σ))
 
@@ -51,6 +64,7 @@ function integrate!(op,
     zlocal = zero(out)
     P = zeros(T, num_tshapes, num_tshapes)
     Q = zeros(T, num_bshapes, num_bshapes)
+    qaction = ApplyIntegrateNonConforming(qbuffer)
     for (p,tchart) in enumerate(τs)
         restrict!(P, test_locspace, τ, tchart, test_overlaps[p])
         for (q,bchart) in enumerate(σs)
@@ -59,7 +73,8 @@ function integrate!(op,
             fill!(zlocal, 0)
             integrate!(op, test_locspace, bsis_locspace,
                 p, tchart, q, bchart, qdata, qstrat,
-                zlocal, test_locspace, nothing, bsis_locspace, nothing; action=ApplyIntegrateNonConforming())
+                zlocal, test_locspace, nothing, bsis_locspace, nothing;
+                action=qaction)
 
             for i in axes(P,1)
                 for j in axes(Q,1)

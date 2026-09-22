@@ -9,7 +9,7 @@ end
 function integrate!(a, 𝒳, 𝒴, i, τ, j, σ, qd,
     qs::TrialRefinesTestQStrat,
     out=nothing, test_space=nothing, tptr=nothing, trial_space=nothing, bptr=nothing;
-    action::QuadRuleAction=ApplyIntegrate())
+    action::QuadRuleAction)
 
     hits = _numhits(τ, σ)
     if hits > 0

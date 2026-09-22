@@ -59,6 +59,19 @@ function integrate!(out, op::VIEOperator,
     return nothing
 end
 
+function integrate!(out, op::VIEOperator,
+    test_functions::Space, test_ptr, test_chart,
+    trial_functions::Space, trial_ptr, trial_chart,
+    strat::SauterSchwab3DStrategy, qbuffer)
+
+    return integrate!(
+        out, op,
+        test_functions, test_ptr, test_chart,
+        trial_functions, trial_ptr, trial_chart,
+        strat,
+    )
+end
+
 
 
 #TODO: use trial_ptr to get the cell material using material_array[trial_ptr] ...

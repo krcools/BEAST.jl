@@ -10,7 +10,7 @@ end
 function integrate!(a, 𝒳, 𝒴, i, τ, j, σ, qd,
     qs::CommonFaceOverlappingEdgeQStrat,
     out=nothing, test_space=nothing, tptr=nothing, trial_space=nothing, bptr=nothing;
-    action::QuadRuleAction=ApplyIntegrate())
+    action::QuadRuleAction)
 
     if CompScienceMeshes.overlap(τ, σ)
         return integrate!(a, 𝒳, 𝒴, i, τ, j, σ, qd, qs.conforming_qstrat,

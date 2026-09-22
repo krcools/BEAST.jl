@@ -254,7 +254,7 @@ end
 
 function integrate!(op::VolumeSurfaceOperator, g::RefSpace, f::RefSpace, i, τ, j, σ, qd, qs,
         out=nothing, test_space=nothing, tptr=nothing, trial_space=nothing, bptr=nothing;
-        action::QuadRuleAction=ApplyIntegrate())
+        action::QuadRuleAction)
     qrule = qr_volume(op, g, f, i, τ, j, σ, qd, qs)
     integrate!(action, out, op, test_space, tptr, τ, trial_space, bptr, σ, qrule)
 end
@@ -302,7 +302,7 @@ end
 
 function integrate!(op::BoundarySurfaceOperator, g::RefSpace, f::RefSpace, i, τ, j, σ, qd, qs,
         out=nothing, test_space=nothing, tptr=nothing, trial_space=nothing, bptr=nothing;
-        action::QuadRuleAction=ApplyIntegrate())
+        action::QuadRuleAction)
     qrule = qr_boundary(op, g, f, i, τ, j, σ, qd, qs)
     integrate!(action, out, op, test_space, tptr, τ, trial_space, bptr, σ, qrule)
 end
@@ -345,4 +345,3 @@ function qr_boundary(op::BoundarySurfaceOperator, g::RefSpace, f::RefSpace, i, �
         qd[2][1,j])
 
 end
-

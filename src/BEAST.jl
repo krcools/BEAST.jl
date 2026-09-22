@@ -123,6 +123,7 @@ export facecurrents
 export potential
 export get_scatter_parameters
 export quaddata
+export quadraturebuffer
 
 export DofInterpolate
 
@@ -161,15 +162,20 @@ or hand it back to the caller unevaluated ([`ReturnQRule`](@ref)).
 abstract type QuadRuleAction end
 
 """
-    ApplyIntegrate()
+    ApplyIntegrate(qbuffer)
 
 The standard `action` for [`integrate!`](@ref): evaluate the quadrature rule into
 the output buffer right away, from within the same method/branch that built it.
 Doing so lets the choice of which `integrate!` method to run for that rule resolve
 statically, instead of through a dynamic dispatch on the union of possible
 rule types a given quadrature strategy can produce.
+
+When `qbuffer` is supplied, Sauter-Schwab rules reuse that scratch storage for
+vertex reordering. Assembly code should pass a worker-local buffer.
 """
-struct ApplyIntegrate <: QuadRuleAction end
+struct ApplyIntegrate{B} <: QuadRuleAction
+    qbuffer::B
+end
 
 """
     ReturnQRule()
@@ -180,7 +186,7 @@ of evaluating it. Used for introspection and for testing.
 struct ReturnQRule <: QuadRuleAction end
 
 """
-    ApplyIntegrateNonConforming()
+    ApplyIntegrateNonConforming(qbuffer)
 
 Like [`ApplyIntegrate`](@ref), but for the non-conforming-mesh rules
 (`NonConformingOverlapQRule`, `NonConformingTouchQRule`). Their own `integrate!`
@@ -188,7 +194,9 @@ methods are reached only after the generic dispatcher has already stripped the
 test/trial `Space` down to local refspaces, so there is no full `Space` left to
 pass through the `ApplyIntegrate` path.
 """
-struct ApplyIntegrateNonConforming <: QuadRuleAction end
+struct ApplyIntegrateNonConforming{B} <: QuadRuleAction
+    qbuffer::B
+end
 
 include("utils/polynomial.jl")
 include("utils/specialfns.jl")
@@ -270,6 +278,7 @@ include("quadrature/strategies/testrefinestrialqstrat.jl")
 include("quadrature/strategies/trialrefinestestqstrat.jl")
 include("quadrature/strategies/nonconftestbaryrefoftrialqstrat.jl")
 include("quadrature/strategies/timedomain/nothingqstrat.jl")
+include("quadrature/quadraturebuffer.jl")
 
 
 include("excitation.jl")

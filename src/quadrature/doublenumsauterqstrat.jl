@@ -84,7 +84,7 @@ function integrate!(op::IntegralOperator, g::RefSpace, f::RefSpace,
     j, σ::CompScienceMeshes.Simplex{<:Any, 2},
     qd, qs::DoubleNumSauterQstrat,
     out=nothing, test_space=nothing, tptr=nothing, trial_space=nothing, bptr=nothing;
-    action::QuadRuleAction=ApplyIntegrate())
+    action::QuadRuleAction)
 
     hits = _numhits(τ, σ)
     @assert hits <= 3
@@ -117,7 +117,7 @@ function integrate!(op::IntegralOperator, g::RefSpace, f::RefSpace,
     j, σ::CompScienceMeshes.Simplex{<:Any, 3},
     qd, qs::DoubleNumSauterQstrat,
     out=nothing, test_space=nothing, tptr=nothing, trial_space=nothing, bptr=nothing;
-    action::QuadRuleAction=ApplyIntegrate())
+    action::QuadRuleAction)
     qrule = qr_volume(op, g, f, i, τ, j, σ, qd, qs)
     integrate!(action, out, op, test_space, tptr, τ, trial_space, bptr, σ, qrule)
 end
@@ -126,7 +126,7 @@ function integrate!(op::IntegralOperator, g::RefSpace, f::RefSpace,
     j, σ::CompScienceMeshes.Simplex{<:Any, 2},
     qd, qs::DoubleNumSauterQstrat,
     out=nothing, test_space=nothing, tptr=nothing, trial_space=nothing, bptr=nothing;
-    action::QuadRuleAction=ApplyIntegrate())
+    action::QuadRuleAction)
     qrule = qr_boundary(op, g, f, i, τ, j, σ, qd, qs)
     integrate!(action, out, op, test_space, tptr, τ, trial_space, bptr, σ, qrule)
 end
@@ -136,7 +136,7 @@ function integrate!(op::IntegralOperator, g::RefSpace, f::RefSpace,
     j, σ::CompScienceMeshes.Simplex{<:Any, 3},
     qd, qs::DoubleNumSauterQstrat,
     out=nothing, test_space=nothing, tptr=nothing, trial_space=nothing, bptr=nothing;
-    action::QuadRuleAction=ApplyIntegrate())
+    action::QuadRuleAction)
     qrule = _TransposedStrat(qr_boundary(op, g, f, i, τ, j, σ, qd, qs))
     integrate!(action, out, op, test_space, tptr, τ, trial_space, bptr, σ, qrule)
 end
@@ -230,7 +230,7 @@ function integrate!(op::IntegralOperator, g::RefSpace, f::RefSpace,
     j, σ::CompScienceMeshes.Quadrilateral,
     qd, qs::DoubleNumSauterQstrat,
     out=nothing, test_space=nothing, tptr=nothing, trial_space=nothing, bptr=nothing;
-    action::QuadRuleAction=ApplyIntegrate())
+    action::QuadRuleAction)
 
     hits = _numhits(τ, σ)
     @assert hits != 3

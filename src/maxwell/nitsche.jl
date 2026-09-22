@@ -30,7 +30,7 @@ end
 function integrate!(op::SingleLayerTrace, g::LagrangeRefSpace, f::LagrangeRefSpace, i, τ, j, σ, qd,
         qs::DoubleNumWiltonSauterQStrat,
         out=nothing, test_space=nothing, tptr=nothing, trial_space=nothing, bptr=nothing;
-        action::QuadRuleAction=ApplyIntegrate())
+        action::QuadRuleAction)
 
     qrule = DoubleQuadRule(
         qd.tpoints[1,i],

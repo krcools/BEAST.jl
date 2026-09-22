@@ -5,6 +5,9 @@ mutable struct WiltonSERule{P,Q} <: SingularityExtractionRule
     regularpart_quadrule::Q
 end
 
+quadraturebuffer(qrule::WiltonSERule, test_space, trial_space) =
+    quadraturebuffer(qrule.regularpart_quadrule, test_space, trial_space)
+
 function innerintegrals!(op::MWSingleLayer3DSng, p, g, f, t, s, z,
         strat::WiltonSERule, dx)
 
