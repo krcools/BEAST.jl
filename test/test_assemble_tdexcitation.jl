@@ -5,7 +5,7 @@
     Γ = meshcuboid(1.0, 1.0, 1.0, 2.0; generator=:gmsh)
     X = raviartthomas(Γ)
 
-    struct ConstFunctional{T} <: Functional{T}
+    struct ConstFunctional{T} <: BEAST.Functional{T}
         constant::T
     end
 
@@ -13,7 +13,7 @@
         f.constant * [1.0, 0.0, 0.0]
     end
 
-    struct FuncXGaussian{T} <: TDFunctional{T}
+    struct FuncXGaussian{T} <: BEAST.TDFunctional{T}
         functional::ConstFunctional{T}
         gaussian::BEAST.Gaussian{T}
     end
