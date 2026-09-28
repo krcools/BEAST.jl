@@ -137,6 +137,33 @@ function gpu_shapefunction_eval!(shape_values, elements, local_space, quadrule)
     return nothing
 end
 
+@inline function gpu_doublenum_integral(integrand,
+    test_element, trial_element, test_values, trial_values,
+    test_local_space, trial_local_space, test_quadrule, trial_quadrule,
+    ::Type{T}) where T
+
+    num_test_shapes = numfunctions(test_local_space, domain(test_element))
+    num_trial_shapes = numfunctions(trial_local_space, domain(trial_element))
+    z = zeros(SMatrix{num_test_shapes,num_trial_shapes,T})
+
+    for test_quadrature_index in eachindex(test_quadrule)
+        test_point, test_weight = test_quadrule[test_quadrature_index]
+        x = neighborhood(test_element, test_point)
+        weighted_test_jacobian = test_weight * jacobian(x)
+
+        for trial_quadrature_index in eachindex(trial_quadrule)
+            trial_point, trial_weight = trial_quadrule[trial_quadrature_index]
+            y = neighborhood(trial_element, trial_point)
+            weight = weighted_test_jacobian * trial_weight * jacobian(y)
+            z += weight * integrand(x, y,
+                test_values[test_quadrature_index],
+                trial_values[trial_quadrature_index])
+        end
+    end
+
+    return z
+end
+
 function gpu_momintegral_doublenum_pair!(zlocal, operator, pair,
     test_elements, trial_elements, test_shapes, trial_shapes,
     test_local_space, trial_local_space, test_quadrule, trial_quadrule)
@@ -147,31 +174,17 @@ function gpu_momintegral_doublenum_pair!(zlocal, operator, pair,
 
     test_element = test_elements[test_index]
     trial_element = trial_elements[trial_index]
-    test_domain = domain(test_element)
-    trial_domain = domain(trial_element)
-    num_test_shapes = numfunctions(test_local_space, test_domain)
-    num_trial_shapes = numfunctions(trial_local_space, trial_domain)
+    num_test_shapes = numfunctions(test_local_space, domain(test_element))
+    num_trial_shapes = numfunctions(trial_local_space, domain(trial_element))
 
     integrand = BEAST.Integrand(operator, test_local_space, trial_local_space,
         test_element, trial_element)
 
-    T = eltype(zlocal)
-    z = zeros(SMatrix{num_test_shapes,num_trial_shapes,T})
-    for test_quadrature_index in eachindex(test_quadrule)
-        test_point, test_weight = test_quadrule[test_quadrature_index]
-        x = neighborhood(test_element, test_point)
-        weighted_test_jacobian = test_weight * jacobian(x)
-        test_values = test_shapes[test_index, test_quadrature_index]
-
-        for trial_quadrature_index in eachindex(trial_quadrule)
-            trial_point, trial_weight = trial_quadrule[trial_quadrature_index]
-            y = neighborhood(trial_element, trial_point)
-            weight = weighted_test_jacobian * trial_weight * jacobian(y)
-            trial_values = trial_shapes[trial_index, trial_quadrature_index]
-
-            z += weight * integrand(x, y, test_values, trial_values)
-        end
-    end
+    z = gpu_doublenum_integral(integrand,
+        test_element, trial_element,
+        view(test_shapes, test_index, :), view(trial_shapes, trial_index, :),
+        test_local_space, trial_local_space, test_quadrule, trial_quadrule,
+        eltype(zlocal))
 
     test_offset = num_test_shapes * (test_index - 1)
     trial_offset = num_trial_shapes * (trial_index - 1)
@@ -304,6 +317,33 @@ function gpu_sauterschwab_reorder(test_vertices, trial_vertices, ::CommonFace)
     return SVector{3,Int}(1, 2, 3), SVector(J)
 end
 
+@inline function gpu_sauterschwab_integral(integrand,
+    test_element, trial_element, strategy,
+    test_local_space, trial_local_space, ::Type{T}) where T
+
+    num_test_shapes = numfunctions(test_local_space, domain(test_element))
+    num_trial_shapes = numfunctions(trial_local_space, domain(trial_element))
+    I, J = gpu_sauterschwab_reorder(
+        vertices(test_element), vertices(trial_element), strategy)
+    pulledback_integrand = BEAST.pulledback_integrand(
+        integrand, I, test_element, J, trial_element)
+
+    z = zeros(SMatrix{num_test_shapes,num_trial_shapes,T})
+    for (eta_1, weight_1) in strategy.qps
+        for (eta_2, weight_2) in strategy.qps
+            for (eta_3, weight_3) in strategy.qps
+                for (xi, weight_4) in strategy.qps
+                    weight = weight_1 * weight_2 * weight_3 * weight_4
+                    z += weight * strategy(
+                        pulledback_integrand, eta_1, eta_2, eta_3, xi)
+                end
+            end
+        end
+    end
+
+    return z
+end
+
 function gpu_momintegral_sauterschwab!(zlocal, operator, num_pairs, pairs,
     test_elements, trial_elements, test_local_space, trial_local_space, strategy)
 
@@ -319,26 +359,11 @@ function gpu_momintegral_sauterschwab!(zlocal, operator, num_pairs, pairs,
         num_test_shapes = numfunctions(test_local_space, domain(test_element))
         num_trial_shapes = numfunctions(trial_local_space, domain(trial_element))
 
-        I, J = gpu_sauterschwab_reorder(
-            vertices(test_element), vertices(trial_element), strategy)
         integrand = BEAST.Integrand(operator, test_local_space, trial_local_space,
             test_element, trial_element)
-        pulledback_integrand = BEAST.pulledback_integrand(
-            integrand, I, test_element, J, trial_element)
-
-        T = eltype(zlocal)
-        z = zeros(SMatrix{num_test_shapes,num_trial_shapes,T})
-        for (eta_1, weight_1) in strategy.qps
-            for (eta_2, weight_2) in strategy.qps
-                for (eta_3, weight_3) in strategy.qps
-                    for (xi, weight_4) in strategy.qps
-                        weight = weight_1 * weight_2 * weight_3 * weight_4
-                        z += weight * strategy(
-                            pulledback_integrand, eta_1, eta_2, eta_3, xi)
-                    end
-                end
-            end
-        end
+        z = gpu_sauterschwab_integral(integrand,
+            test_element, trial_element, strategy,
+            test_local_space, trial_local_space, eltype(zlocal))
 
         test_offset = num_test_shapes * (test_index - 1)
         trial_offset = num_trial_shapes * (trial_index - 1)
@@ -407,7 +432,7 @@ function assemblechunk_body_gpu_device!(operator::IntegralOperator,
     test_local_space, test_elements, test_assembly, test_quadrule, test_shapes,
     trial_local_space, trial_elements, trial_assembly, trial_quadrule, trial_shapes,
     quadstrat::BEAST.DoubleNumQStrat;
-    gpu_blocksize)
+    gpu_blocksize, singular_rules=nothing)
 
     num_test_shapes = div(size(test_assembly, 2), length(test_elements))
     num_trial_shapes = div(size(trial_assembly, 2), length(trial_elements))
@@ -434,7 +459,7 @@ function assemblechunk_body_gpu_device!(operator::IntegralOperator,
     test_local_space, test_elements, test_assembly, test_quadrule, test_shapes,
     trial_local_space, trial_elements, trial_assembly, trial_quadrule, trial_shapes,
     quadstrat::BEAST.DoubleNumSauterQstrat;
-    gpu_blocksize)
+    gpu_blocksize, singular_rules=nothing)
 
     num_test_shapes = div(size(test_assembly, 2), length(test_elements))
     num_trial_shapes = div(size(trial_assembly, 2), length(trial_elements))
@@ -455,13 +480,19 @@ function assemblechunk_body_gpu_device!(operator::IntegralOperator,
         test_local_space, trial_local_space, test_quadrule, trial_quadrule;
         gpu_blocksize=gpu_blocksize, problem_size=num_pairs[1])
 
-    coordinate_type = coordtype(eltype(test_elements))
-    common_vertex = CommonVertex(
-        gpu_legendre_rule(quadstrat.sauter_schwab_common_vert, coordinate_type))
-    common_edge = CommonEdge(
-        gpu_legendre_rule(quadstrat.sauter_schwab_common_edge, coordinate_type))
-    common_face = CommonFace(
-        gpu_legendre_rule(quadstrat.sauter_schwab_common_face, coordinate_type))
+    if isnothing(singular_rules)
+        coordinate_type = coordtype(eltype(test_elements))
+        common_vertex = CommonVertex(gpu_legendre_rule(
+            quadstrat.sauter_schwab_common_vert, coordinate_type))
+        common_edge = CommonEdge(gpu_legendre_rule(
+            quadstrat.sauter_schwab_common_edge, coordinate_type))
+        common_face = CommonFace(gpu_legendre_rule(
+            quadstrat.sauter_schwab_common_face, coordinate_type))
+    else
+        common_vertex = CommonVertex(singular_rules.common_vertex)
+        common_edge = CommonEdge(singular_rules.common_edge)
+        common_face = CommonFace(singular_rules.common_face)
+    end
 
     for (singularity, strategy) in
         ((2, common_vertex), (3, common_edge), (4, common_face))
