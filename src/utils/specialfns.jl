@@ -28,16 +28,23 @@ end
 function fouriertransform(a::Array, dt, t0, dim=1)
     n = size(a,dim)
     dω = 2π / (n*dt)
-    b = fftshift(fft(a, dim), dim) * dt / sqrt(2π)
     ω0 = -dω * div(n,2)
+    ω = ω0 .+ dω .* (0:n-1)
+
+    b = fftshift(fft(a, dim), dim) * dt / sqrt(2π)
+    b .*= reshape(exp.(-im .* ω .* t0), ntuple(j -> j == dim ? n : 1, ndims(a))) 
+
     b, dω, ω0
 end
 
 function inversefouriertransform(a::Array, dω, ω0, dim=1)
     n = size(a,dim)
     dt = 2π/ (n*dω)
-    b = ifft(a,dim) * sqrt(2π) / dt
+    ω = ω0 .+ dω .* (0:n-1)
     t0 = -dt * div(n,2)
+
+    b = ifft(ifftshift(a .* reshape(exp.(im .* ω .* t0), ntuple(j -> j == dim ? n : 1, ndims(a))), dim), dim) * sqrt(2π) / dt
+
     b, dt, t0
 end
 
