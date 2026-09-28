@@ -18,6 +18,7 @@ Adapt.@adapt_structure CommonVertex
 Adapt.@adapt_structure CommonEdge
 Adapt.@adapt_structure CommonFace
 
+include("BEASTCUDAExt/tiling.jl")
 include("BEASTCUDAExt/gpu_utils.jl")
 include("BEASTCUDAExt/gpu_basis.jl")
 include("BEASTCUDAExt/gpu_integrals.jl")
