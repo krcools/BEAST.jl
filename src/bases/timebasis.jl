@@ -204,13 +204,13 @@ function assemblydata(tbf::TimeBasisFunction)
     els = [ simplex(point((i-1)*Δt),point(i*Δt)) for i in 1:num_cells ]
 
     for k in 1 : numfunctions(tbf)
-        tk = (k-1) * Δt
+        tk = k * Δt
         for i in 1 : numintervals(tbf)
             # Focus on interval [(i-2)Δt,(i-1)Δt]
             p = tbf.polys[i]
             q = substitute(p,t-tk)
 
-            c = k + i - 2
+            c = k + i - 1
             1 <= c <= num_cells || continue
             for d = 0 : degree(q)
                 r = d + 1
@@ -301,10 +301,10 @@ function assemblydata(tbf::TimeBasisDelta)
     num_funcs = zeros(Int, num_cells, num_refs)
     data = fill((0,z), max_num_funcs, num_refs, num_cells)
 
-    els = [ simplex(point((i-0)*Δt),point((i+1)*Δt)) for i in 1:num_cells ]
+    els = [ simplex(point((i-1)*Δt),point(i*Δt)) for i in 1:num_cells ]
 
-    for k in 1 : numfunctions(tbf)-1
-        data[1,1,k] = (k+1,w)
+    for k in 1 : numfunctions(tbf)
+        data[1,1,k] = (k,w)
     end
 
     return els, AssemblyData(data)
