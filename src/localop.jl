@@ -188,6 +188,7 @@ function assemble_local_refines!(biop::LocalOperator, tfs::Space, bfs::Space, st
         P = ta2g[p]
         Q = CompScienceMeshes.parent(tgeo, P)
         q = bg2a[Q]
+        q == 0 && continue
 
         bcell = bels[q]
         @assert overlap(tcell, bcell)

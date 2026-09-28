@@ -1,6 +1,7 @@
 @info "Executing test_local_assembly.jl"
 using CompScienceMeshes
 using BEAST
+using LinearAlgebra
 
 using Test
 
@@ -46,6 +47,22 @@ BEAST.assemble_local_mixed!(Id, BC, RT, st2)
 Q2 = fr2()
 @test isapprox(Q1, Q2, atol=1e-8)
 
+# Dual functions reach into cells of the coarse mesh that carry no trial function.
+# Refines algorithm has to skip those cells.
+Xd = duallagrangec0d1(m)
+Yp = BEAST.subset(BEAST.lagrangecxd0(m), collect(1:2:length(m)))
+
+fr1, st1 = BEAST.allocatestorage(Id, Xd, Yp, Val{:bandedstorage}, BEAST.LongDelays{:ignore})
+BEAST.assemble_local_refines!(Id, Xd, Yp, st1)
+Q1 = fr1()
+
+fr2, st2 = BEAST.allocatestorage(Id, Xd, Yp, Val{:bandedstorage}, BEAST.LongDelays{:ignore})
+BEAST.assemble_local_mixed!(Id, Xd, Yp, st2)
+Q2 = fr2()
+
+@test isapprox(Q1, Q2, atol=1e-8)
+@test norm(Q1) > 0
+@test isapprox(Matrix(assemble(Id, Xd, Yp)), Q2, atol=1e-8)
 
 @testitem "localop assembly returns sparse" begin
     using CompScienceMeshes
