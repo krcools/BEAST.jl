@@ -403,7 +403,7 @@ function assemble_primer_gpu(functions::Space, elements, assembly_data,
     return local_to_global, (elements, assembly_data), (quadrule_d, shape_values)
 end
 
-function assemblechunk_body_gpu!(operator::IntegralOperator,
+function assemblechunk_body_gpu_device!(operator::IntegralOperator,
     test_local_space, test_elements, test_assembly, test_quadrule, test_shapes,
     trial_local_space, trial_elements, trial_assembly, trial_quadrule, trial_shapes,
     quadstrat::BEAST.DoubleNumQStrat;
@@ -427,10 +427,10 @@ function assemblechunk_body_gpu!(operator::IntegralOperator,
     matrix = CUDA.zeros(T, size(test_assembly, 1), size(trial_assembly, 1))
     build_matrix!(matrix, zlocal, test_assembly, trial_assembly)
 
-    return Array(matrix)
+    return matrix
 end
 
-function assemblechunk_body_gpu!(operator::IntegralOperator,
+function assemblechunk_body_gpu_device!(operator::IntegralOperator,
     test_local_space, test_elements, test_assembly, test_quadrule, test_shapes,
     trial_local_space, trial_elements, trial_assembly, trial_quadrule, trial_shapes,
     quadstrat::BEAST.DoubleNumSauterQstrat;
@@ -475,6 +475,20 @@ function assemblechunk_body_gpu!(operator::IntegralOperator,
 
     matrix = CUDA.zeros(T, size(test_assembly, 1), size(trial_assembly, 1))
     build_matrix!(matrix, zlocal, test_assembly, trial_assembly)
+
+    return matrix
+end
+
+function assemblechunk_body_gpu!(operator::IntegralOperator,
+    test_local_space, test_elements, test_assembly, test_quadrule, test_shapes,
+    trial_local_space, trial_elements, trial_assembly, trial_quadrule, trial_shapes,
+    quadstrat::Union{BEAST.DoubleNumQStrat,BEAST.DoubleNumSauterQstrat};
+    gpu_blocksize)
+
+    matrix = assemblechunk_body_gpu_device!(operator,
+        test_local_space, test_elements, test_assembly, test_quadrule, test_shapes,
+        trial_local_space, trial_elements, trial_assembly, trial_quadrule, trial_shapes,
+        quadstrat; gpu_blocksize)
 
     return Array(matrix)
 end

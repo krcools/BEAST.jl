@@ -23,5 +23,6 @@ include("BEASTCUDAExt/gpu_utils.jl")
 include("BEASTCUDAExt/gpu_basis.jl")
 include("BEASTCUDAExt/gpu_integrals.jl")
 include("BEASTCUDAExt/gpu_assemble_integralop.jl")
+include("BEASTCUDAExt/gpu_blockassembler.jl")
 
 end
