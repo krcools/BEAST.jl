@@ -58,6 +58,66 @@ function gpu_triangle_rule(order, ::Type{T}) where T
     return CuArray(rule)
 end
 
+function gpu_legendre_rule(order, ::Type{T}) where T
+    rule = convert.(NTuple{2,T}, BEAST._legendre(order, zero(T), one(T)))
+    return CuArray(rule)
+end
+
+function gpu_singularityflag!(singularity_map,
+    test_elements::CuDeviceVector{S}, trial_elements::CuDeviceVector{S}) where S
+
+    pair = (blockIdx().x - 1) * blockDim().x + threadIdx().x
+    num_test_elements = length(test_elements)
+    num_trial_elements = length(trial_elements)
+
+    if pair <= num_test_elements * num_trial_elements
+        test_index = mod(pair - 1, num_test_elements) + 1
+        trial_index = div(pair - 1, num_test_elements) + 1
+        tolerance = 1.0e3 * eps(coordtype(S))
+
+        hits = 1
+        for test_vertex in vertices(test_elements[test_index])
+            for trial_vertex in vertices(trial_elements[trial_index])
+                hits += norm(test_vertex - trial_vertex) < tolerance
+            end
+        end
+        singularity_map[pair, hits] = true
+    end
+
+    return nothing
+end
+
+function gpu_compact_pair_map!(pair_map, singularity_map, cumulative_counts)
+    pair = (blockIdx().x - 1) * blockDim().x + threadIdx().x
+    singularity = threadIdx().y
+
+    if pair <= size(singularity_map, 1) && singularity <= size(singularity_map, 2)
+        if singularity_map[pair, singularity]
+            pair_map[cumulative_counts[pair, singularity], singularity] = pair
+        end
+    end
+
+    return nothing
+end
+
+function gpu_singularitydetection!(pair_map, num_pairs, test_elements, trial_elements)
+    num_element_pairs = length(test_elements) * length(trial_elements)
+    singularity_map = CUDA.zeros(Bool, num_element_pairs, 4)
+
+    launch_gpu_kernel!(gpu_singularityflag!, singularity_map,
+        test_elements, trial_elements;
+        gpu_blocksize=256, problem_size=num_element_pairs)
+
+    cumulative_counts = accumulate(+, singularity_map; dims=1)
+    num_pairs .= Array(cumulative_counts[end, :])
+
+    launch_gpu_kernel!(gpu_compact_pair_map!, pair_map,
+        singularity_map, cumulative_counts;
+        gpu_blocksize=(256, 4), problem_size=size(singularity_map))
+
+    return nothing
+end
+
 function gpu_shapefunction_eval!(shape_values, elements, local_space, quadrule)
     element_index = (blockIdx().x - 1) * blockDim().x + threadIdx().x
     quadrature_index = (blockIdx().y - 1) * blockDim().y + threadIdx().y
@@ -72,43 +132,206 @@ function gpu_shapefunction_eval!(shape_values, elements, local_space, quadrule)
     return nothing
 end
 
+function gpu_momintegral_doublenum_pair!(zlocal, operator, pair,
+    test_elements, trial_elements, test_shapes, trial_shapes,
+    test_local_space, trial_local_space, test_quadrule, trial_quadrule)
+
+    num_test_elements = length(test_elements)
+    test_index = mod(pair - 1, num_test_elements) + 1
+    trial_index = div(pair - 1, num_test_elements) + 1
+
+    test_element = test_elements[test_index]
+    trial_element = trial_elements[trial_index]
+    test_domain = domain(test_element)
+    trial_domain = domain(trial_element)
+    num_test_shapes = numfunctions(test_local_space, test_domain)
+    num_trial_shapes = numfunctions(trial_local_space, trial_domain)
+
+    integrand = BEAST.Integrand(operator, test_local_space, trial_local_space,
+        test_element, trial_element)
+
+    T = eltype(zlocal)
+    z = zeros(SMatrix{num_test_shapes,num_trial_shapes,T})
+    for test_quadrature_index in eachindex(test_quadrule)
+        test_point, test_weight = test_quadrule[test_quadrature_index]
+        x = neighborhood(test_element, test_point)
+        weighted_test_jacobian = test_weight * jacobian(x)
+        test_values = test_shapes[test_index, test_quadrature_index]
+
+        for trial_quadrature_index in eachindex(trial_quadrule)
+            trial_point, trial_weight = trial_quadrule[trial_quadrature_index]
+            y = neighborhood(trial_element, trial_point)
+            weight = weighted_test_jacobian * trial_weight * jacobian(y)
+            trial_values = trial_shapes[trial_index, trial_quadrature_index]
+
+            z += weight * integrand(x, y, test_values, trial_values)
+        end
+    end
+
+    test_offset = num_test_shapes * (test_index - 1)
+    trial_offset = num_trial_shapes * (trial_index - 1)
+    for trial_shape in 1:num_trial_shapes
+        for test_shape in 1:num_test_shapes
+            zlocal[test_offset + test_shape, trial_offset + trial_shape] =
+                z[test_shape, trial_shape]
+        end
+    end
+
+    return nothing
+end
+
 function gpu_momintegral_doublenum_allpairs!(zlocal, operator,
     test_elements, trial_elements, test_shapes, trial_shapes,
     test_local_space, trial_local_space, test_quadrule, trial_quadrule)
 
     pair = (blockIdx().x - 1) * blockDim().x + threadIdx().x
-    num_test_elements = length(test_elements)
-    num_trial_elements = length(trial_elements)
+    if pair <= length(test_elements) * length(trial_elements)
+        gpu_momintegral_doublenum_pair!(zlocal, operator, pair,
+            test_elements, trial_elements, test_shapes, trial_shapes,
+            test_local_space, trial_local_space, test_quadrule, trial_quadrule)
+    end
 
-    if pair <= num_test_elements * num_trial_elements
+    return nothing
+end
+
+function gpu_momintegral_doublenum!(zlocal, operator, num_pairs, pairs,
+    test_elements, trial_elements, test_shapes, trial_shapes,
+    test_local_space, trial_local_space, test_quadrule, trial_quadrule)
+
+    pair_index = (blockIdx().x - 1) * blockDim().x + threadIdx().x
+    if pair_index <= num_pairs
+        gpu_momintegral_doublenum_pair!(zlocal, operator, pairs[pair_index],
+            test_elements, trial_elements, test_shapes, trial_shapes,
+            test_local_space, trial_local_space, test_quadrule, trial_quadrule)
+    end
+
+    return nothing
+end
+
+function gpu_setdifference(A::SVector{N1,T}, B::SVector{N2,T}) where {N1,N2,T}
+    result = zeros(MVector{N1-N2,T})
+    index = 1
+    for a in A
+        found = false
+        for b in B
+            found |= a == b
+        end
+        if !found
+            result[index] = a
+            index += 1
+        end
+    end
+    return result
+end
+
+function gpu_sauterschwab_reorder(test_vertices, trial_vertices, ::CommonVertex)
+    T = eltype(first(test_vertices))
+    tolerance = 1.0e3 * eps(T)
+    test_common = 0
+    trial_common = 0
+
+    for test_index in 1:3
+        for trial_index in 1:3
+            if norm(test_vertices[test_index] - trial_vertices[trial_index]) < tolerance
+                test_common = test_index
+                trial_common = trial_index
+                break
+            end
+        end
+        test_common != 0 && break
+    end
+
+    indices = SVector{3,Int}(1, 2, 3)
+    test_other = gpu_setdifference(indices, SVector{1,Int}(test_common))
+    trial_other = gpu_setdifference(indices, SVector{1,Int}(trial_common))
+
+    I = SVector{3,Int}(test_common, test_other[1], test_other[2])
+    J = SVector{3,Int}(trial_common, trial_other[1], trial_other[2])
+    return I, J
+end
+
+function gpu_sauterschwab_reorder(test_vertices, trial_vertices, ::CommonEdge)
+    T = eltype(first(test_vertices))
+    tolerance = 1.0e3 * eps(T)
+    test_common_1 = 0
+    test_common_2 = 0
+    trial_common_1 = 0
+    trial_common_2 = 0
+    num_common = 0
+
+    for test_index in 1:3
+        for trial_index in 1:3
+            if norm(test_vertices[test_index] - trial_vertices[trial_index]) < tolerance
+                if num_common == 0
+                    test_common_1 = test_index
+                    trial_common_1 = trial_index
+                else
+                    test_common_2 = test_index
+                    trial_common_2 = trial_index
+                end
+                num_common += 1
+                break
+            end
+        end
+    end
+
+    test_other = 6 - test_common_1 - test_common_2
+    trial_other = 6 - trial_common_1 - trial_common_2
+    I = SVector{3,Int}(test_common_2, test_other, test_common_1)
+    J = SVector{3,Int}(trial_common_2, trial_other, trial_common_1)
+    return I, J
+end
+
+function gpu_sauterschwab_reorder(test_vertices, trial_vertices, ::CommonFace)
+    T = eltype(first(test_vertices))
+    tolerance = 1.0e3 * eps(T)
+    J = zeros(MVector{3,Int})
+
+    for test_index in 1:3
+        for trial_index in 1:3
+            if norm(test_vertices[test_index] - trial_vertices[trial_index]) < tolerance
+                J[test_index] = trial_index
+                break
+            end
+        end
+    end
+
+    return SVector{3,Int}(1, 2, 3), SVector(J)
+end
+
+function gpu_momintegral_sauterschwab!(zlocal, operator, num_pairs, pairs,
+    test_elements, trial_elements, test_local_space, trial_local_space, strategy)
+
+    pair_index = (blockIdx().x - 1) * blockDim().x + threadIdx().x
+    if pair_index <= num_pairs
+        num_test_elements = length(test_elements)
+        pair = pairs[pair_index]
         test_index = mod(pair - 1, num_test_elements) + 1
         trial_index = div(pair - 1, num_test_elements) + 1
 
         test_element = test_elements[test_index]
         trial_element = trial_elements[trial_index]
-        test_domain = domain(test_element)
-        trial_domain = domain(trial_element)
-        num_test_shapes = numfunctions(test_local_space, test_domain)
-        num_trial_shapes = numfunctions(trial_local_space, trial_domain)
+        num_test_shapes = numfunctions(test_local_space, domain(test_element))
+        num_trial_shapes = numfunctions(trial_local_space, domain(trial_element))
 
+        I, J = gpu_sauterschwab_reorder(
+            vertices(test_element), vertices(trial_element), strategy)
         integrand = BEAST.Integrand(operator, test_local_space, trial_local_space,
             test_element, trial_element)
+        pulledback_integrand = BEAST.pulledback_integrand(
+            integrand, I, test_element, J, trial_element)
 
         T = eltype(zlocal)
         z = zeros(SMatrix{num_test_shapes,num_trial_shapes,T})
-        for test_quadrature_index in eachindex(test_quadrule)
-            test_point, test_weight = test_quadrule[test_quadrature_index]
-            x = neighborhood(test_element, test_point)
-            weighted_test_jacobian = test_weight * jacobian(x)
-            test_values = test_shapes[test_index, test_quadrature_index]
-
-            for trial_quadrature_index in eachindex(trial_quadrule)
-                trial_point, trial_weight = trial_quadrule[trial_quadrature_index]
-                y = neighborhood(trial_element, trial_point)
-                weight = weighted_test_jacobian * trial_weight * jacobian(y)
-                trial_values = trial_shapes[trial_index, trial_quadrature_index]
-
-                z += weight * integrand(x, y, test_values, trial_values)
+        for (eta_1, weight_1) in strategy.qps
+            for (eta_2, weight_2) in strategy.qps
+                for (eta_3, weight_3) in strategy.qps
+                    for (xi, weight_4) in strategy.qps
+                        weight = weight_1 * weight_2 * weight_3 * weight_4
+                        z += weight * strategy(
+                            pulledback_integrand, eta_1, eta_2, eta_3, xi)
+                    end
+                end
             end
         end
 
@@ -161,7 +384,8 @@ end
 
 function assemblechunk_body_gpu!(operator::IntegralOperator,
     test_local_space, test_elements, test_assembly, test_quadrule, test_shapes,
-    trial_local_space, trial_elements, trial_assembly, trial_quadrule, trial_shapes;
+    trial_local_space, trial_elements, trial_assembly, trial_quadrule, trial_shapes,
+    quadstrat::BEAST.DoubleNumQStrat;
     gpu_blocksize)
 
     num_test_shapes = div(size(test_assembly, 2), length(test_elements))
@@ -185,9 +409,59 @@ function assemblechunk_body_gpu!(operator::IntegralOperator,
     return Array(matrix)
 end
 
+function assemblechunk_body_gpu!(operator::IntegralOperator,
+    test_local_space, test_elements, test_assembly, test_quadrule, test_shapes,
+    trial_local_space, trial_elements, trial_assembly, trial_quadrule, trial_shapes,
+    quadstrat::BEAST.DoubleNumSauterQstrat;
+    gpu_blocksize)
+
+    num_test_shapes = div(size(test_assembly, 2), length(test_elements))
+    num_trial_shapes = div(size(trial_assembly, 2), length(trial_elements))
+    T = promote_type(scalartype(operator),
+        eltype(test_assembly), eltype(trial_assembly))
+
+    num_element_pairs = length(test_elements) * length(trial_elements)
+    zlocal = CUDA.zeros(T,
+        num_test_shapes * length(test_elements),
+        num_trial_shapes * length(trial_elements))
+    pair_map = CUDA.zeros(Int, num_element_pairs, 4)
+    num_pairs = zeros(Int, 4)
+    gpu_singularitydetection!(pair_map, num_pairs, test_elements, trial_elements)
+
+    launch_gpu_kernel!(gpu_momintegral_doublenum!, zlocal, operator,
+        num_pairs[1], view(pair_map, :, 1),
+        test_elements, trial_elements, test_shapes, trial_shapes,
+        test_local_space, trial_local_space, test_quadrule, trial_quadrule;
+        gpu_blocksize=gpu_blocksize, problem_size=num_pairs[1])
+
+    coordinate_type = coordtype(eltype(test_elements))
+    common_vertex = CommonVertex(
+        gpu_legendre_rule(quadstrat.sauter_schwab_common_vert, coordinate_type))
+    common_edge = CommonEdge(
+        gpu_legendre_rule(quadstrat.sauter_schwab_common_edge, coordinate_type))
+    common_face = CommonFace(
+        gpu_legendre_rule(quadstrat.sauter_schwab_common_face, coordinate_type))
+
+    for (singularity, strategy) in
+        ((2, common_vertex), (3, common_edge), (4, common_face))
+
+        launch_gpu_kernel!(gpu_momintegral_sauterschwab!, zlocal, operator,
+            num_pairs[singularity], view(pair_map, :, singularity),
+            test_elements, trial_elements, test_local_space, trial_local_space,
+            strategy;
+            gpu_blocksize=gpu_blocksize, problem_size=num_pairs[singularity])
+    end
+
+    matrix = CUDA.zeros(T, size(test_assembly, 1), size(trial_assembly, 1))
+    build_matrix!(matrix, zlocal, test_assembly, trial_assembly)
+
+    return Array(matrix)
+end
+
 function assemble_gpu!(operator::IntegralOperator,
     test_functions::Space, trial_functions::Space, store,
-    quadstrat::BEAST.DoubleNumQStrat; gpu_blocksize)
+    quadstrat::Union{BEAST.DoubleNumQStrat,BEAST.DoubleNumSauterQstrat};
+    gpu_blocksize)
 
     T = scalartype(operator, test_functions, trial_functions)
 
@@ -203,7 +477,7 @@ function assemble_gpu!(operator::IntegralOperator,
         refspace(test_functions), test_elements, test_assembly,
         test_quadrule, test_shapes,
         refspace(trial_functions), trial_elements, trial_assembly,
-        trial_quadrule, trial_shapes;
+        trial_quadrule, trial_shapes, quadstrat;
         gpu_blocksize)
 
     for trial_dof in axes(matrix, 2)
@@ -221,7 +495,7 @@ function assemble_gpu!(operator::IntegralOperator,
     gpu_blocksize)
 
     throw(ArgumentError(
-        "GPU assembly currently supports DoubleNumQStrat, got $(typeof(quadstrat))"))
+        "GPU assembly currently supports DoubleNumQStrat and DoubleNumSauterQstrat, got $(typeof(quadstrat))"))
 end
 
 function assemble!(operator::IntegralOperator,
