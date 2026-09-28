@@ -55,7 +55,7 @@ function extend(space::S, supermesh) where {S <: Space}
 end
 
 
-@testitem "extend by zero" begin
+@testitem "extend by zero: union" begin
     using CompScienceMeshes
 
     m1 = meshrectangle(1.0, 1.0, 1.0, 3)
@@ -102,7 +102,7 @@ function extend(space::F, submesh, supermesh) where {F <: Space}
 end
 
 
-@testitem "extend by zero" begin
+@testitem "extend by zero: weld" begin
     using CompScienceMeshes
 
     m1 = meshrectangle(1.0, 1.0, 1.0, 3)
