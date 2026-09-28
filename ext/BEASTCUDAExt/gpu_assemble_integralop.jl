@@ -21,8 +21,8 @@ function l2g_maps!(assembly_data, nfunctions)
     return local_to_global
 end
 
-function load_assemblydata_gpu(functions::Space, ::Type{T}) where T
-    elements, assembly_data, _ = BEAST.assemblydata(functions)
+function load_assemblydata_gpu(functions::Space, elements, assembly_data,
+    ::Type{T}) where T
     element_domain = domain(first(elements))
     num_shapes = numfunctions(refspace(functions), element_domain)
 
@@ -46,6 +46,11 @@ function load_assemblydata_gpu(functions::Space, ::Type{T}) where T
 
     return CuArray(elements), CuSparseMatrixCSC(assembly_matrix),
         local_to_global, element_domain, coordtype(first(elements))
+end
+
+function load_assemblydata_gpu(functions::Space, ::Type{T}) where T
+    elements, assembly_data, _ = BEAST.assemblydata(functions)
+    return load_assemblydata_gpu(functions, elements, assembly_data, T)
 end
 
 function gpu_triangle_rule(order, ::Type{T}) where T
@@ -361,9 +366,25 @@ function build_matrix!(matrix, zlocal, test_assembly, trial_assembly)
 end
 
 function assemble_primer_gpu(functions::Space, quadrule, ::Type{T}) where T
-    local_space = refspace(functions)
     elements, assembly_data, local_to_global, element_domain, coordinate_type =
         load_assemblydata_gpu(functions, T)
+
+    return assemble_primer_gpu(functions, elements, assembly_data,
+        local_to_global, element_domain, coordinate_type, quadrule)
+end
+
+function assemble_primer_gpu(functions::Space, elements, assembly_data,
+    quadrule, ::Type{T}) where T
+    elements, assembly_data, local_to_global, element_domain, coordinate_type =
+        load_assemblydata_gpu(functions, elements, assembly_data, T)
+
+    return assemble_primer_gpu(functions, elements, assembly_data,
+        local_to_global, element_domain, coordinate_type, quadrule)
+end
+
+function assemble_primer_gpu(functions::Space, elements, assembly_data,
+    local_to_global, element_domain, coordinate_type, quadrule)
+    local_space = refspace(functions)
 
     eltype(elements) <: CompScienceMeshes.Simplex{3,2} ||
         throw(ArgumentError(
@@ -461,29 +482,77 @@ end
 function assemble_gpu!(operator::IntegralOperator,
     test_functions::Space, trial_functions::Space, store,
     quadstrat::Union{BEAST.DoubleNumQStrat,BEAST.DoubleNumSauterQstrat};
-    gpu_blocksize)
+    gpu_blocksize,
+    tilingstrat=TilingStrategy(EqualTiling(1), EqualTiling(1)),
+    nstreams::Int=1)
 
     T = scalartype(operator, test_functions, trial_functions)
 
-    test_local_to_global, (test_elements, test_assembly),
-        (test_quadrule, test_shapes) =
-            assemble_primer_gpu(test_functions, quadstrat.outer_rule, T)
+    test_geometry = geometry(test_functions)
+    trial_geometry = geometry(trial_functions)
+    test_tiles = tileindices(numcells(test_geometry), tilingstrat[1])
+    trial_tiles = tileindices(numcells(trial_geometry), tilingstrat[2])
 
-    trial_local_to_global, (trial_elements, trial_assembly),
-        (trial_quadrule, trial_shapes) =
-            assemble_primer_gpu(trial_functions, quadstrat.inner_rule, T)
+    test_elements, test_assembly, _ =
+        BEAST.assemblydata(test_functions; onlyactives=false)
+    trial_elements, trial_assembly, _ =
+        BEAST.assemblydata(trial_functions; onlyactives=false)
 
-    matrix = assemblechunk_body_gpu!(operator,
-        refspace(test_functions), test_elements, test_assembly,
-        test_quadrule, test_shapes,
-        refspace(trial_functions), trial_elements, trial_assembly,
-        trial_quadrule, trial_shapes, quadstrat;
-        gpu_blocksize)
+    test_data = map(test_tiles) do tile
+        elements = test_elements[tile]
+        assembly_data = BEAST.AssemblyData(test_assembly.data[:, :, tile])
+        assemble_primer_gpu(test_functions, elements, assembly_data,
+            quadstrat.outer_rule, T)
+    end
 
-    for trial_dof in axes(matrix, 2)
-        for test_dof in axes(matrix, 1)
-            store(matrix[test_dof, trial_dof],
-                test_local_to_global[test_dof], trial_local_to_global[trial_dof])
+    trial_data = map(trial_tiles) do tile
+        elements = trial_elements[tile]
+        assembly_data = BEAST.AssemblyData(trial_assembly.data[:, :, tile])
+        assemble_primer_gpu(trial_functions, elements, assembly_data,
+            quadstrat.inner_rule, T)
+    end
+
+    CUDA.synchronize()
+
+    num_test_tiles = length(test_tiles)
+    num_trial_tiles = length(trial_tiles)
+    num_tile_pairs = num_test_tiles * num_trial_tiles
+    nstreams > 0 || throw(ArgumentError("number of CUDA streams must be positive"))
+    nstreams = min(nstreams, num_tile_pairs)
+    device = CUDA.device()
+
+    for batch_start in 1:nstreams:num_tile_pairs
+        batch_stop = min(batch_start + nstreams - 1, num_tile_pairs)
+        tasks = map(batch_start:batch_stop) do tile_pair
+            Threads.@spawn begin
+                CUDA.device!(device)
+                test_tile = mod(tile_pair - 1, num_test_tiles) + 1
+                trial_tile = div(tile_pair - 1, num_test_tiles) + 1
+
+                test_local_to_global, (test_elements, test_assembly),
+                    (test_quadrule, test_shapes) = test_data[test_tile]
+                trial_local_to_global, (trial_elements, trial_assembly),
+                    (trial_quadrule, trial_shapes) = trial_data[trial_tile]
+
+                matrix = assemblechunk_body_gpu!(operator,
+                    refspace(test_functions), test_elements, test_assembly,
+                    test_quadrule, test_shapes,
+                    refspace(trial_functions), trial_elements, trial_assembly,
+                    trial_quadrule, trial_shapes, quadstrat;
+                    gpu_blocksize)
+
+                return matrix, test_local_to_global, trial_local_to_global
+            end
+        end
+
+        for task in tasks
+            matrix, test_local_to_global, trial_local_to_global = fetch(task)
+            for trial_dof in axes(matrix, 2)
+                for test_dof in axes(matrix, 1)
+                    store(matrix[test_dof, trial_dof],
+                        test_local_to_global[test_dof], trial_local_to_global[trial_dof])
+                end
+            end
         end
     end
 
@@ -492,7 +561,7 @@ end
 
 function assemble_gpu!(operator::IntegralOperator,
     test_functions::Space, trial_functions::Space, store, quadstrat;
-    gpu_blocksize)
+    kwargs...)
 
     throw(ArgumentError(
         "GPU assembly currently supports DoubleNumQStrat and DoubleNumSauterQstrat, got $(typeof(quadstrat))"))
@@ -501,9 +570,13 @@ end
 function assemble!(operator::IntegralOperator,
     test_functions::Space, trial_functions::Space, store,
     threading::Type{Threading{:gpu}};
-    quadstrat=BEAST.defaultquadstrat, gpu_blocksize=256, kwargs...)
+    quadstrat=BEAST.defaultquadstrat,
+    gpu_blocksize=256,
+    tilingstrat=TilingStrategy(EqualTiling(1), EqualTiling(1)),
+    nstreams::Int=1,
+    kwargs...)
 
     strategy = quadstrat(operator, test_functions, trial_functions)
     return assemble_gpu!(operator, test_functions, trial_functions, store, strategy;
-        gpu_blocksize)
+        gpu_blocksize, tilingstrat, nstreams)
 end
