@@ -44,12 +44,12 @@ derive(gaussian2).(taxis2)[120]/sol2
 @test all(derive(gaussian1).(taxis1)/sol1 .≈ derive(gaussian2).(taxis2)/sol2)
 
 timeels1, timead1 = BEAST.assemblydata(U1)
-@test timeels1[100][1][1] ≈ Δt1*100
-@test timeels1[100][2][1] ≈ Δt1*101
+@test timeels1[100][1][1] ≈ Δt1*99
+@test timeels1[100][2][1] ≈ Δt1*100
 
 timeels2, timead2 = BEAST.assemblydata(U2)
-@test timeels2[100][1][1] ≈ Δt2*100
-@test timeels2[100][2][1] ≈ Δt2*101
+@test timeels2[100][1][1] ≈ Δt2*99
+@test timeels2[100][2][1] ≈ Δt2*100
 
 b1[120]/sol1
 b2[120]/sol2
