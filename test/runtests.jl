@@ -111,10 +111,17 @@ include("test_evie_dvie.jl")
 
 include("test_coloring.jl")
 
+const CUDA_FUNCTIONAL = try
+    @eval import CUDA
+    CUDA.functional()
+catch
+    false
+end
+
 @run_package_tests filter = ti -> begin
     # @show ti.tags
-    # @show isempty(intersect([:example, :diagnostics], ti.tags))
-    isempty(intersect([:example, :diagnostics], ti.tags))
+    excluded_tags = CUDA_FUNCTIONAL ? [:example, :diagnostics] : [:example, :diagnostics, :gpu]
+    isempty(intersect(excluded_tags, ti.tags))
 end verbose = true
 
 try
