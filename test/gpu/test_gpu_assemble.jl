@@ -46,4 +46,44 @@ end
         tilingstrat=tiling, nstreams=2)
 
     @test isapprox(gpu, cpu; atol=1.0e-10, rtol=1.0e-10)
+    @test_throws ArgumentError assemble(operator, space, space;
+        threading=:gpu, quadstrat=quadrature, devices=Int[])
+    @test_throws ArgumentError assemble(operator, space, space;
+        threading=:gpu, quadstrat=quadrature,
+        devices=[CUDA.device(), CUDA.device()])
+end
+
+@testitem "GPU dense assembly with multiple devices" tags=[:gpu] begin
+    using CUDA
+    using CompScienceMeshes
+    using Test
+
+    @test CUDA.functional()
+    devices = collect(CUDA.devices())
+    if length(devices) < 2
+        @test_skip length(devices) >= 2
+    else
+        devices = devices[1:2]
+        CUDA.device!(first(devices))
+
+        extension = Base.get_extension(BEAST, :BEASTCUDAExt)
+        mesh = meshcuboid(1.0, 1.0, 1.0, 0.5)
+        operator = Helmholtz3D.singlelayer(wavenumber=1.0)
+        space = lagrangec0(mesh; order=1)
+        quadrature = BEAST.DoubleNumSauterQstrat(2, 3, 2, 2, 2, 2)
+        cpu = assemble(operator, space, space;
+            threading=:single, quadstrat=quadrature)
+
+        gpu = assemble(operator, space, space;
+            threading=:gpu, quadstrat=quadrature,
+            devices, nstreams=2)
+        @test isapprox(gpu, cpu; atol=1.0e-10, rtol=1.0e-10)
+
+        tiling = extension.TilingStrategy(
+            extension.EqualTiling(2), extension.EqualTiling(2))
+        gpu = assemble(operator, space, space;
+            threading=:gpu, quadstrat=quadrature,
+            devices, tilingstrat=tiling)
+        @test isapprox(gpu, cpu; atol=1.0e-10, rtol=1.0e-10)
+    end
 end
