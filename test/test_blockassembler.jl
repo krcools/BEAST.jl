@@ -3,26 +3,46 @@ using CompScienceMeshes
 using LinearAlgebra
 using Test
 
-r = 10.0
-λ = 20 * r
-k = 2 * π / λ
+@testset "blockassembler" begin
+    r = 10.0
+    lambda = 20 * r
+    wavenumber = 2 * pi / lambda
 
-sphere = readmesh(joinpath(dirname(@__FILE__),"assets","sphere5.in"), T=Float64)
+    sphere = readmesh(joinpath(@__DIR__, "assets", "sphere5.in"); T=Float64)
+    operator = Maxwell3D.doublelayer(; wavenumber)
+    space = raviartthomas(sphere)
 
-D = Maxwell3D.doublelayer(wavenumber=k)
-X = raviartthomas(sphere)
-Y = buffachristiansen(sphere)
+    matrix = assemble(operator, space, space)
+    blockassembler = BEAST.blockassembler(operator, space, space)
+    ids = collect(eachindex(space.fns))
 
-A = assemble(D, X, X)
+    function assembleblock(assembler, rows=ids, columns=ids)
+        out = zeros(ComplexF64, length(rows), length(columns))
+        store(v, m, n) = (out[m, n] += v)
+        assembler(rows, columns, store)
+        return out
+    end
 
-@views blkasm = BEAST.blockassembler(D, X, X)
+    expected = assembleblock(blockassembler)
+    @test matrix ≈ expected atol=eps(Float64)
 
-@views function assembler(Z, tdata, sdata)
-    @views store(v,m,n) = (Z[m,n] += v)
-    blkasm(tdata,sdata,store)
+    poolsize = length(blockassembler.scratchpool.available)
+    scratchids = Set(objectid.(blockassembler.scratchpool.available))
+    @test assembleblock(blockassembler) ≈ expected
+    @test length(blockassembler.scratchpool.available) == poolsize
+    @test Set(objectid.(blockassembler.scratchpool.available)) == scratchids
+
+    failingstore(args...) = error("store failed")
+    @test_throws ErrorException blockassembler(
+        [first(ids)], [first(ids)], failingstore
+    )
+    @test length(blockassembler.scratchpool.available) == poolsize
+
+    results = fetch.([
+        Threads.@spawn assembleblock(blockassembler) for
+        _ in 1:(2 * Threads.nthreads() + 1)
+    ])
+    @test all(result -> result ≈ expected, results)
+    @test length(blockassembler.scratchpool.available) == poolsize
+    @test Set(objectid.(blockassembler.scratchpool.available)) == scratchids
 end
-
-A_blk = zeros(ComplexF64, length(X.fns), length(Y.fns))
-assembler(A_blk, [1:length(X.fns);], [1:length(Y.fns);])
-
-@test norm(A - A_blk) ≈ 0 atol=eps(Float64) 
