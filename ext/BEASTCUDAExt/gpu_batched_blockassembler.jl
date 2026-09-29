@@ -458,9 +458,7 @@ function batched_block_chunks(assembler::GPUBlockAssembler,
     return chunks
 end
 
-function gpu_batched_blockassemble!(blocks, assembler::GPUBlockAssembler,
-    test_ids, trial_ids; budget=1 << 30)
-
+function validate_batched_blocks(blocks, test_ids, trial_ids)
     length(blocks) == length(test_ids) == length(trial_ids) ||
         throw(DimensionMismatch("blocks and index collections must have equal length"))
     for block in eachindex(blocks)
@@ -469,6 +467,13 @@ function gpu_batched_blockassemble!(blocks, assembler::GPUBlockAssembler,
             throw(DimensionMismatch(
                 "destination size does not match block indices"))
     end
+    return nothing
+end
+
+function gpu_batched_blockassemble!(blocks, assembler::GPUBlockAssembler,
+    test_ids, trial_ids; budget=1 << 30)
+
+    validate_batched_blocks(blocks, test_ids, trial_ids)
 
     CUDA.device!(assembler.device)
     for chunk in batched_block_chunks(assembler, test_ids, trial_ids; budget)
@@ -489,4 +494,56 @@ function gpu_batched_blockassemble(assembler::GPUBlockAssembler,
         for block in eachindex(test_ids)]
     return gpu_batched_blockassemble!(
         blocks, assembler, test_ids, trial_ids; kwargs...)
+end
+
+function gpu_blockassemblers(operator::IntegralOperator,
+    test_space::Space, trial_space::Space; devices, kwargs...)
+
+    devices = collect(devices)
+    isempty(devices) && throw(ArgumentError("at least one CUDA device is required"))
+    tasks = map(devices) do device
+        Threads.@spawn gpu_blockassembler(operator, test_space, trial_space;
+            device, kwargs...)
+    end
+    return fetch.(tasks)
+end
+
+function gpu_batched_blockassemble!(blocks,
+    assemblers::AbstractVector{<:GPUBlockAssembler}, test_ids, trial_ids;
+    budget=1 << 30)
+
+    isempty(assemblers) &&
+        throw(ArgumentError("at least one GPU block assembler is required"))
+    validate_batched_blocks(blocks, test_ids, trial_ids)
+    isempty(blocks) && return blocks
+
+    num_blocks = length(blocks)
+    num_assemblers = min(length(assemblers), num_blocks)
+    tasks = map(1:num_assemblers) do index
+        first_block = div((index - 1) * num_blocks, num_assemblers) + 1
+        last_block = div(index * num_blocks, num_assemblers)
+        Threads.@spawn gpu_batched_blockassemble!(
+            view(blocks, first_block:last_block), assemblers[index],
+            view(test_ids, first_block:last_block),
+            view(trial_ids, first_block:last_block); budget)
+    end
+    fetch.(tasks)
+    return blocks
+end
+
+function gpu_batched_blockassemble(
+    assemblers::AbstractVector{<:GPUBlockAssembler}, test_ids, trial_ids;
+    kwargs...)
+
+    isempty(assemblers) &&
+        throw(ArgumentError("at least one GPU block assembler is required"))
+    length(test_ids) == length(trial_ids) ||
+        throw(DimensionMismatch("index collections must have equal length"))
+    assembler = first(assemblers)
+    T = scalartype(assembler.operator,
+        assembler.test_space, assembler.trial_space)
+    blocks = [zeros(T, length(test_ids[block]), length(trial_ids[block]))
+        for block in eachindex(test_ids)]
+    return gpu_batched_blockassemble!(
+        blocks, assemblers, test_ids, trial_ids; kwargs...)
 end
