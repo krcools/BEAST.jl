@@ -90,6 +90,10 @@ end
     @test extension.gpu_batched_blockassemble!(
         device_blocks, assembler, test_ids, trial_ids) === device_blocks
     @test Array.(device_blocks) == unchunked
+
+    assemblers = [assembler]
+    @test extension.gpu_batched_blockassemble(
+        assemblers, test_ids, trial_ids) == unchunked
 end
 
 @testitem "GPU batched far block assembly vs CPU" tags=[:gpu] begin
@@ -121,5 +125,45 @@ end
         @test isapprox(blocks[block],
             cpu[test_ids[block], trial_ids[block]];
             atol=1.0e-10, rtol=1.0e-10)
+    end
+end
+
+@testitem "GPU batched block assembly with multiple devices" tags=[:gpu] begin
+    using CUDA
+    using CompScienceMeshes
+    using Test
+
+    @test CUDA.functional()
+    devices = collect(CUDA.devices())
+    if length(devices) < 2
+        @test_skip length(devices) >= 2
+    else
+        devices = devices[1:2]
+        CUDA.device!(first(devices))
+
+        extension = Base.get_extension(BEAST, :BEASTCUDAExt)
+        mesh = meshcuboid(1.0, 1.0, 1.0, 0.5)
+        space = lagrangec0(mesh; order=1)
+        operator = Helmholtz3D.singlelayer(wavenumber=1.0)
+        quadrature = BEAST.DoubleNumSauterQstrat(2, 2, 2, 2, 2, 2)
+        cpu = assemble(operator, space, space;
+            threading=:single, quadstrat=quadrature)
+        assemblers = extension.gpu_blockassemblers(
+            operator, space, space; quadstrat=quadrature, devices)
+
+        num_ids = min(numfunctions(space), 16)
+        middle = div(num_ids, 2)
+        first_ids = collect(1:middle)
+        last_ids = collect(middle + 1:num_ids)
+        test_ids = [first_ids, first_ids, last_ids, last_ids]
+        trial_ids = [first_ids, last_ids, first_ids, last_ids]
+        blocks = extension.gpu_batched_blockassemble(
+            assemblers, test_ids, trial_ids; budget=1)
+
+        for block in eachindex(blocks)
+            @test isapprox(blocks[block],
+                cpu[test_ids[block], trial_ids[block]];
+                atol=1.0e-10, rtol=1.0e-10)
+        end
     end
 end
