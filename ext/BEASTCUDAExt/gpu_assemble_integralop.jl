@@ -612,42 +612,53 @@ function assemble_gpu!(operator::IntegralOperator,
     num_tile_pairs = num_test_tiles * num_trial_tiles
     num_workers = min(length(device_data) * nstreams, num_tile_pairs)
 
-    for batch_start in 1:num_workers:num_tile_pairs
-        batch_stop = min(batch_start + num_workers - 1, num_tile_pairs)
-        tasks = map(batch_start:batch_stop) do tile_pair
-            worker = tile_pair - batch_start + 1
-            data = device_data[mod(worker - 1, length(device_data)) + 1]
-            Threads.@spawn begin
-                CUDA.device!(data.device)
-                test_tile = mod(tile_pair - 1, num_test_tiles) + 1
-                trial_tile = div(tile_pair - 1, num_test_tiles) + 1
+    result_type = Tuple{Matrix{T},Vector{Int},Vector{Int}}
+    results = Channel{result_type}(2 * num_workers)
+    producer = Threads.@spawn begin
+        try
+            @sync for worker in 1:num_workers
+                Threads.@spawn let worker=worker
+                    data = device_data[mod(worker - 1, length(device_data)) + 1]
+                    CUDA.device!(data.device)
+                    for tile_pair in worker:num_workers:num_tile_pairs
+                        test_tile = mod(tile_pair - 1, num_test_tiles) + 1
+                        trial_tile = div(tile_pair - 1, num_test_tiles) + 1
 
-                test_local_to_global, (test_elements, test_assembly),
-                    (test_quadrule, test_shapes) = data.test_data[test_tile]
-                trial_local_to_global, (trial_elements, trial_assembly),
-                    (trial_quadrule, trial_shapes) = data.trial_data[trial_tile]
+                        test_local_to_global,
+                            (test_tile_elements, test_tile_assembly),
+                            (test_quadrule, test_shapes) = data.test_data[test_tile]
+                        trial_local_to_global,
+                            (trial_tile_elements, trial_tile_assembly),
+                            (trial_quadrule, trial_shapes) = data.trial_data[trial_tile]
 
-                matrix = assemblechunk_body_gpu!(operator,
-                    refspace(test_functions), test_elements, test_assembly,
-                    test_quadrule, test_shapes,
-                    refspace(trial_functions), trial_elements, trial_assembly,
-                    trial_quadrule, trial_shapes, quadstrat;
-                    gpu_blocksize, singular_rules=data.singular_rules)
+                        matrix = assemblechunk_body_gpu!(operator,
+                            refspace(test_functions),
+                            test_tile_elements, test_tile_assembly,
+                            test_quadrule, test_shapes,
+                            refspace(trial_functions),
+                            trial_tile_elements, trial_tile_assembly,
+                            trial_quadrule, trial_shapes, quadstrat;
+                            gpu_blocksize, singular_rules=data.singular_rules)
 
-                return matrix, test_local_to_global, trial_local_to_global
-            end
-        end
-
-        for task in tasks
-            matrix, test_local_to_global, trial_local_to_global = fetch(task)
-            for trial_dof in axes(matrix, 2)
-                for test_dof in axes(matrix, 1)
-                    store(matrix[test_dof, trial_dof],
-                        test_local_to_global[test_dof], trial_local_to_global[trial_dof])
+                        put!(results,
+                            (matrix, test_local_to_global, trial_local_to_global))
+                    end
                 end
+            end
+        finally
+            close(results)
+        end
+    end
+
+    for (matrix, test_local_to_global, trial_local_to_global) in results
+        for trial_dof in axes(matrix, 2)
+            for test_dof in axes(matrix, 1)
+                store(matrix[test_dof, trial_dof],
+                    test_local_to_global[test_dof], trial_local_to_global[trial_dof])
             end
         end
     end
+    fetch(producer)
 
     return nothing
 end

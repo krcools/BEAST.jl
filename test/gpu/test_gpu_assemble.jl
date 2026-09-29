@@ -46,6 +46,14 @@ end
         tilingstrat=tiling, nstreams=2)
 
     @test isapprox(gpu, cpu; atol=1.0e-10, rtol=1.0e-10)
+
+    tiling = extension.TilingStrategy(
+        extension.WorksizeTiling(5), extension.WorksizeTiling(7))
+    gpu = assemble(operator, space, space;
+        threading=:gpu, quadstrat=quadrature,
+        tilingstrat=tiling, nstreams=3)
+    @test isapprox(gpu, cpu; atol=1.0e-10, rtol=1.0e-10)
+
     @test_throws ArgumentError assemble(operator, space, space;
         threading=:gpu, quadstrat=quadrature, devices=Int[])
     @test_throws ArgumentError assemble(operator, space, space;
