@@ -274,7 +274,7 @@ function assemble!(operator::Operator, testfunctions::Space, trialfunctions::Spa
             assemblechunk_body!(operator, testfunctions, trialfunctions,
                 testelements, eachindex(testelements), testad1, coloredtestelements,
                 trialelements, eachindex(trialelements), trialad, coloredtrialelements,
-                qdata, nothing, store; quadstrat=qs, scheduler)
+                qdata, store; quadstrat=qs, scheduler)
             next!(pbar; step = length(testelementcolors[i]) * length(trialelementcolors[j]))
     end end 
     finish!(pbar)
