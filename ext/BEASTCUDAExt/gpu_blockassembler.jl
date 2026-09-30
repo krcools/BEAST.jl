@@ -65,31 +65,13 @@ function active_block_data(data::GPUBlockSpaceData, ids)
     return elements, assembly_data, data.quadrule, shapes
 end
 
-function resolve_gpu_block_quadstrat(quadstrat, operator, test_space, trial_space)
-    strategy = applicable(quadstrat, operator, test_space, trial_space) ?
-        quadstrat(operator, test_space, trial_space) : quadstrat
-
-    if CompScienceMeshes.refines(geometry(test_space), geometry(trial_space)) ||
-        CompScienceMeshes.refines(geometry(trial_space), geometry(test_space))
-        throw(ArgumentError(
-            "GPU block assembly currently supports conforming meshes only"))
-    end
-
-    strategy isa Union{BEAST.DoubleNumQStrat,BEAST.DoubleNumSauterQstrat} ||
-        throw(ArgumentError(
-            "GPU block assembly currently supports DoubleNumQStrat and " *
-            "DoubleNumSauterQstrat, got $(typeof(strategy))"))
-
-    return strategy
-end
-
 function gpu_blockassembler(operator::IntegralOperator,
     test_space::Space, trial_space::Space;
     quadstrat=BEAST.defaultquadstrat,
     gpu_blocksize=256,
     device=CUDA.device())
 
-    strategy = resolve_gpu_block_quadstrat(
+    strategy = resolve_gpu_quadstrat(
         quadstrat, operator, test_space, trial_space)
     CUDA.device!(device)
     T = scalartype(operator, test_space, trial_space)

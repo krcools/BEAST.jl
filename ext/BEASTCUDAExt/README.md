@@ -30,8 +30,8 @@ See [`examples/gpu_assemble.jl`](../../examples/gpu_assemble.jl) and
 ## Current limitations
 
 - Only three-dimensional triangular surface meshes are supported.
-- Singular block assembly does not yet support test and trial meshes in a
-  refinement relation. Separate nonintersecting meshes are supported.
+- GPU assembly does not yet support test and trial meshes in a refinement
+  relation. Separate nonintersecting meshes are supported.
 - The default Wilton-Sauter quadrature strategy is not implemented on the GPU,
   so a supported strategy must be selected explicitly.
 - CUDA is the only GPU backend. 

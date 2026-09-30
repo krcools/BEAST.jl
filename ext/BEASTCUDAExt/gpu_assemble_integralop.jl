@@ -302,7 +302,8 @@ end
 
 function build_matrix!(matrix, zlocal, test_assembly, trial_assembly)
     T = promote_type(eltype(zlocal), eltype(trial_assembly))
-    trial_projection = CUDA.zeros(T, size(trial_assembly, 1), size(zlocal, 1))
+    trial_projection = CuArray{T}(
+        undef, size(trial_assembly, 1), size(zlocal, 1))
 
     CUSPARSE.mm!('N', 'T', one(T), trial_assembly, zlocal,
         zero(T), trial_projection, 'O')
@@ -333,10 +334,6 @@ function assemble_primer_gpu(functions::Space, elements, assembly_data,
     local_to_global, element_domain, coordinate_type, quadrule)
     local_space = refspace(functions)
 
-    eltype(elements) <: CompScienceMeshes.Simplex{3,2} ||
-        throw(ArgumentError(
-            "GPU assembly currently supports triangular surface elements in three dimensions"))
-
     quadrule_d = gpu_triangle_rule(quadrule, coordinate_type)
     num_shapes = numfunctions(local_space, element_domain)
     shape_type = shapetype(local_space)
@@ -361,7 +358,7 @@ function assemblechunk_body_gpu_device!(operator::IntegralOperator,
     T = promote_type(scalartype(operator),
         eltype(test_assembly), eltype(trial_assembly))
 
-    zlocal = CUDA.zeros(T,
+    zlocal = CuArray{T}(undef,
         num_test_shapes * length(test_elements),
         num_trial_shapes * length(trial_elements))
 
@@ -371,7 +368,8 @@ function assemblechunk_body_gpu_device!(operator::IntegralOperator,
         test_local_space, trial_local_space, test_quadrule, trial_quadrule;
         gpu_blocksize=gpu_blocksize, problem_size=num_pairs)
 
-    matrix = CUDA.zeros(T, size(test_assembly, 1), size(trial_assembly, 1))
+    matrix = CuArray{T}(
+        undef, size(test_assembly, 1), size(trial_assembly, 1))
     build_matrix!(matrix, zlocal, test_assembly, trial_assembly)
 
     return matrix
@@ -389,10 +387,10 @@ function assemblechunk_body_gpu_device!(operator::IntegralOperator,
         eltype(test_assembly), eltype(trial_assembly))
 
     num_element_pairs = length(test_elements) * length(trial_elements)
-    zlocal = CUDA.zeros(T,
+    zlocal = CuArray{T}(undef,
         num_test_shapes * length(test_elements),
         num_trial_shapes * length(trial_elements))
-    pair_map = CUDA.zeros(Int, num_element_pairs, 4)
+    pair_map = CuArray{Int}(undef, num_element_pairs, 4)
     num_pairs = zeros(Int, 4)
     gpu_singularitydetection!(pair_map, num_pairs, test_elements, trial_elements)
 
@@ -426,7 +424,8 @@ function assemblechunk_body_gpu_device!(operator::IntegralOperator,
             gpu_blocksize=gpu_blocksize, problem_size=num_pairs[singularity])
     end
 
-    matrix = CUDA.zeros(T, size(test_assembly, 1), size(trial_assembly, 1))
+    matrix = CuArray{T}(
+        undef, size(test_assembly, 1), size(trial_assembly, 1))
     build_matrix!(matrix, zlocal, test_assembly, trial_assembly)
 
     return matrix
@@ -603,7 +602,11 @@ function assemble!(operator::IntegralOperator,
     devices=(CUDA.device(),),
     kwargs...)
 
-    strategy = quadstrat(operator, test_functions, trial_functions)
+    numfunctions(test_functions) == 0 && return
+    numfunctions(trial_functions) == 0 && return
+
+    strategy = resolve_gpu_quadstrat(
+        quadstrat, operator, test_functions, trial_functions)
     return assemble_gpu!(operator, test_functions, trial_functions, store, strategy;
         gpu_blocksize, tilingstrat, nstreams, devices)
 end
