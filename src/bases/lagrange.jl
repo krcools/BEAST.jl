@@ -814,11 +814,20 @@ the area so that overall the integral over the dual function is one.
 When `interpolatory=true` is used, the function value is one on the support, and thus,
 it gives rise to a partition of unity.
 """
-function duallagrangecxd0(mesh, jct=CompScienceMeshes.mesh(coordtype(mesh), dimension(mesh)-1); interpolatory=false)
-    vertexlist = interior_and_junction_vertices(mesh, jct)
-    duallagrangecxd0(mesh, vertexlist; interpolatory=interpolatory)
+function duallagrangecxd0(mesh; interpolatory=false)
+    jct = CompScienceMeshes.mesh(coordtype(mesh), dimension(mesh)-1)
+    duallagrangecxd0(mesh, jct; interpolatory=interpolatory)
 end
 
+function duallagrangecxd0(mesh, jct::CompScienceMeshes.AbstractMesh; interpolatory=false)
+    if dimension(jct) == dimension(mesh) - 1
+        vertexlist = interior_and_junction_vertices(mesh, jct)
+    else
+        @assert dimension(jct) == 0
+        vertexlist = Int[CompScienceMeshes.indices(jct, v)[1] for v in jct]
+    end
+    duallagrangecxd0(mesh, vertexlist; interpolatory=interpolatory)
+end
 
 function duallagrangecxd0(mesh, vertexlist::Vector{Int}; interpolatory=false)
 
@@ -840,14 +849,6 @@ function duallagrangecxd0(mesh, vertexlist::Vector{Int}; interpolatory=false)
     NF = 1
     LagrangeBasis{0,-1,NF}(fine, fns, pos)
 end
-
-
-function duallagrangecxd0(mesh, vertices::CompScienceMeshes.AbstractMesh{U,1}; interpolatory=false) where {U}
-    # vertexlist = Int[v[1] for v in vertices]
-    vertexlist =Int[CompScienceMeshes.indices(vertices, v)[1] for v in vertices]
-    return duallagrangecxd0(mesh, vertexlist; interpolatory=interpolatory)
-end
-
 
 """
     singleduallagd0(fine, F, v; interpolatory=false)
@@ -1962,4 +1963,25 @@ end
     using CompScienceMeshes
     Γ = meshcuboid(1.0,1.0,1.0,0.5)
     @test BEAST._surface(duallagrangecxd0(Γ)) ≈ 6.0
+end
+
+@testitem "duallagrangecxd0 on curves" begin
+    using CompScienceMeshes
+
+    # closed curve, vertex numbering inherited from the parent surface
+    Γ = boundary(meshrectangle(1.0,1.0,0.5,3))
+    X = duallagrangecxd0(Γ)
+    @test numfunctions(X) == numcells(Γ)
+    @test BEAST._surface(X) ≈ 4.0
+
+    # open curve: the two end vertices carry no dual function
+    Λ = meshsegment(1.0, 1/4, 3)
+    Y = duallagrangecxd0(Λ)
+    @test numfunctions(Y) == numcells(Λ) - 1
+    @test BEAST._surface(Y) ≈ 0.75
+
+    # junction supplied, half-pyramids on end vertices are kept
+    Z = duallagrangecxd0(Λ, boundary(Λ))
+    @test numfunctions(Z) == numcells(Λ) + 1
+    @test BEAST._surface(Z) ≈ 1.0
 end
