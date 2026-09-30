@@ -13,6 +13,7 @@
     quadrature = BEAST.DoubleNumSauterQstrat(2, 3, 2, 2, 2, 2)
     configurations = [
         (Helmholtz3D.singlelayer(wavenumber=1.0), lagrangec0(mesh; order=1)),
+        (Helmholtz3D.singlelayer(wavenumber=1.0), duallagrangec0d1(mesh)),
         (Maxwell3D.singlelayer(wavenumber=1.0), raviartthomas(mesh)),
         (Maxwell3D.singlelayer(wavenumber=1.0), buffachristiansen(sphere)),
     ]
