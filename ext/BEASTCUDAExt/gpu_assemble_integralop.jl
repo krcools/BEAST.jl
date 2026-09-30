@@ -226,95 +226,17 @@ function gpu_momintegral_doublenum!(zlocal, operator, num_pairs, pairs,
     return nothing
 end
 
-function gpu_setdifference(A::SVector{N1,T}, B::SVector{N2,T}) where {N1,N2,T}
-    result = zeros(MVector{N1-N2,T})
-    index = 1
-    for a in A
-        found = false
-        for b in B
-            found |= a == b
-        end
-        if !found
-            result[index] = a
-            index += 1
-        end
-    end
-    return result
-end
+@inline function gpu_sauterschwab_reorder(
+    test_vertices, trial_vertices, strategy)
 
-function gpu_sauterschwab_reorder(test_vertices, trial_vertices, ::CommonVertex)
-    T = eltype(first(test_vertices))
-    tolerance = 1.0e3 * eps(T)
-    test_common = 0
-    trial_common = 0
+    I = MVector{3,Int}(undef)
+    J = MVector{3,Int}(undef)
+    K = MVector{3,Int}(undef)
+    L = MVector{3,Int}(undef)
+    SauterSchwabQuadrature.reorder!(
+        I, J, K, L, test_vertices, trial_vertices, strategy)
 
-    for test_index in 1:3
-        for trial_index in 1:3
-            if norm(test_vertices[test_index] - trial_vertices[trial_index]) < tolerance
-                test_common = test_index
-                trial_common = trial_index
-                break
-            end
-        end
-        test_common != 0 && break
-    end
-
-    indices = SVector{3,Int}(1, 2, 3)
-    test_other = gpu_setdifference(indices, SVector{1,Int}(test_common))
-    trial_other = gpu_setdifference(indices, SVector{1,Int}(trial_common))
-
-    I = SVector{3,Int}(test_common, test_other[1], test_other[2])
-    J = SVector{3,Int}(trial_common, trial_other[1], trial_other[2])
-    return I, J
-end
-
-function gpu_sauterschwab_reorder(test_vertices, trial_vertices, ::CommonEdge)
-    T = eltype(first(test_vertices))
-    tolerance = 1.0e3 * eps(T)
-    test_common_1 = 0
-    test_common_2 = 0
-    trial_common_1 = 0
-    trial_common_2 = 0
-    num_common = 0
-
-    for test_index in 1:3
-        for trial_index in 1:3
-            if norm(test_vertices[test_index] - trial_vertices[trial_index]) < tolerance
-                if num_common == 0
-                    test_common_1 = test_index
-                    trial_common_1 = trial_index
-                else
-                    test_common_2 = test_index
-                    trial_common_2 = trial_index
-                end
-                num_common += 1
-                break
-            end
-        end
-    end
-
-    test_other = 6 - test_common_1 - test_common_2
-    trial_other = 6 - trial_common_1 - trial_common_2
-    I = SVector{3,Int}(test_common_2, test_other, test_common_1)
-    J = SVector{3,Int}(trial_common_2, trial_other, trial_common_1)
-    return I, J
-end
-
-function gpu_sauterschwab_reorder(test_vertices, trial_vertices, ::CommonFace)
-    T = eltype(first(test_vertices))
-    tolerance = 1.0e3 * eps(T)
-    J = zeros(MVector{3,Int})
-
-    for test_index in 1:3
-        for trial_index in 1:3
-            if norm(test_vertices[test_index] - trial_vertices[trial_index]) < tolerance
-                J[test_index] = trial_index
-                break
-            end
-        end
-    end
-
-    return SVector{3,Int}(1, 2, 3), SVector(J)
+    return SVector(I), SVector(J)
 end
 
 @inline function gpu_sauterschwab_integral(integrand,
