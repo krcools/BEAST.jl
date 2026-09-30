@@ -35,16 +35,6 @@ function GPUBlockSpaceData(space::Space, quadrule, ::Type{T}) where T
         space, elements_d, quadrule_d, shapes_d, num_shapes, T)
 end
 
-function active_element_ids(space::Space, ids)
-    element_ids = Int[]
-    for id in ids
-        for shape in BEAST.basisfunction(space, id)
-            push!(element_ids, shape.cellid)
-        end
-    end
-    return unique!(sort!(element_ids))
-end
-
 function block_assemblydata_gpu(data::GPUBlockSpaceData, ids, element_ids)
     element_map = Dict(element_id => i for (i, element_id) in enumerate(element_ids))
     rows = Int[]
@@ -66,7 +56,7 @@ function block_assemblydata_gpu(data::GPUBlockSpaceData, ids, element_ids)
 end
 
 function active_block_data(data::GPUBlockSpaceData, ids)
-    element_ids = active_element_ids(data.space, ids)
+    element_ids = BEAST.active_element_ids(data.space, ids)
     element_ids_d = CuArray(element_ids)
     elements = data.elements[element_ids_d]
     shapes = data.shapes[element_ids_d, :]
