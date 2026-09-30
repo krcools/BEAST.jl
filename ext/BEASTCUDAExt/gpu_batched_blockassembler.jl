@@ -260,7 +260,9 @@ function batched_entry_table(space, ids_per_block, dof_offsets,
     return entry_offsets, entry_elements, entry_shapes, entry_coefficients
 end
 
-function batched_worklist(assembler::GPUBlockAssembler, test_ids, trial_ids)
+function batched_worklist(assembler::GPUBlockAssembler,
+    test_ids, trial_ids, block_elements)
+
     num_blocks = length(test_ids)
     test_elements = Int[]
     trial_elements = Int[]
@@ -272,14 +274,14 @@ function batched_worklist(assembler::GPUBlockAssembler, test_ids, trial_ids)
     cell_offsets = zeros(Int, num_blocks + 1)
 
     for block in 1:num_blocks
-        active_test = active_element_ids(assembler.test_space, test_ids[block])
-        active_trial = active_element_ids(assembler.trial_space, trial_ids[block])
-        append!(test_elements, active_test)
-        append!(trial_elements, active_trial)
-        test_offsets[block + 1] = test_offsets[block] + length(active_test)
-        trial_offsets[block + 1] = trial_offsets[block] + length(active_trial)
+        elements = block_elements[block]
+        append!(test_elements, elements.test)
+        append!(trial_elements, elements.trial)
+        test_offsets[block + 1] = test_offsets[block] + length(elements.test)
+        trial_offsets[block + 1] =
+            trial_offsets[block] + length(elements.trial)
         pair_offsets[block + 1] = pair_offsets[block] +
-            length(active_test) * length(active_trial)
+            length(elements.test) * length(elements.trial)
         row_offsets[block + 1] = row_offsets[block] + length(test_ids[block])
         column_offsets[block + 1] =
             column_offsets[block] + length(trial_ids[block])
@@ -336,9 +338,10 @@ function scatter_batched_blocks!(blocks::AbstractVector{<:CUDA.AnyCuMatrix},
 end
 
 function gpu_batched_blockassemble_chunk!(blocks, assembler::GPUBlockAssembler,
-    test_ids, trial_ids)
+    test_ids, trial_ids, block_elements)
 
-    worklist = batched_worklist(assembler, test_ids, trial_ids)
+    worklist = batched_worklist(
+        assembler, test_ids, trial_ids, block_elements)
     num_test_shapes = assembler.test_data.num_shapes
     num_trial_shapes = assembler.trial_data.num_shapes
     T = scalartype(assembler.operator,
@@ -417,35 +420,38 @@ function gpu_batched_blockassemble_chunk!(blocks, assembler::GPUBlockAssembler,
     return scatter_batched_blocks!(blocks, output, worklist)
 end
 
-function batched_block_pair_counts(assembler::GPUBlockAssembler,
+function batched_block_elements(assembler::GPUBlockAssembler,
     test_ids, trial_ids)
 
-    counts = Vector{Int}(undef, length(test_ids))
+    elements = Vector{NamedTuple{(:test, :trial),Tuple{Vector{Int},Vector{Int}}}}(
+        undef, length(test_ids))
     for block in eachindex(test_ids)
-        num_test_elements = length(active_element_ids(
-            assembler.test_space, test_ids[block]))
-        num_trial_elements = length(active_element_ids(
-            assembler.trial_space, trial_ids[block]))
-        counts[block] = num_test_elements * num_trial_elements
+        elements[block] = (
+            test=BEAST.active_element_ids(
+                assembler.test_space, test_ids[block]),
+            trial=BEAST.active_element_ids(
+                assembler.trial_space, trial_ids[block]),
+        )
     end
-    return counts
+    return elements
 end
 
 function batched_block_chunks(assembler::GPUBlockAssembler,
-    test_ids, trial_ids; budget=1 << 30)
+    block_elements; budget=1 << 30)
 
     budget > 0 || throw(ArgumentError("GPU block budget must be positive"))
     bytes_per_pair = assembler.test_data.num_shapes *
         assembler.trial_data.num_shapes *
         sizeof(scalartype(assembler.operator,
             assembler.test_space, assembler.trial_space))
-    pair_counts = batched_block_pair_counts(assembler, test_ids, trial_ids)
 
     chunks = UnitRange{Int}[]
     first_block = 1
     bytes = 0
-    for block in eachindex(pair_counts)
-        block_bytes = pair_counts[block] * bytes_per_pair
+    for block in eachindex(block_elements)
+        elements = block_elements[block]
+        block_bytes = length(elements.test) * length(elements.trial) *
+            bytes_per_pair
         if bytes + block_bytes > budget && block > first_block
             push!(chunks, first_block:block - 1)
             first_block = block
@@ -453,8 +459,8 @@ function batched_block_chunks(assembler::GPUBlockAssembler,
         end
         bytes += block_bytes
     end
-    first_block <= length(pair_counts) &&
-        push!(chunks, first_block:length(pair_counts))
+    first_block <= length(block_elements) &&
+        push!(chunks, first_block:length(block_elements))
     return chunks
 end
 
@@ -476,9 +482,11 @@ function gpu_batched_blockassemble!(blocks, assembler::GPUBlockAssembler,
     validate_batched_blocks(blocks, test_ids, trial_ids)
 
     CUDA.device!(assembler.device)
-    for chunk in batched_block_chunks(assembler, test_ids, trial_ids; budget)
+    block_elements = batched_block_elements(assembler, test_ids, trial_ids)
+    for chunk in batched_block_chunks(assembler, block_elements; budget)
         gpu_batched_blockassemble_chunk!(view(blocks, chunk), assembler,
-            view(test_ids, chunk), view(trial_ids, chunk))
+            view(test_ids, chunk), view(trial_ids, chunk),
+            view(block_elements, chunk))
     end
     return blocks
 end
