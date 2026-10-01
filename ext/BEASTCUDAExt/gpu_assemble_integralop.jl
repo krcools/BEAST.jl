@@ -48,11 +48,6 @@ function load_assemblydata_gpu(functions::Space, elements, assembly_data,
         local_to_global, element_domain, coordtype(first(elements))
 end
 
-function load_assemblydata_gpu(functions::Space, ::Type{T}) where T
-    elements, assembly_data, _ = BEAST.assemblydata(functions)
-    return load_assemblydata_gpu(functions, elements, assembly_data, T)
-end
-
 function gpu_triangle_rule(order, ::Type{T}) where T
     points, weights = CompScienceMeshes.trgauss(order)
     rule = Vector{Tuple{SVector{2,T},T}}(undef, length(weights))
@@ -63,13 +58,18 @@ function gpu_triangle_rule(order, ::Type{T}) where T
     return CuArray(rule)
 end
 
-function gpu_legendre_rule(order, ::Type{T}) where T
-    rule = convert.(NTuple{2,T}, BEAST._legendre(order, zero(T), one(T)))
-    return CuArray(rule)
+function gpu_sauterschwab_rules(strategy, coordinate_type)
+    return (
+        CommonVertex(CuArray(BEAST._sauterschwab_legendre_rule(
+            strategy.sauter_schwab_common_vert, coordinate_type))),
+        CommonEdge(CuArray(BEAST._sauterschwab_legendre_rule(
+            strategy.sauter_schwab_common_edge, coordinate_type))),
+        CommonFace(CuArray(BEAST._sauterschwab_legendre_rule(
+            strategy.sauter_schwab_common_face, coordinate_type))),
+    )
 end
 
-function gpu_singularityflag!(singularity_map,
-    test_elements::CuDeviceVector{S}, trial_elements::CuDeviceVector{S}) where S
+function gpu_singularityflag!(singularity_map, test_elements, trial_elements)
 
     pair = (blockIdx().x - 1) * blockDim().x + threadIdx().x
     num_test_elements = length(test_elements)
@@ -78,14 +78,8 @@ function gpu_singularityflag!(singularity_map,
     if pair <= num_test_elements * num_trial_elements
         test_index = mod(pair - 1, num_test_elements) + 1
         trial_index = div(pair - 1, num_test_elements) + 1
-        tolerance = 1.0e3 * eps(coordtype(S))
-
-        hits = 1
-        for test_vertex in vertices(test_elements[test_index])
-            for trial_vertex in vertices(trial_elements[trial_index])
-                hits += norm(test_vertex - trial_vertex) < tolerance
-            end
-        end
+        hits = BEAST._numhits(
+            test_elements[test_index], trial_elements[trial_index]) + 1
         singularity_map[pair, hits] = true
     end
 
@@ -240,30 +234,14 @@ end
 end
 
 @inline function gpu_sauterschwab_integral(integrand,
-    test_element, trial_element, strategy,
-    test_local_space, trial_local_space, ::Type{T}) where T
+    test_element, trial_element, strategy)
 
-    num_test_shapes = numfunctions(test_local_space, domain(test_element))
-    num_trial_shapes = numfunctions(trial_local_space, domain(trial_element))
     I, J = gpu_sauterschwab_reorder(
         vertices(test_element), vertices(trial_element), strategy)
     pulledback_integrand = BEAST.pulledback_integrand(
         integrand, I, test_element, J, trial_element)
 
-    z = zeros(SMatrix{num_test_shapes,num_trial_shapes,T})
-    for (eta_1, weight_1) in strategy.qps
-        for (eta_2, weight_2) in strategy.qps
-            for (eta_3, weight_3) in strategy.qps
-                for (xi, weight_4) in strategy.qps
-                    weight = weight_1 * weight_2 * weight_3 * weight_4
-                    z += weight * strategy(
-                        pulledback_integrand, eta_1, eta_2, eta_3, xi)
-                end
-            end
-        end
-    end
-
-    return z
+    return BEAST.sauterschwab_parameterized(pulledback_integrand, strategy)
 end
 
 function gpu_momintegral_sauterschwab!(zlocal, operator, num_pairs, pairs,
@@ -284,8 +262,7 @@ function gpu_momintegral_sauterschwab!(zlocal, operator, num_pairs, pairs,
         integrand = BEAST.Integrand(operator, test_local_space, trial_local_space,
             test_element, trial_element)
         z = gpu_sauterschwab_integral(integrand,
-            test_element, trial_element, strategy,
-            test_local_space, trial_local_space, eltype(zlocal))
+            test_element, trial_element, strategy)
 
         test_offset = num_test_shapes * (test_index - 1)
         trial_offset = num_trial_shapes * (trial_index - 1)
@@ -314,30 +291,27 @@ function build_matrix!(matrix, zlocal, test_assembly, trial_assembly)
 end
 
 function assemble_primer_gpu(functions::Space, quadrule, ::Type{T}) where T
-    elements, assembly_data, local_to_global, element_domain, coordinate_type =
-        load_assemblydata_gpu(functions, T)
+    elements, assembly_data, _ = BEAST.assemblydata(functions)
+    return assemble_primer_gpu(
+        functions, elements, assembly_data, quadrule, T)
+end
 
-    return assemble_primer_gpu(functions, elements, assembly_data,
-        local_to_global, element_domain, coordinate_type, quadrule)
+function gpu_shape_type(functions::Space, elements)
+    T = coordtype(first(elements))
+    point = SVector{2,T}(one(T) / 3, one(T) / 3)
+    return typeof(refspace(functions)(neighborhood(first(elements), point)))
 end
 
 function assemble_primer_gpu(functions::Space, elements, assembly_data,
-    quadrule, ::Type{T}) where T
-    elements, assembly_data, local_to_global, element_domain, coordinate_type =
+    quadrule, ::Type{T},
+    shape_type=gpu_shape_type(functions, elements)) where T
+
+    elements, assembly_data, local_to_global, _, coordinate_type =
         load_assemblydata_gpu(functions, elements, assembly_data, T)
-
-    return assemble_primer_gpu(functions, elements, assembly_data,
-        local_to_global, element_domain, coordinate_type, quadrule)
-end
-
-function assemble_primer_gpu(functions::Space, elements, assembly_data,
-    local_to_global, element_domain, coordinate_type, quadrule)
     local_space = refspace(functions)
 
     quadrule_d = gpu_triangle_rule(quadrule, coordinate_type)
-    num_shapes = numfunctions(local_space, element_domain)
-    shape_type = shapetype(local_space)
-    shape_values = CuArray{SVector{num_shapes,shape_type}}(
+    shape_values = CuArray{shape_type}(
         undef, length(elements), length(quadrule_d))
 
     launch_gpu_kernel!(gpu_shapefunction_eval!,
@@ -402,17 +376,9 @@ function assemblechunk_body_gpu_device!(operator::IntegralOperator,
 
     if isnothing(singular_rules)
         coordinate_type = coordtype(eltype(test_elements))
-        common_vertex = CommonVertex(gpu_legendre_rule(
-            quadstrat.sauter_schwab_common_vert, coordinate_type))
-        common_edge = CommonEdge(gpu_legendre_rule(
-            quadstrat.sauter_schwab_common_edge, coordinate_type))
-        common_face = CommonFace(gpu_legendre_rule(
-            quadstrat.sauter_schwab_common_face, coordinate_type))
-    else
-        common_vertex = CommonVertex(singular_rules.common_vertex)
-        common_edge = CommonEdge(singular_rules.common_edge)
-        common_face = CommonFace(singular_rules.common_face)
+        singular_rules = gpu_sauterschwab_rules(quadstrat, coordinate_type)
     end
+    common_vertex, common_edge, common_face = singular_rules
 
     for (singularity, strategy) in
         ((2, common_vertex), (3, common_edge), (4, common_face))
@@ -458,30 +424,25 @@ function gpu_dense_assembly_data(device,
     quadstrat, ::Type{T}) where T
 
     CUDA.device!(device)
+    test_shape_type = gpu_shape_type(test_functions, test_elements)
+    trial_shape_type = gpu_shape_type(trial_functions, trial_elements)
     test_data = map(test_tiles) do tile
         elements = test_elements[tile]
         assembly_data = BEAST.AssemblyData(test_assembly.data[:, :, tile])
         assemble_primer_gpu(test_functions, elements, assembly_data,
-            quadstrat.outer_rule, T)
+            quadstrat.outer_rule, T, test_shape_type)
     end
     trial_data = map(trial_tiles) do tile
         elements = trial_elements[tile]
         assembly_data = BEAST.AssemblyData(trial_assembly.data[:, :, tile])
         assemble_primer_gpu(trial_functions, elements, assembly_data,
-            quadstrat.inner_rule, T)
+            quadstrat.inner_rule, T, trial_shape_type)
     end
 
     singular_rules = nothing
     if quadstrat isa BEAST.DoubleNumSauterQstrat
         coordinate_type = coordtype(eltype(test_elements))
-        singular_rules = (
-            common_vertex=gpu_legendre_rule(
-                quadstrat.sauter_schwab_common_vert, coordinate_type),
-            common_edge=gpu_legendre_rule(
-                quadstrat.sauter_schwab_common_edge, coordinate_type),
-            common_face=gpu_legendre_rule(
-                quadstrat.sauter_schwab_common_face, coordinate_type),
-        )
+        singular_rules = gpu_sauterschwab_rules(quadstrat, coordinate_type)
     end
 
     CUDA.synchronize()

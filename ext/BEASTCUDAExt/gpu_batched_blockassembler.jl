@@ -15,7 +15,7 @@ end
 function gpu_batched_classify!(labels, total_pairs,
     pair_offsets, test_offsets, trial_offsets,
     test_elements, trial_elements, num_blocks,
-    all_test_elements::CuDeviceVector{S}, all_trial_elements) where S
+    all_test_elements, all_trial_elements)
 
     pair = (blockIdx().x - 1) * blockDim().x + threadIdx().x
     if pair <= total_pairs
@@ -27,16 +27,8 @@ function gpu_batched_classify!(labels, total_pairs,
         test_index = test_elements[test_offsets[block] + test_local + 1]
         trial_index = trial_elements[trial_offsets[block] + trial_local + 1]
 
-        test_element = all_test_elements[test_index]
-        trial_element = all_trial_elements[trial_index]
-        tolerance = 1.0e3 * eps(coordtype(S))
-        hits = 0
-        for test_vertex in vertices(test_element)
-            for trial_vertex in vertices(trial_element)
-                hits += norm(test_vertex - trial_vertex) < tolerance
-            end
-        end
-        labels[pair] = UInt8(hits)
+        labels[pair] = UInt8(BEAST._numhits(
+            all_test_elements[test_index], all_trial_elements[trial_index]))
     end
 
     return nothing
@@ -156,16 +148,13 @@ function gpu_batched_integrate_singular!(zstage, operator,
         hits = labels[pair]
         if hits == 0x01
             z = gpu_sauterschwab_integral(integrand,
-                test_element, trial_element, common_vertex,
-                test_local_space, trial_local_space, eltype(zstage))
+                test_element, trial_element, common_vertex)
         elseif hits == 0x02
             z = gpu_sauterschwab_integral(integrand,
-                test_element, trial_element, common_edge,
-                test_local_space, trial_local_space, eltype(zstage))
+                test_element, trial_element, common_edge)
         else
             z = gpu_sauterschwab_integral(integrand,
-                test_element, trial_element, common_face,
-                test_local_space, trial_local_space, eltype(zstage))
+                test_element, trial_element, common_face)
         end
 
         offset = (pair - 1) * num_test_shapes * num_trial_shapes
@@ -389,9 +378,7 @@ function gpu_batched_blockassemble_chunk!(blocks, assembler::GPUBlockAssembler,
             assembler.test_data.quadrule, assembler.trial_data.quadrule;
             gpu_blocksize=128, problem_size=length(regular_pairs))
 
-        common_vertex = CommonVertex(assembler.singular_rules.common_vertex)
-        common_edge = CommonEdge(assembler.singular_rules.common_edge)
-        common_face = CommonFace(assembler.singular_rules.common_face)
+        common_vertex, common_edge, common_face = assembler.singular_rules
         launch_gpu_kernel!(gpu_batched_integrate_singular!, zstage,
             assembler.operator, singular_pairs, labels, length(singular_pairs),
             pair_offsets, test_offsets, trial_offsets,
