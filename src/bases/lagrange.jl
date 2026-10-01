@@ -1193,6 +1193,7 @@ function duallagrangec0d1(mesh, refined, jct_pred, ::Type{Val{3}})
     uv_ctr = ones(dimension(mesh))/(dimension(mesh)+1)
 
     vtoc, vton = vertextocellmap(refined)
+    fine_cells = collect(refined)
     for (i,p) in enumerate(mesh)
         coarse_idcs = CompScienceMeshes.indices(mesh, p)
         coarse_chart = chart(mesh,p)
@@ -1209,6 +1210,7 @@ function duallagrangec0d1(mesh, refined, jct_pred, ::Type{Val{3}})
         I = CollisionDetection.find(fine_vertices, centroid)
         @assert length(I) == 1
         centroid_id = I[1]
+        children = vtoc[centroid_id, 1:vton[centroid_id]]
 
         # get the indx in fine.vertices of the centroid of the faces of coarse_cell
         face_center_ids = Vector{Int}(undef,num_faces)
@@ -1225,39 +1227,16 @@ function duallagrangec0d1(mesh, refined, jct_pred, ::Type{Val{3}})
             face_center_ids[f] = I[1]
         end
 
-        n = vton[centroid_id]
-        for c in vtoc[centroid_id,1:n]
-            fine_idcs = cells(refined)[c].indices
-            local_id = something(findfirst(isequal(centroid_id), fine_idcs), 0)
-            @assert local_id != 0
-            shape = Shape(c, local_id, 1.0)
-            push!(fns[i], shape)
-        end
-
-        for f in 1:num_faces
-            v = face_center_ids[f]
-            jct_pred(vertices(refined)[v]) && continue
+        for v in (centroid_id, face_center_ids..., coarse_idcs...)
+            v != centroid_id && jct_pred(vertices(refined)[v]) && continue
             n = vton[v]
-            for c in vtoc[v,1:n]
-                fine_idcs = cells(refined)[c].indices
-                local_id = something(findfirst(isequal(v), fine_idcs),0)
+            cells_at_v = vtoc[v, 1:n]
+            coeff = T(count(in(children), cells_at_v)) / n
+            for c in cells_at_v
+                fine_idcs = CompScienceMeshes.indices(refined, fine_cells[c])
+                local_id = something(findfirst(isequal(v), fine_idcs), 0)
                 @assert local_id != 0
-                #shape = Shape(c, local_id, 1/n/2)
-                shape = Shape(c, local_id, 1/2)
-                
-                push!(fns[i], shape)
-            end
-        end
-
-        for f in 1:length(coarse_idcs)
-            v = coarse_idcs[f]
-            jct_pred(vertices(refined)[v]) && continue
-            n = vton[v]
-            for c in vtoc[v,1:n]
-                fine_idcs = cells(refined)[c].indices
-                local_id = something(findfirst(isequal(v), fine_idcs),0)
-                @assert local_id != 0
-                shape = Shape(c, local_id, 1/(n/2))
+                shape = Shape(c, local_id, coeff)
                 push!(fns[i], shape)
             end
         end
@@ -1957,6 +1936,16 @@ end
     using CompScienceMeshes
     Γ = meshcuboid(1.0,1.0,1.0,0.5)
     @test BEAST._surface(duallagrangec0d1(Γ)) ≈ 6.0
+end
+
+@testitem "duallagrangec0d1 on open surfaces" begin
+    using CompScienceMeshes
+    # dual P1 must reproduce constants on an open surface too: a boundary edge
+    # belongs to one coarse cell, so its coefficient is one, not one half
+    Γ = meshrectangle(1.0, 1.0, 0.25, 3)
+    @test BEAST._surface(duallagrangec0d1(Γ)) ≈ 1.0
+    # closed surfaces are unchanged
+    @test BEAST._surface(duallagrangec0d1(meshcuboid(1.0,1.0,1.0,0.5))) ≈ 6.0
 end
 
 @testitem "duallagrangecxd0" begin
