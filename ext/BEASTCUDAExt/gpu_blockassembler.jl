@@ -7,12 +7,6 @@ struct GPUBlockSpaceData{S,E,Q,V,T}
     coefficient_type::Type{T}
 end
 
-struct GPUSauterSchwabRules{V,E,F}
-    common_vertex::V
-    common_edge::E
-    common_face::F
-end
-
 struct GPUBlockAssembler{O,X,Y,TX,TY,Q,R,D}
     operator::O
     test_space::X
@@ -81,13 +75,7 @@ function gpu_blockassembler(operator::IntegralOperator,
     singular_rules = nothing
     if strategy isa BEAST.DoubleNumSauterQstrat
         coordinate_type = coordtype(eltype(test_data.elements))
-        singular_rules = GPUSauterSchwabRules(
-            gpu_legendre_rule(
-                strategy.sauter_schwab_common_vert, coordinate_type),
-            gpu_legendre_rule(
-                strategy.sauter_schwab_common_edge, coordinate_type),
-            gpu_legendre_rule(
-                strategy.sauter_schwab_common_face, coordinate_type))
+        singular_rules = gpu_sauterschwab_rules(strategy, coordinate_type)
     end
 
     return GPUBlockAssembler(operator, test_space, trial_space,

@@ -6,8 +6,6 @@ using CUDA.CUSPARSE
 
 using BEAST
 import BEAST: assemble!, Threading, Space, IntegralOperator
-import BEAST: _integrands
-import BEAST: LagrangeRefSpace, RTRefSpace
 using BEAST.CompScienceMeshes
 using BEAST.LinearAlgebra
 using BEAST.SauterSchwabQuadrature
@@ -20,8 +18,6 @@ Adapt.@adapt_structure CommonFace
 
 include("BEASTCUDAExt/tiling.jl")
 include("BEASTCUDAExt/gpu_utils.jl")
-include("BEASTCUDAExt/gpu_basis.jl")
-include("BEASTCUDAExt/gpu_integrals.jl")
 include("BEASTCUDAExt/gpu_assemble_integralop.jl")
 include("BEASTCUDAExt/gpu_blockassembler.jl")
 include("BEASTCUDAExt/gpu_batched_blockassembler.jl")

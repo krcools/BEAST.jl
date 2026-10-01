@@ -25,8 +25,7 @@ function resolve_gpu_quadstrat(quadstrat, operator, test_space, trial_space)
                 "elements in three dimensions"))
     end
 
-    strategy = applicable(quadstrat, operator, test_space, trial_space) ?
-        quadstrat(operator, test_space, trial_space) : quadstrat
+    strategy = quadstrat(operator, test_space, trial_space)
 
     if CompScienceMeshes.refines(geometry(test_space), geometry(trial_space)) ||
         CompScienceMeshes.refines(geometry(trial_space), geometry(test_space))
