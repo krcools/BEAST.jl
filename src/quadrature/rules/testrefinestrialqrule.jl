@@ -37,10 +37,7 @@ function integrate!(out, op,
     trial_charts = [chart(test_mesh, p) for p in CompScienceMeshes.children(parent_mesh, trial_cell)]
 
     trial_overlaps = map(trial_charts) do chart
-        simplex(
-            carttobary(trial_chart, chart.vertices[1]),
-            carttobary(trial_chart, chart.vertices[2]),
-            carttobary(trial_chart, chart.vertices[3]))
+        simplex(map(v -> carttobary(trial_chart, v), chart.vertices))
     end
 
     quadstrat = qr.conforming_qstrat
