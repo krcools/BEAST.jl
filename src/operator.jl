@@ -18,6 +18,7 @@ end
 
 scalartype(op::TransposedOperator) = scalartype(op.op)
 defaultquadstrat(op::TransposedOperator, tfs::Space, bfs::Space) = defaultquadstrat(op.op, tfs, bfs)
+function LinearAlgebra.issymmetric(op) false end
 
 """
     LinearCombinationOfOperators{T} <: AbstractOperator

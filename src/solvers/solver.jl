@@ -278,9 +278,21 @@ function assemble(bf::BilForm, X::DirectProductSpace, Y::DirectProductSpace,
         z = if a isa BilForm
             assemble(a, x, y, archive; materialize, kwargs...)
         else
-            get!(archive, (a,x,y)) do
-                materialize(a, x, y; kwargs...)
+            if haskey(archive, (a,x,y))
+                archive[(a,x,y)]
+            elseif issymmetric(a) && haskey(archive, (a,y,x))
+                transpose(archive[(a,y,x)])
+            else
+                # materialize(a, x, y; kwargs...)
+                archive[(a,x,y)] = materialize(a, x, y; kwargs...)
             end
+            # get!(archive, (a,x,y)) do
+            #     if issymmetric(a) && haskey(archive, (a,y,x))
+            #         @show "hello"
+            #         return transpose(archive[(a,y,x)])
+            #     end
+            #     return materialize(a, x, y; kwargs...)
+            # end
             # materialize(a, x, y; kwargs...)
         end
         # z = (a isa BilForm) ?
@@ -296,7 +308,9 @@ function assemble(bf::BilForm, X::DirectProductSpace, Y::DirectProductSpace,
     if spaceTimeBasis
         return sum(lincombv)
     else
-        if length(lincombv) == 1
+        if length(lincombv) == 0
+            return ZeroMap{T}(V,U)
+        elseif length(lincombv) == 1
             return lincombv[1]
         else
             return LinearMaps.LinearCombination{T}(lincombv)

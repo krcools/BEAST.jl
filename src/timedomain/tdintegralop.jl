@@ -3,6 +3,8 @@ using WiltonInts84
 abstract type AbstractSpaceTimeOperator end
 abstract type SpaceTimeOperator <: AbstractSpaceTimeOperator end # atomic operator
 
+function LinearAlgebra.issymmetric(::AbstractSpaceTimeOperator) false end
+
 #TODO RKCQ multithreading
 
 function assemble(operator::AbstractSpaceTimeOperator, test_functions, trial_functions;

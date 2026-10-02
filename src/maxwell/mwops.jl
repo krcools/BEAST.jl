@@ -27,6 +27,7 @@ defaultquadstrat(op::MWStaticExtractedHyperSingular, tfs::RTRefSpace, bfs::RTRef
 gamma(op::MWSingleLayer3D{Val{0}, U}) where {U} = zero(U)
 
 scalartype(op::MWSingleLayer3D{T,U}) where {T,U} = promote_type(T,U)
+function LinearAlgebra.issymmetric(op::MWSingleLayer3D) true end
 # sign_upon_permutation(op::MWSingleLayer3D, I, J) = 1
 
 MWSingleLayer3D(gamma)  = MWSingleLayer3D(gamma, -gamma, -1/(gamma))
@@ -72,6 +73,8 @@ struct MWDoubleLayer3D{T,K} <: MaxwellOperator3D{T,K}
     alpha::T
     gamma::K
 end
+
+function LinearAlgebra.issymmetric(op::MWDoubleLayer3D) true end
 
 # sign_upon_permutation(op::MWDoubleLayer3D, I, J) = 1
 
