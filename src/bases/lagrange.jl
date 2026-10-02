@@ -601,7 +601,7 @@ function unitfunctioncxd0(mesh)
     # in case of a global function. Might be replaced by something
     # more useful.
     # For now, we fill it with the average position of the shape functions
-    p = vertextype(mesh)(0.0, 0.0, 0.0)
+    p = zero(vertextype(mesh))
     for cell in mesh
         p += cartesian(center(chart(mesh, cell)))
     end
@@ -1944,4 +1944,68 @@ end
     Z = duallagrangecxd0(Λ, boundary(Λ))
     @test numfunctions(Z) == numcells(Λ) + 1
     @test BEAST._surface(Z) ≈ 1.0
+end
+
+@testitem "duallagrangec0d1 on curves" begin
+    using CompScienceMeshes
+    using StaticArrays
+
+    function maxjump(X) #function to find maximum jump of basis X
+        fine = BEAST.geometry(X)
+        fcells = collect(fine)
+        incident = Dict{Int, Vector{Int}}()
+        for c in 1:numcells(fine), v in CompScienceMeshes.indices(fine, fcells[c])
+            push!(get!(incident, v, Int[]), c)
+        end
+        jump = 0.0
+        for fn in X.fns
+            val = Dict{Tuple{Int,Int},Float64}()
+            for s in fn
+                v = CompScienceMeshes.indices(fine, fcells[s.cellid])[s.refid]
+                val[(s.cellid, v)] = get(val, (s.cellid, v), 0.0) + s.coeff
+            end
+            for (c, v) in keys(val)
+                xs = [get(val, (c2, v), 0.0) for c2 in incident[v]]
+                jump = max(jump, maximum(xs) - minimum(xs))
+            end
+        end
+        jump
+    end
+
+    len(m) = sum(volume(chart(m, p)) for p in m)
+
+    #close curve
+    n = 8
+    verts = [SVector(cos(2π*k/n), sin(2π*k/n), 0.0) for k in 0:n-1]
+    faces = [CompScienceMeshes.SimplexGraph{2}(SVector(k, mod1(k+1, n))) for k in 1:n]
+    Γ = Mesh(verts, faces)
+    X = duallagrangec0d1(Γ)
+    @test numfunctions(X) == numcells(Γ)
+    @test all(==(6), length.(X.fns))
+    @test maxjump(X) < 1e-12 # check if space is C0
+    @test BEAST._surface(X) ≈ len(Γ)
+
+    # open curve: end segments carry one shape less
+    Λ = meshsegment(1.0,1/4, 3)
+    Y = duallagrangec0d1(Λ)
+    @test numfunctions(Y) == numcells(Λ)
+    @test sort(unique(length.(Y.fns))) == [5, 6]
+    @test maxjump(Y) < 1e-12
+    @test BEAST._surface(Y) ≈ 1.0
+
+    # vertex numbering inherited from a parent surface (github issue #195)
+    Γb = boundary(meshrectangle(1.0,1.0,1/4, 2))
+    Z = duallagrangec0d1(Γb)
+    @test numfunctions(Z) == numcells(Γb)
+    @test maxjump(Z) < 1e-12
+end
+
+@testitem "unitfunctioncxd0 in a two dimensional universe" begin
+    using CompScienceMeshes
+
+    Γ = meshcircle(1.0, 2π/20) # a curve in the plane
+    len = sum(volume(chart(Γ, p)) for p in Γ)
+    @test numfunctions(BEAST.unitfunctioncxd0(Γ)) == 1
+    @test BEAST._surface(duallagrangec0d1(Γ)) ≈ len
+    @test BEAST._surface(duallagrangecxd0(Γ)) ≈ len
 end
