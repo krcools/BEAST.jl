@@ -52,27 +52,27 @@ end
 #RT Basis
 function assemble(::QHProjector{Stars,Direct}, X::RTBasis; quadstrat=defaultquadstrat)
     edges = setminus(skeleton(X.geo,1), boundary(X.geo))
-    Σ = Matrix(connectivity(X.geo, edges, sign))
+    Σ = Matrix{Float64}(connectivity(X.geo, edges, sign))
     return Σ * pinv(Σ'*Σ) * Σ'
 end
 
 function assemble(::QHProjector{Loops,Direct}, X::RTBasis; quadstrat=defaultquadstrat)
    edges = setminus(skeleton(X.geo,1), boundary(X.geo))
-   Σ = Matrix(connectivity(X.geo, edges, sign))
+   Σ = Matrix{Float64}(connectivity(X.geo, edges, sign))
    return LinearAlgebra.I - Σ*pinv(Σ'*Σ)*Σ'
 end
 
 function assemble(::QHProjector{DualStars,Direct}, X::RTBasis; quadstrat=defaultquadstrat)
     edges = setminus(skeleton(X.geo,1), boundary(X.geo))
     verts = setminus(skeleton(X.geo,0), skeleton(boundary(X.geo),0))
-    Λ = Matrix(connectivity(verts, edges, sign))
+    Λ = Matrix{Float64}(connectivity(verts, edges, sign))
     return  Λ * pinv(Λ'*Λ) * Λ'
 end
 
 function assemble(::QHProjector{DualLoops,Direct}, X::RTBasis; quadstrat=defaultquadstrat)
     edges = setminus(skeleton(X.geo,1), boundary(X.geo))
     verts = setminus(skeleton(X.geo,0), skeleton(boundary(X.geo),0))
-    Λ = Matrix(connectivity(verts, edges, sign))
+    Λ = Matrix{Float64}(connectivity(verts, edges, sign))
     return  LinearAlgebra.I - Λ * pinv(Λ'*Λ) * Λ'
 end
 
