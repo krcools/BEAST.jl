@@ -86,4 +86,10 @@ end end end end end
 
     B = Matrix(assemble(𝒱, X, Yf))
     @test norm(A-B)/norm(B) < 1e-12
+
+    # opposite orientation goes through TrialRefinesTestQRule
+    A2 = Matrix(assemble(𝒱, Y, X))
+    B2 = Matrix(assemble(𝒱, Yf, X))
+    @test all(isfinite,A2)
+    @test norm(A2 - B2)/norm(B2) < 1e-12
 end
