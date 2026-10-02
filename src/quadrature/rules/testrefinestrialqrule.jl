@@ -61,3 +61,29 @@ function integrate!(out, op,
                 for k in 1:size(Q, 2)
                     out[i,j] += zlocal[i,k] * Q[j,k]
 end end end end end
+
+@testitem "TestRefinesTrialQRule on a curve" begin
+    using BEAST, Test
+    using CompScienceMeshes
+    using LinearAlgebra
+
+    Γ = meshcircle(1.0, 2π/20)
+    X = duallagrangec0d1(Γ)
+    Y = lagrangecxd0(Γ)
+    @test CompScienceMeshes.refines(BEAST.geometry(X), Γ)
+
+    𝒱 = Helmholtz2D.singlelayer(wavenumber=1.0)
+    A = Matrix(assemble(𝒱, X, Y))
+    @test all(isfinite, A)
+
+    # reference: lift the coarse constants onto the fine mesh, so both spaces live on the
+    # same geometry and the conforming rules apply
+    fine = BEAST.geometry(X)
+    fns = [[BEAST.Shape(2*(i-1)+1, 1, 1.0), BEAST.Shape(2*(i-1)+2, 1, 1.0)] for i in 1:numcells(Γ)]
+    pos = [cartesian(CompScienceMeshes.center(chart(Γ,p))) for p in Γ]
+    Yf = BEAST.LagrangeBasis{0,-1,1}(fine, fns, pos)
+    @test Matrix(assemble(BEAST.Identity(), X, Yf)) ≈ Matrix(assemble(BEAST.Identity(), X, Y))
+
+    B = Matrix(assemble(𝒱, X, Yf))
+    @test norm(A-B)/norm(B) < 1e-12
+end
