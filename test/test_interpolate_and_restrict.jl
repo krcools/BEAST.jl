@@ -58,4 +58,32 @@ itpol = sum(w*val for (w,val) in zip(Q3,vals))
     end
 end
 
+@testitem "restrict Lagrange on a refined cell" begin
+    using CompScienceMeshes
+    using LinearAlgebra
 
+    coarse = simplex(point(0,0,0), point(1,0,0), point(0,1,0))
+    # one child of the barycentric refinement of coarse:
+    child = simplex(point(1,0,0),point(0.5,0.5,0), point(1/3,1/3,0))
+
+    tobary(chart, ch) = simplex(map(v -> carttobary(chart,v), ch.vertices))
+
+    # the three routes to a restriction matrix must agree on a genuine
+    # restriciton; self_restriction alone passes under any node ordering
+    for (degree, n) in ((1,3),(2,6))
+        rs = BEAST.LagrangeRefSpace{Float64, degree, 3, n}()
+        Q1 = BEAST.restrict(rs, coarse, child)
+        Q2 = BEAST.restrict(rs, coarse, child, tobary(coarse, child))
+        Q3 = zeros(n, n)
+        BEAST.restrict!(Q3, rs, coarse, child, tobary(coarse, child))
+        @test Q1 ≈ Q2
+        @test Q1 ≈ Q3
+    end
+
+    for (degree, n) in ((0,1),(1,3),(2,6),(3,10))
+        rs = BEAST.LagrangeRefSpace{Float64, degree, 3, n}()
+        Q = zeros(n, n)
+        BEAST.restrict!(Q, rs, coarse, coarse, tobary(coarse, coarse))
+        @test Q ≈ I
+    end
+end

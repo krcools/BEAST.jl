@@ -596,53 +596,6 @@ function restrict(f::LagrangeRefSpace{T,1}, dom1, dom2) where T
     return Q
 end
 
-
-function restrict(f::LagrangeRefSpace{T,2}, dom1, dom2) where T
-
-    D = numfunctions(f)
-    Q = zeros(T, D, D)
-
-    # for each point of the new domain
-    for i in 1:3
-
-        #vertices
-        v = dom2.vertices[i]
-
-        # find the barycentric coordinates in dom1
-        uvn = carttobary(dom1, v)
-
-        # evaluate the shape functions in this point
-        x = neighborhood(dom1, uvn)
-        fx = f(x)
-
-        for j in 1:D
-            Q[j,i] = fx[j][1]
-        end
-        
-            
-        #edges
-        # find the center of edge i of dom2
-        a = dom2.vertices[mod1(i+1,3)]
-        b = dom2.vertices[mod1(i+2,3)]
-        v = (a + b) / 2
-
-        # find the barycentric coordinates in dom1
-        uvn = carttobary(dom1, v)
-
-        # evaluate the shape functions in this point
-        x = neighborhood(dom1, uvn)
-        fx = f(x)
-  
-        for j in 4:D
-            Q[j,i+3] = fx[j][1]
-        end
-    end
-
-    return Q
-end
-
-
-
 # Quadratic Lagrange element on a triangle
 # function (f::LagrangeRefSpace{T,2,3})(t) where T
 #     u,v,w, = barycentric(t)
