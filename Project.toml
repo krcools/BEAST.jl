@@ -46,7 +46,7 @@ PlotlyBaseExt = ["PlotlyBase"]
 [compat]
 AbstractTrees = "0.4.4"
 BlockArrays = "1"
-CollisionDetection = "0.1.7, 0.2"
+CollisionDetection = "0.2.0"
 Combinatorics = "0.7, 1"
 CompScienceMeshes = "0.11, 0.12"
 Compat = "2, 3, 4"

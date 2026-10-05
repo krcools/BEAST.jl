@@ -86,6 +86,51 @@ function assemble!(biop::LocalOperator, tfs::Space, bfs::Space, store,
     return assemble_local_mixed!(biop, tfs, bfs, store; quadstrat)
 end
 
+function _scatterlocal!(store, locmat, tad, bad, p, q)
+    for i in axes(locmat, 1), j in axes(locmat, 2)
+        for (m, a) in tad[p, i], (n, b) in bad[q, j]
+            store(a * locmat[i, j] * b, m, n)
+        end
+    end
+    return nothing
+end
+
+function _scatterlocal!(store, locmat, tad::AbstractVector, bad::AbstractVector, p, q)
+    for i in axes(locmat, 1), j in axes(locmat, 2)
+        for (m, a) in tad[p][i], (n, b) in bad[q][j]
+            store(a * locmat[i, j] * b, m, n)
+        end
+    end
+    return nothing
+end
+
+function _assemble_restricted_interaction!(
+    biop,
+    trefs,
+    brefs,
+    tcell,
+    bcell,
+    cell,
+    tad,
+    bad,
+    p,
+    q,
+    qd,
+    quadstrat,
+    store,
+    tol,
+)
+    tol === nothing || volume(cell) < tol && return nothing
+
+    testrestriction = restrict(trefs, tcell, cell)
+    trialrestriction = restrict(brefs, bcell, cell)
+    qr = quadrule(biop, trefs, brefs, cell, qd, quadstrat)
+    zlocal = cellinteractions(biop, trefs, brefs, cell, qr)
+    zlocal = testrestriction * zlocal * trialrestriction'
+    _scatterlocal!(store, zlocal, tad, bad, p, q)
+    return nothing
+end
+
 function assemble!(biop::LocalOperator, tfs::Space, bfs::Space, store,
     threading::Type{Threading{:single}};
     quadstrat=defaultquadstrat,
@@ -140,11 +185,7 @@ function assemble_local_matched!(biop::LocalOperator, tfs::Space, bfs::Space, st
         fill!(locmat, 0)
         cellinteractions_matched!(locmat, biop, trefs, brefs, cell, qr)
 
-        for i in 1 : size(locmat, 1), j in 1 : size(locmat, 2)
-            for (m,a) in tad[p,i], (n,b) in bad[q,j]
-                store(a * locmat[i,j] * b, m, n)
-        
-        end end
+        _scatterlocal!(store, locmat, tad, bad, p, q)
 
         new_pctg = round(Int, (done += 1) / todo * 100)
         verbose && new_pctg > pctg + 4 && (print("."); pctg = new_pctg)
@@ -170,9 +211,6 @@ function assemble_local_refines!(biop::LocalOperator, tfs::Space, bfs::Space, st
     tdom = domain(chart(tgeo, first(tgeo)))
     bdom = domain(chart(bgeo, first(bgeo)))
 
-    num_trefs = numfunctions(trefs, tdom)
-    num_brefs = numfunctions(brefs, bdom)
-
     tels, tad, ta2g = assemblydata(tfs)
     bels, bad, ba2g = assemblydata(bfs)
 
@@ -195,23 +233,22 @@ function assemble_local_refines!(biop::LocalOperator, tfs::Space, bfs::Space, st
 
         isct = intersection(tcell, bcell)
         for cell in isct
-
-            P = restrict(brefs, bcell, cell)
-            Q = restrict(trefs, tcell, cell)
-
-            qr = quadrule(biop, trefs, brefs, cell, qd, quadstrat)
-            zlocal = cellinteractions(biop, trefs, brefs, cell, qr)
-            zlocal = Q * zlocal * P'
-
-            for i in 1 : num_trefs
-                for j in 1 : num_brefs
-                    for (m,a) in tad[p,i]
-                        for (n,b) in bad[q,j]
-                            store(a * zlocal[i,j] * b, m, n)
-                        end # next basis function this cell supports
-                    end # next test function this cell supports
-                end # next refshape on basis side
-            end # next refshape on test side
+            _assemble_restricted_interaction!(
+                biop,
+                trefs,
+                brefs,
+                tcell,
+                bcell,
+                cell,
+                tad,
+                bad,
+                p,
+                q,
+                qd,
+                quadstrat,
+                store,
+                nothing,
+            )
 
         end # next cell in intersection
 
@@ -242,13 +279,12 @@ function assemble_local_matched!(biop::LocalOperator, tfs::subdBasis, bfs::subdB
         qr = quadrule(biop, trefs, brefs, cell, qd, quadstrat)
         locmat = cellinteractions(biop, trefs, brefs, cell, qr)
 
-        for i in 1 : size(locmat, 1), j in 1 : size(locmat, 2)
-            for (m,a) in tad[p][i], (n,b) in bad[p][j]
-                store(a * locmat[i,j] * b, m, n)
-end end end end
+        _scatterlocal!(store, locmat, tad, bad, p, p)
+    end
+end
 
 
-function elementstree(elements, expansion_ratio=1)
+function elementstree(elements, expansion_ratio=1.1)
 
     nverts = dimension(eltype(elements)) + 1
     ncells = length(elements)
@@ -278,6 +314,125 @@ function elementstree(elements, expansion_ratio=1)
     return Octree(points, radii, T(expansion_ratio))
 end
 
+struct MixedAssemblyVisitor{B,C,BR,TR,TA,BA,Q,O,S,T,QS}
+    tcell::C
+    bels::B
+    brefs::BR
+    trefs::TR
+    tad::TA
+    bad::BA
+    p::Int
+    qd::Q
+    biop::O
+    store::S
+    tol::T
+    quadstrat::QS
+end
+
+function (visitor::MixedAssemblyVisitor)(q)
+    bcell = visitor.bels[q]
+    overlap(visitor.tcell, bcell) || return false
+
+    isct = intersection(visitor.tcell, bcell)
+    for cell in isct
+        _assemble_restricted_interaction!(
+            visitor.biop,
+            visitor.trefs,
+            visitor.brefs,
+            visitor.tcell,
+            bcell,
+            cell,
+            visitor.tad,
+            visitor.bad,
+            visitor.p,
+            q,
+            visitor.qd,
+            visitor.quadstrat,
+            visitor.store,
+            visitor.tol,
+        )
+    end
+    return false
+end
+
+function _assemble_mixed_cell!(
+    tree,
+    tcell,
+    p::Int,
+    bels,
+    brefs,
+    trefs,
+    tad,
+    bad,
+    qd,
+    biop,
+    store,
+    tol,
+    quadstrat,
+)
+    tc, ts = boundingbox(tcell.vertices)
+    visitor = MixedAssemblyVisitor(
+        tcell,
+        bels,
+        brefs,
+        trefs,
+        tad,
+        bad,
+        p,
+        qd,
+        biop,
+        store,
+        tol,
+        quadstrat,
+    )
+    CollisionDetection.foreachsearchtree(visitor, tree, (tc, ts))
+    return nothing
+end
+
+function _assemble_mixed_cells!(
+    tels::AbstractVector{C},
+    tree,
+    bels,
+    brefs,
+    trefs,
+    tad,
+    bad,
+    qd,
+    biop,
+    store,
+    tol,
+    quadstrat,
+) where {C}
+    print("dots out of 10: ")
+    todo, done, pctg = length(tels), 0, 0
+    for (p, tcell) in enumerate(tels)
+        _assemble_mixed_cell!(
+            tree,
+            tcell,
+            p,
+            bels,
+            brefs,
+            trefs,
+            tad,
+            bad,
+            qd,
+            biop,
+            store,
+            tol,
+            quadstrat,
+        )
+
+        done += 1
+        new_pctg = round(Int, done / todo * 100)
+        if new_pctg > pctg + 9
+            print(".")
+            pctg = new_pctg
+        end
+    end
+    println("")
+    return nothing
+end
+
 
 """
     assemble_local_mixed(biop::LocalOperator, tfs, bfs)
@@ -292,15 +447,6 @@ function assemble_local_mixed!(biop::LocalOperator, tfs::Space{T}, bfs::Space{T}
     trefs = refspace(tfs)
     brefs = refspace(bfs)
 
-    tgeo = geometry(tfs)
-    bgeo = geometry(bfs)
-
-    tdom = domain(chart(tgeo, first(tgeo)))
-    bdom = domain(chart(bgeo, first(bgeo)))
-
-    num_trefs = numfunctions(trefs, tdom)
-    num_brefs = numfunctions(brefs, bdom)
-
     tr = assemblydata(tfs); tr == nothing && return
     br = assemblydata(bfs); br == nothing && return
 
@@ -312,54 +458,20 @@ function assemble_local_mixed!(biop::LocalOperator, tfs::Space{T}, bfs::Space{T}
     # store the bcells in an octree
     tree = elementstree(bels)
 
-    print("dots out of 10: ")
-    todo, done, pctg = length(tels), 0, 0
-    for (p,tcell) in enumerate(tels)
-
-        tc, ts = boundingbox(tcell.vertices)
-        pred = (c,s) -> boxesoverlap(c,s,tc,ts)
-
-        for box in boxes(tree, pred)
-            for q in box
-                bcell = bels[q]
-
-                if overlap(tcell, bcell)
-
-                    isct = intersection(tcell, bcell)
-                    for cell in isct
-                        volume(cell) < tol && continue
-
-                        P = restrict(brefs, bcell, cell)
-                        Q = restrict(trefs, tcell, cell)
-
-                        qr = quadrule(biop, trefs, brefs, cell, qd, quadstrat)
-                        zlocal = cellinteractions(biop, trefs, brefs, cell, qr)
-                        zlocal = Q * zlocal * P'
-
-                        for i in 1 : num_trefs
-                            for j in 1 : num_brefs
-                                for (m,a) in tad[p,i]
-                                    for (n,b) in bad[q,j]
-                                        store(a * zlocal[i,j] * b, m, n)
-                                    end # next basis function this cell supports
-                                end # next test function this cell supports
-                            end # next refshape on basis side
-                        end # next refshape on test side
-
-                    end # next cell in intersection
-                end # if overlap
-            end # next cell in the basis geometry
-        end # next box in the octree
-
-        done += 1
-        new_pctg = round(Int, done / todo * 100)
-        if new_pctg > pctg + 9
-            print(".")
-            pctg = new_pctg
-        end
-    end # next cell in the test geometry
-
-    println("")
+    _assemble_mixed_cells!(
+        tels,
+        tree,
+        bels,
+        brefs,
+        trefs,
+        tad,
+        bad,
+        qd,
+        biop,
+        store,
+        tol,
+        quadstrat,
+    )
 end
 
 

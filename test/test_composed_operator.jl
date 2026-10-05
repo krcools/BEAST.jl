@@ -1,9 +1,43 @@
 ######## test multiplied basis
 using CompScienceMeshes
 using LinearAlgebra
+using Random
 using BEAST
+using CollisionDetection
 using Test
 using StaticArrays
+
+@testset "composed operator tree does not miss overlapping elements" begin
+    rng = MersenneTwister(0xC0DE05ED)
+    elements = CompScienceMeshes.Simplex{3,2,1,3,Float64}[]
+    for _ in 1:1500
+        center = point(rand(rng), rand(rng), 0.0)
+        halfsize = 0.005 + 0.06 * rand(rng)
+        push!(elements, simplex(
+            center + point(-halfsize, -halfsize, 0.0),
+            center + point(halfsize, -halfsize, 0.0),
+            center + point(-halfsize, halfsize, 0.0),
+        ))
+    end
+    tree = BEAST.elementstree(elements)
+
+    for test_element in elements
+        test_center, test_halfsize = boundingbox(test_element.vertices)
+        candidates = Int[]
+        for box in BEAST._overlap_candidates(tree, test_element)
+            append!(candidates, box)
+        end
+        expected = Int[]
+        for (i, element) in enumerate(elements)
+            element_center, element_halfsize = boundingbox(element.vertices)
+            if all(abs.(test_center .- element_center) .<=
+                   test_halfsize + element_halfsize)
+                push!(expected, i)
+            end
+        end
+        @test issubset(expected, candidates)
+    end
+end
 
 
 # different options to compute selfpatch trace
@@ -64,6 +98,3 @@ M_displaced = assemble(K,Xdm,X;quadstrat=localqs)
 
 @test M_displaced ≈ M
 @test M_displaced ≈ M_compare 
-
-
-
