@@ -15,7 +15,7 @@ valuetype(ref::LagrangeRefSpace{T}, charttype) where {T} = T
 
 # Evaluate constant lagrange elements on anything
 (ϕ::LagrangeRefSpace{T,0,2})(tp) where {T} = SVector(((value=one(T), derivative=zero(T)),))
-
+(ϕ:: LagrangeRefSpace{T,0,4})(tp) where {T} = SVector(((value=one(T), derivative=zero(T)),))
 # Evaluate linear Lagrange elements on a segment
 # The derivative denotes the tangential derivative
 function (f::LagrangeRefSpace{T,1,2})(mp) where T
@@ -859,3 +859,58 @@ function interpolate!(out, fields, interpolant::LagrangeRefSpace{T,0,3}, chart) 
     for (g, val) in zip(axes(out, 1), vals)
         out[g,1] = val
 end end
+
+# segment methods
+function interpolate(fields, interpolant::LagrangeRefSpace{T, Degree, 2},chart) where {T, Degree}
+    vals = Vector{Vector{T}}()
+    if Degree > 0
+        push!(vals, fields(neighborhood(chart, (T(1),))))
+        push!(vals, fields(neighborhood(chart, (T(0),))))
+        for k in 1:Degree-1
+            push!(vals, fields(neighborhood(chart, (T(Degree-k)/Degree,))))
+        end
+    else
+        push!(vals, fields(center(chart)))
+    end
+    Q = Matrix{T}(undef, length(vals[1]), length(vals))
+    for i in eachindex(vals)
+        Q[:,i] .= vals[i]
+    end
+    return Q
+end
+
+function interpolate!(out, fields, interpolant::LagrangeRefSpace{T, Degree, 2}, chart) where {T, Degree}
+    us = Degree > 0 ? (T(1), T(0), (T(Degree-k)/Degree for k in 1:Degree-1)...) : (T(1)/2,)
+    for (idx, u) in enumerate(us)
+        vals = fields(neighborhood(chart, (u,)))
+        for (g, val) in zip(axes(out, 1), vals)
+            out[g, idx] = val
+        end
+    end
+end
+
+# tetrahedron methods
+function interpolate(fields, interpolant::LagrangeRefSpace{T, 1, 4}) where {T}
+    vals = [fields(neighborhood(chart, uvw)) for uvw in ((T(1),T(0),T(0)),(T(0),T(1),T(0)),(T(0),T(0),T(1)),(T(0),T(0),T(0)))]
+    Q = Matrix{T}(undef, length(vals[1]), length(vals))
+    for i in eachindex(vals)
+        Q[:,i] .= vals[i]
+    end
+    return Q
+end
+
+function interpolate!(out, fields, interpolant::LagrangeRefSpace{T, 1, 4}, chart) where {T}
+    for (idx, uvw) in enumerate(((T(1),T(0),T(0)),(T(0),T(1),T(0)),(T(0),T(0),T(1)),(T(0),T(0),T(0))))
+        vals = fields(neighborhood(chart, uvw))
+        for (g, val) in zip(axes(out, 1), vals)
+            out[g, idx] = val
+        end
+    end
+end
+
+function interpolate!(out, fields, interpolant::LagrangeRefSpace{T,0,4}, chart) where {T}
+    vals = fields(center(chart))
+    for (g, val) in zip(axes(out, 1), vals)
+        out[g, 1] = val
+    end
+end
