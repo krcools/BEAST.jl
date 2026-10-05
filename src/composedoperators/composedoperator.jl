@@ -136,6 +136,12 @@ end
 
 defaultquadstrat(op::CompDoubleInt,tfs::Space,bfs::Space) = DoubleNumSauterQstrat(5,5,5,5,5,5)
 defaultquadstrat(op::CompSingleInt,tfs::Space,bfs::Space) = SingleNumQStrat(6)
+
+function _overlap_candidates(tree, cell)
+    center, halfsize = boundingbox(cell.vertices)
+    return boxes(tree, center, halfsize)
+end
+
 ##### assembling the single integral 
 function assemble!(biop::CompSingleKern, tfs::Space, bfs::Space, store,
     threading::Type{Threading{:multi}};
@@ -175,10 +181,7 @@ function assemble_local_mixed!(biop::CompSingleKern, tfs::Space{T}, bfs::Space{T
     todo, done, pctg = length(tels), 0, 0
     for (p,tcell) in enumerate(tels)
 
-        tc, ts = boundingbox(tcell.vertices)
-        pred = (c,s) -> boxesoverlap(c,s,tc,ts)
-
-        for box in boxes(tree, pred)
+        for box in _overlap_candidates(tree, tcell)
             for q in box
                 bcell = bels[q]
 
@@ -261,4 +264,3 @@ function quadrule(op::CompSingleKern, ψ::RefSpace, ϕ::RefSpace, cellt,cellb, (
     end
     return A
 end
-
