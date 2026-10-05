@@ -86,4 +86,31 @@ end
         BEAST.restrict!(Q, rs, coarse, coarse, tobary(coarse, coarse))
         @test Q ≈ I
     end
+
+    # segments: nodes are the two ends followed by interior points descending
+    seg = simplex(point(1,0,0), point(0,0,0))
+    for (degree, n) in ((0,1),(1,2),(2,3),(3,4),(4,5))
+        rs = BEAST.LagrangeRefSpace{Float64, degree, 2, n}()
+        Q = zeros(n, n)
+        BEAST.restrict!(Q, rs, seg, seg, tobary(seg, seg))
+        @test Q ≈ I
+    end
+
+    # genuine restriction on a segment: child is the left half
+    half = simplex(point(1,0,0), point(0.5,0,0))
+    for ( degree, n) in ((1,2),(2,3),(3,4))
+        rs = BEAST.LagrangeRefSpace{Float64, degree, 2, n}()
+        Q = zeros(n, n)
+        BEAST.restrict!(Q, rs, seg, half, tobary(seg, half))
+        @test Q ≈ BEAST.restrict(rs, seg, half)
+    end
+
+    # tetrahedra: only degrees zero and one have an evaluator
+    tet = simplex(point(0,0,0), point(1,0,0),point(0,1,0), point(0,0,1))
+    for (degree, n) in ((0,1),(1,4))
+        rs = BEAST.LagrangeRefSpace{Float64, degree, 4, n}()
+        Q = zeros(n, n)
+        BEAST.restrict!(Q, rs, tet, tet, tobary(tet, tet))
+        @test Q ≈ I
+    end
 end
