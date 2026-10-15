@@ -9,6 +9,16 @@ struct GlobalDisplacementMesh{T} <: DisplacementMesh{T}
     mesh::Mesh{<:Any,<:Any,T}
     epsilon 
 end
+
+function CompScienceMeshes.similar_mesh(
+    mesh::GlobalDisplacementMesh,
+    vertices,
+    faces)
+
+    CompScienceMeshes.similar_mesh(mesh.mesh, vertices, faces)
+end
+
+
 struct DisplacementChart
     chart 
     epsilon
