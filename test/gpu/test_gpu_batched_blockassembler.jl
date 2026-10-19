@@ -42,6 +42,41 @@
     end
 end
 
+@testitem "GPU fused scatter with strided and empty blocks" tags=[:gpu] begin
+    using CUDA
+    using LinearAlgebra
+
+    CUDA.device!(0)
+    CUDA.allowscalar(false)
+    extension = Base.get_extension(BEAST, :BEASTCUDAExt)
+    for T in (ComplexF32, ComplexF64), transposed in (false, true)
+        sizes = [(3, 2), (0, 4), (5, 3), (2, 0), (1, 4)]
+        owners = [CUDA.zeros(T, 2m + 2, 2n + 2) for (m, n) in sizes]
+        views = [view(owner, 2:2:2m, 2:2:2n)
+            for (owner, (m, n)) in zip(owners, sizes)]
+        blocks = transposed ? transpose.(views) : views
+        rows = size.(blocks, 1)
+        cols = size.(blocks, 2)
+        cells = [0; cumsum(rows .* cols)]
+        worklist = (; num_blocks=length(blocks), row_offsets=[0; cumsum(rows)],
+            column_offsets=[0; cumsum(cols)], cell_offsets=cells)
+        data = T.(1:cells[end]) .+ T(im) .* T.(cells[end]:-1:1)
+        output = CuArray(data)
+        @test extension.scatter_batched_blocks!(blocks, output, worklist) === blocks
+        for i in eachindex(blocks)
+            expected = reshape(data[cells[i]+1:cells[i+1]], rows[i], cols[i])
+            @test Array(views[i]) == (transposed ? transpose(expected) : expected)
+            expected_owner = zeros(T, size(owners[i]))
+            expected_owner[2:2:2sizes[i][1], 2:2:2sizes[i][2]] .= Array(views[i])
+            @test Array(owners[i]) == expected_owner
+        end
+        empty_worklist = (; num_blocks=0, row_offsets=[0],
+            column_offsets=[0], cell_offsets=[0])
+        empty_blocks = blocks[1:0]
+        @test extension.scatter_batched_blocks!(empty_blocks, output, empty_worklist) === empty_blocks
+    end
+end
+
 @testitem "GPU batched block assembly variants" tags=[:gpu] begin
     using CUDA
     using CompScienceMeshes
@@ -124,6 +159,17 @@ end
     for block in eachindex(blocks)
         @test isapprox(blocks[block],
             cpu[test_ids[block], trial_ids[block]];
+            atol=1.0e-10, rtol=1.0e-10)
+    end
+
+    # Enough varied blocks to use parallel metadata preparation. Every result
+    # must still belong to its original row/column pair.
+    test_ids = repeat(test_ids, 256)
+    trial_ids = repeat(trial_ids, 256)
+    blocks = extension.gpu_batched_blockassemble(assembler, test_ids, trial_ids)
+    @test length(blocks) == 512
+    @test all(eachindex(blocks)) do block
+        isapprox(blocks[block], cpu[test_ids[block], trial_ids[block]];
             atol=1.0e-10, rtol=1.0e-10)
     end
 end

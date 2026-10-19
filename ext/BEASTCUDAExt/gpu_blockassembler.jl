@@ -19,14 +19,22 @@ struct GPUBlockAssembler{O,X,Y,TX,TY,Q,R,D}
     gpu_blocksize::Int
 end
 
-function GPUBlockSpaceData(space::Space, quadrule, ::Type{T}) where T
-    elements, assembly_data, _ = BEAST.assemblydata(space; onlyactives=false)
-    _, (elements_d, _), (quadrule_d, shapes_d) =
-        assemble_primer_gpu(space, elements, assembly_data, quadrule, T)
-    num_shapes = numfunctions(refspace(space), domain(first(elements)))
+# Batched projection builds its own local coefficient tables. Preparing the
+# full sparse assembly matrix here would allocate and upload unused data.
+_gpu_block_elements(space) = [chart(geometry(space), face) for face in geometry(space)]
 
-    return GPUBlockSpaceData(
-        space, elements_d, quadrule_d, shapes_d, num_shapes, T)
+function GPUBlockSpaceData(space::Space, quadrule, ::Type{T};
+    elements=_gpu_block_elements(space), device_elements=nothing) where T
+
+    elements_d = device_elements === nothing ? CuArray(elements) : device_elements
+    quadrule_d = gpu_triangle_rule(quadrule, coordtype(first(elements)))
+    shape_type = gpu_shape_type(space, elements)
+    shapes_d = CuArray{shape_type}(undef, length(elements), length(quadrule_d))
+    launch_gpu_kernel!(gpu_shapefunction_eval!, shapes_d, elements_d,
+        refspace(space), quadrule_d; gpu_blocksize=(64, 4),
+        problem_size=(length(elements), length(quadrule_d)))
+    num_shapes = numfunctions(refspace(space), domain(first(elements)))
+    return GPUBlockSpaceData(space, elements_d, quadrule_d, shapes_d, num_shapes, T)
 end
 
 function block_assemblydata_gpu(data::GPUBlockSpaceData, ids, element_ids)
@@ -63,14 +71,19 @@ function gpu_blockassembler(operator::IntegralOperator,
     test_space::Space, trial_space::Space;
     quadstrat=BEAST.defaultquadstrat,
     gpu_blocksize=256,
-    device=CUDA.device())
+    device=CUDA.device(),
+    test_elements=_gpu_block_elements(test_space),
+    trial_elements=test_space === trial_space ? test_elements : _gpu_block_elements(trial_space))
 
     strategy = resolve_gpu_quadstrat(
         quadstrat, operator, test_space, trial_space)
     CUDA.device!(device)
     T = scalartype(operator, test_space, trial_space)
-    test_data = GPUBlockSpaceData(test_space, strategy.outer_rule, T)
-    trial_data = GPUBlockSpaceData(trial_space, strategy.inner_rule, T)
+    test_data = GPUBlockSpaceData(test_space, strategy.outer_rule, T; elements=test_elements)
+    trial_data = test_space === trial_space && strategy.outer_rule == strategy.inner_rule ? test_data :
+        GPUBlockSpaceData(trial_space, strategy.inner_rule, T;
+            elements=trial_elements,
+            device_elements=test_space === trial_space ? test_data.elements : nothing)
 
     singular_rules = nothing
     if strategy isa BEAST.DoubleNumSauterQstrat

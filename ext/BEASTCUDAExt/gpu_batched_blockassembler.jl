@@ -1,3 +1,5 @@
+using BEAST.OhMyThreads: @tasks, @set, DynamicScheduler, SerialScheduler
+
 @inline function locate_batched_block(index, offsets, num_blocks)
     lower = 1
     upper = num_blocks
@@ -212,12 +214,18 @@ function gpu_batched_project!(output, total_cells,
     return nothing
 end
 
+# Limit the host workers per GPU so concurrent devices share the CPU budget.
+metadata_scheduler(nblocks) = nblocks < 512 || Threads.nthreads(:default) == 1 ?
+    SerialScheduler() : DynamicScheduler(; ntasks=min(8, Threads.nthreads(:default)))
+
 function batched_entry_table(space, ids_per_block, dof_offsets,
     elements, element_offsets, ::Type{T}) where T
 
     num_blocks = length(ids_per_block)
     entry_offsets = zeros(Int32, dof_offsets[end] + 1)
-    for block in 1:num_blocks
+    scheduler = metadata_scheduler(num_blocks)
+    @tasks for block in 1:num_blocks
+        @set scheduler = scheduler
         for (local_dof, dof) in enumerate(ids_per_block[block])
             entry_offsets[dof_offsets[block] + local_dof + 1] =
                 length(BEAST.basisfunction(space, dof))
@@ -229,16 +237,17 @@ function batched_entry_table(space, ids_per_block, dof_offsets,
     entry_elements = Vector{Int32}(undef, num_entries)
     entry_shapes = Vector{Int32}(undef, num_entries)
     entry_coefficients = Vector{T}(undef, num_entries)
-    fill_positions = copy(entry_offsets)
 
-    for block in 1:num_blocks
+    @tasks for block in 1:num_blocks
+        @set scheduler = scheduler
         block_elements = view(elements,
             element_offsets[block] + 1:element_offsets[block + 1])
         for (local_dof, dof) in enumerate(ids_per_block[block])
             slot = dof_offsets[block] + local_dof
+            entry = entry_offsets[slot]
             for shape in BEAST.basisfunction(space, dof)
                 local_element = searchsortedfirst(block_elements, shape.cellid)
-                entry = (fill_positions[slot] += 1)
+                entry += 1
                 entry_elements[entry] = Int32(local_element)
                 entry_shapes[entry] = Int32(shape.refid)
                 entry_coefficients[entry] = T(shape.coeff)
@@ -253,8 +262,6 @@ function batched_worklist(assembler::GPUBlockAssembler,
     test_ids, trial_ids, block_elements)
 
     num_blocks = length(test_ids)
-    test_elements = Int[]
-    trial_elements = Int[]
     test_offsets = zeros(Int, num_blocks + 1)
     trial_offsets = zeros(Int, num_blocks + 1)
     pair_offsets = zeros(Int, num_blocks + 1)
@@ -264,8 +271,6 @@ function batched_worklist(assembler::GPUBlockAssembler,
 
     for block in 1:num_blocks
         elements = block_elements[block]
-        append!(test_elements, elements.test)
-        append!(trial_elements, elements.trial)
         test_offsets[block + 1] = test_offsets[block] + length(elements.test)
         trial_offsets[block + 1] =
             trial_offsets[block] + length(elements.trial)
@@ -276,6 +281,16 @@ function batched_worklist(assembler::GPUBlockAssembler,
             column_offsets[block] + length(trial_ids[block])
         cell_offsets[block + 1] = cell_offsets[block] +
             length(test_ids[block]) * length(trial_ids[block])
+    end
+
+    test_elements = Vector{Int}(undef, test_offsets[end])
+    trial_elements = Vector{Int}(undef, trial_offsets[end])
+    scheduler = metadata_scheduler(num_blocks)
+    @tasks for block in 1:num_blocks
+        @set scheduler = scheduler
+        elements = block_elements[block]
+        copyto!(test_elements, test_offsets[block] + 1, elements.test, 1, length(elements.test))
+        copyto!(trial_elements, trial_offsets[block] + 1, elements.trial, 1, length(elements.trial))
     end
 
     T = assembler.test_data.coefficient_type
@@ -299,29 +314,51 @@ function scatter_batched_blocks!(blocks::AbstractVector{<:AbstractMatrix},
     output, worklist)
 
     output_host = Array(output)
-    for block in 1:worklist.num_blocks
+    scheduler = worklist.num_blocks < 4096 ? SerialScheduler() : DynamicScheduler()
+    @tasks for block in 1:worklist.num_blocks
+        @set scheduler = scheduler
         num_rows = worklist.row_offsets[block + 1] - worklist.row_offsets[block]
         num_columns = worklist.column_offsets[block + 1] -
             worklist.column_offsets[block]
-        (iszero(num_rows) || iszero(num_columns)) && continue
-        data = view(output_host,
-            worklist.cell_offsets[block] + 1:worklist.cell_offsets[block + 1])
-        copyto!(blocks[block], reshape(data, num_rows, num_columns))
+        if !iszero(num_rows) && !iszero(num_columns)
+            data = view(output_host,
+                worklist.cell_offsets[block] + 1:worklist.cell_offsets[block + 1])
+            copyto!(blocks[block], reshape(data, num_rows, num_columns))
+        end
     end
     return blocks
 end
 
-function scatter_batched_blocks!(blocks::AbstractVector{<:CUDA.AnyCuMatrix},
+# One kernel scatters an entire chunk into its device block views, including
+# transposed views. Device descriptors retain each destination's strides.
+function gpu_scatter_batched_blocks!(blocks, output, cells, rows, total)
+    index = (blockIdx().x - 1) * blockDim().x + threadIdx().x
+    if index <= total
+        block = locate_batched_block(index, cells, length(blocks))
+        localindex = index - cells[block] - 1
+        nrows = rows[block+1] - rows[block]
+        row = mod(localindex, nrows) + 1
+        col = div(localindex, nrows) + 1
+        @inbounds blocks[block][row, col] = output[index]
+    end
+    return nothing
+end
+
+function scatter_batched_blocks!(
+    blocks::AbstractVector{<:Union{CUDA.AnyCuMatrix,Transpose{<:Any,<:CUDA.AnyCuMatrix}}},
     output, worklist)
 
-    for block in 1:worklist.num_blocks
-        num_rows = worklist.row_offsets[block + 1] - worklist.row_offsets[block]
-        num_columns = worklist.column_offsets[block + 1] -
-            worklist.column_offsets[block]
-        (iszero(num_rows) || iszero(num_columns)) && continue
-        data = view(output,
-            worklist.cell_offsets[block] + 1:worklist.cell_offsets[block + 1])
-        copyto!(blocks[block], reshape(data, num_rows, num_columns))
+    total = worklist.cell_offsets[end]
+    total == 0 && return blocks
+    destinations = CuArray(CUDA.cudaconvert.(blocks))
+    cells = CuArray(worklist.cell_offsets)
+    rows = CuArray(worklist.row_offsets)
+    # Descriptors contain device pointers. Keep the destination owners alive
+    # until the scatter finishes rather than relying on pointer ownership.
+    GC.@preserve blocks output begin
+        launch_gpu_kernel!(gpu_scatter_batched_blocks!, destinations, output,
+            cells, rows, total; gpu_blocksize=256, problem_size=total)
+        CUDA.synchronize()
     end
     return blocks
 end
@@ -412,7 +449,9 @@ function batched_block_elements(assembler::GPUBlockAssembler,
 
     elements = Vector{NamedTuple{(:test, :trial),Tuple{Vector{Int},Vector{Int}}}}(
         undef, length(test_ids))
-    for block in eachindex(test_ids)
+    scheduler = metadata_scheduler(length(test_ids))
+    @tasks for block in eachindex(test_ids)
+        @set scheduler = scheduler
         elements[block] = (
             test=BEAST.active_element_ids(
                 assembler.test_space, test_ids[block]),
@@ -496,9 +535,11 @@ function gpu_blockassemblers(operator::IntegralOperator,
 
     devices = collect(devices)
     isempty(devices) && throw(ArgumentError("at least one CUDA device is required"))
+    test_elements = _gpu_block_elements(test_space)
+    trial_elements = test_space === trial_space ? test_elements : _gpu_block_elements(trial_space)
     tasks = map(devices) do device
         Threads.@spawn gpu_blockassembler(operator, test_space, trial_space;
-            device, kwargs...)
+            device, test_elements, trial_elements, kwargs...)
     end
     return fetch.(tasks)
 end

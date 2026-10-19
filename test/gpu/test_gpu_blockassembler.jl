@@ -36,6 +36,28 @@
     end
 end
 
+@testitem "GPU block setup shares only matching space data" tags=[:gpu] begin
+    using CUDA
+    using CompScienceMeshes
+
+    CUDA.device!(0)
+    extension = Base.get_extension(BEAST, :BEASTCUDAExt)
+    space = lagrangec0(meshcuboid(1.0, 1.0, 1.0, 0.5); order=1)
+    operator = Helmholtz3D.singlelayer(wavenumber=1.0)
+    equal_rules = extension.gpu_blockassembler(operator, space, space;
+        quadstrat=BEAST.DoubleNumQStrat(2, 2))
+    @test equal_rules.test_data === equal_rules.trial_data
+    different_rules = extension.gpu_blockassembler(operator, space, space;
+        quadstrat=BEAST.DoubleNumQStrat(2, 3))
+    @test different_rules.test_data !== different_rules.trial_data
+    @test different_rules.test_data.elements === different_rules.trial_data.elements
+    @test different_rules.test_data.shapes !== different_rules.trial_data.shapes
+    trial = lagrangec0(CompScienceMeshes.translate(geometry(space), point(5.0, 0.0, 0.0)); order=1)
+    different_spaces = extension.gpu_blockassembler(operator, space, trial;
+        quadstrat=BEAST.DoubleNumQStrat(2, 2))
+    @test different_spaces.test_data.elements !== different_spaces.trial_data.elements
+end
+
 @testitem "GPU far block assembly vs CPU" tags=[:gpu] begin
     using CUDA
     using CompScienceMeshes
