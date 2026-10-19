@@ -38,12 +38,11 @@ function Base.:*(A::LUFactorization, b::AbstractVector)
 end
 
 function LinearAlgebra.mul!(y::AbstractVector, L::LUFactorization, b::AbstractVector)
-    fill!(y,false)
     if L.factorized == false
         L.F = LinearAlgebra.lu(L.A)
         L.factorized = true
     end
-    y[:] = L.F \ Vector(b)
+    y .= L.F \ Vector(b)
 end
 
 function solve(solver::LUFactorization, b)
@@ -69,8 +68,8 @@ end
 
     iG = BEAST.lu(G)
 
-    x=iG*b
-    x2 = inv(Matrix(G))*b
+    x = (iG*5 - G)*b
+    x2 = (inv(Matrix(G))*5 - G)*b
 
     @test norm(x - x2) < 1e-12
 
