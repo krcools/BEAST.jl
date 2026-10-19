@@ -16,8 +16,16 @@ ext = Base.get_extension(BEAST, :BEASTCUDAExt)
   dense matrix blocks.
 - `ext.gpu_batched_blockassemble(...)` assembles several blocks together. Its
   `budget` keyword limits the intermediate staging memory.
+- `ext.gpu_batched_blockassemble!(...)` also accepts transposed views of GPU
+  buffers, writing the transposed blocks on-device without conjugation.
 - `ext.gpu_blockassemblers(...; devices)` creates the per-device assemblers for
   multi-GPU batched block assembly.
+
+Batched GPU destinations are scattered in one kernel per chunk, including
+transposed and strided views. Assembler setup uploads geometry and shape values
+without constructing the unused global sparse assembly matrix. Matching test and
+trial spaces share device geometry, and matching quadrature rules share shape data.
+Large host scatter batches use CPU tasks; smaller batches remain serial.
 
 The GPU results are tested against CPU assembly for Helmholtz and Maxwell
 single-layer operators with Lagrange, Raviart-Thomas, and
