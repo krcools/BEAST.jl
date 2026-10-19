@@ -102,17 +102,18 @@ function assemble(operator::AbstractOperator, test_functions, trial_functions;
     storage_policy = Val{:bandedstorage},
     threading = :dofsplitting,
     scheduler = OhMyThreads.DynamicScheduler(),
-    quadstrat=defaultquadstrat)
+    quadstrat=defaultquadstrat, kwargs...)
 
     (threading == :dofsplitting) && (threading = Threading{:multi})
     (threading == :cellcoloring) && (threading = Threading{:cellcoloring})
     (threading == :single) && (threading = Threading{:single})
+    (threading == :gpu) && (threading = Threading{:gpu})
 
     Z, store = allocatestorage(operator, test_functions, trial_functions,
         storage_policy)
     # qs = quadstrat(operator, test_functions, trial_functions)
     assemble!(operator, test_functions, trial_functions,
-        store, threading; quadstrat, scheduler)
+        store, threading; quadstrat, scheduler, kwargs...)
     return Z()
 end
 

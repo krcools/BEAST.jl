@@ -7,6 +7,10 @@ struct DoubleNumSauterQstrat{R,S} <: AbstractQuadStrat
     sauter_schwab_common_vert::S
 end
 
+@inline function _sauterschwab_legendre_rule(order, ::Type{T}) where T
+    return convert.(NTuple{2,T}, _legendre(order, zero(T), one(T)))
+end
+
 function quaddata(op::IntegralOperator,
     test_local_space::RefSpace, trial_local_space::RefSpace,
     test_charts, trial_charts, qs::DoubleNumSauterQstrat)
@@ -17,11 +21,11 @@ function quaddata(op::IntegralOperator,
     bqd = quadpoints(trial_local_space, trial_charts, (qs.inner_rule,))
      
     leg = (
-      convert.(NTuple{2,T},_legendre(qs.sauter_schwab_common_vert,0,1)),
-      convert.(NTuple{2,T},_legendre(qs.sauter_schwab_common_edge,0,1)),
-      convert.(NTuple{2,T},_legendre(qs.sauter_schwab_common_face,0,1)),
-      convert.(NTuple{2,T},_legendre(qs.sauter_schwab_common_tetr,0,1)),
-      )
+        _sauterschwab_legendre_rule(qs.sauter_schwab_common_vert, T),
+        _sauterschwab_legendre_rule(qs.sauter_schwab_common_edge, T),
+        _sauterschwab_legendre_rule(qs.sauter_schwab_common_face, T),
+        _sauterschwab_legendre_rule(qs.sauter_schwab_common_tetr, T),
+    )
 
     return (tpoints=tqd, bpoints=bqd, gausslegendre=leg)
 end
@@ -256,16 +260,13 @@ function integrate!(op::IntegralOperator, g::RefSpace, f::RefSpace,
 end
 
 
-function _numhits(τ, σ)
+@inline function _numhits(τ, σ)
     T = coordtype(τ)
     hits = 0
     dtol = 1.0e3 * eps(T)
-    dmin2 = floatmax(T)
     for t in vertices(τ)
         for s in vertices(σ)
-            d2 = LinearAlgebra.norm_sqr(t-s)
             d = norm(t-s)
-            dmin2 = min(dmin2, d2)
             hits += (d < dtol)
         end
     end
