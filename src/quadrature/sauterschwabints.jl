@@ -199,8 +199,8 @@ function integrate!(op::Operator,
     sbuffer = sauterschwab_buffer(qbuffer, rule)
     I, J = sauterschwab_reorder!(
         sbuffer.I, sbuffer.J, sbuffer.K, sbuffer.L,
-        vertices(test_chart),
-        vertices(trial_chart),
+        nodes(test_chart),
+        nodes(trial_chart),
         rule
     )
 

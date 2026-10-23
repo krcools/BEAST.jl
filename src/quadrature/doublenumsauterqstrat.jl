@@ -80,8 +80,8 @@ end
 
 
 function integrate!(op::IntegralOperator, g::RefSpace, f::RefSpace,
-    i, τ::CompScienceMeshes.Simplex{<:Any, 2},
-    j, σ::CompScienceMeshes.Simplex{<:Any, 2},
+    i, τ::CompScienceMeshes.AbstractSimplex{<:Any, 2},
+    j, σ::CompScienceMeshes.AbstractSimplex{<:Any, 2},
     qd, qs::DoubleNumSauterQstrat,
     out=nothing, test_space=nothing, tptr=nothing, trial_space=nothing, bptr=nothing;
     action::QuadRuleAction)
@@ -261,8 +261,8 @@ function _numhits(τ, σ)
     hits = 0
     dtol = 1.0e3 * eps(T)
     dmin2 = floatmax(T)
-    for t in vertices(τ)
-        for s in vertices(σ)
+    for t in nodes(τ)
+        for s in nodes(σ)
             d2 = LinearAlgebra.norm_sqr(t-s)
             d = norm(t-s)
             dmin2 = min(dmin2, d2)

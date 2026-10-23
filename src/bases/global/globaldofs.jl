@@ -4,10 +4,14 @@ function trace(edge_ch, face_ch, fields)
 
     face_dom = domain(face_ch)
 
-    edge_verts = vertices(edge_ch)
-    face_verts = vertices(face_ch)
+    # edge_verts = vertices(edge_ch)
+    # face_verts = vertices(face_ch)
+    edge_verts = nodes(edge_ch)
+    face_verts = nodes(face_ch)
 
     perm = [something(findfirst(w -> isapprox(v, w; atol), face_verts), 0) for v in edge_verts]
+    # @show edge_verts
+    # @show face_verts
     # @show perm
     injection = simplex(vertices(face_dom)[perm])
 
