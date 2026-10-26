@@ -40,6 +40,7 @@ makedocs(;
         ],
         "Tutorials" => Any[
             "tutorials/efie.md",
+            "tutorials/efie_geop2.md",
         ],
         "Operators & Excitations" => Any[
             "Overview"=>"operators/overview.md",
