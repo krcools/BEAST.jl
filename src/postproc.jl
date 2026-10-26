@@ -4,29 +4,28 @@
 	fcr, geo = facecurrents(coeffs, basis)
 
 Compute the value of the function with the given collection of coeffient in the provided basis in all the centroids of the mesh underlying the basis. The mesh is returned together with the currents.
+
+Each cell is refined using a barycentric grid with `order+1` points per direction (`order` segments per edge), giving `order^D` sub-cells. The function is evaluated in the centroid of each sub-cell and the refined mesh is returned together with these values (one per sub-cell, suited for cell-based intensities in plotting). The default `order=1` corresponds to no refinement.
 """
-function facecurrents(coeffs, basis)
+function facecurrents(coeffs, basis; order=1)
 
     T = eltype(coeffs)
     RT = real(T)
 
     mesh = geometry(basis)
-    dom = domain(chart(mesh, first(mesh)))
+
+    order > 1 && return _facecurrents_grid(coeffs, basis, order)
 
     refs = refspace(basis)
-    numrefs = numfunctions(refs, dom)
-
     cells, tad, a2g = assemblydata(basis)
 
     D = dimension(mesh)
-    # U = D+1
-    U = 3
 
     # TODO: remove ugliness
     vals = refs(center(first(cells)))
     PT = typeof(first(coeffs) * vals[1][1])
 
-    fcr = zeros(PT, numcells(mesh))
+    fcr = zeros(PT, length(mesh))
 
     for (t, cell) in enumerate(cells)
 
@@ -34,16 +33,51 @@ function facecurrents(coeffs, basis)
         vals = refs(mps)
 
         # assemble in the right hand side vector
-        for i in 1:numrefs
+        for i in eachindex(vals)
             fx = vals[i][1]
             for (m, a) in tad[t, i]
-                # fcr[t] += coeffs[m] * a * fx
                 fcr[a2g[t]] += coeffs[m] * a * fx
             end
         end
     end
 
     return fcr, geometry(basis)
+end
+
+function _facecurrents_grid(coeffs, basis, order)
+
+    CSM = CompScienceMeshes
+
+    geo = CSM.bisecting_refinement(geometry(basis); order)
+    par = CSM.parent(geo)
+
+    @assert par.mesh == geometry(basis)
+
+    refs = refspace(basis)
+    els, tad, a2g = assemblydata(basis)
+
+    vals = refs(center(first(els)))
+    PT = typeof(first(coeffs) * vals[1][1])
+
+    fcr = zeros(PT, length(geo))
+    for (t, chrt) in enumerate(els)
+        ptr = a2g[t]
+        chrt2 = chart(geometry(basis), ptr)
+        @assert chrt == chrt2
+        for (chdptr, inj) in zip(CSM.children(par, ptr), CSM.injections(par, ptr))
+            u = cartesian(center(inj))
+            p = neighborhood(chrt, u)
+            vals = refs(p)
+            for i in eachindex(vals)
+                fx = vals[i].value
+                for (m, a) in tad[t, i]
+                    fcr[chdptr] += coeffs[m] * a * fx
+                end
+            end
+        end
+    end
+
+    return fcr, geo
 end
 
 function facecurrents(coeffs, basis::SpaceTimeBasis)
