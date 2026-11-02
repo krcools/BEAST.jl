@@ -11,16 +11,50 @@ function subset(s::S,I) where {S<:GWPCurlSpace} S(s.geo, s.fns[I], s.pos[I], s.d
 struct GWPGlobalEdgeDoFs order::Int end
 struct GWPGlobalFaceDoFs order::Int end
 
-function globaldofs(edge_ch, face_ch, localspace, dof::GWPGlobalEdgeDoFs)
-    f = trace(edge_ch, face_ch, localspace)
-    T = coordtype(edge_ch)
-    ds = one(T) / (dof.order+2)
-    return stack(range(ds, step=ds, length=dof.order+1)) do s
-        p = neighborhood(edge_ch, s)
-        t = tangents(p, 1)
-        [dot(t,x.value) for x in f(s)]
-    end
+# function globaldofs(edge_ch, face_ch, localspace, dof::GWPGlobalEdgeDoFs)
+#     f = trace(edge_ch, face_ch, localspace)
+#     T = coordtype(edge_ch)
+#     ds = one(T) / (dof.order+2)
+#     return stack(range(ds, step=ds, length=dof.order+1)) do s
+#         p = neighborhood(edge_ch, s)
+#         t = tangents(p, 1)
+#         [dot(t,x.value) for x in f(s)]
+#     end
+# end
+
+function globaldofs(global_ch, face_ch, localspace, dof::GWPGlobalEdgeDoFs)
+
+    d = dof.order
+    T = coordtype(global_ch)
+
+    f = trace(global_ch, face_ch, localspace)
+    g = u -> collect(fi.value for fi in f(u))
+    Q = zeros(T, numfunctions(localspace, domain(face_ch)), d+1)
+    return globaldofs!(Q, global_ch, g, dof)
 end
+
+
+function globaldofs!(Q, global_ch, pulled_back_fn, dof::GWPGlobalEdgeDoFs)
+
+    d = dof.order
+    T = coordtype(global_ch)
+    ds = one(T) / (d+2)
+
+    for i in 1:d+1
+        s = i * ds
+        p = neighborhood(global_ch, s)
+        t = tangents(p, 1)
+        vals = pulled_back_fn(s)
+        for j in axes(Q,1)
+            # Q[j,i] = dot(t, vals[j].value)
+            # @show t, vals[j]
+            Q[j,i] = dot(t, vals[j])
+        end
+    end
+
+    return Q
+end
+
 
 @testitem "GWP edge global dofs" begin
     using CompScienceMeshes
@@ -42,25 +76,41 @@ end
     # display(round.(A, digits=3))
 end
 
-function globaldofs(edge_ch, face_ch, localspace, dof::GWPGlobalFaceDoFs)
+"""
+    globaldofs(global_ch, face_ch, localspace, dof::GWPGlobalFaceDoFs)
+
+Compute the face-interior global degrees of freedom for a local GWP curl space.
+The returned matrix has one row per local basis function and two columns per
+interior lattice point, containing the basis functions' components along the
+two face tangents at that point.
+"""
+function globaldofs(global_ch, face_ch, localspace, dof::GWPGlobalFaceDoFs)
 
     d = dof.order
-    T = coordtype(edge_ch)
+    T = coordtype(global_ch)
+
+    f = trace(global_ch, face_ch, localspace)
+    g = u -> collect(fi.value for fi in f(u))
+    Q = zeros(T, numfunctions(localspace, domain(face_ch)), d*(d+1))
+    return globaldofs!(Q, global_ch, g, dof)
+end
+
+function globaldofs!(Q, global_ch, pulled_back_fn, dof::GWPGlobalFaceDoFs)
+
+    d = dof.order
+    T = coordtype(global_ch)
     ds = one(T) / (d+2)
 
-    f = trace(edge_ch, face_ch, localspace)
-    Q = zeros(T, numfunctions(localspace, domain(face_ch)), d*(d+1))
     S = ((i,j,d+2-i-j) for i in 1:d+1 for j in 1:d+1 if d+2-i-j > 0)
-    # return stack(S) do (i,j,k)
     idx = 1
     for (i,j,k) in S
         u = (i*ds,j*ds)
-        p = neighborhood(edge_ch, u)
+        p = neighborhood(global_ch, u)
         t1 = tangents(p,1)
         t2 = tangents(p,2)
-        vals = f(u)
-        q1 = [dot(t1,x.value) for x in vals]
-        q2 = [dot(t2,x.value) for x in vals]
+        vals = pulled_back_fn(u)
+        q1 = [dot(t1,x) for x in vals]
+        q2 = [dot(t2,x) for x in vals]
         Q[:,idx] = q1; idx += 1
         Q[:,idx] = q2; idx += 1
     end
@@ -71,18 +121,16 @@ end
 
 @testitem "GWP face global dofs" begin
     using CompScienceMeshes
+    using LinearAlgebra
+
     T = Float64
     face_ch = simplex(
         point(3,0,0),
         point(2,0,-1),
         point(0,0,1),
     )
-    # edge_ch = simplex(
-    #     point(0,0,1),
-    #     point(2,0,-1),
-    #     point(3,0,0)
-    # )
-    edge_ch = simplex(
+
+    global_ch = simplex(
         point(3,0,0),
         point(2,0,-1),
         point(0,0,1),
@@ -91,8 +139,10 @@ end
     degree = 3
     localspace = BEAST.GWPCurlRefSpace{T,degree}()
     dofs = BEAST.GWPGlobalFaceDoFs(degree)
-    A = BEAST.globaldofs(edge_ch, face_ch, localspace, dofs)
-    # display(round.(A, digits=3))
+    A = BEAST.globaldofs(global_ch, face_ch, localspace, dofs)
+    num_inner_dofs = degree*(degree+1)
+    T = round.(A[end-num_inner_dofs+1:end,:], digits=3)
+    @test T ≈ Matrix{Int}(I, num_inner_dofs, num_inner_dofs)
 end
 
 function _addshapes!(fns, cell, gids, lids, β)
@@ -176,4 +226,70 @@ end
     nf = order * (order+1)
     Nt = length(edges)*ne + length(mesh)*nf
     @test numfunctions(gwp) == Nt
+end
+
+
+struct GWPInterpolator
+    order
+    mesh
+    edges
+    faces
+end
+
+
+function (interp::GWPInterpolator)(f)
+
+    T = scalartype(f)
+    order = interp.order
+    mesh = interp.mesh
+    edges = interp.edges
+    faces = interp.faces
+
+    ne = order+1
+    nf = order*(order+1)
+
+    Ne = ne * length(edges)
+    Nf = nf * length(faces)
+    Nt = Ne + Nf
+
+    vals = zeros(T, Nt)
+
+    C12 = connectivity(edges, mesh, abs)
+    R12 = rowvals(C12)
+    # V12 = nonzeros(C12)
+    for e in edges
+        edge_ch = chart(edges, e)
+        for k in nzrange(C12, e)
+            # l = V12[k]
+            c = R12[k]
+            cell_ch = chart(mesh, c)
+            h = trace(edge_ch, cell_ch, f)
+            g = u -> (h(u),)
+
+            gids = (e-1)*ne .+ (1:ne)
+            Q = zeros(T, 1, ne)
+            globaldofs!(Q, edge_ch, g, GWPGlobalEdgeDoFs(order))
+            vals[gids] .= Q[1,:]
+            break
+        end
+    end
+
+    C22 = connectivity(faces, mesh, abs)
+    R22 = rowvals(C22)
+    for p in faces
+        face_ch = chart(faces, p)
+        for k in nzrange(C22, p)
+            c = R22[k]
+            cell_ch = chart(mesh, c)
+            h = trace(face_ch, cell_ch, f)
+            g = u -> (h(u),)
+            gids = Ne + (p-1)*nf .+ (1:nf)
+            Q = zeros(T, 1, nf)
+            globaldofs!(Q, face_ch, g, GWPGlobalFaceDoFs(order))
+            vals[gids] .= Q[1,:]
+            break
+        end
+    end
+
+    return vals
 end

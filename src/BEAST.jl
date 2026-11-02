@@ -209,6 +209,7 @@ include("utils/butchertableau.jl")
 include("utils/variational.jl")
 
 include("bases/global/globaldofs.jl")
+include("bases/dofs/lagdofs.jl")
 
 include("bases/localbasis.jl")
 include("bases/local/interpolate.jl")
@@ -233,6 +234,7 @@ include("bases/lincomb.jl")
 include("bases/trace.jl")
 include("bases/restrict.jl")
 include("bases/divergence.jl")
+include("bases/global/lagglobal.jl")
 include("bases/global/gwpglobal.jl")
 include("bases/global/gwpdivglobal.jl")
 

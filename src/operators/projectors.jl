@@ -291,7 +291,7 @@ end
 
     @test norm(PΣd*PΛd*d)/norm(d) < sqrt(eps())
     @test norm(ℙΣd*ℙΛd*d)/norm(d) < sqrt(eps())
-≈
+
     PΣd = assemble(BEAST.PΣ(;compStrat =BEAST.Iterative),X)
     PΛd = assemble(BEAST.PΛ(;compStrat =BEAST.Iterative),X)
 
