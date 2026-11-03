@@ -23,7 +23,7 @@ function assemble(theta::BourhisTheta{C,D,Iterative},Y::GWPDivSpace,X::GWPDivSpa
     Pp = assemble(QHProjector{D,Iterative}(),X;quadstrat) 
     Pr = assemble(QHProjector{C,Iterative}(),Y;quadstrat)  
 
-    return iGxx_r* Pr*iGxx_r*Gmix*iGxx*Pp*iGxx
+    return Pr*iGxx_r*Gmix*Pp*iGxx
 end
 
 function assemble(theta::BourhisTheta{C,D,Direct},Y::GWPDivSpace,X::GWPDivSpace;quadstrat=defaultquadstrat) where {C,D}
@@ -36,7 +36,7 @@ function assemble(theta::BourhisTheta{C,D,Direct},Y::GWPDivSpace,X::GWPDivSpace;
     Pp = assemble(QHProjector{D,Direct}(),X;quadstrat) 
     Pr = assemble(QHProjector{C,Direct}(),Y;quadstrat)  
 
-    return iGxx_r* Pr*iGxx_r*Gmix*iGxx*Pp*iGxx
+    return Pr*iGxx_r*Gmix*Pp*iGxx
 end
 
 function assemble(theta::NedelecTheta{Stars,Direct},Y::Space,X::Space;quadstrat=defaultquadstrat)

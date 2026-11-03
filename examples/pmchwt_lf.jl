@@ -71,11 +71,11 @@ nX =  numfunctions(X)
 Z = spzeros(nX,nX);
 
 # Assembling of the quasi-Helmholtz projectors: Here, the quasi-Helmholtz projectors are directly computed from the star matrix ``\Sigma`` and loop matrix ``\Lambda``. 
-# We have the following ``P\Sigma = \Sigma ( \Sigma^T \Sigma )^+ \Sigma^T`` and ``P\Lambda = I - P\Sigma`` for the primal projectors, with the superscript ``+`` indicating the pseudo-inverse.
-# The dual projectors are defined like this: ``\mathbb{P}\Lambda =  \Lambda ( \Lambda^T \Lambda )^+ \Lambda^T`` and ``\mathbb{P}\Sigma = I - \mathbb{P}\Lambda``.
+# We have the following ``P\Sigma = \Sigma ( \Sigma^T \Sigma )^+ \Sigma^T`` and ``P\Lambda H = I - P\Sigma`` for the primal projectors, with the superscript ``+`` indicating the pseudo-inverse.
+# The dual projectors are defined like this: ``\mathbb{P}\Lambda =  \Lambda ( \Lambda^T \Lambda )^+ \Lambda^T`` and ``\mathbb{P}\Sigma H = I - \mathbb{P}\Lambda``.
 PΣ = assemble(BEAST.PΣ(;compStrat = BEAST.Direct),X)
-PΛ = assemble(BEAST.PΛ(;compStrat = BEAST.Direct),X)
-ℙΣ = assemble(BEAST.ℙΣ(;compStrat = BEAST.Direct),X)
+PΛH = assemble(BEAST.PΛH(;compStrat = BEAST.Direct),X)
+ℙΣH = assemble(BEAST.ℙΣH(;compStrat = BEAST.Direct),X)
 ℙΛ = assemble(BEAST.ℙΛ(;compStrat = BEAST.Direct),X);  
 
 # Assemble the integral operators for PMCHWT
@@ -127,8 +127,8 @@ k = sqrt(κ)
 ik = 1/k;
 # Low-frequency stabilized preconditioner. The additional factor of ``1/\sqrt(\kappa)`` is to rescale the residual close to 1.
 M =   ik *
-    [ k*PΛ*invGmix'  -im*ik*PΣ*invGmix'  Z              Z                  
-      Z               Z                  k*PΛ*invGmix' -im*ik*PΣ*invGmix'  ] *
+    [ k*PΛH*invGmix'  -im*ik*PΣ*invGmix'  Z              Z                  
+      Z               Z                  k*PΛH*invGmix' -im*ik*PΣ*invGmix'  ] *
           
     [ 𝕋sn+𝕋hn   𝕋sn  Z         Z  
       𝕋sn       𝕋sn  Z         Z 
@@ -136,26 +136,26 @@ M =   ik *
       Z         Z    𝕋sn       𝕋sn  ] * 
 
     [ im*k*ℙΛ  Z       
-      ik*ℙΣ    Z      
+      ik*ℙΣH    Z      
       Z        im*k*ℙΛ  
-      Z        ik*ℙΣ     ]; 
+      Z        ik*ℙΣH     ]; 
 #  Low-frequency stabilized PMCHWT system
-A = [-im*ik*ℙΛ*invGmix   k*ℙΣ*invGmix   Z                    Z             
-      Z                  Z             -im*ik*ℙΛ*invGmix     k*ℙΣ*invGmix ] *
+A = [-im*ik*ℙΛ*invGmix   k*ℙΣH*invGmix   Z                    Z             
+      Z                  Z             -im*ik*ℙΛ*invGmix     k*ℙΣH*invGmix ] *
    
     [ (η*(Tsn)+η′*(Tsn′))  (η*(Tsn)+η′*(Tsn′))              (-KLn-KLn′)           (-Kn-Kn′)                         
       (η*(Tsn)+η′*(Tsn′))  (η*(Tsn+Thn)+η′*(Tsn′+Thn′))     (-Kn-Kn′)             (-Kn-Kn′)                         
       (KLn+KLn′)           (Kn+Kn′)                         (α*(Tsn)+α′*(Tsn′))   (α*(Tsn)+α′*(Tsn′))              
       (Kn+Kn′)             (Kn+Kn′)                         (α*(Tsn)+α′*(Tsn′))   (α*(Tsn+Thn)+α′*(Tsn′+Thn′)) ] *
           
-    [ ik*PΛ    Z         
+    [ ik*PΛH    Z         
       im*k*PΣ  Z         
-      Z        ik*PΛ    
+      Z        ik*PΛH    
       Z        im*k*PΣ ]; 
 
 # And the right hand side
-b = [-im*ik*ℙΛ*invGmix   k*ℙΣ*invGmix   Z                    Z             
-      Z                  Z             -im*ik*ℙΛ*invGmix     k*ℙΣ*invGmix ] *
+b = [-im*ik*ℙΛ*invGmix   k*ℙΣH*invGmix   Z                    Z             
+      Z                  Z             -im*ik*ℙΛ*invGmix     k*ℙΣH*invGmix ] *
    
     [ exh
       eh
@@ -166,8 +166,8 @@ b = [-im*ik*ℙΛ*invGmix   k*ℙΣ*invGmix   Z                    Z
 y, stats_lf = BEAST.solve(BEAST.GMRES(A;M=M,rtol=1e-8,verbose=0), (b));
 
 # Recovering actual solution
-u_lf =[ ik*PΛ+im*k*PΣ Z 
-        Z             ik*PΛ+im*k*PΣ]  * y;
+u_lf =[ ik*PΛH+im*k*PΣ Z 
+        Z             ik*PΛH+im*k*PΣ]  * y;
 
 # ## Postprocessing
 # Generate far field points
@@ -185,10 +185,10 @@ ff =  -im * κ / 4π *( -η[1]*ffj + cross.(ffpts, ffm))
 biRCS_mom = 4π*norm.(ff).^2/λ^2;
 
 # Compute far field for low frequency PMCHWT. Keeping loop and star contributions seperate until the end.
-jl = ik*PΛ* y[1:nX]
+jl = ik*PΛH* y[1:nX]
 js = im*k*PΣ*  y[1:nX]
 ms = im*k*PΣ* y[nX+1:2nX]
-ml = ik*PΛ* y[nX+1:2nX]
+ml = ik*PΛH* y[nX+1:2nX]
 
 ffms = potential(MWFarField3D(wavenumber=κ), ffpts, ms, X)
 ffjs = potential(MWFarField3D(wavenumber=κ), ffpts, js, X)
