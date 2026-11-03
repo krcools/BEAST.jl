@@ -19,11 +19,11 @@ function PΣ(;compStrat = Iterative)
     return QHProjector{Stars,compStrat}()
 end
 
-function PΛ(;compStrat = Iterative)
+function PΛH(;compStrat = Iterative)
     return QHProjector{Loops,compStrat}()
 end
 
-function ℙΣ(;compStrat = Iterative)
+function ℙΣH(;compStrat = Iterative)
     return QHProjector{DualLoops,compStrat}()
 end
 
@@ -152,6 +152,7 @@ function assemble(::QHProjector{DualStars,Iterative}, X::RTBasis; quadstrat=defa
     SP = saddlepoint(Gxx,Σp,Gxx+Dxx,sqGpp*Gpp*sqGpp)
     return P0Σ*SP*Px0
 end
+
 #GWP basis
 function assemble(::QHProjector{Stars,Direct}, X::GWPDivSpace; quadstrat=defaultquadstrat)
     p = X.degree
@@ -159,8 +160,9 @@ function assemble(::QHProjector{Stars,Direct}, X::GWPDivSpace; quadstrat=default
     P = lagrangecx(X.geo,order=p)
     #assemble auxilarry matrices
     Gxx = assemble(Identity(),X,X;quadstrat)
+    iGxx = inv(Matrix(Gxx))
     Σp = assemble(Identity(),divergence(X),P;quadstrat)
-    return Σp * pinv(Matrix(Σp'*inv(Matrix(Gxx))*Σp)) * Σp'
+    return iGxx * Σp * pinv(Matrix(Σp'*iGxx*Σp)) * Σp'
 end
 
 function assemble(::QHProjector{Loops,Direct}, X::GWPDivSpace; quadstrat=defaultquadstrat)
@@ -169,8 +171,9 @@ function assemble(::QHProjector{Loops,Direct}, X::GWPDivSpace; quadstrat=default
     P = lagrangecx(X.geo,order=p)
     #assemble auxilarry matrices
     Gxx = assemble(Identity(),X,X;quadstrat)
+    iGxx = inv(Matrix(Gxx))
     Σp = assemble(Identity(),divergence(X),P;quadstrat)
-    return Gxx - Σp * pinv(Matrix(Σp'*inv(Matrix(Gxx))*Σp)) * Σp'
+    return LinearAlgebra.I - iGxx * Σp * pinv(Matrix(Σp'*iGxx*Σp)) * Σp'
 end
 
 function assemble(::QHProjector{DualLoops,Direct}, X::GWPDivSpace; quadstrat=defaultquadstrat)
@@ -179,8 +182,9 @@ function assemble(::QHProjector{DualLoops,Direct}, X::GWPDivSpace; quadstrat=def
     L = lagrangec0(X.geo,order=p+1)
     #assemble auxilarry matrices
     Gxx = assemble(Identity(),X,X;quadstrat) 
+    iGxx = inv(Matrix(Gxx))
     Λp = assemble(Identity(),X,curl(L);quadstrat)
-    return Gxx - Λp * pinv(Matrix(Λp'*inv(Matrix(Gxx))*Λp)) * Λp'
+    return LinearAlgebra.I - iGxx * Λp * pinv(Matrix(Λp'*iGxx*Λp)) * Λp'
 end
 
 function assemble(::QHProjector{DualStars,Direct}, X::GWPDivSpace; quadstrat=defaultquadstrat)
@@ -189,8 +193,9 @@ function assemble(::QHProjector{DualStars,Direct}, X::GWPDivSpace; quadstrat=def
     L = lagrangec0(X.geo,order=p+1)
     #assemble auxilarry matrices
     Gxx = assemble(Identity(),X,X;quadstrat) 
+    iGxx = inv(Matrix(Gxx))
     Λp = assemble(Identity(),X,curl(L);quadstrat)
-    return Λp * pinv(Matrix(Λp'*inv(Matrix(Gxx))*Λp)) * Λp'
+    return iGxx * Λp * pinv(Matrix(Λp'*iGxx*Λp)) * Λp'
 end
 
 function assemble(::QHProjector{Stars,Iterative}, X::GWPDivSpace; quadstrat=defaultquadstrat)
@@ -201,6 +206,7 @@ function assemble(::QHProjector{Stars,Iterative}, X::GWPDivSpace; quadstrat=defa
     nP = numfunctions(P)
     #assemble auxilarry matrices
     Gxx = assemble(Identity(),X,X;quadstrat)
+    iGxx = BEAST.cholesky(Gxx)
     Dxx = assemble(Identity(),divergence(X),divergence(X);quadstrat)
     Gpp = assemble(Identity(),P,P;quadstrat)
     Σp = assemble(Identity(),divergence(X),P;quadstrat)
@@ -208,7 +214,7 @@ function assemble(::QHProjector{Stars,Iterative}, X::GWPDivSpace; quadstrat=defa
            spzeros(nP,nX)]
     P0Σ = [spzeros(nX,nX) Σp]
     SP = saddlepoint(Gxx,Σp,Gxx+Dxx,Gpp)
-    return P0Σ*SP*Px0
+    return iGxx*P0Σ*SP*Px0
 end
 
 function assemble(::QHProjector{Loops,Iterative}, X::GWPDivSpace; quadstrat=defaultquadstrat)
@@ -219,13 +225,14 @@ function assemble(::QHProjector{Loops,Iterative}, X::GWPDivSpace; quadstrat=defa
     nP = numfunctions(P)
     #assemble auxilary matrices
     Gxx = assemble(Identity(),X,X;quadstrat)
+    iGxx = BEAST.cholesky(Gxx)
     Dxx = assemble(Identity(),divergence(X),divergence(X);quadstrat)
     Gpp = assemble(Identity(),P,P;quadstrat)
     Σp = assemble(Identity(),divergence(X),P;quadstrat)
     Px0 = [Gxx
            spzeros(nP,nX)]
     SP = saddlepoint(Gxx,Σp,Gxx+Dxx,Gpp)
-    return Px0'*SP*Px0
+    return iGxx*Px0'*SP*Px0
 end
 
 function assemble(::QHProjector{DualLoops,Iterative}, X::GWPDivSpace; quadstrat=defaultquadstrat)
@@ -236,6 +243,7 @@ function assemble(::QHProjector{DualLoops,Iterative}, X::GWPDivSpace; quadstrat=
     nL = numfunctions(L)
     #assemble auxilarry matrices
     Gxx = assemble(Identity(),X,X;quadstrat)
+    iGxx = BEAST.cholesky(Gxx)
     Cll = assemble(Identity(),curl(L),curl(L);quadstrat)
     Gll = assemble(Identity(),L,L;quadstrat)
     #Σp = assemble(Identity(),divergence(X),P)
@@ -243,7 +251,7 @@ function assemble(::QHProjector{DualLoops,Iterative}, X::GWPDivSpace; quadstrat=
     Px0 = [Gxx
            spzeros(nL,nX)]
     SP = saddlepoint(Gxx,Λp,Gxx,Gll+Cll)
-    return Px0'*SP*Px0
+    return iGxx*Px0'*SP*Px0
 end
 
 function assemble(::QHProjector{DualStars,Iterative}, X::GWPDivSpace; quadstrat=defaultquadstrat)
@@ -254,6 +262,7 @@ function assemble(::QHProjector{DualStars,Iterative}, X::GWPDivSpace; quadstrat=
     nP = numfunctions(L)
     #assemble auxilarry matrices
     Gxx = assemble(Identity(),X,X;quadstrat)
+    iGxx = BEAST.cholesky(Gxx)
     Cll = assemble(Identity(),curl(L),curl(L);quadstrat)
     Gll = assemble(Identity(),L,L;quadstrat)
     #Σp = assemble(Identity(),divergence(X),P)
@@ -262,7 +271,7 @@ function assemble(::QHProjector{DualStars,Iterative}, X::GWPDivSpace; quadstrat=
            spzeros(nP,nX)]
     P0Λ = [spzeros(nX,nX) Λp]
     SP = saddlepoint(Gxx,Λp,Gxx,Gll+Cll)
-    return P0Λ*SP*Px0
+    return iGxx*P0Λ*SP*Px0
 end   
 
 
@@ -277,47 +286,43 @@ end
     X = raviartthomas(M)
     Y = BEAST.gwpdiv(M;order=1)
 
-    G = assemble(BEAST.Identity(),Y,Y)
-    iG = BEAST.cholesky(G)
-
     b = rand(numfunctions(Y))
     d = rand(numfunctions(X))
 
     PΣd = assemble(BEAST.PΣ(;compStrat =BEAST.Direct),X)
-    PΛd = assemble(BEAST.PΛ(;compStrat =BEAST.Direct),X)
+    PΛHd = assemble(BEAST.PΛH(;compStrat =BEAST.Direct),X)
 
-    ℙΣd = assemble(BEAST.ℙΣ(;compStrat =BEAST.Direct),X)
+    ℙΣd = assemble(BEAST.ℙΣH(;compStrat =BEAST.Direct),X)
     ℙΛd = assemble(BEAST.ℙΛ(;compStrat =BEAST.Direct),X)
 
-    @test norm(PΣd*PΛd*d)/norm(d) < sqrt(eps())
+    @test norm(PΣd*PΛHd*d)/norm(d) < sqrt(eps())
     @test norm(ℙΣd*ℙΛd*d)/norm(d) < sqrt(eps())
 
     PΣd = assemble(BEAST.PΣ(;compStrat =BEAST.Iterative),X)
-    PΛd = assemble(BEAST.PΛ(;compStrat =BEAST.Iterative),X)
+    PΛHd = assemble(BEAST.PΛH(;compStrat =BEAST.Iterative),X)
 
-    ℙΣd = assemble(BEAST.ℙΣ(;compStrat =BEAST.Iterative),X)
+    ℙΣHd = assemble(BEAST.ℙΣH(;compStrat =BEAST.Iterative),X)
     ℙΛd = assemble(BEAST.ℙΛ(;compStrat =BEAST.Iterative),X)
 
-    @test norm(PΣd*PΛd*d)/norm(d) < sqrt(eps())
-    @test norm(ℙΣd*ℙΛd*d)/norm(d) < sqrt(eps())
+    @test norm(PΣd*PΛHd*d)/norm(d) < sqrt(eps())
+    @test norm(ℙΣHd*ℙΛd*d)/norm(d) < sqrt(eps())
 
     PΣd = assemble(BEAST.PΣ(;compStrat =BEAST.Direct),Y)
-    PΛd = assemble(BEAST.PΛ(;compStrat =BEAST.Direct),Y)
+    PΛHd = assemble(BEAST.PΛH(;compStrat =BEAST.Direct),Y)
 
-    ℙΣd = assemble(BEAST.ℙΣ(;compStrat =BEAST.Direct),Y)
+    ℙΣHd = assemble(BEAST.ℙΣH(;compStrat =BEAST.Direct),Y)
     ℙΛd = assemble(BEAST.ℙΛ(;compStrat =BEAST.Direct),Y)
 
-    @test norm(PΣd*iG*PΛd*b)/norm(b) <  sqrt(eps())
-    @test norm(ℙΣd*iG*ℙΛd*b)/norm(b) <  sqrt(eps())
+    @test norm(PΣd*PΛHd*b)/norm(b) <  sqrt(eps())
+    @test norm(ℙΣHd*ℙΛd*b)/norm(b) <  sqrt(eps())
 
     PΣd = assemble(BEAST.PΣ(;compStrat =BEAST.Iterative),Y)
-    PΛd = assemble(BEAST.PΛ(;compStrat =BEAST.Iterative),Y)
+    PΛHd = assemble(BEAST.PΛH(;compStrat =BEAST.Iterative),Y)
 
-    ℙΣd = assemble(BEAST.ℙΣ(;compStrat =BEAST.Iterative),Y)
+    ℙΣHd = assemble(BEAST.ℙΣH(;compStrat =BEAST.Iterative),Y)
     ℙΛd = assemble(BEAST.ℙΛ(;compStrat =BEAST.Iterative),Y)
 
-    @test norm(PΣd*iG*PΛd*b)/norm(b) <  sqrt(eps())
-    @test norm(ℙΣd*iG*ℙΛd*b)/norm(b) <  sqrt(eps())
-    @show norm(ℙΣd*iG*ℙΛd*b)/norm(b)
-
+    @test norm(PΣd*PΛHd*b)/norm(b) <  sqrt(eps())
+    @test norm(ℙΣHd*ℙΛd*b)/norm(b) <  sqrt(eps())
+   
 end 
