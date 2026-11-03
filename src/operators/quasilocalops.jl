@@ -6,7 +6,9 @@ function allocatestorage(op::QuasiLocalOperator,
 
         T = scalartype(op, test_functions, trial_functions)
 
-        nt = Threads.nthreads()
+        # One buffer per thread across all thread pools: the interactive pool comes first
+        # in the thread numbering, so `threadid()` can exceed `nthreads()`.
+        nt = Threads.maxthreadid()
         M = Vector{Vector{Int}}(undef, nt)
         N = Vector{Vector{Int}}(undef, nt)
         V = Vector{Vector{T}}(undef, nt)
@@ -22,7 +24,9 @@ function allocatestorage(op::QuasiLocalOperator,
         # @show M
     
         function storeq2(v,m,n)
-            tid = Threads.threadid()-Threads.nthreads(:interactive)
+            # No yield point between the three push! calls, so the task cannot
+            # migrate to another thread in between.
+            tid = Threads.threadid()
             push!(M[tid],m)
             # @show length(M)
             push!(N[tid],n)
