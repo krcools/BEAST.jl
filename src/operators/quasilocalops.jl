@@ -49,7 +49,7 @@ end
 
 
 function assemblechunk!(op::QuasiLocalOperator, tfs::Space, bfs::Space, store321;
-    quadstrat=defaultquadstrat(op, tfs, bfs))
+    quadstrat=defaultquadstrat(op, tfs, bfs), verbose=true)
 
     tr = assemblydata(tfs); tr == nothing && return
     br = assemblydata(bfs); br == nothing && return
@@ -80,8 +80,9 @@ function assemblechunk!(op::QuasiLocalOperator, tfs::Space, bfs::Space, store321
 
     δ = oprange(op)
     tid = Threads.threadid()
+    verbose = verbose && tid == 1
 
-    tid == 1 && print("dots out of 10: ")
+    verbose && print("dots out of 10: ")
     todo, done, pctg = length(tels), 0, 0
     for (p,(tcell,tptr)) in enumerate(zip(tels, tact))
 
@@ -114,8 +115,8 @@ function assemblechunk!(op::QuasiLocalOperator, tfs::Space, bfs::Space, store321
         done += 1
         new_pctg = round(Int, done / todo * 100)
         if new_pctg > pctg + 9
-            tid == 1 && print(".")
+            verbose && print(".")
             pctg = new_pctg
     end end
-    tid == 1 && println("")
+    verbose && println("")
 end

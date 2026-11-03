@@ -278,7 +278,7 @@ elements(sp::Space) = elements(geometry(sp))
 Computes the matrix of operator biop wrt the finite element spaces tfs and bfs
 """
 function assemblechunk!(biop::IntegralOperator, tfs::Space, bfs::Space, store;
-        quadstrat=defaultquadstrat(biop, tfs, bfs))
+        quadstrat=defaultquadstrat(biop, tfs, bfs), verbose=true)
 
     numfunctions(tfs) == 0 && return
     numfunctions(bfs) == 0 && return

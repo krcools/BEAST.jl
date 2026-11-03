@@ -146,13 +146,14 @@ end
 function assemble!(biop::CompSingleKern, tfs::Space, bfs::Space, store,
     threading::Type{Threading{:multi}};
     quadstrat=defaultquadstrat(biop, tfs, bfs),
+    verbose=true,
     kwargs...)
 
-    return assemble_local_mixed!(biop, tfs, bfs, store; quadstrat)
+    return assemble_local_mixed!(biop, tfs, bfs, store; quadstrat, verbose)
 end
 
 function assemble_local_mixed!(biop::CompSingleKern, tfs::Space{T}, bfs::Space{T}, store;
-    quadstrat=defaultquadstrat) where {T}
+    quadstrat=defaultquadstrat, verbose=true) where {T}
     tol = sqrt(eps(T))
 
     quadstrat = quadstrat(biop, tfs, bfs)
@@ -177,7 +178,7 @@ function assemble_local_mixed!(biop::CompSingleKern, tfs::Space{T}, bfs::Space{T
     # store the bcells in an octree
     tree = elementstree(bels)
 
-    print("dots out of 10: ")
+    verbose && print("dots out of 10: ")
     todo, done, pctg = length(tels), 0, 0
     for (p,tcell) in enumerate(tels)
 
@@ -218,13 +219,13 @@ function assemble_local_mixed!(biop::CompSingleKern, tfs::Space{T}, bfs::Space{T
 
         done += 1
         new_pctg = round(Int, done / todo * 100)
-        if new_pctg > pctg + 9
+        if verbose && new_pctg > pctg + 9
             print(".")
             pctg = new_pctg
         end
     end # next cell in the test geometry
 
-    println("")
+    verbose && println("")
 end
 kernelvals(::CompSingleKern,x) = nothing
 function cellinteractions(biop::CompSingleKern, trefs::U, brefs::V, cell, qr, disp) where {U<:RefSpace{T},V<:RefSpace{T}} where {T}
