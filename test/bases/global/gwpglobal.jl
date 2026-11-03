@@ -71,3 +71,27 @@ end
     end
     @test err < 1e-10
 end
+
+@testitem "GWP interpolator on spaces: consistency with embedding" begin
+    using CompScienceMeshes
+    using LinearAlgebra
+    using SparseArrays
+
+    dir = pkgdir(BEAST, "test/assets")
+    Γ = CompScienceMeshes.readmesh(joinpath(dir, "sphere45.in"))
+    ℰ = CompScienceMeshes.skeleton(Γ, 1)
+
+    # a subset of the edges, some of which have their orientation flipped
+    I = 1:2:length(ℰ)
+    ℰ1 = Mesh(vertices(ℰ), [isodd(i ÷ 2) ? CompScienceMeshes.fliporientation(c) : c for (i,c) in zip(I, cells(ℰ)[I])])
+    @test any(<(0), nonzeros(CompScienceMeshes.embedding(ℰ1, ℰ)))
+
+    # for the lowest order, interpolation reduces to the signed injection of edges
+    X1 = BEAST.gwpcurl(Γ, ℰ1; order=0)
+    Π = BEAST.GWPInterpolator(0, Γ, ℰ, Γ)
+    A = Π(X1)
+
+    S = copy(transpose(CompScienceMeshes.embedding(ℰ1, ℰ)))
+    @test size(A) == size(S)
+    @test norm(A - S, Inf) < 1e-10
+end
