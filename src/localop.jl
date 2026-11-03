@@ -68,6 +68,7 @@ end
 function assemble!(biop::LocalOperator, tfs::Space, bfs::Space, store,
         threading::Type{Threading{:multi}};
         quadstrat=defaultquadstrat,
+        verbose=true,
         kwargs...)
 
         quadstrat = quadstrat(biop, tfs, bfs)
@@ -76,14 +77,14 @@ function assemble!(biop::LocalOperator, tfs::Space, bfs::Space, store,
     numfunctions(bfs) == 0 && return
  
     if geometry(tfs) == geometry(bfs)
-        return assemble_local_matched!(biop, tfs, bfs, store; quadstrat)
+        return assemble_local_matched!(biop, tfs, bfs, store; quadstrat, verbose)
     end
 
     if CompScienceMeshes.refines(geometry(tfs), geometry(bfs))
-        return assemble_local_refines!(biop, tfs, bfs, store; quadstrat)
+        return assemble_local_refines!(biop, tfs, bfs, store; quadstrat, verbose)
     end
 
-    return assemble_local_mixed!(biop, tfs, bfs, store; quadstrat)
+    return assemble_local_mixed!(biop, tfs, bfs, store; quadstrat, verbose)
 end
 
 function _scatterlocal!(store, locmat, tad, bad, p, q)
@@ -134,23 +135,24 @@ end
 function assemble!(biop::LocalOperator, tfs::Space, bfs::Space, store,
     threading::Type{Threading{:single}};
     quadstrat=defaultquadstrat,
+    verbose=true,
     kwargs...)
 
     quadstrat = quadstrat(biop, tfs, bfs)
 
     if geometry(tfs) == geometry(bfs)
-        return assemble_local_matched!(biop, tfs, bfs, store; quadstrat)
+        return assemble_local_matched!(biop, tfs, bfs, store; quadstrat, verbose)
     end
 
     if CompScienceMeshes.refines(geometry(tfs), geometry(bfs))
-        return assemble_local_refines!(biop, tfs, bfs, store; quadstrat)
+        return assemble_local_refines!(biop, tfs, bfs, store; quadstrat, verbose)
     end
 
-    return assemble_local_mixed!(biop, tfs, bfs, store; quadstrat)
+    return assemble_local_mixed!(biop, tfs, bfs, store; quadstrat, verbose)
 end
 
 function assemble_local_matched!(biop::LocalOperator, tfs::Space, bfs::Space, store;
-    quadstrat=defaultquadstrat(biop, tfs, bfs))
+    quadstrat=defaultquadstrat(biop, tfs, bfs), verbose=true)
 
     tels, tad, ta2g = assemblydata(tfs)
     bels, bad, ba2g = assemblydata(bfs)
@@ -172,7 +174,7 @@ function assemble_local_matched!(biop::LocalOperator, tfs::Space, bfs::Space, st
 
     qd = quaddata(biop, trefs, brefs, tels, bels, quadstrat)
 
-    verbose = length(tels) > 10_000
+    verbose = verbose && length(tels) > 10_000
     verbose && print("dots out of 20: ")
     todo, done, pctg = length(tels), 0, 0
     locmat = zeros(scalartype(biop, trefs, brefs), num_trefs, num_brefs)
@@ -194,7 +196,7 @@ end
 
 
 function assemble_local_refines!(biop::LocalOperator, tfs::Space, bfs::Space, store;
-    quadstrat=defaultquadstrat(biop, tfs, bfs))
+    quadstrat=defaultquadstrat(biop, tfs, bfs), verbose=true)
 
     # println("Using 'refines' algorithm for local assembly:")
 
@@ -219,7 +221,7 @@ function assemble_local_refines!(biop::LocalOperator, tfs::Space, bfs::Space, st
 
     qd = quaddata(biop, trefs, brefs, tels, bels, quadstrat)
 
-    print("dots out of 10: ")
+    verbose && print("dots out of 10: ")
     todo, done, pctg = length(tels), 0, 0
     for (p,tcell) in enumerate(tels)
 
@@ -254,18 +256,18 @@ function assemble_local_refines!(biop::LocalOperator, tfs::Space, bfs::Space, st
 
         done += 1
         new_pctg = round(Int, done / todo * 100)
-        if new_pctg > pctg + 9
+        if verbose && new_pctg > pctg + 9
             print(".")
             pctg = new_pctg
         end
     end # next cell in the test geometry
 
-    println("")
+    verbose && println("")
 
 end
 
 function assemble_local_matched!(biop::LocalOperator, tfs::subdBasis, bfs::subdBasis, store;
-    quadstrat=defaultquadstrat(biop, tfs, bfs))
+    quadstrat=defaultquadstrat(biop, tfs, bfs), verbose=true)
 
     tels, tad = assemblydata(tfs)
     bels, bad = assemblydata(bfs)
@@ -401,9 +403,10 @@ function _assemble_mixed_cells!(
     biop,
     store,
     tol,
-    quadstrat,
+    quadstrat;
+    verbose=true,
 ) where {C}
-    print("dots out of 10: ")
+    verbose && print("dots out of 10: ")
     todo, done, pctg = length(tels), 0, 0
     for (p, tcell) in enumerate(tels)
         _assemble_mixed_cell!(
@@ -424,12 +427,12 @@ function _assemble_mixed_cells!(
 
         done += 1
         new_pctg = round(Int, done / todo * 100)
-        if new_pctg > pctg + 9
+        if verbose && new_pctg > pctg + 9
             print(".")
             pctg = new_pctg
         end
     end
-    println("")
+    verbose && println("")
     return nothing
 end
 
@@ -440,7 +443,7 @@ end
 For use when basis and test functions are defined on different meshes
 """
 function assemble_local_mixed!(biop::LocalOperator, tfs::Space{T}, bfs::Space{T}, store;
-    quadstrat=defaultquadstrat(biop, tfs, bfs)) where {T}
+    quadstrat=defaultquadstrat(biop, tfs, bfs), verbose=true) where {T}
 
     tol = sqrt(eps(T))
 
@@ -470,7 +473,8 @@ function assemble_local_mixed!(biop::LocalOperator, tfs::Space{T}, bfs::Space{T}
         biop,
         store,
         tol,
-        quadstrat,
+        quadstrat;
+        verbose,
     )
 end
 

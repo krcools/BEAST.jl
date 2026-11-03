@@ -94,15 +94,20 @@ defaultquadstrat(lc::LinearCombinationOfOperators, tfs::DirectProductSpace, bfs:
         storage_policy = Val{:bandedstorage},
         threading = :dofsplitting,
         scheduler = OhMyThreads.DynamicScheduler(),
-        quadstrat=defaultquadstrat(operator, test_functions, trial_functions))
+        quadstrat=defaultquadstrat(operator, test_functions, trial_functions),
+        verbose=true)
 
 Assemble the system matrix corresponding to the operator `operator` tested with the test functions `test_functions` and the trial functions `trial_functions`.
+
+Set `verbose=false` to suppress the progress output printed during the assembly, e.g. when
+several matrices are assembled concurrently.
 """
 function assemble(operator::AbstractOperator, test_functions, trial_functions;
     storage_policy = Val{:bandedstorage},
     threading = :dofsplitting,
     scheduler = OhMyThreads.DynamicScheduler(),
-    quadstrat=defaultquadstrat)
+    quadstrat=defaultquadstrat,
+    verbose=true)
 
     (threading == :dofsplitting) && (threading = Threading{:multi})
     (threading == :cellcoloring) && (threading = Threading{:cellcoloring})
@@ -112,7 +117,7 @@ function assemble(operator::AbstractOperator, test_functions, trial_functions;
         storage_policy)
     # qs = quadstrat(operator, test_functions, trial_functions)
     assemble!(operator, test_functions, trial_functions,
-        store, threading; quadstrat, scheduler)
+        store, threading; quadstrat, scheduler, verbose)
     return Z()
 end
 
@@ -215,7 +220,7 @@ end
 
 function assemble!(operator::Operator, test_functions::Space, trial_functions::Space,
     store, threading::Type{Threading{:multi}};
-    quadstrat=defaultquadstrat, kwargs...)
+    quadstrat=defaultquadstrat, verbose=true, kwargs...)
 
     quadstrat = quadstrat(operator, test_functions, trial_functions)
     P = Threads.nthreads()
@@ -228,20 +233,20 @@ function assemble!(operator::Operator, test_functions::Space, trial_functions::S
         lo <= hi || continue
         test_functions_p = subset(test_functions, lo:hi)
         store1 = _OffsetStore(store, lo-1, 0)
-        assemblechunk!(operator, test_functions_p, trial_functions, store1, quadstrat=quadstrat)
+        assemblechunk!(operator, test_functions_p, trial_functions, store1; quadstrat, verbose)
 end end
 
 function assemble!(operator::Operator, test_functions::Space, trial_functions::Space,
     store, threading::Type{Threading{:single}};
-    quadstrat=defaultquadstrat, kwargs...)
+    quadstrat=defaultquadstrat, verbose=true, kwargs...)
 
     quadstrat = quadstrat(operator, test_functions, trial_functions)
-    assemblechunk!(operator, test_functions, trial_functions, store; quadstrat)
+    assemblechunk!(operator, test_functions, trial_functions, store; quadstrat, verbose)
 end
 
 function assemble!(operator::Operator, testfunctions::Space, trialfunctions::Space,
     store, threading::Type{Threading{:cellcoloring}};
-    quadstrat=defaultquadstrat, scheduler)
+    quadstrat=defaultquadstrat, scheduler, verbose=true, kwargs...)
 
     quadstrat = quadstrat(operator, testfunctions, trialfunctions)
 
@@ -262,7 +267,7 @@ function assemble!(operator::Operator, testfunctions::Space, trialfunctions::Spa
         quadstrat
     end
 
-    pbar = progressbar(length(testelements) * length(trialelements), true)
+    pbar = progressbar(length(testelements) * length(trialelements), verbose)
 
     for (i, coloredtestelements) in enumerate(testelementcolors)
         testad1 = AssemblyData(testad.data[:,:,coloredtestelements])
