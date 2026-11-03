@@ -110,6 +110,7 @@ include("test_vie.jl")
 include("test_evie_dvie.jl")
 
 include("test_coloring.jl")
+include("test_quasilocal.jl")
 
 @run_package_tests filter = ti -> begin
     # @show ti.tags
