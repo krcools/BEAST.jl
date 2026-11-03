@@ -293,3 +293,91 @@ function (interp::GWPInterpolator)(f)
 
     return vals
 end
+
+# Add to the sparse triplets the result of applying the dofs `Q` (one column per
+# dof) to the local shapes on active cell `a`, storing it in rows
+# `offset .+ axes(Q,2)`.
+function _addinterpentries!(rows, cols, vals, ad, a, Q, offset)
+    for j in axes(Q,2)
+        for i in axes(Q,1)
+            for (m,α) in ad[a,i]
+                iszero(α) && continue
+                push!(rows, offset + j)
+                push!(cols, m)
+                push!(vals, α * Q[i,j])
+            end
+        end
+    end
+end
+
+# Return the active index of the first cell adjacent to column `k` of `C` that
+# supports at least one function, or 0 if there is no such cell.
+function _firstactivecell(C, k, g2a)
+    R = rowvals(C)
+    for m in nzrange(C, k)
+        a = get(g2a, R[m], 0)
+        a != 0 && return a
+    end
+    return 0
+end
+
+"""
+    (interp::GWPInterpolator)(space::Space)
+
+Interpolate each of the generating functions in `space` on a GWP space. It
+is assumed that the GWP space geometry is defined on the same vertex buffer
+as `space`, and that `space` is tangentially continuous, so that the edge dofs
+can be evaluated from either side of an edge.
+
+Returns a sparse matrix `A` of size `Nt × numfunctions(space)`, where column `m`
+contains the GWP coefficients of the interpolant of the `m`-th function.
+"""
+function (interp::GWPInterpolator)(space::Space)
+
+    T = scalartype(space)
+    edges = interp.edges
+    faces = interp.faces
+
+    order = interp.order
+    ne = order+1
+    nf = order*(order+1)
+
+    Ne = ne * length(edges)
+    Nf = nf * length(faces)
+    Nt = Ne + Nf
+
+    rows = Int[]
+    cols = Int[]
+    vals = T[]
+
+    charts1, ad, a2g = assemblydata(space)
+    g2a = Dict(p => i for (i,p) in enumerate(a2g))
+    ϕ = refspace(space)
+
+    cells1 = geometry(space)
+    D12 = connectivity(edges, cells1, abs)
+    D22 = connectivity(faces, cells1, abs)
+
+    for e in edges
+        # functions of `space` vanish on cells where none is supported
+        a = _firstactivecell(D12, e, g2a)
+        a == 0 && continue
+
+        edge_ch = chart(edges, e)
+        Q = globaldofs(edge_ch, charts1[a], ϕ, GWPGlobalEdgeDoFs(order))
+        _addinterpentries!(rows, cols, vals, ad, a, Q, ne*(e-1))
+    end
+
+    if order > 0
+        for p in faces
+            a = _firstactivecell(D22, p, g2a)
+            a == 0 && continue
+
+            face_ch = chart(faces, p)
+            Q = globaldofs(face_ch, charts1[a], ϕ, GWPGlobalFaceDoFs(order))
+            _addinterpentries!(rows, cols, vals, ad, a, Q, Ne + nf*(p-1))
+        end
+    end
+
+    return sparse(rows, cols, vals, Nt, numfunctions(space))
+end

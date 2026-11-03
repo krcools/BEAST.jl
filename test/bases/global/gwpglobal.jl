@@ -35,3 +35,39 @@
     end
     @test err < 1e-10
 end
+@testitem "GWP interpolator on spaces" begin
+    using CompScienceMeshes
+    using LinearAlgebra
+
+    dir = pkgdir(BEAST, "test/assets")
+    Γ = CompScienceMeshes.readmesh(joinpath(dir, "sphere45.in"))
+    ℰ = CompScienceMeshes.skeleton(Γ, 1)
+
+    # interpolating a GWP space on itself yields the identity
+    Y2 = BEAST.gwpcurl(Γ, ℰ; order=2)
+    Π2 = BEAST.GWPInterpolator(2, Γ, ℰ, Γ)
+    A = Π2(Y2)
+    @test size(A) == (numfunctions(Y2), numfunctions(Y2))
+    @test norm(A - I, Inf) < 1e-10
+
+    # lower order GWP functions are reproduced exactly
+    Y1 = BEAST.gwpcurl(Γ, ℰ; order=1)
+    B = Π2(Y1)
+    @test size(B) == (numfunctions(Y2), numfunctions(Y1))
+
+    function evaluate(X, coeffs, c, p)
+        ϕp = BEAST.refspace(X)(p)
+        sum(coeffs[i] * s.coeff * ϕp[s.refid].value
+            for (i,fn) in enumerate(X.fns) for s in fn if s.cellid == c;
+            init=zero(cartesian(p)))
+    end
+
+    err = maximum(1:numfunctions(Y1)) do m
+        e_m = zeros(numfunctions(Y1)); e_m[m] = 1
+        maximum(1:length(Γ)) do c
+            p = neighborhood(chart(Γ, c), (0.2, 0.3))
+            norm(evaluate(Y2, B[:,m], c, p) - evaluate(Y1, e_m, c, p))
+        end
+    end
+    @test err < 1e-10
+end
