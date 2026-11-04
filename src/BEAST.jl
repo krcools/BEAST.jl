@@ -293,6 +293,7 @@ include("identityop.jl")
 include("integralop.jl")
 include("dyadicop.jl")
 include("interpolation.jl")
+include("operators/osrc.jl")
 include("operators/projectors.jl")
 include("operators/theta.jl")
 
