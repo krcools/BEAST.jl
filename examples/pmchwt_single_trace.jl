@@ -88,29 +88,29 @@ end
     ]
     A = sum(Aloc[i][u[i],v[i]] for i in 1:numdoms)
 
-    Edges = skeleton(Σ,1)
-    edges = [skeleton(∂Ωᵢ, 1) for ∂Ωᵢ in ∂Ω]
-    Rloc = [ CompScienceMeshes.embedding(edges[i], Edges) for i  in 1:numdoms]
-    R = sum((Rloc[i][m,p])[u[i],z] + (Rloc[i][j,q])[u[i],z] for i in 1:numdoms) 
+    # Restriction of the single trace on Σ to the local traces on ∂Ωᵢ
+    Π = BEAST.InterpolatorOp()
+    R = sum(Π[m,p][u[i],z] + Π[j,q][u[i],z] for i in 1:numdoms)
 
     return (;bilforms=(;A,R), linforms=(;b))
 end
 
-@target spaces (geo) -> begin
+@target spaces (geo; order) -> begin
 
     (;∂Ω, Σ) = geo
 
-    Edges = skeleton(Σ,1)
-    edges = [skeleton(∂Ωᵢ, 1) for ∂Ωᵢ in ∂Ω]
+    # Local traces are expanded in divergence conforming spaces. The restriction
+    # from the single trace space is computed by interpolation between the curl
+    # conforming spaces from which these are derived.
+    Xc = BEAST.gwpcurl(Σ; order, interpolator=true)
+    Yc = [BEAST.gwpcurl(∂Ωᵢ; order, interpolator=true) for ∂Ωᵢ in ∂Ω]
+    Yd = [BEAST.gwpdiv(∂Ωᵢ; order) for ∂Ωᵢ in ∂Ω]
 
-    Nd = BEAST.nedelec(Σ, Edges)
-    RT = [n×BEAST.nedelec(∂Ωᵢ, e) for (∂Ωᵢ,e) in zip(∂Ω, edges)]
+    U = ∏(y × y for y in Yd)
+    Uc = ∏(y × y for y in Yc)
+    V = ∏(Xc × Xc)
 
-    U = ∏(rt × rt for rt in RT)
-    V = ∏(Nd × Nd)
-    # V = BEAST.DirectProductSpace([Nd × Nd])
-
-    return (;U, V)
+    return (;U, Uc, V)
 end
 
 
@@ -120,10 +120,10 @@ end
     (;A,R) = bilforms
     (;b) = linforms
 
-    (;U,V) = spaces
+    (;U,Uc,V) = spaces
 
     bu = assemble(b, U)
-    RUv = assemble(R, U, V)
+    RUv = assemble(R, Uc, V)
     Auu = assemble(A, U, U; threading=:cellcoloring)
 
     linmaps = (;Auu, RUv)
@@ -210,8 +210,8 @@ end
 
 x = range(-2.0,2.0,length=150)
 z = range(-1.5,2.5,length=100)
-make(matrix; h=0.08, κ=2.0, x, z)
-nf = make(nearfield; h=0.08, κ=2.0, x, z)
+make(matrix; h=0.15, κ=2.0, order=1, x, z)
+nf = make(nearfield; h=0.15, κ=2.0, order=1, x, z)
 
 Etot = sum(nf.E)
 Htot = sum(nf.H)
