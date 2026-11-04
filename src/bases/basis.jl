@@ -497,3 +497,14 @@ function reduce_assembly_data(ad, active_dofs, active_els)
     end end end
     return AssemblyData(ad1)
 end
+
+
+struct SpaceWithDoFs{T} <: Space{T}
+    space::Space{T}
+    interpolator
+end
+
+function numfunctions(s::SpaceWithDoFs) numfunctions(s.space) end
+function basisfunction(s::SpaceWithDoFs, i) basisfunction(s.space, i) end
+function positions(s::SpaceWithDoFs) positions(s.space) end
+function geometry(s::SpaceWithDoFs) geometry(s.space) end

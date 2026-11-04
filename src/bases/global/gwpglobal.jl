@@ -158,7 +158,7 @@ function _addshapes!(fns, cell, gids, lids, β)
 end
 
 
-function gwpcurl(mesh, edges=nothing; order)
+function gwpcurl(mesh, edges=nothing; order, interpolator=false)
 
     T = coordtype(mesh)
     atol = sqrt(eps(T))
@@ -209,6 +209,12 @@ function gwpcurl(mesh, edges=nothing; order)
     for e in edges pos[(e-1)*ne .+ (1:ne)] .= Ref(cartesian(center(chart(edges, e)))) end
     for f in mesh pos[Ne+(f-1)*nf .+ (1: nf)] .= Ref(cartesian(center(chart(mesh, f)))) end
 
+    if interpolator
+        return SpaceWithDoFs(
+            GWPCurlSpace(mesh, fns, pos, order),
+            GWPInterpolator(order, mesh, edges, mesh)
+        )
+    end
     return GWPCurlSpace(mesh, fns, pos, order)
 end
 
