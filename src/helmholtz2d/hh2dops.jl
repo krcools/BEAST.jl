@@ -103,7 +103,8 @@ struct HH2DHyperSingularFDBIO{T, K} <: HelmholtzOperator2D{T, K}
     end
 end
 
-mutable struct KernelValsHelmholtz2D{K1,K2,F}
+# Immutable, so that the kernel values evaluated at every quadrature point do not allocate
+struct KernelValsHelmholtz2D{K1,K2,F}
     gamma::K1
     vect::SVector{2,F}
     dist::F
@@ -163,9 +164,10 @@ function kernelvals(biop::HelmholtzOperator2D{T, K}, x, y) where {T, K <: Comple
     r = xc - yc
     R = norm(r)
 
-    hankels = hankelh2.([0 1], k * R)
-    green = - im / 4 * hankels[1]
-    gradgreen = k * im / 4 * hankels[2] * (r/R)
+    # Two scalar calls: broadcasting over [0 1] allocates two arrays per kernel evaluation
+    kR = k * R
+    green = - im / 4 * hankelh2(0, kR)
+    gradgreen = k * im / 4 * hankelh2(1, kR) * (r/R)
 
     return KernelValsHelmholtz2D(γ, r, R, green, gradgreen)
 end

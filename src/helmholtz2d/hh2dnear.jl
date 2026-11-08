@@ -76,7 +76,8 @@ end
     return SVector{2,T2}( v[2], -v[1])
 end
 
-mutable struct KernelValsHH2DNear{K1,K2,F}
+# Immutable, so that the kernel values evaluated at every quadrature point do not allocate
+struct KernelValsHH2DNear{K1,K2,F}
     gamma::K1
     vect::SVector{2,F}
     dist::F
@@ -134,10 +135,10 @@ function kernelvals(op::HH2DNear{T, K}, x, y) where {T, K <: Complex}
     r = xc - yc
     R = norm(r)
 
+    # Two scalar calls: broadcasting over [0 1] allocates two arrays per kernel evaluation
     kR = k * R
-    hankels = hankelh2.([0 1], kR)
-    green = - im / 4 * hankels[1]
-    gradgreen = k * im / 4 * hankels[2] * r / R
+    green = - im / 4 * hankelh2(0, kR)
+    gradgreen = k * im / 4 * hankelh2(1, kR) * r / R
 
     return KernelValsHH2DNear(γ, r, R, green, gradgreen)
 end
