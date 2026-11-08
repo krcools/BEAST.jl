@@ -78,27 +78,61 @@ using StaticArrays
                 specialallocations = hankelallocations(k * R)
             end
 
-            for op in (
-                BEAST.HH2DSingleLayerFDBIO(1.0, γ),
-                BEAST.HH2DDoubleLayerFDBIO(1.0, γ),
-                BEAST.HH2DDoubleLayerTransposedFDBIO(1.0, γ),
-                BEAST.HH2DHyperSingularFDBIO(1.0, 1.0, γ),
-                BEAST.HH2DSingleLayerNear(1.0, γ),
-                BEAST.HH2DDoubleLayerNear(1.0, γ),
-                BEAST.HH2DDoubleLayerTransposedNear(1.0, γ),
-                BEAST.HH2DHyperSingularNear(1.0, 1.0, γ),
+            # Which kernel values are evaluated: the boundary integral operators evaluate
+            # what their integrand reads, the near-field operators both.
+            for (op, evaluatesgreen, evaluatesgradgreen) in (
+                (BEAST.HH2DSingleLayerFDBIO(1.0, γ), true, false),
+                (BEAST.HH2DDoubleLayerFDBIO(1.0, γ), false, true),
+                (BEAST.HH2DDoubleLayerTransposedFDBIO(1.0, γ), false, true),
+                (BEAST.HH2DHyperSingularFDBIO(1.0, 1.0, γ), true, false),
+                (BEAST.HH2DSingleLayerNear(1.0, γ), true, true),
+                (BEAST.HH2DDoubleLayerNear(1.0, γ), true, true),
+                (BEAST.HH2DDoubleLayerTransposedNear(1.0, γ), true, true),
+                (BEAST.HH2DHyperSingularNear(1.0, 1.0, γ), true, true),
             )
-                kv = kernelvals(op, mp1, mp2)
+                # Type-stable: the traits that select the kernel values are constant
+                kv = @inferred kernelvals(op, mp1, mp2)
                 @test kv.vect ≈ r
                 @test kv.dist ≈ R
-                @test kv.green ≈ green
-                @test kv.gradgreen ≈ gradgreen
+
+                # A kernel value that is not evaluated is `nothing`: the Hankel or Bessel
+                # function is computed only when it is read.
+                if evaluatesgreen
+                    @test kv.green ≈ green
+                else
+                    @test isnothing(kv.green)
+                end
+                if evaluatesgradgreen
+                    @test kv.gradgreen ≈ gradgreen
+                else
+                    @test isnothing(kv.gradgreen)
+                end
 
                 # The kernel values are evaluated at every quadrature point of an
                 # assembly and must not allocate.
                 @test isbits(kv)
                 allocations(op, mp1, mp2)
                 @test allocations(op, mp1, mp2) <= specialallocations
+            end
+        end
+    end
+
+    @testset "assembly reads only the evaluated kernel values" begin
+        # Coincident, adjacent and distant segments of a closed curve, including the
+        # singular quadrature rules: an integrand that read a kernel value that is not
+        # evaluated (`nothing`) would throw. In single precision, the Hankel and Bessel
+        # functions return double precision.
+        for F in (Float64, Float32)
+            X = lagrangec0d1(meshcircle(F(1.0), F(0.5)))
+            for γ in (Val(0), F(1.5), F(1.5) * im, complex(F(1.0), F(0.5)))
+                for op in (
+                    BEAST.HH2DSingleLayerFDBIO(F(1.0), γ),
+                    BEAST.HH2DDoubleLayerFDBIO(F(1.0), γ),
+                    BEAST.HH2DDoubleLayerTransposedFDBIO(F(1.0), γ),
+                    BEAST.HH2DHyperSingularFDBIO(F(1.0), F(1.0), γ),
+                )
+                    @test all(isfinite, assemble(op, X, X))
+                end
             end
         end
     end
