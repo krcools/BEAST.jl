@@ -255,9 +255,9 @@ include("bases/rtqspace.jl")
 
 
 include("bases/subdbasis.jl")
-include("bases/stagedtimestep.jl")
 
 include("bases/timebasis.jl")
+include("bases/stagedtimestep.jl")
 include("bases/tensorbasis.jl")
 
 include("bases/composedbasis.jl")
