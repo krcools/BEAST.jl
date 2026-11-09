@@ -9,7 +9,7 @@ N: the number of stages.
 NN: the number of stages squared
 Each time step has intermediary stages given by the vertor c in a Butcher tableau (A,b,c)
 """
-struct StagedTimeStep{T, N, NN, I}
+struct StagedTimeStep{T, N, NN, I} <: AbstractTimeBasisFunction
 	Δt :: T
 	Nt :: I
 	c  :: SVector{N,T}
