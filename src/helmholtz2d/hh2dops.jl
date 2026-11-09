@@ -103,13 +103,25 @@ struct HH2DHyperSingularFDBIO{T, K} <: HelmholtzOperator2D{T, K}
     end
 end
 
-mutable struct KernelValsHelmholtz2D{K1,K2,F}
+# Immutable, so that the kernel values evaluated at every quadrature point do not allocate.
+# The Green's function or its gradient is `nothing` if the operator does not read it.
+struct KernelValsHelmholtz2D{K1,F,G,GG}
     gamma::K1
     vect::SVector{2,F}
     dist::F
-    green::K2
-    gradgreen::SVector{2,K2}
+    green::G
+    gradgreen::GG
 end
+
+# The integrand of each operator reads one of the two kernel values: the single layer and the
+# hypersingular operator the Green's function, the double layers its gradient. kernelvals only
+# evaluates what is read and returns `nothing` for the other value, so an integrand reading it
+# fails with a MethodError instead of computing a wrong matrix. The traits are constant for
+# each operator type, so the compiler removes the branches on them.
+needsgreen(::HelmholtzOperator2D) = true
+needsgreen(::Union{HH2DDoubleLayerFDBIO,HH2DDoubleLayerTransposedFDBIO}) = false
+needsgradgreen(::HelmholtzOperator2D) = true
+needsgradgreen(::Union{HH2DSingleLayerFDBIO,HH2DHyperSingularFDBIO}) = false
 
 # Kernel values for 2D Laplace BIE operators
 function kernelvals(biop::HelmholtzOperator2D{T, K}, x, y) where {T, K <: Val{0}}
@@ -121,8 +133,8 @@ function kernelvals(biop::HelmholtzOperator2D{T, K}, x, y) where {T, K <: Val{0}
 
     #Treatment: static limit (HelmholtzOperator2D ~> "LaplaceOperator2D") Δu = 0 (k, γ -> 0)
     #Logarithmic singularity of Hankel function: Gk = -1/(2π) * log(kR) (at static case, lnk = 0)
-    green = -1/(2π) * log(R)
-    gradgreen = -1/(2π) * (1/R) * (r/R)
+    green = needsgreen(biop) ? -1/(2π) * log(R) : nothing
+    gradgreen = needsgradgreen(biop) ? -1/(2π) * (1/R) * (r/R) : nothing
 
     return KernelValsHelmholtz2D(nothing, r, R, green, gradgreen)
 end
@@ -138,9 +150,9 @@ function kernelvals(biop::HelmholtzOperator2D{T, K}, x, y) where {T, K <: Real}
 
     # Modified Helmholtz equation assumes: Δu - k² u = Δu + γ² u = f
     # Green's function: Gγ = 1/(2π)* K0(γ |x - y|)
-    green = 1/(2π) * besselk(0, γ * R)
+    green = needsgreen(biop) ? 1/(2π) * besselk(0, γ * R) : nothing
     # Jin (pg. 713, C.5.9): dK0/dn = -dK1/dn
-    gradgreen = -γ/(2π) * besselk(1, γ * R) * (r/R)
+    gradgreen = needsgradgreen(biop) ? -γ/(2π) * besselk(1, γ * R) * (r/R) : nothing
 
     return KernelValsHelmholtz2D(γ, r, R, green, gradgreen)
 end
@@ -163,9 +175,10 @@ function kernelvals(biop::HelmholtzOperator2D{T, K}, x, y) where {T, K <: Comple
     r = xc - yc
     R = norm(r)
 
-    hankels = hankelh2.([0 1], k * R)
-    green = - im / 4 * hankels[1]
-    gradgreen = k * im / 4 * hankels[2] * (r/R)
+    # Two scalar calls: broadcasting over [0 1] allocates two arrays per kernel evaluation
+    kR = k * R
+    green = needsgreen(biop) ? - im / 4 * hankelh2(0, kR) : nothing
+    gradgreen = needsgradgreen(biop) ? k * im / 4 * hankelh2(1, kR) * (r/R) : nothing
 
     return KernelValsHelmholtz2D(γ, r, R, green, gradgreen)
 end
