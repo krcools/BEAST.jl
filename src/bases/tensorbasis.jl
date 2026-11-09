@@ -23,7 +23,13 @@ end
 
 temporalbasis(s::SpaceTimeBasis) = s.time
 
-⊗(a, b) = SpaceTimeBasis(a,b)
+⊗(s, t) = SpaceTimeBasis(s::AbstractSpace,t::AbstractTimeBasisFunction)
+
+function ⊗(ds::BEAST.DirectProductSpace, t::AbstractTimeBasisFunction) 
+    r = [s⊗t for s in ds.factors] 
+    return DirectProductSpace(r)
+end
+
 numfunctions(S::SpaceTimeBasis) = numfunctions(S.space) * numfunctions(S.time)
 scalartype(st::SpaceTimeBasis) = promote_type(scalartype(st.space), scalartype(st.time))
 
