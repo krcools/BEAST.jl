@@ -138,5 +138,6 @@ end
     space = lagrangecxd0(mesh)
     assemble(Identity(), space, space)
     allocations = @allocated assemble(Identity(), space, space)
-    @test allocations < 10_000_000
+    # Julia 1.10 allocates 10.6 MB here, Julia 1.12 and 1.13 2.8 MB
+    @test allocations < (VERSION < v"1.11" ? 16_000_000 : 4_000_000)
 end
