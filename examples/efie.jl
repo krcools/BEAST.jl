@@ -63,4 +63,6 @@ add_trace!(plt, scatter(x=Θ, y=norm.(ffd)), row=1, col=1)
 add_trace!(plt, contour(x=zs, y=ys, z=norm.(Esc-Ein)', colorscale="Viridis", zmin=0, zmax=2, showscale=false), row=1, col=2)
 u = BEAST.FEMFunction(u, X)
 add_trace!(plt, mesh3d(u; colorscale=:Viridis, cmin=0, cmax=2), row=2, col=1)
-PlotlyDocumenter.to_documenter(plt) #hide
+isinteractive() && @eval import PlotlyJS #hide
+isinteractive() && display(PlotlyJS.plot(plt)) #hide
+isinteractive() || PlotlyDocumenter.to_documenter(plt) #hide
