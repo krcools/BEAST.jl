@@ -456,6 +456,12 @@ struct AssembleblockbodyFunctor{B,T1,T2,T3,T4,T5,T6,T7,T8,T9}
     quadstrat::T9
 end
 
+function active_element_ids(space, ids)
+    element_ids = collect(Int,
+        shape.cellid for id in ids for shape in basisfunction(space, id))
+    return unique!(sort!(element_ids))
+end
+
 function (f::AssembleblockbodyFunctor)(testids, trialids, store)
 
     tad = f.testassemblydata
@@ -463,8 +469,8 @@ function (f::AssembleblockbodyFunctor)(testids, trialids, store)
 
     # The following code assumed that the testelements cache was build for
     # all the elements in geoemtry(tfs). Similar for the trial side.
-    active_test_els = unique!(sort!(collect(sh.cellid for m in testids for sh in f.tfs.fns[m])))
-    active_trial_els = unique!(sort!(collect(sh.cellid for m in trialids for sh in f.bfs.fns[m])))
+    active_test_els = active_element_ids(f.tfs, testids)
+    active_trial_els = active_element_ids(f.bfs, trialids)
 
     tad1 = reduce_assembly_data(tad, testids, active_test_els)
     bad1 = reduce_assembly_data(bad, trialids, active_trial_els)

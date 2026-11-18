@@ -21,9 +21,10 @@ function quaddata(op::IntegralOperator,
     bqd = quadpoints(trial_local_space, trial_charts, (qs.inner_rule_far,qs.inner_rule_near))
      
     leg = (
-      convert.(NTuple{2,T},_legendre(qs.sauter_schwab_common_vert,0,1)),
-      convert.(NTuple{2,T},_legendre(qs.sauter_schwab_common_edge,0,1)),
-      convert.(NTuple{2,T},_legendre(qs.sauter_schwab_common_face,0,1)),)
+        _sauterschwab_legendre_rule(qs.sauter_schwab_common_vert, T),
+        _sauterschwab_legendre_rule(qs.sauter_schwab_common_edge, T),
+        _sauterschwab_legendre_rule(qs.sauter_schwab_common_face, T),
+    )
 
     return (tpoints=tqd, bpoints=bqd, gausslegendre=leg)
 end
