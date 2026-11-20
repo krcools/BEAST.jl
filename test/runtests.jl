@@ -103,6 +103,7 @@ include("test_itsolver.jl")
 
 include("test_hh_lsvie.jl")
 
+include("test_osrc.jl")
 include("test_composed_basis.jl")
 include("test_composed_operator.jl")
 include("test_analytic_excitation.jl")
