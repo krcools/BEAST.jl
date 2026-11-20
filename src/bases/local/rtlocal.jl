@@ -85,12 +85,12 @@ function interpolate(fields, interpolant::RTRefSpace{T}, chart) where {T}
         u_face = T(1//2)
         p_face = neighborhood(face, (u_face,))
         t_face = -tangents(p_face, 1)
-        t1 = tangents(chart, 1)[:,1]
-        t2 = tangents(chart, 2)[:,2]
         u_chart = cartesian(inj, u_face)
         p_chart = neighborhood(chart, u_chart)
 
-        n_chart = normalize(t1× t2)
+        # from the tangents at the point, which follow the vertex order, and not normal(p_chart):
+        # a flat chart from `intersection` carries a normal flipped against its vertex order
+        n_chart = normalize(tangents(p_chart, 1) × tangents(p_chart, 2))
         m_face = cross(t_face, n_chart)
 
         # p = center(face)
