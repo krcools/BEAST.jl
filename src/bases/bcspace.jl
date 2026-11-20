@@ -87,6 +87,48 @@ isclosed(a, pred) = length(a)>2 && pred(a[end], a[1])
 Construct the set of Buffa-Christiansen functions subject to mesh Γ and only
 enforcing zero normal components on ∂Γ ∖ γ.
 """
+# The vertex of `fine` that the refinement inserted on the coarse edge with chart `ch` and the
+# global vertex indices `edge`, found among the corners of the fine cells `F` around `edge[1]`.
+# For the barycentric refinement it is the image of the parametric midpoint of the edge, which
+# for a curved edge does not lie on the segment between its end points: it is identified as the
+# corner closest to that midpoint. The line of sight refinement places it elsewhere on the
+# (straight) edge, and the corner on that segment is searched for instead.
+function _edgevertex(Γ, fine, F, edge, ch, ibscaled)
+    T = coordtype(fine)
+    vert1 = vertices(Γ)[edge[1]]
+    vert2 = vertices(Γ)[edge[2]]
+    if !ibscaled
+        edge_ctr = cartesian(center(ch))
+        p, dmin = 0, typemax(T)
+        for f in F, q in CompScienceMeshes.indices(fine, f)
+            d = norm(vertices(fine)[q] - edge_ctr)
+            d < dmin && ((p, dmin) = (q, d))
+        end
+        @assert dmin ≤ 1e-8 * norm(vert2 - vert1)
+        return p
+    end
+    ln = volume(ch)
+    supp = fine[F]
+    bnd = boundary(supp)
+    bnd_nodes = skeleton(bnd,0)
+    p = 0
+    for bn in bnd_nodes
+        node = CompScienceMeshes.indices(bnd_nodes, bn)
+        vert = vertices(fine)[node[1]]
+        dist = norm(vert-vert1)
+        node[1] == edge[1] && continue
+        if dot(vert-vert1,vert2-vert1) ≈ dist*ln
+            p = node[1]
+            break
+        end
+    end
+    @assert p != 0
+    edge_ctr = cartesian(center(ch))
+    @assert all(carttobary(ch, edge_ctr) .≥ 0)
+    @assert norm(cross(edge_ctr - ch.vertices[1], vertices(fine)[p] - ch.vertices[1])) ≤ 1e-8
+    return p
+end
+
 function buffachristiansen(Γ, γ=mesh(coordtype(Γ),1,3); ibscaled=false, sort=:spacefillingcurve, edges=:all)
 
     @assert CompScienceMeshes.isoriented(Γ)
@@ -133,39 +175,16 @@ function buffachristiansen(Γ, γ=mesh(coordtype(Γ),1,3); ibscaled=false, sort=
 
         edge = CompScienceMeshes.indices(edges,e)
         ch = chart(edges, e)
-        ln = volume(ch)
         # !in_interior(edge) && !on_junction(ch) && continue
 
         # index of edge center in fine's vertexbuffer
         v  = edge[1]
         n = vton[v]
         F = vtof[v,1:n]
-        supp = fine[F]
-        bnd = boundary(supp)
-        bnd_nodes = skeleton(bnd,0)
-        p = 0
-        for bn in bnd_nodes
-            node = CompScienceMeshes.indices(bnd_nodes, bn)
-            vert1 = vertices(Γ)[edge[1]]
-            vert2 = vertices(Γ)[edge[2]]
-            vert = vertices(fine)[node[1]]
-            dist = norm(vert-vert1)
-            node[1] == edge[1] && continue
-            if dot(vert-vert1,vert2-vert1) ≈ dist*ln
-                p = node[1]
-                break
-            end
-        end
-        @assert p != 0
+        p = _edgevertex(Γ, fine, F, edge, ch, ibscaled)
 
         # p = numvertices(edges) + i
         pos[k] = vertices(fine)[p]
-
-        # sanity check
-        edge_ctr = cartesian(center(ch))
-        fine_vtx = vertices(fine)[p]
-        @assert all(carttobary(ch, edge_ctr) .≥ 0)
-        @assert norm(cross(edge_ctr - ch.vertices[1], fine_vtx - ch.vertices[1])) ≤ 1e-8
 
         v = edge[1]
         n = vton[v]
@@ -200,7 +219,7 @@ function buildhalfbc(fine, S, v, p, onjunction, ibscaled)
     @assert length(S) >= 2
     @assert mod(length(S), 2) == 0
     @assert all(0 .< S .<= numcells(fine))
-    @assert all([v in cells(fine)[s].indices for s in S])
+    @assert all([v in CompScienceMeshes.indices(fine, s) for s in S])
 
     bf = Shape{T}[]
 
@@ -209,12 +228,12 @@ function buildhalfbc(fine, S, v, p, onjunction, ibscaled)
     modn(i) = mod1(i,n)
 
     # sort the fine faces making up the domain
-    share_edge(i,j) = length(intersect(cells(fine)[i].indices, cells(fine)[j].indices)) == 2
+    share_edge(i,j) = length(intersect(CompScienceMeshes.indices(fine, i), CompScienceMeshes.indices(fine, j))) == 2
     S = sortneighbors(S, share_edge)
     @assert all(0 .< S .<= numcells(fine))
 
-    port_faces = findall(i -> p in cells(fine)[i].indices, S)
-    port_edges = [something(findfirst(isequal(v), cells(fine)[S[i]].indices),0) for i in port_faces]
+    port_faces = findall(i -> p in CompScienceMeshes.indices(fine, i), S)
+    port_edges = [something(findfirst(isequal(v), CompScienceMeshes.indices(fine, S[i])),0) for i in port_faces]
 
     c_on_boundary = !share_edge(S[end], S[1]) || length(S) == 2
     e_on_boundary = length(port_faces) == 1
@@ -233,7 +252,7 @@ function buildhalfbc(fine, S, v, p, onjunction, ibscaled)
     end
 
     port_lengths = [begin
-            face = cells(fine)[S[j]]
+            face = CompScienceMeshes.indices(fine, S[j])
             v1 = vertices(fine)[face[mod1(i+1,3)]]
             v2 = vertices(fine)[face[mod1(i+2,3)]]
             norm(v2-v1)
@@ -253,10 +272,10 @@ function buildhalfbc(fine, S, v, p, onjunction, ibscaled)
     bnd_edges = Int[]
     if c_on_boundary
         bnd_faces = [1,n]
-        p1 = x -> x in cells(fine)[S[2]].indices && x != v
-        p2 = x -> x in cells(fine)[S[n-1]].indices && x != v
-        e1 = findfirst(p1, cells(fine)[S[1]].indices)
-        e2 = findfirst(p2, cells(fine)[S[n]].indices)
+        p1 = x -> x in CompScienceMeshes.indices(fine, S[2]) && x != v
+        p2 = x -> x in CompScienceMeshes.indices(fine, S[n-1]) && x != v
+        e1 = findfirst(p1, CompScienceMeshes.indices(fine, S[1]))
+        e2 = findfirst(p2, CompScienceMeshes.indices(fine, S[n]))
         bnd_edges = [e1, e2]
     end
 
@@ -266,8 +285,8 @@ function buildhalfbc(fine, S, v, p, onjunction, ibscaled)
     if c_on_boundary
         for i in 1:length(bnd_faces)
             f, e = bnd_faces[i], bnd_edges[i]
-            a = vertices(fine)[cells(fine)[S[f]].indices[mod1(e+1,3)]]
-            b = vertices(fine)[cells(fine)[S[f]].indices[mod1(e+2,3)]]
+            a = vertices(fine)[CompScienceMeshes.indices(fine, S[f])[mod1(e+1,3)]]
+            b = vertices(fine)[CompScienceMeshes.indices(fine, S[f])[mod1(e+2,3)]]
             seg = simplex(a,b)
             if onjunction(seg)
                 push!(jct_idxes, i)
@@ -324,7 +343,7 @@ function buildhalfbc(fine, S, v, p, onjunction, ibscaled)
         # get the indices of the faces in fine.faces
         f0, f1 = S[j0], S[j1]
         # what are the local indices of the common edge?
-        e0, e1 = getcommonedge(cells(fine)[f0].indices, cells(fine)[f1].indices)
+        e0, e1 = getcommonedge(CompScienceMeshes.indices(fine, f0), CompScienceMeshes.indices(fine, f1))
         # add the two half Raviart-Thomas shape functions
         add!(bf, S[j0], abs(e0), +charges[j0])
         add!(bf, S[j1], abs(e1), -charges[j0])

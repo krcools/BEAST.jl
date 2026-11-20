@@ -279,14 +279,14 @@ Returns a vector of indices into the vector of local shape functions that corres
 global degrees of freedom supported on sub-entity `i`, where the type of entity (nodes,
 edge, face) is encoded in the type of 'dof'.
 """
-function localindices(dof::_LagrangeGlobalNodesDoFs, chart::CompScienceMeshes.Simplex{<:Any, 2},
+function localindices(dof::_LagrangeGlobalNodesDoFs, chart::CompScienceMeshes.AbstractSimplex{<:Any, 2},
     localspace, i)
 
     d = dof.order
     [1, d+1, div((d+1)*(d+2),2)][[i]]
 end
 
-function localindices(dof::_LagrangeGlobalEdgeDoFs, chart::CompScienceMeshes.Simplex{<:Any, 2},
+function localindices(dof::_LagrangeGlobalEdgeDoFs, chart::CompScienceMeshes.AbstractSimplex{<:Any, 2},
     localspace, i)
 
     d = dof.order
@@ -324,7 +324,7 @@ function localindices(dof::_LagrangeGlobalEdgeDoFs, chart::CompScienceMeshes.Sim
     return lids
 end
 
-function localindices(dof::_LagrangeGlobalFaceDoFs, chart::CompScienceMeshes.Simplex{<:Any, 2},
+function localindices(dof::_LagrangeGlobalFaceDoFs, chart::CompScienceMeshes.AbstractSimplex{<:Any, 2},
     localspace, i)
 
     d = dof.order
