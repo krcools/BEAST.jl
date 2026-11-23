@@ -33,3 +33,29 @@ using LinearAlgebra
         end
     end
 end
+
+# The same matrices by the mixed assembly, which intersects the cells of the test and the trial
+# geometry: the spaces on the refinement are built on a copy of the mesh, which the refinement
+# does not refine.
+@testset "local operators on curvilinear meshes, mixed assembly" begin
+
+    CSM = CompScienceMeshes
+    asm(op, X, Y) = Matrix(assemble(op, X, Y; verbose=false))
+    ops = (BEAST.Identity(), BEAST.NCross())
+
+    for O in (2, 3)
+        Γ = gmshsphere(1.0, 0.6; order=O)
+        Γ2 = deepcopy(Γ)
+        for (coarse, fine) in ((raviartthomas, buffachristiansen), (lagrangecxd0, duallagrangec0d1))
+            X, Y, Y2 = coarse(Γ), fine(Γ), fine(Γ2)
+            @test !CSM.refines(geometry(Y2), geometry(X))
+            for op in ops
+                op isa BEAST.NCross && coarse !== raviartthomas && continue
+                A, B = asm(op, X, Y2), asm(op, X, Y)
+                @test norm(A - B) ≤ 1e-12 * norm(B)
+                A, B = asm(op, Y2, X), asm(op, Y, X)
+                @test norm(A - B) ≤ 1e-12 * norm(B)
+            end
+        end
+    end
+end

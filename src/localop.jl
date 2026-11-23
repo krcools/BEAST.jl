@@ -406,9 +406,10 @@ function assemble_local_matched!(biop::LocalOperator, tfs::subdBasis, bfs::subdB
 end
 
 
+# The cells in an octree of balls around the mean of their vertices, which for curvilinear cells
+# are all their interpolation nodes.
 function elementstree(elements, expansion_ratio=1.1)
 
-    nverts = dimension(eltype(elements)) + 1
     ncells = length(elements)
 
     @assert !isempty(elements)
@@ -427,8 +428,8 @@ function elementstree(elements, expansion_ratio=1.1)
             bary += verts[j]
         end
 
-        points[i] = bary / nverts
-        for j in 1 : nverts
+        points[i] = bary / length(verts)
+        for j in eachindex(verts)
             radii[i] = max(radii[i], norm(verts[j]-points[i]))
         end
     end
