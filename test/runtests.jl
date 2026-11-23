@@ -29,6 +29,8 @@ include("test_nd2.jl")
 
 include("test_dvg.jl")
 include("test_bcspace.jl")
+include("test_curvilinear_spaces.jl")
+include("test_curvilinear_localops.jl")
 include("test_trace.jl")
 include("test_ttrace.jl")
 include("test_timebasis.jl")

@@ -84,6 +84,10 @@ function assemble!(biop::LocalOperator, tfs::Space, bfs::Space, store,
         return assemble_local_refines!(biop, tfs, bfs, store; quadstrat, verbose)
     end
 
+    if CompScienceMeshes.refines(geometry(bfs), geometry(tfs))
+        return assemble_local_refinedby!(biop, tfs, bfs, store; quadstrat, verbose)
+    end
+
     return assemble_local_mixed!(biop, tfs, bfs, store; quadstrat, verbose)
 end
 
@@ -148,6 +152,10 @@ function assemble!(biop::LocalOperator, tfs::Space, bfs::Space, store,
         return assemble_local_refines!(biop, tfs, bfs, store; quadstrat, verbose)
     end
 
+    if CompScienceMeshes.refines(geometry(bfs), geometry(tfs))
+        return assemble_local_refinedby!(biop, tfs, bfs, store; quadstrat, verbose)
+    end
+
     return assemble_local_mixed!(biop, tfs, bfs, store; quadstrat, verbose)
 end
 
@@ -195,6 +203,93 @@ function assemble_local_matched!(biop::LocalOperator, tfs::Space, bfs::Space, st
 end
 
 
+# The interaction of the test functions on `tcell`, cell `P` of the refinement `tgeo`, with the
+# trial functions on its parent `bcell`, over their intersection.
+function _assemble_testchild_interaction!(biop, trefs, brefs, tcell, bcell, tgeo, P,
+        tad, bad, p, q, qd, quadstrat, store)
+
+    @assert overlap(tcell, bcell)
+
+    isct = intersection(tcell, bcell)
+    for cell in isct
+        _assemble_restricted_interaction!(
+            biop,
+            trefs,
+            brefs,
+            tcell,
+            bcell,
+            cell,
+            tad,
+            bad,
+            p,
+            q,
+            qd,
+            quadstrat,
+            store,
+            nothing,
+        )
+    end
+    return nothing
+end
+
+# A curved child cannot be located in its parent geometrically, but its parametric domain is
+# mapped into the parent's affinely, which yields the restriction of the trial functions exactly.
+# That of the test functions is the identity.
+function _assemble_testchild_interaction!(biop, trefs, brefs,
+        tcell::CompScienceMeshes.CurvilinearSimplex, bcell, tgeo, P,
+        tad, bad, p, q, qd, quadstrat, store)
+
+    tcellinbcell = CompScienceMeshes.chartinparent(tgeo, P)
+    trialrestriction = restrict(brefs, bcell, tcell, tcellinbcell)
+    qr = quadrule(biop, trefs, brefs, tcell, qd, quadstrat)
+    zlocal = cellinteractions(biop, trefs, brefs, tcell, qr)
+    _scatterlocal!(store, zlocal * trialrestriction', tad, bad, p, q)
+    return nothing
+end
+
+# The interaction of the test functions on `tcell` with the trial functions on its child `bcell`,
+# cell `Q` of the refinement `bgeo`, over their intersection.
+function _assemble_trialchild_interaction!(biop, trefs, brefs, tcell, bcell, bgeo, Q,
+        tad, bad, p, q, qd, quadstrat, store)
+
+    @assert overlap(tcell, bcell)
+
+    isct = intersection(tcell, bcell)
+    for cell in isct
+        _assemble_restricted_interaction!(
+            biop,
+            trefs,
+            brefs,
+            tcell,
+            bcell,
+            cell,
+            tad,
+            bad,
+            p,
+            q,
+            qd,
+            quadstrat,
+            store,
+            nothing,
+        )
+    end
+    return nothing
+end
+
+# As for a curved test child: the parametric domain of the child yields the restriction of the
+# test functions exactly, and that of the trial functions is the identity.
+function _assemble_trialchild_interaction!(biop, trefs, brefs,
+        tcell, bcell::CompScienceMeshes.CurvilinearSimplex, bgeo, Q,
+        tad, bad, p, q, qd, quadstrat, store)
+
+    bcellintcell = CompScienceMeshes.chartinparent(bgeo, Q)
+    testrestriction = restrict(trefs, tcell, bcell, bcellintcell)
+    qr = quadrule(biop, trefs, brefs, bcell, qd, quadstrat)
+    zlocal = cellinteractions(biop, trefs, brefs, bcell, qr)
+    _scatterlocal!(store, testrestriction * zlocal, tad, bad, p, q)
+    return nothing
+end
+
 function assemble_local_refines!(biop::LocalOperator, tfs::Space, bfs::Space, store;
     quadstrat=defaultquadstrat(biop, tfs, bfs), verbose=true)
 
@@ -231,28 +326,8 @@ function assemble_local_refines!(biop::LocalOperator, tfs::Space, bfs::Space, st
         q == 0 && continue
 
         bcell = bels[q]
-        @assert overlap(tcell, bcell)
-
-        isct = intersection(tcell, bcell)
-        for cell in isct
-            _assemble_restricted_interaction!(
-                biop,
-                trefs,
-                brefs,
-                tcell,
-                bcell,
-                cell,
-                tad,
-                bad,
-                p,
-                q,
-                qd,
-                quadstrat,
-                store,
-                nothing,
-            )
-
-        end # next cell in intersection
+        _assemble_testchild_interaction!(biop, trefs, brefs, tcell, bcell, tgeo, P,
+            tad, bad, p, q, qd, quadstrat, store)
 
         done += 1
         new_pctg = round(Int, done / todo * 100)
@@ -261,6 +336,51 @@ function assemble_local_refines!(biop::LocalOperator, tfs::Space, bfs::Space, st
             pctg = new_pctg
         end
     end # next cell in the test geometry
+
+    verbose && println("")
+
+end
+
+# The mirror image of assemble_local_refines!: the trial geometry refines the test geometry, and
+# every cell of the trial geometry lies in its parent in the test geometry.
+function assemble_local_refinedby!(biop::LocalOperator, tfs::Space, bfs::Space, store;
+    quadstrat=defaultquadstrat(biop, tfs, bfs), verbose=true)
+
+    tgeo = geometry(tfs)
+    bgeo = geometry(bfs)
+    @assert CompScienceMeshes.refines(bgeo, tgeo)
+
+    trefs = refspace(tfs)
+    brefs = refspace(bfs)
+
+    tels, tad, ta2g = assemblydata(tfs)
+    bels, bad, ba2g = assemblydata(bfs)
+
+    tg2a = zeros(Int, length(tgeo))
+    for (i,j) in enumerate(ta2g) tg2a[j] = i end
+
+    qd = quaddata(biop, trefs, brefs, tels, bels, quadstrat)
+
+    verbose && print("dots out of 10: ")
+    todo, done, pctg = length(bels), 0, 0
+    for (q,bcell) in enumerate(bels)
+
+        Q = ba2g[q]
+        P = CompScienceMeshes.parent(bgeo, Q)
+        p = tg2a[P]
+        p == 0 && continue
+
+        tcell = tels[p]
+        _assemble_trialchild_interaction!(biop, trefs, brefs, tcell, bcell, bgeo, Q,
+            tad, bad, p, q, qd, quadstrat, store)
+
+        done += 1
+        new_pctg = round(Int, done / todo * 100)
+        if verbose && new_pctg > pctg + 9
+            print(".")
+            pctg = new_pctg
+        end
+    end # next cell in the trial geometry
 
     verbose && println("")
 
@@ -286,9 +406,10 @@ function assemble_local_matched!(biop::LocalOperator, tfs::subdBasis, bfs::subdB
 end
 
 
+# The cells in an octree of balls around the mean of their vertices, which for curvilinear cells
+# are all their interpolation nodes.
 function elementstree(elements, expansion_ratio=1.1)
 
-    nverts = dimension(eltype(elements)) + 1
     ncells = length(elements)
 
     @assert !isempty(elements)
@@ -307,8 +428,8 @@ function elementstree(elements, expansion_ratio=1.1)
             bary += verts[j]
         end
 
-        points[i] = bary / nverts
-        for j in 1 : nverts
+        points[i] = bary / length(verts)
+        for j in eachindex(verts)
             radii[i] = max(radii[i], norm(verts[j]-points[i]))
         end
     end

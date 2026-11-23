@@ -195,8 +195,9 @@ defaultquadstrat(::LocalOperator, _::Space, _::Space) = SingleNumQStrat(6)
 #     return qd, A
 # end
 
-function quaddata(op::LocalOperator, g, f, 
-    tels::Vector{<:CompScienceMeshes.Simplex{U,2}}, bels::Vector{<:CompScienceMeshes.Simplex{U,2}},
+# also for curvilinear triangles: the rule is one on the reference triangle
+function quaddata(op::LocalOperator, g, f,
+    tels::Vector{<:CompScienceMeshes.AbstractSimplex{U,2}}, bels::Vector{<:CompScienceMeshes.AbstractSimplex{U,2}},
     qs::SingleNumQStrat) where {U}
 
     u, w = trgauss(qs.quad_rule)
