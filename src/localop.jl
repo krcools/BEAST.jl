@@ -121,7 +121,10 @@ function _assemble_restricted_interaction!(
     store,
     tol,
 )
-    tol === nothing || volume(cell) < tol && return nothing
+    # Skip pieces of the intersection that are negligible compared with the cells
+    # themselves, e.g. when two cells only touch along an edge. The comparison is
+    # relative, so that it does not depend on the unit of length.
+    tol === nothing || volume(cell) < tol * min(volume(tcell), volume(bcell)) && return nothing
 
     testrestriction = restrict(trefs, tcell, cell)
     trialrestriction = restrict(brefs, bcell, cell)

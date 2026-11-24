@@ -191,7 +191,8 @@ function assemble_local_mixed!(biop::CompSingleKern, tfs::Space{T}, bfs::Space{T
                     isct = intersection2(tcell, bcell)
                     disp = displacement(displacementchart(geometry(tfs),tact_to_global[p]),displacementchart(geometry(bfs),bact_to_global[q])) #number to multiply with test normal, if zero use the orientation of displacementvector
                     for (cellt,cellb) in isct
-                        volume(cellb) < tol && continue
+                        # relative to the cells, so independent of the unit of length
+                        volume(cellb) < tol * min(volume(tcell), volume(bcell)) && continue
                         # @assert sign(dot(normal(chart(geometry(tfs),p)),normal(cellt))) == 1
                         # @assert sign(dot(normal(chart(geometry(bfs),q)),normal(cellb))) == 1
 
