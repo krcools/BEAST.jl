@@ -335,9 +335,11 @@ function innerintegrals!(z, op::MWDoubleLayerTDIO,
 
 	ds = op.num_diffs
 
+    # No assignment to `r` here: it would capture the ring radius `r` of the enclosing
+    # function in a Core.Box, which makes the call of wiltonints above type unstable.
     @inline function tmGRoR(d, iGG)
         sgn = isodd(d) ? -1 : 1
-        r = sgn * iGG[d+1]
+        return sgn * iGG[d+1]
     end
 
     Ux = U(p)

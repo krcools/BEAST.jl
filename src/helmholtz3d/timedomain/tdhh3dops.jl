@@ -120,9 +120,11 @@ function innerintegrals!(zlocal, operator::HH3DSingleLayerTDBIO,
     @assert numfunctions(test_local_space, domain(test_element))  == 1
     @assert numfunctions(trial_local_space, domain(trial_element)) == 1
 
+    # No assignment to `r` here: it would capture the ring radius `r` of the enclosing
+    # function in a Core.Box, which makes the call of wiltonints above type unstable.
     @inline function tmRoR_sl(d, iG)
         sgn = isodd(d) ? -1 : 1
-        r = sgn * iG[d+2]
+        return sgn * iG[d+2]
     end
 
     # bns = quad_rule.binomials
@@ -168,8 +170,9 @@ function innerintegrals!(zlocal, operator::HH3DHyperSingularTDBIO,
     @assert numfunctions(test_local_space, domain(test_element))  <= 3
     @assert numfunctions(trial_local_space, domain(trial_element)) == 3
 
+    # No assignment to `r` here (see tmRoR_sl in the single layer)
     @inline function tmRoR(d, iG)
-        r = (isodd(d) ? -1 : 1) * iG[d+2]
+        return (isodd(d) ? -1 : 1) * iG[d+2]
     end
 
     @inline function tmRoRf(d, ∫G, ∫Gξy, bξ, h, m)
