@@ -16,8 +16,9 @@ function assemble(operator::AbstractSpaceTimeOperator, test_functions, trial_fun
     if stagedtimestep
         return assemble(RungeKuttaConvolutionQuadrature(operator), test_functions, trial_functions)
     end
-    freeze, store = allocatestorage(operator, test_functions, trial_functions,
-        storage_policy, long_delays_policy)
+    # The sizing pass of the storage allocation runs with the same threading as the assembly
+    freeze, store = _allocatestorage(operator, test_functions, trial_functions,
+        storage_policy, long_delays_policy, threading)
     assemble!(operator, test_functions, trial_functions, store, threading; quadstrat)
     return freeze()
 end
@@ -38,7 +39,8 @@ integrate!(z, op::EmptyRP, xs...) = nothing
 
 function allocatestorage(op::RetardedPotential, testST, basisST,
 	::Type{Val{:densestorage}},
-	::Type{LongDelays{:ignore}})
+	::Type{LongDelays{:ignore}};
+    threading=Threading{:multi})
 
     tfs = spatialbasis(testST)
     bfs = spatialbasis(basisST)
@@ -56,7 +58,7 @@ function allocatestorage(op::RetardedPotential, testST, basisST,
 
     aux = EmptyRP(op.speed_of_light)
     #print("Allocating memory for convolution operator: ")
-    assemble!(aux, testST, basisST, store)
+    assemble!(aux, testST, basisST, store, threading)
     #println("\nAllocated memory for convolution operator.")
 
     kmax = maximum(K1);
@@ -103,7 +105,8 @@ struct Storage{T} end
 
 function allocatestorage(op::RetardedPotential, testST, basisST,
 	::Type{Val{:bandedstorage}},
-    ::Type{LongDelays{:compress}})
+    ::Type{LongDelays{:compress}};
+    threading=Threading{:multi})
     
     #@info "Allocating mem for RP op compressing the static tail..."
 
@@ -133,7 +136,7 @@ function allocatestorage(op::RetardedPotential, testST, basisST,
 	tbf_trunc = truncatetail(tbf)
 	δ = timebasisdelta(Δt, Nt)
     #print("Allocating memory for convolution operator: ")
-    assemble!(op_alloc, tfs⊗δ, bfs⊗tbf_trunc, store_alloc)
+    assemble!(op_alloc, tfs⊗δ, bfs⊗tbf_trunc, store_alloc, threading)
     #println("\nAllocated memory for convolution operator.")
 
 	bandwidth = maximum(K1 .- K0 .+ 1)
