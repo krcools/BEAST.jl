@@ -240,6 +240,17 @@ function assemble_chunk!(op::RetardedPotential, testST, trialST, store;
     trialspace = spatialbasis(trialST)
     timebasisfunction = convolve(temporalbasis(testST), temporalbasis(trialST))
 
+	# Function barrier: the type of the convolved time basis is not always inferable (its
+	# degree is part of the type, and some convolve methods only know it at run time).
+	# Without the barrier the whole element loop below is then dynamically dispatched and
+	# allocates on every ring.
+	T = scalartype(op, testST, trialST)
+	_assemble_chunk!(op, testspace, trialspace, timebasisfunction, store, quadstrat, T)
+end
+
+function _assemble_chunk!(op::RetardedPotential, testspace, trialspace, timebasisfunction, store,
+	quadstrat, ::Type{T}) where {T}
+
 	testels, testad   = assemblydata(testspace)
 	trialels, trialad = assemblydata(trialspace)
 
@@ -271,7 +282,7 @@ function assemble_chunk!(op::RetardedPotential, testST, trialST, store;
     udim = numfunctions(U, domain(chart(ugeo, first(ugeo))))
     vdim = numfunctions(V, domain(chart(vgeo, first(vgeo))))
     wdim = numfunctions(W)
-    z = zeros(scalartype(op, testST, trialST), udim, vdim, wdim)
+    z = zeros(T, udim, vdim, wdim)
 
 	# @show length(testels) length(trialels)
 
