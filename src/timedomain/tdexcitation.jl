@@ -46,7 +46,7 @@ function assemble!(exc::TDFunctional, testST, store; quadstrat=defaultquadstrat)
     testels, testad = assemblydata(testfns)
     timeels, timead = assemblydata(timefns)
 
-    @show quadstrat
+    #@show quadstrat
     @assert quadstrat != nothing
     qs = quadstrat(exc, testST)
     qd = quaddata(exc, testrefs, timerefs, testels, timeels, qs)
