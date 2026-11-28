@@ -94,6 +94,8 @@ function innerintegrals!(zlocal, operator::HH3DSingleLayerTDBIO,
 
     # error("Here!!!")
 
+    sol = operator.speed_of_light
+
     dx = quad_weight
     x = cartesian(test_point)
     # n = normal(test_point)
@@ -118,9 +120,11 @@ function innerintegrals!(zlocal, operator::HH3DSingleLayerTDBIO,
     @assert numfunctions(test_local_space, domain(test_element))  == 1
     @assert numfunctions(trial_local_space, domain(trial_element)) == 1
 
+    # No assignment to `r` here: it would capture the ring radius `r` of the enclosing
+    # function in a Core.Box, which makes the call of wiltonints above type unstable.
     @inline function tmRoR_sl(d, iG)
         sgn = isodd(d) ? -1 : 1
-        r = sgn * iG[d+2]
+        return sgn * iG[d+2]
     end
 
     # bns = quad_rule.binomials
@@ -130,7 +134,7 @@ function innerintegrals!(zlocal, operator::HH3DSingleLayerTDBIO,
         d = k - 1
         d < D && continue
         q = reduce(*, d-D+1:d ,init=1)
-        zlocal[1,1,k] += a * q * tmRoR_sl(d-D, ∫G)
+        zlocal[1,1,k] += a * q * tmRoR_sl(d-D, ∫G) / sol^(d-D)
     end # k
 end
 
@@ -141,6 +145,7 @@ function innerintegrals!(zlocal, operator::HH3DHyperSingularTDBIO,
         test_element, trial_element, time_element,
         quad_rule, quad_weight)
 
+    sol = operator.speed_of_light
     dx = quad_weight
     x = cartesian(test_point)
 
@@ -165,8 +170,9 @@ function innerintegrals!(zlocal, operator::HH3DHyperSingularTDBIO,
     @assert numfunctions(test_local_space, domain(test_element))  <= 3
     @assert numfunctions(trial_local_space, domain(trial_element)) == 3
 
+    # No assignment to `r` here (see tmRoR_sl in the single layer)
     @inline function tmRoR(d, iG)
-        r = (isodd(d) ? -1 : 1) * iG[d+2]
+        return (isodd(d) ? -1 : 1) * iG[d+2]
     end
 
     @inline function tmRoRf(d, ∫G, ∫Gξy, bξ, h, m)
@@ -190,7 +196,7 @@ function innerintegrals!(zlocal, operator::HH3DHyperSingularTDBIO,
                 d = k-1
                 d < Ds && continue
                 q = reduce(*, d-Ds+1:d ,init=1)
-                zlocal[i,j,k] += α * q * g * ndotn * tmRoRf(d-Ds, ∫G, ∫Gξy, ξ-b, h, m)
+                zlocal[i,j,k] += α * q * g * ndotn * tmRoRf(d-Ds, ∫G, ∫Gξy, ξ-b, h, m) / sol^(d-Ds)
             end
         end
     end
@@ -206,7 +212,7 @@ function innerintegrals!(zlocal, operator::HH3DHyperSingularTDBIO,
                 d = k - 1
                 d < Dh && continue
                 q = reduce(*, d-Dh+1:d ,init=1)
-                zlocal[i,j,k] += β * q * dot(curlg, curlf) * tmRoR(d-Dh, ∫G)
+                zlocal[i,j,k] += β * q * dot(curlg, curlf) * tmRoR(d-Dh, ∫G) / sol^(d-Dh)
             end
         end
     end
@@ -222,6 +228,9 @@ function innerintegrals!(zlocal, operator::HH3DDoubleLayerTDBIO,
     @assert numfunctions(test_local_space, domain(test_element))  <= 3
     @assert numfunctions(trial_local_space, domain(trial_element)) == 1
 
+
+    sol = operator.speed_of_light
+    
     dx = quad_weight
     x = cartesian(test_point)
     nx = normal(test_point)
@@ -263,7 +272,7 @@ function innerintegrals!(zlocal, operator::HH3DDoubleLayerTDBIO,
                 d < D && continue
                 q = reduce(*, d-D+1:d ,init=1)
                 @assert q == 1
-                zlocal[i,j,k] += α * q * g * dot(nx, grad_tmRoR(d-D, ∫∇G)) * f
+                zlocal[i,j,k] += α * q * g * dot(nx, grad_tmRoR(d-D, ∫∇G)) * f / sol^(d-D)
             end
         end
     end

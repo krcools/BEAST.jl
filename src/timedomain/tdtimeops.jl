@@ -137,7 +137,7 @@ Base.:*(a::Number, op::TemporalDifferentiation) = TemporalDifferentiation(a * op
 defaultquadstrat(op::TemporalDifferentiation, tfs, bfs) = defaultquadstrat(op.operator, tfs, bfs)
 
 function allocatestorage(op::TemporalDifferentiation, testfns, trialfns,
-	storage_trait, longdelays_trait)
+	storage_trait, longdelays_trait; threading=Threading{:multi})
 
 	trial_time_fns  = temporalbasis(trialfns)
 	trial_space_fns = spatialbasis(trialfns)
@@ -158,7 +158,7 @@ function allocatestorage(op::TemporalDifferentiation, testfns, trialfns,
 		derive(convolve(test_time_fns, trial_time_fns))
 	)
 
-    return allocatestorage(op.operator, testfns, trialfns, storage_trait, longdelays_trait)
+    return _allocatestorage(op.operator, testfns, trialfns, storage_trait, longdelays_trait, threading)
 end
 
 function assemble!(operator::TemporalDifferentiation, testfns, trialfns, store, threading = Threading{:multi};
@@ -199,7 +199,7 @@ scalartype(op::TemporalIntegration) = scalartype(op.operator)
 Base.:*(a::Number, op::TemporalIntegration) = TemporalIntegration(a * op.operator)
 
 function allocatestorage(op::TemporalIntegration, testfns, trialfns,
-	storage_trait::Type{Val{S}}, longdelays_trait) where {S}
+	storage_trait::Type{Val{S}}, longdelays_trait; threading=Threading{:multi}) where {S}
 
 	trial_time_fns  = temporalbasis(trialfns)
 	trial_space_fns = spatialbasis(trialfns)
@@ -209,7 +209,7 @@ function allocatestorage(op::TemporalIntegration, testfns, trialfns,
 		integrate(trial_time_fns)
 	)
 
-	return allocatestorage(op.operator, testfns, trialfns, storage_trait, longdelays_trait)
+	return _allocatestorage(op.operator, testfns, trialfns, storage_trait, longdelays_trait, threading)
 end
 
 function assemble!(operator::TemporalIntegration, testfns, trialfns, store,
@@ -226,3 +226,13 @@ function assemble!(operator::TemporalIntegration, testfns, trialfns, store,
     assemble!(operator.operator, testfns, trialfns, store, threading; quadstrat)
 
 end
+
+# Storage allocation with the threading of the assembly (see `assemble` in tdintegralop.jl).
+# Only these operators run a sizing pass that can be threaded; all other operators keep
+# their `allocatestorage` methods without a `threading` keyword.
+_allocatestorage(op::Union{RetardedPotential,TemporalDifferentiation,TemporalIntegration},
+    testfns, trialfns, storage_trait, longdelays_trait, threading) =
+    allocatestorage(op, testfns, trialfns, storage_trait, longdelays_trait; threading)
+
+_allocatestorage(op, testfns, trialfns, storage_trait, longdelays_trait, threading) =
+    allocatestorage(op, testfns, trialfns, storage_trait, longdelays_trait)

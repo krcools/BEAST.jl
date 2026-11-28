@@ -151,26 +151,35 @@ function timebasisspline2(dt, numfunctions, T::Type=typeof(dt))
     TimeBasisFunction{T,4,3,2}(dt, numfunctions, polys)
 end
 
-function timebasisshiftedlagrange(dt, numfunctions, degree, T::Type=typeof(dt))
+#The degree determines the type of the result (TimeBasisFunction{T,degree+2,degree+1,degree}),
+#so it is taken as Val{degree} to make the result type inferable. The method with an integer
+#degree forwards to it; for a constant degree (e.g. convolve of two pulses passes 1) constant
+#propagation through this small method still gives a concrete type.
+Base.@constprop :aggressive timebasisshiftedlagrange(dt, numfunctions, degree::Integer, T::Type=typeof(dt)) =
+    timebasisshiftedlagrange(dt, numfunctions, Val(Int(degree)), T)
+
+function timebasisshiftedlagrange(dt, numfunctions, ::Val{degree}, T::Type=typeof(dt)) where {degree}
     z, i = zero(T), one(T)
     c = Polynomial(SVector(i))
     t = Polynomial(SVector(z,i/dt))
-    polys = Polynomial{degree+1,T}[]
-    for k = 0:degree
-        f = c
-        for i in 1:k
-            f = T(1/i) * f * (i - t)
-        end
-        g = c
-        for i in 1:(degree-k)
-            g = T.(1/i) * g * (i + t)
-        end
-        push!(polys, f*g)
-    end
-    push!(polys, Polynomial(zeros(SVector{degree+1})))
-    @assert length(polys) == degree+2
-    polys = SVector{degree+2,Polynomial{degree+1,T}}(polys...)
+    P = Polynomial{degree+1,T}
+    #the k-th polynomial has degree k + (degree-k) = degree; the assertion makes the tuple
+    #concrete although the degree of f and g grows in the loops of _shiftedlagrangepoly
+    lagrange = ntuple(k -> _shiftedlagrangepoly(k-1, degree, c, t, T)::P, Val(degree+1))
+    polys = SVector{degree+2,P}(lagrange..., P(zeros(SVector{degree+1,T})))
     TimeBasisFunction{T,degree+2,degree+1,degree}(dt, numfunctions, polys)
+end
+
+function _shiftedlagrangepoly(k, degree, c, t, T)
+    f = c
+    for i in 1:k
+        f = T(1/i) * f * (i - t)
+    end
+    g = c
+    for i in 1:(degree-k)
+        g = T.(1/i) * g * (i + t)
+    end
+    return f*g
 end
 
 function (f::TimeBasisFunction)(t::Real)

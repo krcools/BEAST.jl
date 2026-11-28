@@ -57,18 +57,20 @@ end
 
 import Base: *,+,-,promote_rule
 
-function *(p::Polynomial,q::Polynomial)
+#The sizes are static (ntuple over Val) so that the arithmetic below is type stable and does
+#not allocate: temporalassemblydata does a lot of it for every block of a time-domain matrix.
+function *(p::Polynomial{N},q::Polynomial{M}) where {N,M}
     T = promote_type(eltype(p), eltype(q))
-    D = degree(p)+degree(q)+1
-    x = zeros(T, D)
-    for d in 0 : D
-        for k in 0 : D
-            k <= degree(p) || continue
-            0 <= d-k <= degree(q) || continue
-            x[d+1] += p[k] * q[d-k]
+    D = N+M-1
+    x = ntuple(Val(D)) do i
+        d = i-1
+        s = zero(T)
+        for k in max(0,d-M+1) : min(d,N-1)
+            s += p[k] * q[d-k]
         end
+        s
     end
-    Polynomial(x...)
+    Polynomial{D,T}(SVector{D,T}(x))
 end
 
 # function *(p::Polynomial{1}, q::Polynomial)
@@ -85,13 +87,16 @@ function *(a::Number, q::Polynomial)
     Polynomial{length(q),T}(a*q.data)
 end
 
-function +(p::Polynomial, q::Polynomial)
+function +(p::Polynomial{N}, q::Polynomial{M}) where {N,M}
     T = promote_type(eltype(p), eltype(q))
-    D = max(length(p), length(q))
-    x = zeros(T,D)
-    for i in 1 : length(p); x[i] += p.data[i]; end
-    for i in 1 : length(q); x[i] += q.data[i]; end
-    Polynomial(x...)
+    D = max(N, M)
+    x = ntuple(Val(D)) do i
+        s = zero(T)
+        i <= N && (s += p.data[i])
+        i <= M && (s += q.data[i])
+        s
+    end
+    Polynomial{D,T}(SVector{D,T}(x))
 end
 
 +(p::Polynomial, a::Number) = p + Polynomial(a)
@@ -102,13 +107,15 @@ end
 
 -(p::Polynomial, q::Polynomial) = p + (-one(eltype(q))*q)
 
-function substitute(p::Polynomial, q::Polynomial)
-    T = promote_type(eltype(p), eltype(q))
-    r = Polynomial(p[degree(p)])
-    for d = degree(p)-1 : -1 : 0
-        r = q*r + p[d]
+#Horner's scheme; the degree of r grows in every step, so the loop is unrolled at compile
+#time to keep it type stable (a recursion over Val is not inferred beyond degree 2)
+@generated function substitute(p::Polynomial{N}, q::Polynomial) where {N}
+    steps = [:(r = q*r + p[$d]) for d in N-2:-1:0]
+    return quote
+        r = Polynomial(p[$(N-1)])
+        $(steps...)
+        return r
     end
-    return r
 end
 
 # mutable struct PieceWisePolynomial
